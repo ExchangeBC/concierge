@@ -1,121 +1,202 @@
 import * as express from 'express';
-// import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http';
-import { Set } from 'immutable';
+import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http';
+import { isNumber } from 'lodash';
 import { Document, Model } from 'mongoose';
 
 //////////////////////////
-// Low-level HTTP types //
+// Low-level Http types //
 //////////////////////////
 
-interface HTTPStatusCode {
-  httpStatusCode: number;
-}
-
-/*interface Request<Body> {
+interface Request<Params, Query, Body> {
   headers: IncomingHttpHeaders;
+  params: Params;
+  query: Query;
   body: Body;
 }
 
 interface Response<Body> {
-  code: HTTPStatusCode;
+  code: number;
   headers: OutgoingHttpHeaders;
   body: Body;
-}*/
+}
 
 //////////
 // CRUD //
 //////////
 
-enum CRUDAction {
-  Create,
-  ReadOne,
-  ReadMany,
-  Update,
-  Delete
+interface ReadOneRequestParams {
+  id: string;
 }
 
-interface CRUDStatusCodes<StatusCode> {
-  ok: StatusCode;
-  created: StatusCode;
-  deleted: StatusCode;
-  notFound: StatusCode;
-  invalidRequestBody: StatusCode;
-  unsupportedAction: StatusCode;
+interface ReadManyRequestQuery {
+  offset: number;
+  count: number;
 }
 
-interface CRUDResource<Interface extends Document, StatusCode> {
-  model: Model<Interface>;
-  codes: CRUDStatusCodes<StatusCode>;
-  // TODO add support for custom handler behaviour
-  // Possible change supportedActions to Map<CRUDAction, HandlerFunction>
-  supportedActions: Set<CRUDAction>;
+interface ReadManyResponse<Item> {
+  total: number;
+  offset: number;
+  count: number;
+  items: Item[];
 }
 
-// This function returns an express RequestHandler that creates an instance of Model in the database.
-// handleReadOne, handleReadMany, handleUpdate, handleDelete all have the same type signature.
-function handleCreate<M, SC extends HTTPStatusCode>(model: M, codes: CRUDStatusCodes<SC>): express.RequestHandler {
-  return (req, res, next) => { return; };
+interface UpdateRequestParams {
+  id: string;
 }
 
-function handleReadOne<M, SC extends HTTPStatusCode>(model: M, codes: CRUDStatusCodes<SC>): express.RequestHandler {
-  return (req, res, next) => { return; };
+interface DeleteRequestParams {
+  id: string;
 }
 
-function handleReadMany<M, SC extends HTTPStatusCode>(model: M, codes: CRUDStatusCodes<SC>): express.RequestHandler {
-  return (req, res, next) => { return; };
+interface Create<Item extends Document, CreateRequestBody> {
+  transformRequestBody(raw: any): CreateRequestBody;
+  handler(model: Model<Item>, request: Request<null, null, CreateRequestBody>): Promise<Response<Item>>;
 }
 
-function handleUpdate<M, SC extends HTTPStatusCode>(model: M, codes: CRUDStatusCodes<SC>): express.RequestHandler {
-  return (req, res, next) => { return; };
+type ReadOne<Item extends Document> = (model: Model<Item>, request: Request<ReadOneRequestParams, null, null>) => Promise<Response<Item>>;
+
+type ReadMany<Item extends Document> = (model: Model<Item>, request: Request<null, ReadManyRequestQuery, null>) => Promise<Response<ReadManyResponse<Item>>>;
+
+interface Update<Item extends Document, UpdateRequestBody> {
+  transformRequestBody(raw: any): UpdateRequestBody;
+  handler(model: Model<Item>, request: Request<UpdateRequestParams, null, UpdateRequestBody>): Promise<Response<Item>>;
 }
 
-function handleDelete<M, SC extends HTTPStatusCode>(model: M, codes: CRUDStatusCodes<SC>): express.RequestHandler {
-  return (req, res, next) => { return; };
+type Delete<Item extends Document> = (model: Model<Item>, request: Request<DeleteRequestParams, null, null>) => Promise<Response<null>>;
+
+interface Resource<Item extends Document, CreateRequestBody, UpdateRequestBody> {
+  model: Model<Item>;
+  create?: Create<Item, CreateRequestBody>;
+  readOne?: ReadOne<Item>;
+  readMany?: ReadMany<Item>;
+  // tslint:disable-next-line: member-ordering
+  update?: Update<Item, UpdateRequestBody>;
+  delete?: Delete<Item>;
 }
 
-function handleUnsupportedAction<SC extends HTTPStatusCode>(codes: CRUDStatusCodes<SC>): express.RequestHandler {
-  return (req, res, next) => { return; };
+type MakeRequest<Params, Query, Body> = (req: express.Request) => Request<Params, Query, Body>;
+type MakeResponse<ReqParams, ReqQuery, ReqBody, ResBody> = (request: Request<ReqParams, ReqQuery, ReqBody>) => Promise<Response<ResBody>>;
+
+function handleCreate<Item extends Document, CreateRequestBody>(model: Model<Item>, create: Create<Item, CreateRequestBody>): express.RequestHandler {
+  return handleJson(
+    req => ({
+      headers: req.headers,
+      params: null,
+      query: null,
+      body: create.transformRequestBody(req.body)
+    }),
+    create.handler.bind(null, model)
+  );
 }
 
-// This function creates an express Router given a CRUDResource.
-function createCRUDRouter<I extends Document, SC extends HTTPStatusCode>(resource: CRUDResource<I, SC>): express.Router {
+function handleReadOne<Item extends Document>(model: Model<Item>, readOne: ReadOne<Item>): express.RequestHandler {
+  return handleJson(
+    req => ({
+      headers: req.headers,
+      params: {
+        id: req.params.id || ''
+      },
+      query: null,
+      body: null
+    }),
+    readOne.bind(null, model)
+  );
+}
+
+function handleReadMany<Item extends Document>(model: Model<Item>, readMany: ReadMany<Item>): express.RequestHandler {
+  return handleJson(
+    req => {
+      const { offset, count } = req.query;
+      return {
+        headers: req.headers,
+        params: null,
+        query: {
+          offset: isNumber(offset) ? offset : 0,
+          count: isNumber(count) ? count : 20
+        },
+        body: null
+      };
+    },
+    readMany.bind(null, model)
+  );
+}
+
+function handleUpdate<Item extends Document, UpdateRequestBody>(model: Model<Item>, update: Update<Item, UpdateRequestBody>): express.RequestHandler {
+  return handleJson(
+    req => ({
+      headers: req.headers,
+      params: {
+        id: req.params.id || ''
+      },
+      query: null,
+      body: update.transformRequestBody(req.body)
+    }),
+    update.handler.bind(null, model)
+  );
+}
+
+function handleDelete<Item extends Document>(model: Model<Item>, deleteFn: Delete<Item>): express.RequestHandler {
+  return handleJson(
+    req => ({
+      headers: req.headers,
+      params: {
+        id: req.params.id || ''
+      },
+      query: null,
+      body: null
+    }),
+    deleteFn.bind(null, model)
+  );
+}
+
+function handleNotFound(): express.RequestHandler {
+  return (req, res) => {
+    res.status(404).json({});
+  };
+}
+
+function handleJson<P, Q, ReqB, ResB>(makeRequest: MakeRequest<P, Q, ReqB>, makeResponse: MakeResponse<P, Q, ReqB, ResB>): express.RequestHandler {
+  return (req, res) => {
+    makeResponse(makeRequest(req))
+      .then(respondJson.bind(null, res))
+      .catch(respondServerError.bind(null, res));
+  };
+}
+
+function respondJson<Body>(res: express.Response, response: Response<Body>): express.Response {
+  const { code, headers, body } = response;
+  return res
+    .status(code)
+    .set(headers)
+    .json(body);
+}
+
+function respondServerError<Body>(res: express.Response, error: Error): express.Response {
+  return res
+    .status(500)
+    .json({
+      message: error.message,
+      stack: error.stack,
+      raw: error.toString()
+    });
+}
+
+// This function creates an express Router given a Resource.
+function crudRouter<I extends Document, CRB, URB>(resource: Resource<I, CRB, URB>): express.Router {
   const router = express.Router();
-  const { model, codes, supportedActions } = resource;
-  for (const action of supportedActions) {
-    switch (action) {
-      case CRUDAction.Create:
-        router.post('/', handleCreate(model, codes));
-        break;
-      case CRUDAction.ReadOne:
-        router.get('/:id', handleReadOne(model, codes));
-        break;
-      case CRUDAction.ReadMany:
-        router.get('/', handleReadMany(model, codes));
-        break;
-      case CRUDAction.Update:
-        router.put('/:id', handleUpdate(model, codes));
-        break;
-      case CRUDAction.Delete:
-        router.delete('/:id', handleDelete(model, codes));
-        break;
-    }
-  }
-  router.use(handleUnsupportedAction(codes));
+  const { model, create, readOne, readMany, update } = resource;
+  if (create) { router.post('/', handleCreate(model, create)); }
+  if (readOne) { router.get('/:id', handleReadOne(model, readOne)); }
+  if (readMany) { router.get('/', handleReadMany(model, readMany)); }
+  if (update) { router.put('/:id', handleUpdate(model, update)); }
+  if (resource.delete) { router.delete('/', handleDelete(model, resource.delete)); }
+  router.use(handleNotFound());
   return router;
 }
 
 ///////////
 // NOTES //
 ///////////
-
-// type CreateCRUDRouter<A extends Document, B extends HTTPStatusCode> = (resource: CRUDResource<A, B>) => express.Router;
-// type CRUDHandler<Model extends Document, StatusCode extends HTTPStatusCode> = (model: Model, codes: CRUDStatusCodes<StatusCode>) => express.RequestHandler;
-
-/*interface CRUDHandlers<Interface extends Document> {
-  create?(model: Model<Interface>, body: any): Promise<Response<Model<Interface>>>;
-  readOne?(model: Model<Interface>, id: string): Promise<Response<Model<Interface>>>;
-  readMany?(model: Model<Interface>): Promise<Response<Model<Interface>>>;
-}*/
 
 // Below is a WIP for type-safe, lower-level implementation.
 /*type Middleware<ReqBody> = (req: Request<ReqBody>) => Promise<Request<ReqBody>>;
