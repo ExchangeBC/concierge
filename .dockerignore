@@ -1,0 +1,7 @@
+*.swp
+*.tmp
+*.pem
+*.map
+.sass-cache/
+node_modules/
+tmp/

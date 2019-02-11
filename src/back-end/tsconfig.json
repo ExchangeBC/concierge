@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"target": "esnext",
+		"moduleResolution": "node",
+		"allowJs": true,
+		"noEmit": true,
+		"strict": true,
+		"noImplicitReturns": true,
+		"forceConsistentCasingInFileNames": true,
+		"noUnusedLocals": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true
+	},
+  "files": [
+    "index.ts"
+  ]
+}
