@@ -10,7 +10,6 @@ function start(port: number): void {
   const UserModel: UserSchema.Model = mongoose.model(UserSchema.NAME, UserSchema.schema);
   // API
   const api: Router = Router();
-  // TODO replace null with relevant model
   api.use(`/${UserResource.ROUTE_NAMESPACE}`, crud.router(UserResource)(UserModel));
   // Main express app
   const app = express();

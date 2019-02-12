@@ -1,7 +1,7 @@
 //set up global constants for all grunt tasks
 const env = process.env.NODE_ENV || "development";
 const src = "src/front-end";
-const build = "build";
+const build = "build/front-end";
 global.gruntConfig = {
   dir: {
     src,
@@ -10,7 +10,7 @@ global.gruntConfig = {
   src: {
     "static": `${src}/static`,
     sass: `${src}/sass`,
-    js: `${src}/js`
+    ts: `${src}/typescript`
   },
   out: {
     css: `${build}/app.css`,

@@ -3,11 +3,9 @@ module.exports = {
     interrupt: true,
     debounceDelay: 250
   },
-  js: {
+  ts: {
     files: [
-      `${gruntConfig.src.js}/**`,
-      `${gruntConfig.src.sass}/**`,
-      `${gruntConfig.src.static}/**`,
+      `${gruntConfig.src.ts}/**`
     ],
     tasks: [
       "browserify:development"

@@ -1,18 +1,19 @@
 const makeConfig = debug => ({
   options: {
-    debug,
-    transform: [
+    plugin: [
       [
-        "babelify",
+        "tsify",
         {
-          sourceMaps: debug,
-          presets: [ "@babel/preset-env", "@babel/preset-react" ]
+          project: gruntConfig.src.ts
         }
       ]
-    ]
+    ],
+    browserifyOptions: {
+      debug
+    }
   },
   src: [
-    `${gruntConfig.src.js}/index.js`
+    `${gruntConfig.src.ts}/index.ts`
   ],
   dest: `${gruntConfig.out.js}`
 });
