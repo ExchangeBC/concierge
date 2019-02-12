@@ -1,22 +1,34 @@
 # Concierge Web Application
 
+## Quick Start
+
+```bash
+# TODO
+```
+
 ## Dependencies
 
-- Written in TypeScript. Transpiled with Babel.
+- Written in TypeScript. 
   - `tslint` for linting.
-- Lodash for utilities.
-- ImmutableJS for data structures.
+- `lodash` for utilities.
+- `immutable` for data structures.
+- `mocha` for BDD test harness.
 
 ### Back-End
 
-- `migrate` and `mongodb` for Database migrations.
+- `ts-node` to run the application.
 - `dotenv` to read environment variables from a file.
 - `express` for handling HTTP requests.
-- `immutable` for data structures.
+- TODO `migrate` and `mongodb` for Database migrations.
+- TODO middleware to serve the UI.
+- TODO Dockerfile.
 
 ### Front-End
 
 - `react` and `react-dom` for view expression and rendering.
-- `immutable` for data structures.
-- `path-to-regexp` to handle route parsing.
-- `grunt` for build tasks
+  - TODO `jest` for unit tests.
+  - TODO `enzyme` for functional tests.
+- `grunt` for build tasks.
+- `sass` and bootstrap for styles.
+- `browserify` and `tsify` to create the ES5 JavaScript bundle.
+- TODO `page` for client-side routing.
