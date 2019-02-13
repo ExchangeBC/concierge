@@ -137,7 +137,7 @@ export function router<Item extends Document, CRB, URB>(resource: Resource<Item,
     if (readOne) { router.get('/:id', handleReadOne(Model, readOne)); }
     if (readMany) { router.get('/', handleReadMany(Model, readMany)); }
     if (update) { router.put('/:id', handleUpdate(Model, update)); }
-    if (resource.delete) { router.delete('/', handleDelete(Model, resource.delete)); }
+    if (resource.delete) { router.delete('/:id', handleDelete(Model, resource.delete)); }
     router.use((req, res) => respondNotFoundJson(res));
     return router;
   };
