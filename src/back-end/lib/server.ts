@@ -1,12 +1,16 @@
 import * as express from 'express';
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http';
-import { Document } from 'mongoose';
+import { assign } from 'lodash';
 
-export interface Request<Params, Query, Body> {
-  headers: IncomingHttpHeaders;
+export interface ConfigurableRequest<Params, Query, Body> {
   params: Params;
   query: Query;
   body: Body;
+}
+
+export interface Request<Params, Query, Body> extends ConfigurableRequest<Params, Query, Body> {
+  path: string,
+  headers: IncomingHttpHeaders;
 }
 
 export interface Response<Body> {
@@ -15,42 +19,56 @@ export interface Response<Body> {
   body: Body;
 }
 
-export type MakeRequest<Params, Query, Body> = (req: express.Request) => Request<Params, Query, Body>;
+export type MakeRequest<Params, Query, Body> = (req: express.Request) => ConfigurableRequest<Params, Query, Body>;
+
+// TODO use this to type middleware
+export type TransformRequest<RPA, RQA, RBA, RPB, RQB, RBB> = (request: Request<RPA, RQA, RBA>) => Promise<ConfigurableRequest<RPB, RQB, RBB>>;
 
 export type MakeResponse<ReqParams, ReqQuery, ReqBody, ResBody> = (request: Request<ReqParams, ReqQuery, ReqBody>) => Promise<Response<ResBody>>;
 
-// TODO use type system to ensure ResB can be stringified to JSON
-export function handleJson<P, Q, ReqB, ResB>(makeRequest: MakeRequest<P, Q, ReqB>, makeResponse: MakeResponse<P, Q, ReqB, ResB>): express.RequestHandler {
+export type Respond<Body> = (expressResponse: express.Response, response: Response<Body>) => express.Response;
+
+export interface Handler<ReqParams, ReqQuery, ReqBody, ResBody> {
+  makeRequest: MakeRequest<ReqParams, ReqQuery, ReqBody>;
+  makeResponse: MakeResponse<ReqParams, ReqQuery, ReqBody, ResBody>;
+  respond: Respond<ResBody>;
+}
+
+export function makeHandler<RP, RQ, ReqB, ResB>(handler: Handler<RP, RQ, ReqB, ResB>): express.RequestHandler {
   return (req, res) => {
-    makeResponse(makeRequest(req))
-      .then(respondJson.bind(null, res))
+    const request = assign(handler.makeRequest(req), {
+      path: req.path,
+      headers: req.headers
+    });
+    handler.makeResponse(request)
+      .then(handler.respond.bind(null, res))
       .catch(respondServerError.bind(null, res));
   };
 }
 
-// TODO may not need this, handleJson is probably sufficient
-export function handleDocument<P, Q, ReqB, ResB extends Document>(makeRequest: MakeRequest<P, Q, ReqB>, makeResponse: MakeResponse<P, Q, ReqB, ResB>): express.RequestHandler {
-  return handleJson(makeRequest, async request => {
-    const response = await makeResponse(request);
-    response.body = response.body.toJSON();
-    return response;
+// TODO Use type system to ensure ResB can be stringified as JSON.
+export function makeHandlerJson<P, Q, ReqB, ResB>(makeRequest: MakeRequest<P, Q, ReqB>, makeResponse: MakeResponse<P, Q, ReqB, ResB>): express.RequestHandler {
+  return makeHandler({
+    makeRequest,
+    makeResponse,
+    respond: respondJson
   });
 }
 
-export function respondJson<Body>(res: express.Response, response: Response<Body>): express.Response {
+export function respondJson<Body>(expressResponse: express.Response, response: Response<Body>): express.Response {
   const { code, headers, body } = response;
-  return res
+  return expressResponse
     .status(code)
     .set(headers)
     .json(body);
 }
 
-export function respondNotFoundJson(res: express.Response): express.Response {
-  return res.status(404).json({});
+export function respondNotFoundJson(expressResponse: express.Response): express.Response {
+  return expressResponse.status(404).json({});
 }
 
-export function respondServerError<Body>(res: express.Response, error: Error): express.Response {
-  return res
+export function respondServerError<Body>(expressResponse: express.Response, error: Error): express.Response {
+  return expressResponse
     .status(500)
     .json({
       message: error.message,
@@ -64,11 +82,11 @@ export function respondServerError<Body>(res: express.Response, error: Error): e
 ///////////
 
 // Below is a WIP for type-safe, lower-level implementation.
-/*type Middleware<ReqBody> = (req: Request<ReqBody>) => Promise<Request<ReqBody>>;
+/*type TransformRequest<ReqBody> = (req: Request<ReqBody>) => Promise<Request<ReqBody>>;
 
-type Handler<ReqBody, ResBody> = (req: Request<ReqBody>) => Promise<Response<ResBody>>;
+type MakeResponse<ReqBody, ResBody> = (req: Request<ReqBody>) => Promise<Response<ResBody>>;
 
-function handleError(res: express.Response, error: Error): void {
+function handleError(expressResponse: express.Response, error: Error): void {
   res
     .status(500)
     .json({
@@ -78,7 +96,7 @@ function handleError(res: express.Response, error: Error): void {
     });
 }
 
-function handle<ReqBody, ResBody>(middlewares: Array<Middleware<ReqBody>>, handler: Handler<ReqBody, ResBody>): express.RequestHandler {
+function handle<ReqBody, ResBody>(middlewaexpressResponse: Array<TransformRequest<ReqBody>>, handler: MakeResponse<ReqBody, ResBody>): express.RequestHandler {
   return (req, res, next) => {
     const promise = middlewares.reduce(
       (acc, m) => acc.then(request => m(request)),

@@ -1,12 +1,18 @@
 import { config } from 'dotenv';
+import { resolve } from 'path';
 
 config();
 
-const get = (name, fallback = undefined) => process.env[name] || fallback;
+function get(name: string , fallback: string): string {
+  return process.env[name] || fallback;
+}
 
-export default {
-  env: get('NODE_ENV', 'production'),
-  port: parseInt(get('PORT', 3000), 10),
-  mongoUrl: get('MONGO_URL', 'mongodb://dev:dev@localhost:27017/concierge'),
-  secret: get('SECRET', 'foobar')
-};
+export const ENV = get('NODE_ENV', 'production');
+
+export const PORT = parseInt(get('PORT', '3000'), 10);
+
+export const MONGO_URL = get('MONGO_URL', 'mongodb://dev:dev@localhost:27017/concierge');
+
+export const SECRET = get('SECRET', 'foobar');
+
+export const FRONT_END_BUILD_DIR = resolve(__dirname, '../../build/front-end');

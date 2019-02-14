@@ -1,7 +1,7 @@
 import * as express from 'express';
 import { isNumber } from 'lodash';
 import { Document, Model } from 'mongoose';
-import { handleJson, Request, respondNotFoundJson, Response } from './server';
+import { makeHandlerJson, Request, respondNotFoundJson, Response } from './server';
 
 export interface ReadOneRequestParams {
   id: string;
@@ -29,6 +29,7 @@ export interface DeleteRequestParams {
 
 export interface Create<Item extends Document, CreateRequestBody> {
   transformRequestBody(raw: any): CreateRequestBody;
+  // TODO make higher-order function using MakeResponse
   handler(Model: Model<Item>, request: Request<null, null, CreateRequestBody>): Promise<Response<Item>>;
 }
 
@@ -38,6 +39,7 @@ export type ReadMany<Item extends Document> = (Model: Model<Item>, request: Requ
 
 export interface Update<Item extends Document, UpdateRequestBody> {
   transformRequestBody(raw: any): UpdateRequestBody;
+  // TODO make higher-order function using MakeResponse
   handler(Model: Model<Item>, request: Request<UpdateRequestParams, null, UpdateRequestBody>): Promise<Response<Item>>;
 }
 
@@ -54,9 +56,8 @@ export interface Resource<Item extends Document, CreateRequestBody, UpdateReques
 }
 
 function handleCreate<Item extends Document, CreateRequestBody>(Model: Model<Item>, create: Create<Item, CreateRequestBody>): express.RequestHandler {
-  return handleJson(
+  return makeHandlerJson(
     req => ({
-      headers: req.headers,
       params: null,
       query: null,
       body: create.transformRequestBody(req.body)
@@ -66,9 +67,8 @@ function handleCreate<Item extends Document, CreateRequestBody>(Model: Model<Ite
 }
 
 function handleReadOne<Item extends Document>(Model: Model<Item>, readOne: ReadOne<Item>): express.RequestHandler {
-  return handleJson(
+  return makeHandlerJson(
     req => ({
-      headers: req.headers,
       params: {
         id: req.params.id || ''
       },
@@ -80,11 +80,10 @@ function handleReadOne<Item extends Document>(Model: Model<Item>, readOne: ReadO
 }
 
 function handleReadMany<Item extends Document>(Model: Model<Item>, readMany: ReadMany<Item>): express.RequestHandler {
-  return handleJson(
+  return makeHandlerJson(
     req => {
       const { offset, count } = req.query;
       return {
-        headers: req.headers,
         params: null,
         query: {
           offset: isNumber(offset) ? offset : 0,
@@ -100,9 +99,8 @@ function handleReadMany<Item extends Document>(Model: Model<Item>, readMany: Rea
 }
 
 function handleUpdate<Item extends Document, UpdateRequestBody>(Model: Model<Item>, update: Update<Item, UpdateRequestBody>): express.RequestHandler {
-  return handleJson(
+  return makeHandlerJson(
     req => ({
-      headers: req.headers,
       params: {
         id: req.params.id || ''
       },
@@ -114,9 +112,8 @@ function handleUpdate<Item extends Document, UpdateRequestBody>(Model: Model<Ite
 }
 
 function handleDelete<Item extends Document>(Model: Model<Item>, deleteFn: Delete<Item>): express.RequestHandler {
-  return handleJson(
+  return makeHandlerJson(
     req => ({
-      headers: req.headers,
       params: {
         id: req.params.id || ''
       },
