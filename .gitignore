@@ -2,8 +2,6 @@
 *.tmp
 *.pem
 *.map
-*.env
-!development.env
 .sass-cache/
 node_modules/
 tmp/
