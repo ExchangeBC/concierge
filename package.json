@@ -4,6 +4,7 @@
   "description": "Concierge Web Application",
   "main": "index.js",
   "scripts": {
+    "start": "npm run back-end:start",
     "back-end:lint": "npx tslint -c tslint.json src/back-end/*.ts src/back-end/**/*.ts && Lint Successful\n",
     "back-end:typecheck": "npx tsc --project src/back-end && echo Typecheck Successful\n",
     "back-end:test": "echo TODO need to support typescript && npm run back-end:typecheck && npx mocha -cu bdd tests/back-end/index.js",
