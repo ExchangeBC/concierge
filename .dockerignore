@@ -5,3 +5,11 @@
 .sass-cache/
 node_modules/
 tmp/
+build/
+
+*.env
+*.md
+.git/
+shell.nix
+LICENSE
+OPEN_SOURCE_LICENSES
