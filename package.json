@@ -4,9 +4,11 @@
   "description": "Concierge Web Application",
   "main": "index.js",
   "scripts": {
+    "back-end:lint": "npx tslint -c tslint.json src/back-end/*.ts src/back-end/**/*.ts",
     "back-end:typecheck": "npx tsc --project src/back-end && echo Typecheck Successful\n",
     "back-end:start": "npx ts-node --project src/back-end/tsconfig.json src/back-end/index.ts",
     "back-end:test": "echo TODO need to support typescript && npm run back-end:typecheck && npx mocha -cu bdd tests/back-end/index.js",
+    "front-end:lint": "npx tslint -c tslint.json src/front-end/*.ts src/front-end/**/*.ts",
     "front-end:typecheck": "npx tsc --project src/front-end/typescript && echo Typecheck Successful\n",
     "front-end:build": "npx grunt build",
     "front-end:watch": "echo TODO need to support typechecking && npx grunt watch",
