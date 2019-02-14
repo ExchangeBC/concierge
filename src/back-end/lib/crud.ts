@@ -49,7 +49,6 @@ export interface Resource<Item extends Document, CreateRequestBody, UpdateReques
   create?: Create<Item, CreateRequestBody>;
   readOne?: ReadOne<Item>;
   readMany?: ReadMany<Item>;
-  // tslint:disable-next-line: member-ordering
   update?: Update<Item, UpdateRequestBody>;
   delete?: Delete<Item>;
 }
@@ -95,8 +94,7 @@ function handleReadMany<Item extends Document>(Model: Model<Item>, readMany: Rea
       };
     },
     async request => {
-      const response = await readMany(Model, request);
-      return response;
+      return await readMany(Model, request);
     }
   );
 }

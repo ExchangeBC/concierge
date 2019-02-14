@@ -50,6 +50,14 @@ const resource: Resource = {
       headers: {},
       body: stubUser(Model)
     };
+  },
+
+  async delete(Model, request) {
+    return {
+      code: 200,
+      headers: {},
+      body: null
+    };
   }
 
 };

@@ -7,7 +7,7 @@ export interface Document extends mongoose.Document {
   age: number;
 }
 
-export type Model = mongoose.Model<Document>
+export type Model = mongoose.Model<Document>;
 
 export const schema: mongoose.Schema = new mongoose.Schema({
   name: String,
