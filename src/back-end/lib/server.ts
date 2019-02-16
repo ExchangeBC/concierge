@@ -1,6 +1,13 @@
 import * as express from 'express';
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http';
 import { assign } from 'lodash';
+import * as mongoose from 'mongoose';
+import { DomainLogger, makeDomainLogger } from './logger';
+import { console } from './logger/adapters';
+
+export enum HttpMethod {
+  Get, Post, Put, Patch, Delete, Options, Unknown
+}
 
 export interface ConfigurableRequest<Params, Query, Body> {
   params: Params;
@@ -11,6 +18,8 @@ export interface ConfigurableRequest<Params, Query, Body> {
 export interface Request<Params, Query, Body> extends ConfigurableRequest<Params, Query, Body> {
   path: string,
   headers: IncomingHttpHeaders;
+  logger: DomainLogger;
+  method: HttpMethod;
 }
 
 export interface Response<Body> {
@@ -21,7 +30,6 @@ export interface Response<Body> {
 
 export type MakeRequest<Params, Query, Body> = (req: express.Request) => ConfigurableRequest<Params, Query, Body>;
 
-// TODO use this to type middleware
 export type TransformRequest<RPA, RQA, RBA, RPB, RQB, RBB> = (request: Request<RPA, RQA, RBA>) => Promise<ConfigurableRequest<RPB, RQB, RBB>>;
 
 export type MakeResponse<ReqParams, ReqQuery, ReqBody, ResBody> = (request: Request<ReqParams, ReqQuery, ReqBody>) => Promise<Response<ResBody>>;
@@ -34,11 +42,32 @@ export interface Handler<ReqParams, ReqQuery, ReqBody, ResBody> {
   respond: Respond<ResBody>;
 }
 
+export function parseHttpMethod(raw: string): HttpMethod {
+  switch (raw.toLowerCase()) {
+    case 'get':
+      return HttpMethod.Get;
+    case 'post':
+      return HttpMethod.Post;
+    case 'put':
+      return HttpMethod.Put;
+    case 'patch':
+      return HttpMethod.Patch;
+    case 'delete':
+      return HttpMethod.Delete;
+    case 'options':
+      return HttpMethod.Options;
+    default:
+      return HttpMethod.Unknown;
+  }
+}
+
 export function makeHandler<RP, RQ, ReqB, ResB>(handler: Handler<RP, RQ, ReqB, ResB>): express.RequestHandler {
   return (req, res) => {
     const request = assign(handler.makeRequest(req), {
+      method: parseHttpMethod(req.method),
       path: req.path,
-      headers: req.headers
+      headers: req.headers,
+      logger: makeDomainLogger(console, `request:${new mongoose.Types.ObjectId()}`)
     });
     handler.makeResponse(request)
       .then(handler.respond.bind(null, res))
@@ -76,44 +105,3 @@ export function respondServerError<Body>(expressResponse: express.Response, erro
       raw: error.toString()
     });
 }
-
-///////////
-// NOTES //
-///////////
-
-// Below is a WIP for type-safe, lower-level implementation.
-/*type TransformRequest<ReqBody> = (req: Request<ReqBody>) => Promise<Request<ReqBody>>;
-
-type MakeResponse<ReqBody, ResBody> = (req: Request<ReqBody>) => Promise<Response<ResBody>>;
-
-function handleError(expressResponse: express.Response, error: Error): void {
-  res
-    .status(500)
-    .json({
-      message: error.message,
-      stack: error.stack,
-      raw: error.toString()
-    });
-}
-
-function handle<ReqBody, ResBody>(middlewaexpressResponse: Array<TransformRequest<ReqBody>>, handler: MakeResponse<ReqBody, ResBody>): express.RequestHandler {
-  return (req, res, next) => {
-    const promise = middlewares.reduce(
-      (acc, m) => acc.then(request => m(request)),
-      // Initial request
-      Promise.resolve({
-        headers: req.headers,
-        body: req.body
-      })
-    );
-    promise
-      .then(request => handler(request))
-      .then(response => {
-        res
-          .status(response.code)
-          .set(response.headers)
-          .send(response.body);
-      })
-      .catch(error => handleError(res, error));
-  };
-}*/
