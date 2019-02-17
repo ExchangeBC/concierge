@@ -34,29 +34,35 @@ const resource: Resource = {
       };
     },
 
-    async handler(Model, request) {
-      return {
-        code: 201,
-        headers: {},
-        body: stubUser(Model)
+    run(Model) {
+      return async request => {
+        return {
+          code: 201,
+          headers: {},
+          body: stubUser(Model)
+        };
       };
     }
 
   },
 
-  async readOne(Model, request) {
-    return {
-      code: 200,
-      headers: {},
-      body: stubUser(Model)
-    };
+  readOne(Model) {
+    return async request => {
+      return {
+        code: 200,
+        headers: {},
+        body: stubUser(Model)
+      };
+    }
   },
 
-  async delete(Model, request) {
-    return {
-      code: 200,
-      headers: {},
-      body: null
+  delete(Model) {
+    return async request => {
+      return {
+        code: 200,
+        headers: {},
+        body: null
+      };
     };
   }
 

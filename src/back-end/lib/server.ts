@@ -1,12 +1,18 @@
 import * as express from 'express';
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http';
 import { assign } from 'lodash';
-import * as mongoose from 'mongoose';
+import mongoose from 'mongoose';
 import { DomainLogger, makeDomainLogger } from './logger';
 import { console } from './logger/adapters';
 
 export enum HttpMethod {
-  Get, Post, Put, Patch, Delete, Options, Unknown
+  Get = 'GET',
+  Post = 'POST',
+  Put = 'PUT',
+  Patch = 'PATCH',
+  Delete = 'DELETE',
+  Options = 'OPTIONS',
+  Unknown = 'UNKNOWN'
 }
 
 export interface ConfigurableRequest<Params, Query, Body> {
@@ -42,6 +48,12 @@ export interface Handler<ReqParams, ReqQuery, ReqBody, ResBody> {
   respond: Respond<ResBody>;
 }
 
+export interface Route<ReqParams, ReqQuery, ReqBody, ResBody> {
+  method: HttpMethod;
+  pattern: string;
+  handler: Handler<ReqParams, ReqQuery, ReqBody, ResBody>;
+}
+
 export function parseHttpMethod(raw: string): HttpMethod {
   switch (raw.toLowerCase()) {
     case 'get':
@@ -62,7 +74,7 @@ export function parseHttpMethod(raw: string): HttpMethod {
 }
 
 export function makeHandler<RP, RQ, ReqB, ResB>(handler: Handler<RP, RQ, ReqB, ResB>): express.RequestHandler {
-  return (req, res) => {
+  return (req, res, next) => {
     const request = assign(handler.makeRequest(req), {
       method: parseHttpMethod(req.method),
       path: req.path,
@@ -75,13 +87,29 @@ export function makeHandler<RP, RQ, ReqB, ResB>(handler: Handler<RP, RQ, ReqB, R
   };
 }
 
-// TODO Use type system to ensure ResB can be stringified as JSON.
-export function makeHandlerJson<P, Q, ReqB, ResB>(makeRequest: MakeRequest<P, Q, ReqB>, makeResponse: MakeResponse<P, Q, ReqB, ResB>): express.RequestHandler {
-  return makeHandler({
-    makeRequest,
-    makeResponse,
-    respond: respondJson
-  });
+export function bindRoute<RP, RQ, ReqB, ResB>(route: Route<RP, RQ, ReqB, ResB>): (router: express.Router) => express.Router {
+  return router => {
+    switch (route.method) {
+      case HttpMethod.Get:
+        router.get(route.pattern, makeHandler(route.handler));
+        break;
+      case HttpMethod.Post:
+        router.post(route.pattern, makeHandler(route.handler));
+        break;
+      case HttpMethod.Put:
+        router.put(route.pattern, makeHandler(route.handler));
+        break;
+      case HttpMethod.Patch:
+        router.patch(route.pattern, makeHandler(route.handler));
+        break;
+      case HttpMethod.Delete:
+        router.delete(route.pattern, makeHandler(route.handler));
+        break;
+      default:
+        break;
+    }
+    return router;
+  };
 }
 
 export function respondJson<Body>(expressResponse: express.Response, response: Response<Body>): express.Response {

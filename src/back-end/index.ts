@@ -6,7 +6,7 @@ import * as FrontEndHandler from './handlers/front-end';
 import * as crud from './lib/crud';
 import { makeDomainLogger } from './lib/logger';
 import { console } from './lib/logger/adapters';
-import { makeHandler } from './lib/server';
+import { makeHandler, respondNotFoundJson } from './lib/server';
 import UserResource from './resources/user';
 import * as UserSchema from './schemas/user';
 
@@ -21,7 +21,16 @@ const app = express();
 // API
 const api: Router = Router();
 api.use(`/${UserResource.ROUTE_NAMESPACE}`, crud.router(UserResource)(UserModel));
-app.use('/api', bodyParser.json(), api);
+app.use(
+  // Base path for all CRUD requests.
+  '/api',
+  // Parse all request bodies as JSON.
+  bodyParser.json(),
+  // Mount the CRUD API router.
+  api,
+  // Respond with a JSON 404 response if the route has not been defined.
+  (req, res) => respondNotFoundJson(res)
+);
 
 // Front-end
 

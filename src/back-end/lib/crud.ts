@@ -1,7 +1,7 @@
 import * as express from 'express';
-import { isNumber } from 'lodash';
+import { flow, identity, isNumber } from 'lodash';
 import { Document, Model } from 'mongoose';
-import { makeHandlerJson, Request, respondNotFoundJson, Response } from './server';
+import { bindRoute, HttpMethod, Request, respondJson, Response, Route } from './server';
 
 export interface ReadOneRequestParams {
   id: string;
@@ -29,21 +29,20 @@ export interface DeleteRequestParams {
 
 export interface Create<Item extends Document, CreateRequestBody> {
   transformRequestBody(raw: any): CreateRequestBody;
-  // TODO make higher-order function using MakeResponse
-  handler(Model: Model<Item>, request: Request<null, null, CreateRequestBody>): Promise<Response<Item>>;
+  run(Model: Model<Item>): (request: Request<null, null, CreateRequestBody>) => Promise<Response<Item>>;
 }
 
-export type ReadOne<Item extends Document> = (Model: Model<Item>, request: Request<ReadOneRequestParams, null, null>) => Promise<Response<Item>>;
+export type ReadOne<Item extends Document> = (Model: Model<Item>) => (request: Request<ReadOneRequestParams, null, null>) => Promise<Response<Item>>;
 
-export type ReadMany<Item extends Document> = (Model: Model<Item>, request: Request<null, ReadManyRequestQuery, null>) => Promise<Response<ReadManyResponse<Item>>>;
+export type ReadMany<Item extends Document> = (Model: Model<Item>) => (request: Request<null, ReadManyRequestQuery, null>) => Promise<Response<ReadManyResponse<Item>>>;
 
 export interface Update<Item extends Document, UpdateRequestBody> {
   transformRequestBody(raw: any): UpdateRequestBody;
   // TODO make higher-order function using MakeResponse
-  handler(Model: Model<Item>, request: Request<UpdateRequestParams, null, UpdateRequestBody>): Promise<Response<Item>>;
+  run(Model: Model<Item>): (request: Request<UpdateRequestParams, null, UpdateRequestBody>) => Promise<Response<Item>>;
 }
 
-export type Delete<Item extends Document> = (Model: Model<Item>, request: Request<DeleteRequestParams, null, null>) => Promise<Response<null>>;
+export type Delete<Item extends Document> = (Model: Model<Item>) => (request: Request<DeleteRequestParams, null, null>) => Promise<Response<null>>;
 
 export interface Resource<Item extends Document, CreateRequestBody, UpdateRequestBody> {
   ROUTE_NAMESPACE: string;
@@ -55,85 +54,108 @@ export interface Resource<Item extends Document, CreateRequestBody, UpdateReques
   delete?: Delete<Item>;
 }
 
-function handleCreate<Item extends Document, CreateRequestBody>(Model: Model<Item>, create: Create<Item, CreateRequestBody>): express.RequestHandler {
-  return makeHandlerJson(
-    req => ({
-      params: null,
-      query: null,
-      body: create.transformRequestBody(req.body)
-    }),
-    create.handler.bind(null, Model)
-  );
-}
-
-function handleReadOne<Item extends Document>(Model: Model<Item>, readOne: ReadOne<Item>): express.RequestHandler {
-  return makeHandlerJson(
-    req => ({
-      params: {
-        id: req.params.id || ''
-      },
-      query: null,
-      body: null
-    }),
-    readOne.bind(null, Model)
-  );
-}
-
-function handleReadMany<Item extends Document>(Model: Model<Item>, readMany: ReadMany<Item>): express.RequestHandler {
-  return makeHandlerJson(
-    req => {
-      const { offset, count } = req.query;
-      return {
+export function makeCreateRoute<Item extends Document, CreateRequestBody>(Model: Model<Item>, create: Create<Item, CreateRequestBody>): Route<null, null, CreateRequestBody, Item> {
+  return {
+    method: HttpMethod.Post,
+    pattern: '/',
+    handler: {
+      makeRequest: req => ({
         params: null,
-        query: {
-          offset: isNumber(offset) ? offset : 0,
-          count: isNumber(count) ? count : 20
-        },
-        body: null
-      };
-    },
-    async request => {
-      return await readMany(Model, request);
+        query: null,
+        body: create.transformRequestBody(req.body)
+      }),
+      makeResponse: create.run(Model),
+      respond: respondJson
     }
-  );
+  };
 }
 
-function handleUpdate<Item extends Document, UpdateRequestBody>(Model: Model<Item>, update: Update<Item, UpdateRequestBody>): express.RequestHandler {
-  return makeHandlerJson(
-    req => ({
-      params: {
-        id: req.params.id || ''
-      },
-      query: null,
-      body: update.transformRequestBody(req.body)
-    }),
-    update.handler.bind(null, Model)
-  );
+export function makeReadOneRoute<Item extends Document>(Model: Model<Item>, readOne: ReadOne<Item>): Route<ReadOneRequestParams, null, null, Item> {
+  return {
+    method: HttpMethod.Get,
+    pattern: '/:id',
+    handler: {
+      makeRequest: req => ({
+        params: {
+          id: req.params.id || ''
+        },
+        query: null,
+        body: null
+      }),
+      makeResponse: readOne(Model),
+      respond: respondJson
+    }
+  };
 }
 
-function handleDelete<Item extends Document>(Model: Model<Item>, deleteFn: Delete<Item>): express.RequestHandler {
-  return makeHandlerJson(
-    req => ({
-      params: {
-        id: req.params.id || ''
+export function makeReadManyRoute<Item extends Document>(Model: Model<Item>, readMany: ReadMany<Item>): Route<null, ReadManyRequestQuery, null, ReadManyResponse<Item>> {
+  return {
+    method: HttpMethod.Get,
+    pattern: '/',
+    handler: {
+      makeRequest: req => {
+        const { offset, count } = req.query;
+        return {
+          params: null,
+          query: {
+            offset: isNumber(offset) ? offset : 0,
+            count: isNumber(count) ? count : 20
+          },
+          body: null
+        };
       },
-      query: null,
-      body: null
-    }),
-    deleteFn.bind(null, Model)
-  );
+      makeResponse: readMany(Model),
+      respond: respondJson
+    }
+  };
+}
+
+export function makeUpdateRoute<Item extends Document, UpdateRequestBody>(Model: Model<Item>, update: Update<Item, UpdateRequestBody>): Route<UpdateRequestParams, null, UpdateRequestBody, Item> {
+  return {
+    method: HttpMethod.Put,
+    pattern: '/:id',
+    handler: {
+      makeRequest: req => ({
+        params: {
+          id: req.params.id || ''
+        },
+        query: null,
+        body: update.transformRequestBody(req.body)
+      }),
+      makeResponse: update.run(Model),
+      respond: respondJson
+    }
+  };
+}
+
+export function makeDeleteRoute<Item extends Document>(Model: Model<Item>, deleteFn: Delete<Item>): Route<DeleteRequestParams, null, null, null> {
+  return {
+    method: HttpMethod.Delete,
+    pattern: '/:id',
+    handler: {
+      makeRequest: req => ({
+        params: {
+          id: req.params.id || ''
+        },
+        query: null,
+        body: null
+      }),
+      makeResponse: deleteFn(Model),
+      respond: respondJson
+    }
+  };
 }
 
 export function router<Item extends Document, CRB, URB>(resource: Resource<Item, CRB, URB>): (Model: Model<Item>) => express.Router {
   return Model => {
-    const router = express.Router();
     const { create, readOne, readMany, update } = resource;
-    if (create) { router.post('/', handleCreate(Model, create)); }
-    if (readOne) { router.get('/:id', handleReadOne(Model, readOne)); }
-    if (readMany) { router.get('/', handleReadMany(Model, readMany)); }
-    if (update) { router.put('/:id', handleUpdate(Model, update)); }
-    if (resource.delete) { router.delete('/:id', handleDelete(Model, resource.delete)); }
-    router.use((req, res) => respondNotFoundJson(res));
+    return flow([
+      create ? bindRoute(makeCreateRoute(Model, create)) : identity,
+      readOne ? bindRoute(makeReadOneRoute(Model, readOne)) : identity,
+      readMany ? bindRoute(makeReadManyRoute(Model, readMany)) : identity,
+      update ? bindRoute(makeUpdateRoute(Model, update)) : identity,
+      resource.delete ? bindRoute(makeDeleteRoute(Model, resource.delete)) : identity
+    ])(express.Router());
     return router;
   };
 }
