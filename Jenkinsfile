@@ -9,6 +9,11 @@ def TST_TAG_NAME = 'test'
 def TST_BCK_TAG_NAME = 'test-previous'
 def TST_NS = 'akpalw-test'
 
+// Note: openshiftVerifyDeploy requires policy to be added:
+// oc policy add-role-to-user view system:serviceaccount:akpalw-tools:jenkins -n akpalw-dev
+// oc policy add-role-to-user view system:serviceaccount:akpalw-tools:jenkins -n akpalw-test
+// oc policy add-role-to-user view system:serviceaccount:akpalw-tools:jenkins -n akpalw-prod
+
 // pipeline
 properties([[$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10']]])
 
