@@ -51,6 +51,7 @@
     "typescript": "^3.3.3"
   },
   "devDependencies": {
+    "@types/page": "^1.8.0",
     "autoprefixer": "^9.4.4",
     "axios": "^0.18.0",
     "cssnano": "^4.1.8",
