@@ -1,5 +1,5 @@
 import React from 'react';
-import { ADT, Component, ComponentView, Init, Update } from '../lib/framework';
+import { ADT, Component, ComponentMsg, ComponentView, Init, Update } from '../lib/framework';
 
 export interface Params {
   message: string;
@@ -9,7 +9,7 @@ export interface State {
   message: string;
 }
 
-export type Msg = ADT<'setMessage', string>;
+export type Msg = ComponentMsg<ADT<'setMessage', string>>;
 
 export const init: Init<Params, State> = async ({ message }) => {
   return {
@@ -29,11 +29,16 @@ export const update: Update<State, Msg> = (state, msg) => {
 };
 
 export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  function double() {
+    const message = `${state.message} ${state.message}`;
+    dispatch({ tag: 'setMessage', data: message });
+    dispatch({ tag: '@replaceUrl', data: `/say/${message}` });
+  }
   return (
     <div>
       <div>{state.message}</div>
       <br />
-      <button onClick={() => dispatch({ tag: 'setMessage', data: `${state.message} ${state.message}` })}>
+      <button onClick={double}>
         Double Message
       </button>
     </div>

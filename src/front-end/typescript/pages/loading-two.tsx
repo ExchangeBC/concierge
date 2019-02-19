@@ -1,11 +1,11 @@
 import React from 'react';
-import { Component, ComponentView, Init, Update } from '../lib/framework';
+import { ADT, Component, ComponentMsg, ComponentView, Init, Update } from '../lib/framework';
 
 export interface State {
   value: number;
 }
 
-export type Msg = number;
+export type Msg = ComponentMsg<ADT<'modifyValue', number>>;
 
 export const init: Init<null, State> = async () => {
   return {

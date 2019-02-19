@@ -1,11 +1,11 @@
 import React from 'react';
-import { Component, ComponentView, Init, Update } from '../lib/framework';
+import { Component, ComponentMsg, ComponentView, Init, Update } from '../lib/framework';
 
 export interface State {
   value: null;
 }
 
-export type Msg = null;
+export type Msg = ComponentMsg<null>;
 
 export const init: Init<null, State> = async () => {
   return {

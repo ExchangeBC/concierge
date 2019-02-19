@@ -30,29 +30,43 @@ export interface Component<Params, State, Msg> {
   view: ComponentView<State, Msg>;
 }
 
-export interface Route {
+export interface RouteDefinition {
   path: string;
-  id: string;
+  pageId: string;
 }
 
-export interface RouteMsgData {
-  params: object;
-  id: string;
+export interface Router<Page> {
+  routes: RouteDefinition[];
+  toPage(pageId: string, params: object): Page;
 }
 
-export type RouteMsg = ADT<'route', RouteMsgData>;
+export type RouteMsg<Page> = ADT<'@route', Page>;
 
-export type Routes = Route[];
+export type NewUrlMsg = ADT<'@newUrl', string>;
 
-export type NavigateMsg = ADT<'navigate', string>;
+export type ReplaceUrlMsg = ADT<'@replaceUrl', string>;
 
-export type AppMsg<Msg> = Msg | RouteMsg | NavigateMsg;
+export type GlobalMsg = NewUrlMsg | ReplaceUrlMsg;
 
-export interface App<State, Msg> extends Component<null, State, AppMsg<Msg>> {
-  routes: Routes;
+export type ComponentMsg<Msg> = Msg | GlobalMsg;
+
+export type AppMsg<Msg, Page> = ComponentMsg<Msg> | RouteMsg<Page>;
+
+export interface App<State, Msg, Page> extends Component<null, State, AppMsg<Msg, Page>> {
+  router: Router<Page>;
 }
 
 export type Dispatch<Msg> = (msg: Msg) => void;
+
+export function mapDispatch<ParentMsg, ChildMsg>(dispatch: Dispatch<ComponentMsg<ParentMsg>>, fn: (childMsg: ComponentMsg<ChildMsg>) => ComponentMsg<ParentMsg>): Dispatch<ComponentMsg<ChildMsg>> {
+  return childMsg => {
+    if ((childMsg as GlobalMsg)) {
+      dispatch(childMsg as GlobalMsg);
+    } else {
+      dispatch(fn(childMsg));
+    }
+  };
+}
 
 export type StateSubscription<State, Msg> = (state: RecordOf<State>, dispatch: Dispatch<Msg>) => void;
 
@@ -67,16 +81,13 @@ export interface StateManager<State, Msg> {
   getState(): State;
 }
 
-export function initializeRouter<Msg>(routes: Routes, dispatch: Dispatch<AppMsg<Msg>>): void {
+export function initializeRouter<Msg, Page>(router: Router<Page>, dispatch: Dispatch<AppMsg<Msg, Page>>): void {
   // Bind all routes for pushState.
-  routes.forEach(({ path, id }) => {
+  router.routes.forEach(({ path, pageId }) => {
     page(path, ctx => {
       dispatch({
-        tag: 'route',
-        data: {
-          params: get(ctx, 'params', {}),
-          id
-        }
+        tag: '@route',
+        data: router.toPage(pageId, get(ctx, 'params', {}))
       });
     });
   });
@@ -84,31 +95,38 @@ export function initializeRouter<Msg>(routes: Routes, dispatch: Dispatch<AppMsg<
   page();
 }
 
-export function navigate(path: string): void {
+export function newUrl(path: string): void {
   page(path);
 }
 
-export async function start<State, Msg extends ADT<any, any>>(app: App<State, Msg>, element: HTMLElement, debug: boolean): Promise<StateManager<State, AppMsg<Msg>>> {
+export function replaceUrl(path: string): void {
+  page.redirect(path);
+}
+
+export async function start<State, Msg extends ADT<any, any>, Page>(app: App<State, Msg, Page>, element: HTMLElement, debug: boolean): Promise<StateManager<State, AppMsg<Msg, Page>>> {
   // Initialize state.
   // We do not need the RecordFactory, so we create the Record immediately.
   let state = Record(await app.init(null))({});
   // Set up subscription state.
-  const subscriptions: Array<StateSubscription<State, AppMsg<Msg>>> = [];
-  const subscribe: StateSubscribe<State, AppMsg<Msg>> = fn => (subscriptions.push(fn) && true) || false;
-  const unsubscribe: StateUnsubscribe<State, AppMsg<Msg>> = fn => (remove(subscriptions, a => a === fn) && true) || false;
+  const subscriptions: Array<StateSubscription<State, AppMsg<Msg, Page>>> = [];
+  const subscribe: StateSubscribe<State, AppMsg<Msg, Page>> = fn => (subscriptions.push(fn) && true) || false;
+  const unsubscribe: StateUnsubscribe<State, AppMsg<Msg, Page>> = fn => (remove(subscriptions, a => a === fn) && true) || false;
   // Set up state accessor function.
   const getState = () => state;
   // Initialize state mutation promise chain.
   // i.e. Mutate state sequentially in a single thread.
   let promise = Promise.resolve();
   // Set up dispatch function to queue state mutations.
-  const dispatch: Dispatch<AppMsg<Msg>> = msg => {
+  const dispatch: Dispatch<AppMsg<Msg, Page>> = msg => {
     // tslint:disable:next-line no-console
     if (debug) { console.log('dispatch', msg); }
     promise = promise
       .then(() => {
-        if (msg.tag === 'navigate') {
-          navigate(msg.data);
+        if (msg.tag === '@newUrl') {
+          newUrl(msg.data);
+          return state;
+        } else if (msg.tag === '@replaceUrl') {
+          replaceUrl(msg.data);
           return state;
         }
         const [newState, promiseState] = app.update(state, msg);
@@ -128,7 +146,7 @@ export async function start<State, Msg extends ADT<any, any>>(app: App<State, Ms
       });
   };
   // Render the view whenever state changes.
-  const render = (state: RecordOf<State>, dispatch: Dispatch<AppMsg<Msg>>): void => {
+  const render = (state: RecordOf<State>, dispatch: Dispatch<AppMsg<Msg, Page>>): void => {
     ReactDOM.render(
       <app.view state={state} dispatch={dispatch} />,
       element
@@ -142,7 +160,7 @@ export async function start<State, Msg extends ADT<any, any>>(app: App<State, Ms
   // Trigger state initialization notification.
   notify();
   // Initialize the router.
-  initializeRouter(app.routes, dispatch);
+  initializeRouter(app.router, dispatch);
   // Return StateManager.
   return {
     dispatch,
