@@ -11,7 +11,7 @@ export const ENV = get('NODE_ENV', 'production');
 
 export const PORT = parseInt(get('PORT', '3000'), 10);
 
-export const MONGO_URL = get('MONGO_URL', 'mongodb://dev:dev@localhost:27017/concierge');
+export const MONGO_URL = get('MONGO_URL', 'mongodb://localhost:27017/concierge');
 
 export const SECRET = get('SECRET', 'foobar');
 

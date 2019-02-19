@@ -24,7 +24,7 @@ export const console: Adapter = {
   },
 
   error(prefix, msg) {
-    process.stdout.write(oneLine(prefix, msg, chalk.red));
+    process.stderr.write(oneLine(prefix, msg, chalk.red));
   },
 
   debug(prefix, msg) {

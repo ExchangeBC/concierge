@@ -1,4 +1,4 @@
-import { assign, reduce } from 'lodash';
+import { reduce } from 'lodash';
 import { Adapter, AdapterFunction } from './adapters';
 
 export type LogFunction = (domain: string, msg: string, data?: object) => void;
@@ -21,12 +21,10 @@ export interface DomainLogger {
 
 export function logWith(adapter: AdapterFunction): LogFunction {
   return (domain, msg, data = {}) => {
-    data = assign({ msg }, data);
-    const msgs = reduce<object, Array<[string, string]>>(data, (acc, v, k) => {
-      acc.push([`${domain}:${k}`, v]);
-      return acc;
-    }, []);
-    msgs.forEach(([prefix, msg]) => adapter(prefix, msg));
+    const dataMsg = reduce<object, string>(data, (acc, v, k) => {
+      return `${k}=${JSON.stringify(v)} ${acc}`;
+    }, '');
+    adapter(domain, `${msg} ${dataMsg}`);
   };
 }
 
