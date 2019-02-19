@@ -1,13 +1,9 @@
 import { assign, reduce } from 'lodash';
 import { Adapter, AdapterFunction } from './adapters';
 
-export interface LogData {
-  [k: string]: string;
-}
+export type LogFunction = (domain: string, msg: string, data?: object) => void;
 
-export type LogFunction = (domain: string, msg: string, data?: LogData) => void;
-
-export type DomainLogFunction = (msg: string, data?: LogData) => void;
+export type DomainLogFunction = (msg: string, data?: object) => void;
 
 export interface Logger {
   info: LogFunction;
@@ -26,7 +22,7 @@ export interface DomainLogger {
 export function logWith(adapter: AdapterFunction): LogFunction {
   return (domain, msg, data = {}) => {
     data = assign({ msg }, data);
-    const msgs = reduce<LogData, Array<[string, string]>>(data, (acc, v, k) => {
+    const msgs = reduce<object, Array<[string, string]>>(data, (acc, v, k) => {
       acc.push([`${domain}:${k}`, v]);
       return acc;
     }, []);

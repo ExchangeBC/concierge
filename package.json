@@ -5,11 +5,11 @@
   "main": "index.js",
   "scripts": {
     "start": "npm run back-end:start",
-    "back-end:lint": "npx tslint -c tslint.json src/back-end/*.ts src/back-end/**/*.ts && Lint Successful\n",
+    "back-end:lint": "npx tslint -c tslint.json src/back-end/*.ts src/back-end/**/*.ts && echo Lint Successful\n",
     "back-end:typecheck": "npx tsc --project src/back-end && echo Typecheck Successful\n",
     "back-end:test": "echo TODO need to support typescript && npm run back-end:typecheck && npx mocha -cu bdd tests/back-end/index.js",
     "back-end:start": "npx ts-node --project src/back-end/tsconfig.json src/back-end/index.ts",
-    "front-end:lint": "npx tslint -c tslint.json src/front-end/*.ts src/front-end/**/*.ts && Lint Successful\n",
+    "front-end:lint": "npx tslint -c tslint.json src/front-end/*.ts src/front-end/**/*.ts && echo Lint Successful\n",
     "front-end:typecheck": "npx tsc --project src/front-end/typescript && echo Typecheck Successful\n",
     "front-end:test": "echo TODO need to support typescript && npx mocha -cu bdd tests/front-end/index.js",
     "front-end:build": "npx grunt build",
@@ -33,6 +33,7 @@
     "@types/express": "^4.16.1",
     "@types/immutable": "^3.8.7",
     "@types/lodash": "^4.14.120",
+    "@types/mime-types": "^2.1.0",
     "@types/mongoose": "^5.3.12",
     "@types/react": "^16.8.2",
     "@types/react-dom": "^16.8.0",
@@ -43,8 +44,10 @@
     "express-session": "^1.15.6",
     "immutable": "^4.0.0-rc.12",
     "lodash": "^4.17.11",
+    "mime-types": "^2.1.22",
     "mongoose": "^5.4.3",
     "morgan": "^1.9.1",
+    "on-finished": "^2.3.0",
     "typescript": "^3.3.3"
   },
   "devDependencies": {

@@ -1,7 +1,6 @@
-import * as express from 'express';
-import { flow, identity, isNumber } from 'lodash';
-import { Document, Model } from 'mongoose';
-import { bindRoute, HttpMethod, Request, respondJson, Response, Route } from './server';
+import { get } from 'lodash';
+import mongoose from 'mongoose';
+import { HttpMethod, JsonResponseBody, mapJsonResponse, mapRespond, Respond, Route, Router } from './server';
 
 export interface ReadOneRequestParams {
   id: string;
@@ -12,11 +11,11 @@ export interface ReadManyRequestQuery {
   count: number;
 }
 
-export interface ReadManyResponse<Item> {
+export interface ReadManyResponse<Document> {
   total: number;
   offset: number;
   count: number;
-  items: Item[];
+  items: Document[];
 }
 
 export interface UpdateRequestParams {
@@ -27,135 +26,128 @@ export interface DeleteRequestParams {
   id: string;
 }
 
-export interface Create<Item extends Document, CreateRequestBody> {
+export interface Create<Document extends mongoose.Document, CreateRequestBody> {
   transformRequestBody(raw: any): CreateRequestBody;
-  run(Model: Model<Item>): (request: Request<null, null, CreateRequestBody>) => Promise<Response<Item>>;
+  run(Model: mongoose.Model<Document>): Respond<null, null, CreateRequestBody, Document>;
 }
 
-export type ReadOne<Item extends Document> = (Model: Model<Item>) => (request: Request<ReadOneRequestParams, null, null>) => Promise<Response<Item>>;
+export type ReadOne<Document extends mongoose.Document> = (Model: mongoose.Model<Document>) => Respond<ReadOneRequestParams, null, null, Document>;
 
-export type ReadMany<Item extends Document> = (Model: Model<Item>) => (request: Request<null, ReadManyRequestQuery, null>) => Promise<Response<ReadManyResponse<Item>>>;
+export type ReadMany<Document extends mongoose.Document> = (Model: mongoose.Model<Document>) => Respond<null, ReadManyRequestQuery, null, ReadManyResponse<Document>>;
 
-export interface Update<Item extends Document, UpdateRequestBody> {
+export interface Update<Document extends mongoose.Document, UpdateRequestBody> {
   transformRequestBody(raw: any): UpdateRequestBody;
-  // TODO make higher-order function using MakeResponse
-  run(Model: Model<Item>): (request: Request<UpdateRequestParams, null, UpdateRequestBody>) => Promise<Response<Item>>;
+  run(Model: mongoose.Model<Document>): Respond<UpdateRequestParams, null, UpdateRequestBody, Document>;
 }
 
-export type Delete<Item extends Document> = (Model: Model<Item>) => (request: Request<DeleteRequestParams, null, null>) => Promise<Response<null>>;
+export type Delete<Document extends mongoose.Document> = (Model: mongoose.Model<Document>) => Respond<DeleteRequestParams, null, null, null>;
 
-export interface Resource<Item extends Document, CreateRequestBody, UpdateRequestBody> {
+export interface Resource<Document extends mongoose.Document, CreateRequestBody, UpdateRequestBody> {
   ROUTE_NAMESPACE: string;
   MODEL_NAME: string;
-  create?: Create<Item, CreateRequestBody>;
-  readOne?: ReadOne<Item>;
-  readMany?: ReadMany<Item>;
-  update?: Update<Item, UpdateRequestBody>;
-  delete?: Delete<Item>;
+  create?: Create<Document, CreateRequestBody>;
+  readOne?: ReadOne<Document>;
+  readMany?: ReadMany<Document>;
+  update?: Update<Document, UpdateRequestBody>;
+  delete?: Delete<Document>;
 }
 
-export function makeCreateRoute<Item extends Document, CreateRequestBody>(Model: Model<Item>, create: Create<Item, CreateRequestBody>): Route<null, null, CreateRequestBody, Item> {
+export function makeCreateRoute<Document extends mongoose.Document, CreateRequestBody>(Model: mongoose.Model<Document>, create: Create<Document, CreateRequestBody>): Route<null, null, CreateRequestBody, JsonResponseBody, null> {
   return {
     method: HttpMethod.Post,
-    pattern: '/',
+    path: '/',
     handler: {
-      makeRequest: req => ({
+      transformRequest: async request => ({
         params: null,
         query: null,
-        body: create.transformRequestBody(req.body)
+        body: create.transformRequestBody(request.body)
       }),
-      makeResponse: create.run(Model),
-      respond: respondJson
+      respond: mapRespond(create.run(Model), mapJsonResponse)
     }
   };
 }
 
-export function makeReadOneRoute<Item extends Document>(Model: Model<Item>, readOne: ReadOne<Item>): Route<ReadOneRequestParams, null, null, Item> {
+export function makeReadOneRoute<Document extends mongoose.Document>(Model: mongoose.Model<Document>, readOne: ReadOne<Document>): Route<ReadOneRequestParams, null, null, JsonResponseBody, null> {
   return {
     method: HttpMethod.Get,
-    pattern: '/:id',
+    path: '/:id',
     handler: {
-      makeRequest: req => ({
+      transformRequest: async request => ({
         params: {
-          id: req.params.id || ''
+          id: get(request, ['params', 'id'], '')
         },
         query: null,
         body: null
       }),
-      makeResponse: readOne(Model),
-      respond: respondJson
+      respond: mapRespond(readOne(Model), mapJsonResponse)
     }
   };
 }
 
-export function makeReadManyRoute<Item extends Document>(Model: Model<Item>, readMany: ReadMany<Item>): Route<null, ReadManyRequestQuery, null, ReadManyResponse<Item>> {
+export function makeReadManyRoute<Document extends mongoose.Document>(Model: mongoose.Model<Document>, readMany: ReadMany<Document>): Route<null, ReadManyRequestQuery, null, JsonResponseBody, null> {
   return {
     method: HttpMethod.Get,
-    pattern: '/',
+    path: '/',
     handler: {
-      makeRequest: req => {
-        const { offset, count } = req.query;
-        return {
-          params: null,
-          query: {
-            offset: isNumber(offset) ? offset : 0,
-            count: isNumber(count) ? count : 20
-          },
-          body: null
-        };
-      },
-      makeResponse: readMany(Model),
-      respond: respondJson
+      transformRequest: async request => ({
+        params: null,
+        query: {
+          offset: get(request, ['params', 'offset'], ''),
+          count: get(request, ['params', 'count'], '')
+        },
+        body: null
+      }),
+      respond: mapRespond(readMany(Model), mapJsonResponse)
     }
   };
 }
 
-export function makeUpdateRoute<Item extends Document, UpdateRequestBody>(Model: Model<Item>, update: Update<Item, UpdateRequestBody>): Route<UpdateRequestParams, null, UpdateRequestBody, Item> {
+export function makeUpdateRoute<Document extends mongoose.Document, UpdateRequestBody>(Model: mongoose.Model<Document>, update: Update<Document, UpdateRequestBody>): Route<UpdateRequestParams, null, UpdateRequestBody, JsonResponseBody, null> {
   return {
     method: HttpMethod.Put,
-    pattern: '/:id',
+    path: '/:id',
     handler: {
-      makeRequest: req => ({
+      transformRequest: async request => ({
         params: {
-          id: req.params.id || ''
+          id: get(request, ['params', 'id'], '')
         },
         query: null,
-        body: update.transformRequestBody(req.body)
+        body: update.transformRequestBody(request.body)
       }),
-      makeResponse: update.run(Model),
-      respond: respondJson
+      respond: mapRespond(update.run(Model), mapJsonResponse)
     }
   };
 }
 
-export function makeDeleteRoute<Item extends Document>(Model: Model<Item>, deleteFn: Delete<Item>): Route<DeleteRequestParams, null, null, null> {
+export function makeDeleteRoute<Document extends mongoose.Document>(Model: mongoose.Model<Document>, deleteFn: Delete<Document>): Route<DeleteRequestParams, null, null, JsonResponseBody, null> {
   return {
     method: HttpMethod.Delete,
-    pattern: '/:id',
+    path: '/:id',
     handler: {
-      makeRequest: req => ({
+      transformRequest: async request => ({
         params: {
-          id: req.params.id || ''
+          id: get(request, ['params', 'id'], '')
         },
         query: null,
         body: null
       }),
-      makeResponse: deleteFn(Model),
-      respond: respondJson
+      respond: mapRespond(deleteFn(Model), mapJsonResponse)
     }
   };
 }
 
-export function router<Item extends Document, CRB, URB>(resource: Resource<Item, CRB, URB>): (Model: Model<Item>) => express.Router {
+export function makeRouter<Document extends mongoose.Document, CRB, URB>(resource: Resource<Document, CRB, URB>): (Model: mongoose.Model<Document>) => Router<JsonResponseBody> {
   return Model => {
+    // We do not destructure `delete` because it conflicts with a TypeScript keyword.
     const { create, readOne, readMany, update } = resource;
-    return flow([
-      create ? bindRoute(makeCreateRoute(Model, create)) : identity,
-      readOne ? bindRoute(makeReadOneRoute(Model, readOne)) : identity,
-      readMany ? bindRoute(makeReadManyRoute(Model, readMany)) : identity,
-      update ? bindRoute(makeUpdateRoute(Model, update)) : identity,
-      resource.delete ? bindRoute(makeDeleteRoute(Model, resource.delete)) : identity
-    ])(express.Router());
-    return router;
+    const routes = [];
+    if (create) { routes.push(makeCreateRoute(Model, create)); }
+    if (readOne) { routes.push(makeReadOneRoute(Model, readOne)); }
+    if (readMany) { routes.push(makeReadManyRoute(Model, readMany)); }
+    if (update) { routes.push(makeUpdateRoute(Model, update)); }
+    if (resource.delete) { routes.push(makeDeleteRoute(Model, resource.delete)); }
+    // Add namespace prefix
+    routes.forEach(route => route.path = `${resource.ROUTE_NAMESPACE}${route.path}`);
+    return routes;
   };
 }

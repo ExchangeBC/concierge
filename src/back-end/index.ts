@@ -1,13 +1,14 @@
-import bodyParser from 'body-parser';
-import { default as express, Router } from 'express';
+import { concat, flow, map } from 'lodash/fp';
 import * as mongoose from 'mongoose';
 import { PORT } from './config';
-import * as FrontEndHandler from './handlers/front-end';
+import loggerHook from './hooks/logger';
 import * as crud from './lib/crud';
 import { makeDomainLogger } from './lib/logger';
 import { console } from './lib/logger/adapters';
-import { makeHandler, respondNotFoundJson } from './lib/server';
-import UserResource from './resources/user';
+import { addHooksToRoute, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route } from './lib/server';
+import { express } from './lib/server/adapters';
+import userResource from './resources/user';
+import frontEndRouter from './routers/front-end';
 import * as UserSchema from './schemas/user';
 
 const logger = makeDomainLogger(console, 'back-end');
@@ -15,27 +16,27 @@ const logger = makeDomainLogger(console, 'back-end');
 // Models
 const UserModel: UserSchema.Model = mongoose.model(UserSchema.NAME, UserSchema.schema);
 
-// Initialize main express app.
-const app = express();
+// Set up global hooks.
+const hooks = [
+  loggerHook
+];
 
-// API
-const api: Router = Router();
-api.use(`/${UserResource.ROUTE_NAMESPACE}`, crud.router(UserResource)(UserModel));
-app.use(
-  // Base path for all CRUD requests.
-  '/api',
-  // Parse all request bodies as JSON.
-  bodyParser.json(),
-  // Mount the CRUD API router.
-  api,
-  // Respond with a JSON 404 response if the route has not been defined.
-  (req, res) => respondNotFoundJson(res)
-);
+// Set up app router.
+// We need to use `flippedConcat` as using `concat` binds the routes in the wrong order.
+const flippedConcat = (a: any) => (b: any[]): any[] => concat(b)(a);
+const router = flow(
+  // API routes.
+  flippedConcat(crud.makeRouter(userResource)(UserModel)),
+  flippedConcat(notFoundJsonRoute),
+  map((route: Route<any, any, any, JsonResponseBody, any>) => namespaceRoute('/api', route)),
+  // Front-end router.
+  flippedConcat(frontEndRouter),
+  // Add global hooks.
+  map((route: Route<any, any, any, any, any>) => addHooksToRoute(hooks, route))
+)([]);
 
-// Front-end
+router.forEach(r => logger.info(r.path));
 
-app.use(makeHandler(FrontEndHandler.handler));
-
-// Listen.
-app.listen(PORT);
+// Start the server.
+express.run(router, PORT);
 logger.info('server started', { host: '0.0.0.0', port: String(PORT) });
