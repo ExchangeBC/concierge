@@ -1,11 +1,12 @@
 import React from 'react';
+import { Page } from '../app/router';
 import { Component, ComponentMsg, ComponentView, Init, Update } from '../lib/framework';
 
 export interface State {
   value: null;
 }
 
-export type Msg = ComponentMsg<null>;
+export type Msg = ComponentMsg<null, Page>;
 
 export const init: Init<null, State> = async () => {
   return {

@@ -1,23 +1,15 @@
 import { Record } from 'immutable';
-import { get } from 'lodash';
 import React from 'react';
-import { ADT, App, AppMsg, ComponentView, Dispatch, Init, mapDispatch, Router, Update } from './lib/framework';
-import * as PageLoading from './pages/loading';
-import * as PageLoadingTwo from './pages/loading-two';
-import * as PageSay from './pages/say';
+import { ADT, App, AppMsg, ComponentView, Dispatch, Init, mapDispatch, newUrl, Update } from '../lib/framework';
+import * as PageLoading from '../pages/loading';
+import * as PageLoadingTwo from '../pages/loading-two';
+import * as PageSay from '../pages/say';
+import { Page, router } from './router';
 
 /* TODO
- * - Better PageState and PageMsg types.
- * - Better PageMsg dispatching from App's view.
  * - Need `updateChild` helper method.
  * - Need `viewChild` helper method.
- * - Use enum for Route ID instead of a string. Possible to use ADT to encapsulate params.
- *   - type Page = ADT<'say', { message: string; }> | ...
- *   - type AppMsg = ADT<'foo'> | RouteMsg<Page>
- * - Tag PageMsgs more verbosely using the Elm style.
  */
-
-type Page = ADT<'loading', null> | ADT<'loadingTwo', null> | ADT<'say', PageSay.Params>;
 
 interface State {
   activePage: Page;
@@ -44,7 +36,7 @@ export const init: Init<null, State> = async () => {
 export const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
 
-    case '@route':
+    case '@incomingPage':
       return [
         state,
         (async () => {
@@ -116,7 +108,7 @@ export const update: Update<State, Msg> = (state, msg) => {
 
 const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const jsState = state.toJS();
-  const dispatchLoading: Dispatch<PageLoading.Msg> = mapDispatch(dispatch, data => ({ tag: 'pageLoadingMsg' as 'pageLoadingMsg', data }));
+  const dispatchLoading: Dispatch<PageLoading.Msg> = mapDispatch(dispatch as Dispatch<Msg>, data => ({ tag: 'pageLoadingMsg' as 'pageLoadingMsg', data }));
   const dispatchLoadingTwo: Dispatch<PageLoadingTwo.Msg> = mapDispatch(dispatch, data => ({ tag: 'pageLoadingTwoMsg' as 'pageLoadingTwoMsg', data }));
   const dispatchSay: Dispatch<PageSay.Msg> = mapDispatch(dispatch, data => ({ tag: 'pageSayMsg' as 'pageSayMsg', data }));
   switch (jsState.activePage.tag) {
@@ -135,74 +127,22 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
     <div>
       <h1>Demo App With Routing</h1>
-      <button onClick={() => dispatch({ tag: '@newUrl', data: '/say/hi' })}>
+      <button onClick={() => dispatch(newUrl({ tag: 'say' as 'say', data: { message: 'hi' }}))}>
         {`Say "hi"`}
       </button>
-      <button onClick={() => dispatch({ tag: '@newUrl', data: '/say/hello' })}>
+      <button onClick={() => dispatch(newUrl({ tag: 'say' as 'say', data: { message: 'hello' }}))}>
         {`Say "hello"`}
       </button>
-      <button onClick={() => dispatch({ tag: '@newUrl', data: '/loading' })}>
+      <button onClick={() => dispatch(newUrl({ tag: 'loading' as 'loading', data: null }))}>
         Loading
       </button>
-      <button onClick={() => dispatch({ tag: '@newUrl', data: '/loading-two' })}>
+      <button onClick={() => dispatch(newUrl({ tag: 'loadingTwo' as 'loadingTwo', data: null }))}>
         Loading Two
       </button>
       <hr />
       <ViewActivePage state={state} dispatch={dispatch} />
     </div>
   );
-};
-
-export const router: Router<Page> = {
-
-  routes: [
-    {
-      path: '/loading',
-      pageId: 'loading'
-    },
-    {
-      path: '/loading-two',
-      pageId: 'loadingTwo'
-    },
-    {
-      path: '/say/:message',
-      pageId: 'say'
-    },
-    {
-      path: '*',
-      pageId: 'notFound'
-    }
-  ],
-
-  toPage(pageId, params) {
-    switch (pageId) {
-      case 'loading':
-        return {
-          tag: 'loading',
-          data: null
-        };
-      case 'loadingTwo':
-        return {
-          tag: 'loadingTwo',
-          data: null
-        };
-      case 'say':
-        return {
-          tag: 'say',
-          data: {
-            message: get(params, 'message', '')
-          }
-        };
-      default:
-        return {
-          tag: 'say',
-          data: {
-            message: 'Not Found'
-          }
-        };
-    }
-  }
-
 };
 
 export const app: App<State, Msg, Page> = {

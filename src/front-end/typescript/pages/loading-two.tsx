@@ -1,11 +1,12 @@
 import React from 'react';
+import { Page } from '../app/router';
 import { ADT, Component, ComponentMsg, ComponentView, Init, Update } from '../lib/framework';
 
 export interface State {
   value: number;
 }
 
-export type Msg = ComponentMsg<ADT<'modifyValue', number>>;
+export type Msg = ComponentMsg<ADT<'modifyValue', number>, Page>;
 
 export const init: Init<null, State> = async () => {
   return {

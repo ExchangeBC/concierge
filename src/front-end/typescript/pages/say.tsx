@@ -1,5 +1,6 @@
 import React from 'react';
-import { ADT, Component, ComponentMsg, ComponentView, Init, Update } from '../lib/framework';
+import { Page } from '../app/router';
+import { ADT, Component, ComponentMsg, ComponentView, Init, replaceUrl, Update } from '../lib/framework';
 
 export interface Params {
   message: string;
@@ -9,7 +10,7 @@ export interface State {
   message: string;
 }
 
-export type Msg = ComponentMsg<ADT<'setMessage', string>>;
+export type Msg = ComponentMsg<ADT<'setMessage', string>, Page>;
 
 export const init: Init<Params, State> = async ({ message }) => {
   return {
@@ -18,8 +19,6 @@ export const init: Init<Params, State> = async ({ message }) => {
 };
 
 export const update: Update<State, Msg> = (state, msg) => {
-  // tslint:disable no-console
-  console.log(state);
   switch (msg.tag) {
     case 'setMessage':
       return [state.set('message', msg.data)];
@@ -32,7 +31,7 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   function double() {
     const message = `${state.message} ${state.message}`;
     dispatch({ tag: 'setMessage', data: message });
-    dispatch({ tag: '@replaceUrl', data: `/say/${message}` });
+    dispatch(replaceUrl({ tag: 'say' as 'say', data: { message } }));
   }
   return (
     <div>

@@ -37,20 +37,35 @@ export interface RouteDefinition {
 
 export interface Router<Page> {
   routes: RouteDefinition[];
-  toPage(pageId: string, params: object): Page;
+  locationToPage(pageId: string, params: object): Page;
+  pageToUrl(page: Page): string;
 }
 
-export type RouteMsg<Page> = ADT<'@route', Page>;
+export type IncomingPageMsg<Page> = ADT<'@incomingPage', Page>;
 
-export type NewUrlMsg = ADT<'@newUrl', string>;
+export type NewUrlMsg<Page> = ADT<'@newUrl', Page>;
 
-export type ReplaceUrlMsg = ADT<'@replaceUrl', string>;
+export function newUrl<Page>(page: Page): NewUrlMsg<Page> {
+  return {
+    tag: '@newUrl',
+    data: page
+  };
+}
 
-export type GlobalMsg = NewUrlMsg | ReplaceUrlMsg;
+export type ReplaceUrlMsg<Page> = ADT<'@replaceUrl', Page>;
 
-export type ComponentMsg<Msg> = Msg | GlobalMsg;
+export function replaceUrl<Page>(page: Page): ReplaceUrlMsg<Page> {
+  return {
+    tag: '@replaceUrl',
+    data: page
+  };
+}
 
-export type AppMsg<Msg, Page> = ComponentMsg<Msg> | RouteMsg<Page>;
+export type GlobalMsg<Page> = NewUrlMsg<Page> | ReplaceUrlMsg<Page>;
+
+export type ComponentMsg<Msg, Page> = Msg | GlobalMsg<Page>;
+
+export type AppMsg<Msg, Page> = ComponentMsg<Msg, Page> | IncomingPageMsg<Page>;
 
 export interface App<State, Msg, Page> extends Component<null, State, AppMsg<Msg, Page>> {
   router: Router<Page>;
@@ -58,10 +73,10 @@ export interface App<State, Msg, Page> extends Component<null, State, AppMsg<Msg
 
 export type Dispatch<Msg> = (msg: Msg) => void;
 
-export function mapDispatch<ParentMsg, ChildMsg>(dispatch: Dispatch<ComponentMsg<ParentMsg>>, fn: (childMsg: ComponentMsg<ChildMsg>) => ComponentMsg<ParentMsg>): Dispatch<ComponentMsg<ChildMsg>> {
+export function mapDispatch<ParentMsg, ChildMsg, Page>(dispatch: Dispatch<AppMsg<ParentMsg, Page> | ComponentMsg<ParentMsg, Page>>, fn: (childMsg: ComponentMsg<ChildMsg, Page>) => AppMsg<ParentMsg, Page> | ComponentMsg<ParentMsg, Page>): Dispatch<ComponentMsg<ChildMsg, Page>> {
   return childMsg => {
-    if ((childMsg as GlobalMsg)) {
-      dispatch(childMsg as GlobalMsg);
+    if ((childMsg as GlobalMsg<Page>).tag === '@newUrl' || (childMsg as GlobalMsg<Page>).tag === '@replaceUrl') {
+      dispatch(childMsg as GlobalMsg<Page>);
     } else {
       dispatch(fn(childMsg));
     }
@@ -86,8 +101,8 @@ export function initializeRouter<Msg, Page>(router: Router<Page>, dispatch: Disp
   router.routes.forEach(({ path, pageId }) => {
     page(path, ctx => {
       dispatch({
-        tag: '@route',
-        data: router.toPage(pageId, get(ctx, 'params', {}))
+        tag: '@incomingPage',
+        data: router.locationToPage(pageId, get(ctx, 'params', {}))
       });
     });
   });
@@ -95,11 +110,11 @@ export function initializeRouter<Msg, Page>(router: Router<Page>, dispatch: Disp
   page();
 }
 
-export function newUrl(path: string): void {
+export function runNewUrl(path: string): void {
   page(path);
 }
 
-export function replaceUrl(path: string): void {
+export function runReplaceUrl(path: string): void {
   page.redirect(path);
 }
 
@@ -123,10 +138,10 @@ export async function start<State, Msg extends ADT<any, any>, Page>(app: App<Sta
     promise = promise
       .then(() => {
         if (msg.tag === '@newUrl') {
-          newUrl(msg.data);
+          runNewUrl(app.router.pageToUrl(msg.data));
           return state;
         } else if (msg.tag === '@replaceUrl') {
-          replaceUrl(msg.data);
+          runReplaceUrl(app.router.pageToUrl(msg.data));
           return state;
         }
         const [newState, promiseState] = app.update(state, msg);
