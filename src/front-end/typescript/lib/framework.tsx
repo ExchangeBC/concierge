@@ -12,8 +12,34 @@ export interface ADT<Tag, Data = undefined> {
 
 export type Init<Params, State> = (params: Params) => Promise<State>;
 
-// Returns a tuple representing sync and async state mutations.
-export type Update<State, Msg> = (state: RecordOf<State>, msg: Msg) => [RecordOf<State>, Promise<RecordOf<State>>?];
+// Update returns a tuple representing sync and async state mutations.
+type UpdateReturnValue<State> = [RecordOf<State>, Promise<RecordOf<State>>?];
+
+export type Update<State, Msg> = (state: RecordOf<State>, msg: Msg) => UpdateReturnValue<State>;
+
+interface UpdateChildParams<ParentState, ChildState, ChildMsg> {
+  state: RecordOf<ParentState>;
+  childStatePath: string[];
+  updateChild: Update<ChildState, ChildMsg>;
+  childMsg: ChildMsg;
+}
+
+export function updateChild<PS, CS, CM>(params: UpdateChildParams<PS, CS, CM>): UpdateReturnValue<PS> {
+  const { childStatePath, updateChild, childMsg } = params;
+  let { state } = params;
+  const childState = state.getIn(childStatePath);
+  if (!childState) { return [state]; }
+  const [newChildState, newAsyncChildState] = updateChild(Record(childState)(), childMsg);
+  state = state.setIn(childStatePath, newChildState.toJS());
+  return [
+    state,
+    (async () => {
+      const newChildState = await newAsyncChildState;
+      if (!newChildState) { return state; }
+      return state.setIn(childStatePath, newChildState.toJS());
+    })()
+  ];
+}
 
 export type View<Props> = StatelessComponent<Props>;
 

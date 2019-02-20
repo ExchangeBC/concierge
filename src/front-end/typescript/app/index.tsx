@@ -1,15 +1,9 @@
-import { Record } from 'immutable';
 import React from 'react';
-import { ADT, App, AppMsg, ComponentView, Dispatch, Init, mapDispatch, newUrl, Update } from '../lib/framework';
+import { ADT, App, AppMsg, ComponentView, Dispatch, Init, mapDispatch, newUrl, Update, updateChild } from '../lib/framework';
 import * as PageLoading from '../pages/loading';
 import * as PageLoadingTwo from '../pages/loading-two';
 import * as PageSay from '../pages/say';
 import { Page, router } from './router';
-
-/* TODO
- * - Need `updateChild` helper method.
- * - Need `viewChild` helper method.
- */
 
 interface State {
   activePage: Page;
@@ -60,46 +54,28 @@ export const update: Update<State, Msg> = (state, msg) => {
       ];
 
     case 'pageLoadingMsg':
-      const pageLoadingState = state.getIn(['pages', 'loading']);
-      if (!pageLoadingState) { return [state]; }
-      const [newLoadingState, asyncNewLoadingState] = PageLoading.update(Record(pageLoadingState)(), msg.data);
-      state = state.setIn(['pages', 'loading'], newLoadingState.toJS());
-      return [
+      return updateChild({
         state,
-        (async () => {
-          const newLoadingState = await asyncNewLoadingState;
-          if (!newLoadingState) { return state; }
-          return state.setIn(['pages', 'loading'], newLoadingState.toJS());
-        })()
-      ];
+        childStatePath: ['pages', 'loading'],
+        updateChild: PageLoading.update,
+        childMsg: msg.data
+      });
 
     case 'pageLoadingTwoMsg':
-      const pageLoadingTwoState = state.getIn(['pages', 'loadingTwo']);
-      if (!pageLoadingTwoState) { return [state]; }
-      const [newLoadingTwoState, asyncNewLoadingTwoState] = PageLoadingTwo.update(Record(pageLoadingTwoState)(), msg.data);
-      state = state.setIn(['pages', 'loadingTwo'], newLoadingTwoState.toJS());
-      return [
+      return updateChild({
         state,
-        (async () => {
-          const newLoadingTwoState = await asyncNewLoadingTwoState;
-          if (!newLoadingTwoState) { return state; }
-          return state.setIn(['pages', 'loadingTwo'], newLoadingTwoState.toJS());
-        })()
-      ];
+        childStatePath: ['pages', 'loadingTwo'],
+        updateChild: PageLoadingTwo.update,
+        childMsg: msg.data
+      });
 
     case 'pageSayMsg':
-      const pageSayState = state.getIn(['pages', 'say']);
-      if (!pageSayState) { return [state]; }
-      const [newSayState, asyncNewSayState] = PageSay.update(Record(pageSayState)(), msg.data);
-      state = state.setIn(['pages', 'say'], newSayState.toJS());
-      return [
+      return updateChild({
         state,
-        (async () => {
-          const newSayState = await asyncNewSayState;
-          if (!newSayState) { return state; }
-          return state.setIn(['pages', 'say'], newSayState.toJS());
-        })()
-      ];
+        childStatePath: ['pages', 'say'],
+        updateChild: PageSay.update,
+        childMsg: msg.data
+      });
 
     default:
       return [state];
