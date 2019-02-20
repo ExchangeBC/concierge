@@ -5,9 +5,11 @@ import { Msg, Page, State } from './types';
 import update from './update';
 import view from './view';
 
-export const app: App<State, Msg, Page> = {
+const app: App<State, Msg, Page> = {
   init,
   update,
   view,
   router
 };
+
+export default app;
