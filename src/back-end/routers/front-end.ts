@@ -17,7 +17,7 @@ const frontEndAssetRoute: Route<null, null, null, FileResponseBody, null> = {
         code: 200,
         headers: {},
         body: makeFileResponseBody(filePath, FALLBACK_FILE_PATH)
-      }
+      };
     }
   }
 };

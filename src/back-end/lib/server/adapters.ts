@@ -21,6 +21,7 @@ export const express: Adapter<expressLib.Application, ExpressResponseBody> = {
       expressRes
         .status(response.code)
         .set(response.headers);
+      // TODO change to switch statement for better type-checking
       if (response.body.tag === 'json') {
         expressRes.json(response.body.value);
       } else if (response.body.tag === 'file') {
@@ -91,6 +92,7 @@ export const express: Adapter<expressLib.Application, ExpressResponseBody> = {
     // Set up the express app.
     const app = expressLib();
     // Parse JSON request bodies when provided.
+    // TODO remove bodyParser and use TransformRequest functions
     app.use(bodyParser.json({
       type: 'application/json'
     }));
