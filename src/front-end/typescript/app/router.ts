@@ -1,12 +1,14 @@
 import { get } from 'lodash';
-import { ADT, Router } from '../lib/framework';
-import * as PageSay from '../pages/say';
+import { Router } from '../lib/framework';
+import { Page } from './types';
 
-export type Page = ADT<'loading', null> | ADT<'loadingTwo', null> | ADT<'say', PageSay.Params>;
-
-export const router: Router<Page> = {
+const router: Router<Page> = {
 
   routes: [
+    {
+      path: '/',
+      pageId: 'landing'
+    },
     {
       path: '/loading',
       pageId: 'loading'
@@ -27,6 +29,11 @@ export const router: Router<Page> = {
 
   locationToPage(pageId, params) {
     switch (pageId) {
+      case 'landing':
+        return {
+          tag: 'landing',
+          data: undefined
+        };
       case 'loading':
         return {
           tag: 'loading',
@@ -56,6 +63,8 @@ export const router: Router<Page> = {
 
   pageToUrl(page) {
     switch (page.tag) {
+      case 'landing':
+        return '/';
       case 'loading':
         return '/loading';
       case 'loadingTwo':
@@ -68,3 +77,5 @@ export const router: Router<Page> = {
   }
 
 };
+
+export default router;

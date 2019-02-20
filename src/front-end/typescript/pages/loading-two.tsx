@@ -1,5 +1,5 @@
 import React from 'react';
-import { Page } from '../app/router';
+import { Page } from '../app/types';
 import { ADT, Component, ComponentMsg, ComponentView, Init, Update } from '../lib/framework';
 
 export interface State {

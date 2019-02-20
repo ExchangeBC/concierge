@@ -1,7 +1,7 @@
 import { Record, RecordOf } from 'immutable';
 import { get, remove } from 'lodash';
 import page from 'page';
-import { default as React, StatelessComponent } from 'react';
+import { default as React, ReactElement } from 'react';
 import ReactDOM from 'react-dom';
 
 // Set up a basic ADT representation for Msgs.
@@ -10,15 +10,21 @@ export interface ADT<Tag, Data = undefined> {
   data: Data;
 }
 
+export type Immutable<State> = RecordOf<State>;
+
+export function immutable<State>(state: State): Immutable<State> {
+  return Record(state)();
+}
+
 export type Init<Params, State> = (params: Params) => Promise<State>;
 
 // Update returns a tuple representing sync and async state mutations.
-type UpdateReturnValue<State> = [RecordOf<State>, Promise<RecordOf<State>>?];
+type UpdateReturnValue<State> = [Immutable<State>, Promise<Immutable<State>>?];
 
-export type Update<State, Msg> = (state: RecordOf<State>, msg: Msg) => UpdateReturnValue<State>;
+export type Update<State, Msg> = (state: Immutable<State>, msg: Msg) => UpdateReturnValue<State>;
 
 interface UpdateChildParams<ParentState, ChildState, ChildMsg> {
-  state: RecordOf<ParentState>;
+  state: Immutable<ParentState>;
   childStatePath: string[];
   updateChild: Update<ChildState, ChildMsg>;
   childMsg: ChildMsg;
@@ -29,7 +35,7 @@ export function updateChild<PS, CS, CM>(params: UpdateChildParams<PS, CS, CM>): 
   let { state } = params;
   const childState = state.getIn(childStatePath);
   if (!childState) { return [state]; }
-  const [newChildState, newAsyncChildState] = updateChild(Record(childState)(), childMsg);
+  const [newChildState, newAsyncChildState] = updateChild(childState, childMsg);
   state = state.setIn(childStatePath, newChildState.toJS());
   return [
     state,
@@ -41,10 +47,10 @@ export function updateChild<PS, CS, CM>(params: UpdateChildParams<PS, CS, CM>): 
   ];
 }
 
-export type View<Props> = StatelessComponent<Props>;
+export type View<Props> = (props: Props) => ReactElement<Props>;
 
 export interface ComponentViewProps<State, Msg> {
-  state: RecordOf<State>;
+  state: Immutable<State>;
   dispatch: Dispatch<Msg>;
 }
 
@@ -109,7 +115,7 @@ export function mapDispatch<ParentMsg, ChildMsg, Page>(dispatch: Dispatch<AppMsg
   };
 }
 
-export type StateSubscription<State, Msg> = (state: RecordOf<State>, dispatch: Dispatch<Msg>) => void;
+export type StateSubscription<State, Msg> = (state: Immutable<State>, dispatch: Dispatch<Msg>) => void;
 
 export type StateSubscribe<State, Msg> = (fn: StateSubscription<State, Msg>) => boolean;
 
@@ -187,7 +193,7 @@ export async function start<State, Msg extends ADT<any, any>, Page>(app: App<Sta
       });
   };
   // Render the view whenever state changes.
-  const render = (state: RecordOf<State>, dispatch: Dispatch<AppMsg<Msg, Page>>): void => {
+  const render = (state: Immutable<State>, dispatch: Dispatch<AppMsg<Msg, Page>>): void => {
     ReactDOM.render(
       <app.view state={state} dispatch={dispatch} />,
       element
