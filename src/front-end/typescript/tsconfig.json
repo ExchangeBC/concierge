@@ -1,17 +1,21 @@
 {
-	"compilerOptions": {
-		"target": "es5",
-		"moduleResolution": "node",
+  "compilerOptions": {
+    "target": "es5",
+    "moduleResolution": "node",
     "jsx": "react",
-		"allowJs": true,
-		"noEmit": true,
-		"strict": true,
-		"noImplicitReturns": true,
-		"forceConsistentCasingInFileNames": true,
-		"noUnusedLocals": true,
-		"esModuleInterop": true,
-		"allowSyntheticDefaultImports": true
-	},
+    "allowJs": true,
+    "noEmit": true,
+    "strict": true,
+    "noImplicitReturns": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "types": [
+      "node",
+      "mocha"
+    ]
+  },
   "files": [
     "index.ts"
   ]

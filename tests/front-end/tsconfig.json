@@ -10,12 +10,6 @@
     "noUnusedLocals": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "types": [
-      "node",
-      "mocha"
-    ]
-  },
-  "files": [
-    "index.ts"
-  ]
+    "types": ["node", "mocha"]
+  }
 }
