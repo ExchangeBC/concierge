@@ -7,6 +7,13 @@ import { lookup } from 'mime-types';
 import mongoose from 'mongoose';
 import { DomainLogger } from '../logger';
 
+export interface ADT<Tag, Value> {
+  tag: Tag;
+  value: Value;
+}
+
+export type ValidOrInvalid<Valid, Invalid> = ADT<'valid', Valid> | ADT<'invalid', Invalid>;
+
 export enum HttpMethod {
   Any = '*',
   Get = 'GET',
@@ -65,12 +72,7 @@ export interface Response<Body> {
   body: Body;
 }
 
-export interface ResponseBody<Tag, Value> {
-  tag: Tag;
-  value: Value;
-}
-
-export type JsonResponseBody = ResponseBody<'json', any>;
+export type JsonResponseBody = ADT<'json', any>;
 
 export function makeJsonResponseBody(value: any): JsonResponseBody {
   return {
@@ -92,7 +94,7 @@ export interface File {
   contentType: string;
 }
 
-export type FileResponseBody = ResponseBody<'file', File | null>;
+export type FileResponseBody = ADT<'file', File | null>;
 
 // TODO do we need fallback handling here?
 // TODO do something better than responding with a `null` file.
@@ -133,7 +135,7 @@ export function mapFileResponse(response: Response<string>): Response<FileRespon
   };
 }
 
-export type TextResponseBody = ResponseBody<'text', string>;
+export type TextResponseBody = ADT<'text', string>;
 
 export function makeTextResponseBody(value: string): TextResponseBody {
   return {
@@ -150,7 +152,7 @@ export function mapTextResponse(response: Response<string>): Response<TextRespon
   };
 }
 
-export type ErrorResponseBody = ResponseBody<'error', Error>;
+export type ErrorResponseBody = ADT<'error', Error>;
 
 export function makeErrorResponseBody(value: Error): ErrorResponseBody {
   return {

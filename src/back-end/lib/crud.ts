@@ -1,5 +1,6 @@
 import { get } from 'lodash';
 import mongoose from 'mongoose';
+import { DomainLogger } from './logger';
 import { HttpMethod, JsonResponseBody, mapJsonResponse, mapRespond, Respond, Route, Router } from './server';
 
 export interface ReadOneRequestParams {
@@ -26,33 +27,33 @@ export interface DeleteRequestParams {
   id: string;
 }
 
-export interface Create<Document extends mongoose.Document, CreateRequestBody> {
-  transformRequestBody(raw: any): CreateRequestBody;
-  run(Model: mongoose.Model<Document>): Respond<null, null, CreateRequestBody, Document>;
+export interface Create<Document extends mongoose.Document, CreateRequestBody, ErrorResponseBody> {
+  transformRequestBody(Model: mongoose.Model<Document>, raw: any, logger: DomainLogger): Promise<CreateRequestBody>;
+  run(Model: mongoose.Model<Document>): Respond<null, null, CreateRequestBody, Document | ErrorResponseBody>;
 }
 
-export type ReadOne<Document extends mongoose.Document> = (Model: mongoose.Model<Document>) => Respond<ReadOneRequestParams, null, null, Document>;
+export type ReadOne<Document extends mongoose.Document, ErrorResponseBody> = (Model: mongoose.Model<Document>) => Respond<ReadOneRequestParams, null, null, Document | ErrorResponseBody>;
 
-export type ReadMany<Document extends mongoose.Document> = (Model: mongoose.Model<Document>) => Respond<null, ReadManyRequestQuery, null, ReadManyResponse<Document>>;
+export type ReadMany<Document extends mongoose.Document, ErrorResponseBody> = (Model: mongoose.Model<Document>) => Respond<null, ReadManyRequestQuery, null, ReadManyResponse<Document> | ErrorResponseBody>;
 
-export interface Update<Document extends mongoose.Document, UpdateRequestBody> {
-  transformRequestBody(raw: any): UpdateRequestBody;
-  run(Model: mongoose.Model<Document>): Respond<UpdateRequestParams, null, UpdateRequestBody, Document>;
+export interface Update<Document extends mongoose.Document, UpdateRequestBody, ErrorResponseBody> {
+  transformRequestBody(Model: mongoose.Model<Document>, raw: any, logger: DomainLogger): Promise<UpdateRequestBody>;
+  run(Model: mongoose.Model<Document>): Respond<UpdateRequestParams, null, UpdateRequestBody, Document | ErrorResponseBody>;
 }
 
-export type Delete<Document extends mongoose.Document> = (Model: mongoose.Model<Document>) => Respond<DeleteRequestParams, null, null, null>;
+export type Delete<Document extends mongoose.Document, ErrorResponseBody> = (Model: mongoose.Model<Document>) => Respond<DeleteRequestParams, null, null, null | ErrorResponseBody>;
 
-export interface Resource<Document extends mongoose.Document, CreateRequestBody, UpdateRequestBody> {
+export interface Resource<Document extends mongoose.Document, CreateRequestBody, UpdateRequestBody, CreateErrorResponseBody, ReadOneErrorResponseBody, ReadManyErrorResponseBody, UpdateErrorResponseBody, DeleteErrorResponseBody> {
   ROUTE_NAMESPACE: string;
   MODEL_NAME: string;
-  create?: Create<Document, CreateRequestBody>;
-  readOne?: ReadOne<Document>;
-  readMany?: ReadMany<Document>;
-  update?: Update<Document, UpdateRequestBody>;
-  delete?: Delete<Document>;
+  create?: Create<Document, CreateRequestBody, CreateErrorResponseBody>;
+  readOne?: ReadOne<Document, ReadOneErrorResponseBody>;
+  readMany?: ReadMany<Document, ReadManyErrorResponseBody>;
+  update?: Update<Document, UpdateRequestBody, UpdateErrorResponseBody>;
+  delete?: Delete<Document, DeleteErrorResponseBody>;
 }
 
-export function makeCreateRoute<Document extends mongoose.Document, CreateRequestBody>(Model: mongoose.Model<Document>, create: Create<Document, CreateRequestBody>): Route<null, null, CreateRequestBody, JsonResponseBody, null> {
+export function makeCreateRoute<Document extends mongoose.Document, CreateRequestBody, ErrorResponseBody>(Model: mongoose.Model<Document>, create: Create<Document, CreateRequestBody, ErrorResponseBody>): Route<null, null, CreateRequestBody, JsonResponseBody, null> {
   return {
     method: HttpMethod.Post,
     path: '/',
@@ -60,14 +61,14 @@ export function makeCreateRoute<Document extends mongoose.Document, CreateReques
       transformRequest: async request => ({
         params: null,
         query: null,
-        body: create.transformRequestBody(request.body)
+        body: await create.transformRequestBody(Model, request.body, request.logger)
       }),
       respond: mapRespond(create.run(Model), mapJsonResponse)
     }
   };
 }
 
-export function makeReadOneRoute<Document extends mongoose.Document>(Model: mongoose.Model<Document>, readOne: ReadOne<Document>): Route<ReadOneRequestParams, null, null, JsonResponseBody, null> {
+export function makeReadOneRoute<Document extends mongoose.Document, ErrorResponseBody>(Model: mongoose.Model<Document>, readOne: ReadOne<Document, ErrorResponseBody>): Route<ReadOneRequestParams, null, null, JsonResponseBody, null> {
   return {
     method: HttpMethod.Get,
     path: '/:id',
@@ -84,7 +85,7 @@ export function makeReadOneRoute<Document extends mongoose.Document>(Model: mong
   };
 }
 
-export function makeReadManyRoute<Document extends mongoose.Document>(Model: mongoose.Model<Document>, readMany: ReadMany<Document>): Route<null, ReadManyRequestQuery, null, JsonResponseBody, null> {
+export function makeReadManyRoute<Document extends mongoose.Document, ErrorResponseBody>(Model: mongoose.Model<Document>, readMany: ReadMany<Document, ErrorResponseBody>): Route<null, ReadManyRequestQuery, null, JsonResponseBody, null> {
   return {
     method: HttpMethod.Get,
     path: '/',
@@ -102,7 +103,7 @@ export function makeReadManyRoute<Document extends mongoose.Document>(Model: mon
   };
 }
 
-export function makeUpdateRoute<Document extends mongoose.Document, UpdateRequestBody>(Model: mongoose.Model<Document>, update: Update<Document, UpdateRequestBody>): Route<UpdateRequestParams, null, UpdateRequestBody, JsonResponseBody, null> {
+export function makeUpdateRoute<Document extends mongoose.Document, UpdateRequestBody, ErrorResponseBody>(Model: mongoose.Model<Document>, update: Update<Document, UpdateRequestBody, ErrorResponseBody>): Route<UpdateRequestParams, null, UpdateRequestBody, JsonResponseBody, null> {
   return {
     method: HttpMethod.Put,
     path: '/:id',
@@ -112,14 +113,14 @@ export function makeUpdateRoute<Document extends mongoose.Document, UpdateReques
           id: get(request, ['params', 'id'], '')
         },
         query: null,
-        body: update.transformRequestBody(request.body)
+        body: await update.transformRequestBody(Model, request.body, request.logger)
       }),
       respond: mapRespond(update.run(Model), mapJsonResponse)
     }
   };
 }
 
-export function makeDeleteRoute<Document extends mongoose.Document>(Model: mongoose.Model<Document>, deleteFn: Delete<Document>): Route<DeleteRequestParams, null, null, JsonResponseBody, null> {
+export function makeDeleteRoute<Document extends mongoose.Document, ErrorResponseBody>(Model: mongoose.Model<Document>, deleteFn: Delete<Document, ErrorResponseBody>): Route<DeleteRequestParams, null, null, JsonResponseBody, null> {
   return {
     method: HttpMethod.Delete,
     path: '/:id',
@@ -136,7 +137,7 @@ export function makeDeleteRoute<Document extends mongoose.Document>(Model: mongo
   };
 }
 
-export function makeRouter<Document extends mongoose.Document, CRB, URB>(resource: Resource<Document, CRB, URB>): (Model: mongoose.Model<Document>) => Router<JsonResponseBody> {
+export function makeRouter<Document extends mongoose.Document, CRB, URB, CERB, ROERB, RMERB, UERB, DERB>(resource: Resource<Document, CRB, URB, CERB, ROERB, RMERB, UERB, DERB>): (Model: mongoose.Model<Document>) => Router<JsonResponseBody> {
   return Model => {
     // We do not destructure `delete` because it conflicts with a TypeScript keyword.
     const { create, readOne, readMany, update } = resource;
