@@ -8,7 +8,7 @@
     "back-end:lint": "npx tslint -c tslint.json src/back-end/*.ts src/back-end/**/*.ts && echo Lint Successful\n",
     "back-end:typecheck": "npx tsc --project src/back-end && echo Typecheck Successful\n",
     "back-end:test": "node tests/back-end/index.js",
-    "back-end:start": "npx ts-node --project src/back-end/tsconfig.json src/back-end/index.ts",
+    "back-end:start": "cd src/back-end && npx ts-node --require tsconfig-paths/register --project tsconfig.json index.ts",
     "front-end:lint": "npx tslint -c tslint.json src/front-end/*.ts src/front-end/**/*.ts && echo Lint Successful\n",
     "front-end:typecheck": "npx tsc --project src/front-end/typescript && echo Typecheck Successful\n",
     "front-end:test": "node tests/front-end/index.js",
@@ -51,6 +51,7 @@
     "mongoose": "^5.4.3",
     "morgan": "^1.9.1",
     "on-finished": "^2.3.0",
+    "tsconfig-paths": "^3.8.0",
     "typescript": "^3.3.3"
   },
   "devDependencies": {

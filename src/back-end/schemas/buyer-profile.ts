@@ -4,21 +4,21 @@ import * as mongoose from 'mongoose';
 export const NAME = 'BuyerProfile';
 
 export interface Data {
-  firstName: string;
-  lastName: string;
-  positionTitle: string;
-  ministry: string;
-  branch: string;
-  contactAddress: string;
-  contactCity: string;
-  contactProvince: string;
-  contactPostalCode: string;
-  contactCountry: string;
-  contactPhoneNumber: string;
-  contactPhoneCountryCode: string;
-  contactPhoneType: PhoneType;
-  industrySectors: string[];
-  areasOfInterest: string[];
+  firstName?: string;
+  lastName?: string;
+  positionTitle?: string;
+  ministry?: string;
+  branch?: string;
+  contactAddress?: string;
+  contactCity?: string;
+  contactProvince?: string;
+  contactPostalCode?: string;
+  contactCountry?: string;
+  contactPhoneNumber?: string;
+  contactPhoneCountryCode?: string;
+  contactPhoneType?: PhoneType;
+  industrySectors?: string[];
+  areasOfInterest?: string[];
   createdAt: Date;
   updatedAt: Date;
 }

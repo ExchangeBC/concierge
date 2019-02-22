@@ -6,7 +6,8 @@ import * as UserSchema from 'back-end/schemas/user';
 import * as VendorProfileSchema from 'back-end/schemas/vendor-profile';
 import bcrypt from 'bcrypt';
 import { Set } from 'immutable';
-import { get, isArray, isObject } from 'lodash';
+import { get, isArray, isEqual, isObject } from 'lodash';
+// import * as mongoose from 'mongoose';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
 import AVAILABLE_MINISTRIES from 'shared/data/ministries';
@@ -67,21 +68,34 @@ export interface UpdateRequestBody {
   email: string;
 }
 
-function getString(obj: any, keyPath: string | string[]) {
+function getString(obj: any, keyPath: string | string[]): string {
   return String(get(obj, keyPath, ''));
 }
 
-function getStringArray(obj: any, keyPath: string | string[]) {
+function getStringArray(obj: any, keyPath: string | string[]): string[] {
   const value: any[] = get(obj, keyPath, []);
   if (!isArray(value)) { return []; }
   return value.map(v => String(v));
+}
+
+// Validate a field only if it is truthy.
+function optional<Value, Valid, Invalid>(fn: (v: Value) => ValidOrInvalid<Valid, Invalid>, v: Value, undefinedValue: Value): ValidOrInvalid<Valid | undefined, Invalid> {
+  return isEqual(v, undefinedValue) ? valid(undefined) : fn(v);
+}
+
+function validateGenericString(value: string, name: string, min = 1, max = 100): Validation<string> {
+  if (value.length < min || value.length > max) {
+    return invalid([`${name} must be between 1 and 100 characters long.`]);
+  } else {
+    return valid(value);
+  }
 }
 
 function validateStringArray(values: string[], availableValues: Set<string>, name: string): Validation<string[]> {
   availableValues = availableValues.map(v => v.toUpperCase());
   values.map(v => v.toUpperCase());
   const errors: string[] = values.reduce((acc, v) => {
-    if (!availableValues.has(v)) {
+    if (!availableValues.includes(v)) {
       acc.push(`"${v}" is not a valid ${name}.`);
     }
     return acc;
@@ -93,6 +107,16 @@ function validateStringArray(values: string[], availableValues: Set<string>, nam
   }
 }
 
+/*function validateObjectId(objectId: string, name: string): Validation<string> {
+  if (mongoose.Types.ObjectId.isValid(objectId)) {
+    return valid(objectId);
+  } else {
+    return invalid([ `${name} is an invalid ObjectId.` ]);
+  }
+}*/
+
+// TODO Ensure a user with the same email does not already exist.
+// Make async, use User Model.
 function validateEmail(email: string): Validation<string> {
   if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/i)) {
     return invalid([ 'Please enter a valid email.' ]);
@@ -124,14 +148,6 @@ function validateUserType(userType: string): Validation<UserType> {
   }
 }
 
-function validateGenericString(value: string, name: string, min = 1, max = 100): Validation<string> {
-  if (value.length < min || value.length > max) {
-    return invalid([`${name} must be between 1 and 100 characters long.`]);
-  } else {
-    return valid(value);
-  }
-}
-
 function validateFirstName(firstName: string): Validation<string> {
   return validateGenericString(firstName, 'First Name');
 }
@@ -144,7 +160,6 @@ function validatePositionTitle(positionTitle: string): Validation<string> {
   return validateGenericString(positionTitle, 'Position Title');
 }
 
-// TODO enum
 function validateMinistry(ministry: string): Validation<string> {
   const result = validateStringArray([ministry], AVAILABLE_MINISTRIES, 'Ministry');
   switch (result.tag) {
@@ -205,38 +220,38 @@ function validateCategories(categories: string[], name = 'Category'): Validation
 }
 
 async function validateBuyerProfile(profile: object): Promise<ValidOrInvalid<BuyerProfileSchema.Data, BuyerProfileValidationErrors>> {
-  const validatedFirstName = validateFirstName(getString(profile, 'firstName'));
-  const validatedLastName = validateLastName(getString(profile, 'lastName'));
-  const validatedPositionTitle = validatePositionTitle(getString(profile, 'positionTitle'));
-  const validatedMinistry = validateMinistry(getString(profile, 'ministry'));
-  const validatedBranch = validateBranch(getString(profile, 'branch'));
-  const validatedContactAddress = validateAddress(getString(profile, 'contactAddress'));
-  const validatedContactCity = validateCity(getString(profile, 'contactCity'));
-  const validatedContactProvince = validateProvince(getString(profile, 'contactProvince'));
-  const validatedContactPostalCode = validatePostalCode(getString(profile, 'contactPostalCode'));
-  const validatedContactCountry = validateCountry(getString(profile, 'country'));
-  const validatedContactPhoneNumber = validatePhoneNumber(getString(profile, 'contactPhoneNumber'));
-  const validatedContactPhoneCountryCode = validatePhoneCountryCode(getString(profile, 'contactPhoneCountryCode'));
-  const validatedContactPhoneType = validatePhoneType(getString(profile, 'contactPhoneType'));
-  const validatedIndustrySectors = validateIndustrySectors(getStringArray(profile, 'industrySectors'));
-  const validatedAreasOfInterest = validateCategories(getStringArray(profile, 'areasOfInterest'), 'Areas of Interest');
+  const validatedFirstName = optional(validateFirstName, getString(profile, 'firstName'), '');
+  const validatedLastName = optional(validateLastName, getString(profile, 'lastName'), '');
+  const validatedPositionTitle = optional(validatePositionTitle, getString(profile, 'positionTitle'), '');
+  const validatedMinistry = optional(validateMinistry, getString(profile, 'ministry'), '');
+  const validatedBranch = optional(validateBranch, getString(profile, 'branch'), '');
+  const validatedContactAddress = optional(validateAddress, getString(profile, 'contactAddress'), '');
+  const validatedContactCity = optional(validateCity, getString(profile, 'contactCity'), '');
+  const validatedContactProvince = optional(validateProvince, getString(profile, 'contactProvince'), '');
+  const validatedContactPostalCode = optional(validatePostalCode, getString(profile, 'contactPostalCode'), '');
+  const validatedContactCountry = optional(validateCountry, getString(profile, 'country'), '');
+  const validatedContactPhoneNumber = optional(validatePhoneNumber, getString(profile, 'contactPhoneNumber'), '');
+  const validatedContactPhoneCountryCode = optional(validatePhoneCountryCode, getString(profile, 'contactPhoneCountryCode'), '');
+  const validatedContactPhoneType = optional(validatePhoneType, getString(profile, 'contactPhoneType'), '');
+  const validatedIndustrySectors = optional(validateIndustrySectors, getStringArray(profile, 'industrySectors'), []);
+  const validatedAreasOfInterest = optional(v => validateCategories(v, 'Areas of Interest'), getStringArray(profile, 'areasOfInterest'), []);
   if (allValid([validatedFirstName, validatedLastName, validatedPositionTitle, validatedMinistry, validatedBranch, validatedContactAddress, validatedContactCity, validatedContactProvince, validatedContactPostalCode, validatedContactCountry, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedAreasOfInterest])) {
     return valid({
-      firstName: getValidValue(validatedFirstName, ''),
-      lastName: getValidValue(validatedLastName, ''),
-      positionTitle: getValidValue(validatedPositionTitle, ''),
-      ministry: getValidValue(validatedMinistry, ''),
-      branch: getValidValue(validatedBranch, ''),
-      contactAddress: getValidValue(validatedContactAddress, ''),
-      contactCity: getValidValue(validatedContactCity, ''),
-      contactProvince: getValidValue(validatedContactProvince, ''),
-      contactPostalCode: getValidValue(validatedContactPostalCode, ''),
-      contactCountry: getValidValue(validatedContactCountry, ''),
-      contactPhoneNumber: getValidValue(validatedContactPhoneNumber, ''),
-      contactPhoneCountryCode: getValidValue(validatedContactPhoneCountryCode, ''),
-      contactPhoneType: getValidValue(validatedContactPhoneType, PhoneType.Office),
-      industrySectors: getValidValue(validatedIndustrySectors, []),
-      areasOfInterest: getValidValue(validatedAreasOfInterest, []),
+      firstName: getValidValue(validatedFirstName, undefined),
+      lastName: getValidValue(validatedLastName, undefined),
+      positionTitle: getValidValue(validatedPositionTitle, undefined),
+      ministry: getValidValue(validatedMinistry, undefined),
+      branch: getValidValue(validatedBranch, undefined),
+      contactAddress: getValidValue(validatedContactAddress, undefined),
+      contactCity: getValidValue(validatedContactCity, undefined),
+      contactProvince: getValidValue(validatedContactProvince, undefined),
+      contactPostalCode: getValidValue(validatedContactPostalCode, undefined),
+      contactCountry: getValidValue(validatedContactCountry, undefined),
+      contactPhoneNumber: getValidValue(validatedContactPhoneNumber, undefined),
+      contactPhoneCountryCode: getValidValue(validatedContactPhoneCountryCode, undefined),
+      contactPhoneType: getValidValue(validatedContactPhoneType, undefined),
+      industrySectors: getValidValue(validatedIndustrySectors, undefined),
+      areasOfInterest: getValidValue(validatedAreasOfInterest, undefined),
       createdAt: new Date(),
       updatedAt: new Date()
     });
@@ -334,8 +349,13 @@ export type Resource = crud.Resource<UserSchema.Document, CreateRequestBody, Upd
 
 const resource: Resource = {
 
-  ROUTE_NAMESPACE: 'users',
-  MODEL_NAME: UserSchema.NAME,
+  routeNamespace: 'users',
+  model: UserSchema.NAME,
+  extraModels: Set([
+    BuyerProfileSchema.NAME,
+    VendorProfileSchema.NAME,
+    ProgramStaffProfileSchema.NAME
+  ]),
 
   create: {
 
@@ -348,7 +368,7 @@ const resource: Resource = {
       return await validateCreateRequestBody(email, password, userType, profile);
     },
 
-    run(Model) {
+    run(Model, ExtraModels) {
       return async request => {
         switch (request.body.tag) {
           case 'invalid':
@@ -358,8 +378,38 @@ const resource: Resource = {
               body: request.body.value
             };
           case 'valid':
-            const user = new Model(request.body.value);
+            const body = request.body.value;
+            request.logger.debug('body', body);
+            // Create the profile.
+            let ProfileModel;
+            switch (body.userType) {
+              case UserType.Buyer:
+                ProfileModel = ExtraModels.get(BuyerProfileSchema.NAME);
+                break;
+              case UserType.Vendor:
+                ProfileModel = ExtraModels.get(VendorProfileSchema.NAME);
+                break;
+              case UserType.ProgramStaff:
+                ProfileModel = ExtraModels.get(ProgramStaffProfileSchema.NAME);
+                break;
+            }
+            if (!ProfileModel) {
+              throw new Error('Unable to create user profile, undefined profile Model');
+            }
+            const profile = new ProfileModel(body.profile);
+            await profile.save();
+            // Create the user.
+            const now = Date.now();
+            const user = new Model({
+              email: body.email,
+              passwordHash: body.passwordHash,
+              userType: body.userType,
+              profile: profile._id,
+              createdAt: now,
+              updatedAt: now
+            });
             await user.save();
+            // Respond with success.
             return {
               code: 201,
               headers: {},

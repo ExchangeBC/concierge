@@ -9,7 +9,7 @@ export const NAME = 'User';
 export interface Data {
   email: string;
   passwordHash: string;
-  acceptedTerms: boolean;
+  acceptedTermsAt?: Date;
   // Is the user account active or not?
   // Deleting a user account marks it as inactive (`active = false`).
   active: boolean;
@@ -35,11 +35,7 @@ export const schema: mongoose.Schema = new mongoose.Schema({
     type: String,
     required: true
   },
-  acceptedTerms: {
-    type: Boolean,
-    required: true,
-    default: false
-  },
+  acceptedTermsAt: Date,
   active: {
     type: Boolean,
     required: true,

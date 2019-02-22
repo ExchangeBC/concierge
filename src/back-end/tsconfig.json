@@ -10,7 +10,7 @@
     "noUnusedLocals": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "resolveJson": true,
+    "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
       "back-end/*": ["./*"],

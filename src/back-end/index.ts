@@ -2,7 +2,7 @@ import { MONGO_URL, PORT } from 'back-end/config';
 import loggerHook from 'back-end/hooks/logger';
 import * as crud from 'back-end/lib/crud';
 import { makeDomainLogger } from 'back-end/lib/logger';
-import { console } from 'back-end/lib/logger/adapters';
+import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
 import { addHooksToRoute, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route } from 'back-end/lib/server';
 import { express } from 'back-end/lib/server/adapters';
 import userResource from 'back-end/resources/user';
@@ -11,37 +11,29 @@ import * as BuyerProfileSchema from 'back-end/schemas/buyer-profile';
 import * as ProgramStaffProfileSchema from 'back-end/schemas/program-staff-profile';
 import * as UserSchema from 'back-end/schemas/user';
 import * as VendorProfileSchema from 'back-end/schemas/vendor-profile';
-import { Map } from 'immutable';
+import { Map, Set } from 'immutable';
 import { concat, flatten, flow, map } from 'lodash/fp';
 import mongoose from 'mongoose';
+import { model } from 'mongoose';
 
-const logger = makeDomainLogger(console, 'back-end');
-
-function connect(mongoUrl: string) {
-  return new Promise((resolve, reject) => {
-    mongoose.connect(mongoUrl, {
-      useNewUrlParser: true
-    });
-    const db = mongoose.connection;
-    db.once('error', reject);
-    db.once('open', () => resolve());
-  });
-}
+const logger = makeDomainLogger(consoleAdapter, 'back-end');
 
 async function start() {
   // Connect to MongoDB.
-  await connect(MONGO_URL);
+  await mongoose.connect(MONGO_URL, {
+    useNewUrlParser: true
+  });
   logger.info('connected to MongoDB');
   // Declare resources.
   const resources: Array<crud.Resource<any, any, any, any, any, any, any, any>> = [
     userResource
   ];
   // Declare models as a map.
-  const Models: Map<string, mongoose.Model<any>> = Map({
-    [UserSchema.NAME]: mongoose.model(UserSchema.NAME, UserSchema.schema),
-    [BuyerProfileSchema.NAME]: mongoose.model(BuyerProfileSchema.NAME, BuyerProfileSchema.schema),
-    [VendorProfileSchema.NAME]: mongoose.model(VendorProfileSchema.NAME, VendorProfileSchema.schema),
-    [ProgramStaffProfileSchema.NAME]: mongoose.model(ProgramStaffProfileSchema.NAME, ProgramStaffProfileSchema.schema)
+  const Models: Map<string, mongoose.Model<mongoose.Document>> = Map({
+    [UserSchema.NAME]: model(UserSchema.NAME, UserSchema.schema),
+    [BuyerProfileSchema.NAME]: model(BuyerProfileSchema.NAME, BuyerProfileSchema.schema),
+    [VendorProfileSchema.NAME]: model(VendorProfileSchema.NAME, VendorProfileSchema.schema),
+    [ProgramStaffProfileSchema.NAME]: model(ProgramStaffProfileSchema.NAME, ProgramStaffProfileSchema.schema)
   });
   // Declare global hooks.
   const hooks = [
@@ -53,14 +45,16 @@ async function start() {
   const crudRoutes = flow([
     // Create routers from resources.
     map((resource: crud.Resource<any, any, any, any, any, any, any, any>) => {
-      const Model = Models.get(resource.MODEL_NAME);
-      if (Model) {
-        logger.info('created resource router', { routeNamespace: resource.ROUTE_NAMESPACE });
-        return crud.makeRouter(resource)(Model);
+      const Model = Models.get(resource.model);
+      const extraModels = resource.extraModels || Set([]);
+      const ExtraModels = Models.filter((v, k) => !!extraModels.get(k));
+      if (Model && extraModels.size === ExtraModels.size) {
+        logger.info('created resource router', { routeNamespace: resource.routeNamespace });
+        return crud.makeRouter(resource)(Model, ExtraModels);
       } else {
         // Throw an error if a requested model doesn't exist for a resource.
-        const msg = 'could not create resource router: undefined Model';
-        logger.error(msg, { routeNamespace: resource.ROUTE_NAMESPACE });
+        const msg = 'could not create resource router; Model is undefined';
+        logger.error(msg, { routeNamespace: resource.routeNamespace, model: resource.model, extraModels: resource.extraModels });
         throw new Error(msg);
       }
     }),
