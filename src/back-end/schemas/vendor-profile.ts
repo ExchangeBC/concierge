@@ -2,8 +2,11 @@ import * as mongoose from 'mongoose';
 
 export const NAME = 'VendorProfile';
 
-export interface Document extends mongoose.Document {
+export interface Data {
   name: string;
+}
+
+export interface Document extends Data, mongoose.Document {
 }
 
 export type Model = mongoose.Model<Document>;

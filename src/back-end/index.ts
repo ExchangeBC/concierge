@@ -1,19 +1,19 @@
+import { MONGO_URL, PORT } from 'back-end/config';
+import loggerHook from 'back-end/hooks/logger';
+import * as crud from 'back-end/lib/crud';
+import { makeDomainLogger } from 'back-end/lib/logger';
+import { console } from 'back-end/lib/logger/adapters';
+import { addHooksToRoute, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route } from 'back-end/lib/server';
+import { express } from 'back-end/lib/server/adapters';
+import userResource from 'back-end/resources/user';
+import frontEndRouter from 'back-end/routers/front-end';
+import * as BuyerProfileSchema from 'back-end/schemas/buyer-profile';
+import * as ProgramStaffProfileSchema from 'back-end/schemas/program-staff-profile';
+import * as UserSchema from 'back-end/schemas/user';
+import * as VendorProfileSchema from 'back-end/schemas/vendor-profile';
 import { Map } from 'immutable';
 import { concat, flatten, flow, map } from 'lodash/fp';
 import mongoose from 'mongoose';
-import { MONGO_URL, PORT } from './config';
-import loggerHook from './hooks/logger';
-import * as crud from './lib/crud';
-import { makeDomainLogger } from './lib/logger';
-import { console } from './lib/logger/adapters';
-import { addHooksToRoute, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route } from './lib/server';
-import { express } from './lib/server/adapters';
-import userResource from './resources/user';
-import frontEndRouter from './routers/front-end';
-import * as BuyerProfileSchema from './schemas/buyer-profile';
-import * as ProgramStaffProfileSchema from './schemas/program-staff-profile';
-import * as UserSchema from './schemas/user';
-import * as VendorProfileSchema from './schemas/vendor-profile';
 
 const logger = makeDomainLogger(console, 'back-end');
 

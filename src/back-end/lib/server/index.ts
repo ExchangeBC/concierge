@@ -1,18 +1,12 @@
 // TODO how to handle receiving files via multipart request?
 
+import { DomainLogger } from 'back-end/lib/logger';
 import { existsSync, readFileSync, statSync } from 'fs';
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http';
 import { assign } from 'lodash';
 import { lookup } from 'mime-types';
 import mongoose from 'mongoose';
-import { DomainLogger } from '../logger';
-
-export interface ADT<Tag, Value> {
-  tag: Tag;
-  value: Value;
-}
-
-export type ValidOrInvalid<Valid, Invalid> = ADT<'valid', Valid> | ADT<'invalid', Invalid>;
+import { ADT } from 'shared/lib/types';
 
 export enum HttpMethod {
   Any = '*',

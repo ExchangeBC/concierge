@@ -1,10 +1,10 @@
+import { makeDomainLogger } from 'back-end/lib/logger';
+import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
+import { ErrorResponseBody, FileResponseBody, JsonResponseBody, makeErrorResponseBody, parseHttpMethod, Request, Response, Route, Router, TextResponseBody } from 'back-end/lib/server';
 import bodyParser from 'body-parser';
 import expressLib from 'express';
 import { assign } from 'lodash';
 import mongoose from 'mongoose';
-import { makeDomainLogger } from '../logger';
-import { console as consoleAdapter } from '../logger/adapters';
-import { ErrorResponseBody, FileResponseBody, JsonResponseBody, makeErrorResponseBody, parseHttpMethod, Request, Response, Route, Router, TextResponseBody } from './index';
 
 export type InitialRequest = Request<object, object, any>;
 

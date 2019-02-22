@@ -10,9 +10,14 @@
     "noUnusedLocals": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "resolveJson": true,
+    "baseUrl": ".",
+    "paths": {
+      "back-end/*": ["./*"],
+      "shared/*": ["../shared/*"]
+    },
     "types": [
-      "node",
-      "mocha"
+      "node"
     ]
   },
   "files": [

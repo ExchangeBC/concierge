@@ -1,38 +1,25 @@
+import { createdAtSchema, updatedAtSchema, UserType, userTypeSchema } from 'back-end/lib/schemas';
+import * as BuyerProfileSchema from 'back-end/schemas/buyer-profile';
+import * as ProgramStaffProfileSchema from 'back-end/schemas/program-staff-profile';
+import * as VendorProfileSchema from 'back-end/schemas/vendor-profile';
 import * as mongoose from 'mongoose';
-import * as BuyerProfileSchema from './buyer-profile';
-import * as ProgramStaffProfileSchema from './program-staff-profile';
-import * as VendorProfileSchema from './vendor-profile';
 
 export const NAME = 'User';
 
-export enum UserType {
-  Buyer = 'BUYER',
-  Vendor = 'VENDOR',
-  ProgramStaff = 'PROGRAM_STAFF'
-}
-
-export function parseUserType(raw: string): UserType | null {
-  switch (raw.toUpperCase()) {
-    case UserType.Buyer:
-      return UserType.Buyer;
-    case UserType.Vendor:
-      return UserType.Vendor;
-    case UserType.ProgramStaff:
-      return UserType.ProgramStaff;
-    default:
-      return null;
-  }
-}
-
-export interface Document extends mongoose.Document {
+export interface Data {
   email: string;
   passwordHash: string;
   acceptedTerms: boolean;
   // Is the user account active or not?
-  // Deleting a user account marks it as inactive.
+  // Deleting a user account marks it as inactive (`active = false`).
   active: boolean;
   userType: UserType;
   profile: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Document extends Data, mongoose.Document {
 }
 
 export type Model = mongoose.Model<Document>;
@@ -58,15 +45,7 @@ export const schema: mongoose.Schema = new mongoose.Schema({
     required: true,
     default: true
   },
-  userType: {
-    type: String,
-    required: true,
-    enum: [
-      UserType.Buyer,
-      UserType.Vendor,
-      UserType.ProgramStaff
-    ]
-  },
+  userType: userTypeSchema,
   // The user's profile depends on its userType.
   profile: {
     type: mongoose.Schema.Types.ObjectId,
@@ -81,7 +60,9 @@ export const schema: mongoose.Schema = new mongoose.Schema({
           return ProgramStaffProfileSchema.NAME;
       }
     }
-  }
+  },
+  createdAt: createdAtSchema,
+  updatedAt: updatedAtSchema
 } as mongoose.SchemaTypeOpts<any>);
 
 export default schema;

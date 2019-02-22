@@ -1,7 +1,7 @@
+import { DomainLogger } from 'back-end/lib/logger';
+import { HttpMethod, JsonResponseBody, mapJsonResponse, mapRespond, Respond, Route, Router } from 'back-end/lib/server';
 import { get } from 'lodash';
 import mongoose from 'mongoose';
-import { DomainLogger } from './logger';
-import { HttpMethod, JsonResponseBody, mapJsonResponse, mapRespond, Respond, Route, Router } from './server';
 
 export interface ReadOneRequestParams {
   id: string;
@@ -28,7 +28,7 @@ export interface DeleteRequestParams {
 }
 
 export interface Create<Document extends mongoose.Document, CreateRequestBody, ErrorResponseBody> {
-  transformRequestBody(Model: mongoose.Model<Document>, raw: any, logger: DomainLogger): Promise<CreateRequestBody>;
+  transformRequestBody(raw: any, logger: DomainLogger): Promise<CreateRequestBody>;
   run(Model: mongoose.Model<Document>): Respond<null, null, CreateRequestBody, Document | ErrorResponseBody>;
 }
 
@@ -37,7 +37,7 @@ export type ReadOne<Document extends mongoose.Document, ErrorResponseBody> = (Mo
 export type ReadMany<Document extends mongoose.Document, ErrorResponseBody> = (Model: mongoose.Model<Document>) => Respond<null, ReadManyRequestQuery, null, ReadManyResponse<Document> | ErrorResponseBody>;
 
 export interface Update<Document extends mongoose.Document, UpdateRequestBody, ErrorResponseBody> {
-  transformRequestBody(Model: mongoose.Model<Document>, raw: any, logger: DomainLogger): Promise<UpdateRequestBody>;
+  transformRequestBody(raw: any, logger: DomainLogger): Promise<UpdateRequestBody>;
   run(Model: mongoose.Model<Document>): Respond<UpdateRequestParams, null, UpdateRequestBody, Document | ErrorResponseBody>;
 }
 
@@ -61,7 +61,7 @@ export function makeCreateRoute<Document extends mongoose.Document, CreateReques
       transformRequest: async request => ({
         params: null,
         query: null,
-        body: await create.transformRequestBody(Model, request.body, request.logger)
+        body: await create.transformRequestBody(request.body, request.logger)
       }),
       respond: mapRespond(create.run(Model), mapJsonResponse)
     }
@@ -113,7 +113,7 @@ export function makeUpdateRoute<Document extends mongoose.Document, UpdateReques
           id: get(request, ['params', 'id'], '')
         },
         query: null,
-        body: await update.transformRequestBody(Model, request.body, request.logger)
+        body: await update.transformRequestBody(request.body, request.logger)
       }),
       respond: mapRespond(update.run(Model), mapJsonResponse)
     }
