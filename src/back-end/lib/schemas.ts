@@ -1,5 +1,15 @@
 import * as mongoose from 'mongoose';
-import { PhoneType, UserType } from 'shared/lib/types';
+import { BusinessType, PhoneType, UserType } from 'shared/lib/types';
+
+// TODO Determine correct type for generic parameter.
+export const businessTypeSchema: mongoose.SchemaTypeOpts<any> = {
+  type: String,
+  enum: [
+    BusinessType.Corporation,
+    BusinessType.Partnership,
+    BusinessType.SoleProprietor
+  ]
+};
 
 // TODO Determine correct type for generic parameter.
 export const phoneTypeSchema: mongoose.SchemaTypeOpts<any> = {

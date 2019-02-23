@@ -10,7 +10,7 @@ export interface Data {
   positionTitle?: string;
   ministry?: string;
   branch?: string;
-  contactAddress?: string;
+  contactStreetAddress?: string;
   contactCity?: string;
   contactProvince?: string;
   contactPostalCode?: string;
@@ -35,7 +35,7 @@ export const schema: mongoose.Schema = new mongoose.Schema({
   positionTitle: String,
   ministry: String,
   branch: String,
-  contactAddress: String,
+  contactStreetAddress: String,
   contactCity: String,
   contactProvince: String,
   contactPostalCode: String,

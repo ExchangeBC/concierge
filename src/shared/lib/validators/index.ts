@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import { Set } from 'immutable';
 import { isEqual } from 'lodash';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
+import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
 import { ADT, parsePhoneType, parseUserType, PhoneType, UserType } from 'shared/lib/types';
 
 export type ValidOrInvalid<Valid, Invalid> = ADT<'valid', Valid> | ADT<'invalid', Invalid>;
@@ -69,9 +70,9 @@ export function optional<Value, Valid, Invalid>(fn: (v: Value) => ValidOrInvalid
   return isEqual(v, undefinedValue) ? valid(undefined) : fn(v);
 }
 
-export function validateGenericString(value: string, name: string, min = 1, max = 100): Validation<string> {
+export function validateGenericString(value: string, name: string, min = 1, max = 100, characters = 'characters'): Validation<string> {
   if (value.length < min || value.length > max) {
-    return invalid([`${name} must be between 1 and 100 characters long.`]);
+    return invalid([`${name} must be between ${min} and ${max} ${characters} long.`]);
   } else {
     return valid(value);
   }
@@ -79,7 +80,7 @@ export function validateGenericString(value: string, name: string, min = 1, max 
 
 export function validateNumberString(value: string, name: string, min?: number, max?: number): Validation<string> {
   value = value.replace(/[^0-9]/g, '');
-  return validateGenericString(value, name, min, max);
+  return validateGenericString(value, name, min, max, 'numbers');
 }
 
 export function validateStringArray(values: string[], availableValues: Set<string>, name: string): Validation<string[]> {
@@ -137,12 +138,24 @@ export function validateUserType(userType: string): Validation<UserType> {
   }
 }
 
+export function validateName(value: string, name: string): Validation<string> {
+  return validateGenericString(value, name);
+}
+
 export function validateFirstName(firstName: string): Validation<string> {
-  return validateGenericString(firstName, 'First Name');
+  return validateName(firstName, 'First Name');
 }
 
 export function validateLastName(lastName: string): Validation<string> {
-  return validateGenericString(lastName, 'Last Name');
+  return validateName(lastName, 'Last Name');
+}
+
+export function validateBusinessName(businessName: string): Validation<string> {
+  return validateName(businessName, 'Business Name');
+}
+
+export function validateContactName(contactName: string): Validation<string> {
+  return validateName(contactName, 'Contact Name');
 }
 
 export function validateStreetAddress(streetAddress: string): Validation<string> {
@@ -184,4 +197,12 @@ export function validatePhoneType(phoneType: string): Validation<PhoneType> {
 
 export function validateCategories(categories: string[], name = 'Category'): Validation<string[]> {
   return validateStringArray(categories, AVAILABLE_CATEGORIES, name);
+}
+
+export function validatePositionTitle(positionTitle: string): Validation<string> {
+  return validateGenericString(positionTitle, 'Position Title');
+}
+
+export function validateIndustrySectors(industrySectors: string[]): Validation<string[]> {
+  return validateStringArray(industrySectors, AVAILABLE_INDUSTRY_SECTORS, 'Industry Sector');
 }

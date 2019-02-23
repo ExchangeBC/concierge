@@ -37,3 +37,25 @@ export function parseUserType(raw: string): UserType | null {
       return null;
   }
 }
+
+export enum BusinessType {
+  Corporation = 'CORPORATION',
+  LimitedLiabilityCompany = 'LIMITED_LIABILITY_COMPANY',
+  Partnership = 'PARTNERSHIP',
+  SoleProprietor = 'SOLE_PROPRIETOR'
+}
+
+export function parseBusinessType(raw: string): BusinessType | null {
+  switch (raw.toUpperCase()) {
+    case BusinessType.Corporation:
+      return BusinessType.Corporation;
+    case BusinessType.LimitedLiabilityCompany:
+      return BusinessType.LimitedLiabilityCompany;
+    case BusinessType.Partnership:
+      return BusinessType.Partnership;
+    case BusinessType.SoleProprietor:
+      return BusinessType.SoleProprietor;
+    default:
+      return null;
+  }
+}
