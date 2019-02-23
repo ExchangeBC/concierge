@@ -25,10 +25,7 @@ export interface Data {
   updatedAt: Date;
 }
 
-export interface Document extends Data, mongoose.Document {
-}
-
-export type Model = mongoose.Model<Document>;
+export type Model = mongoose.Model<Data & mongoose.Document>;
 
 export const schema: mongoose.Schema = new mongoose.Schema({
   businessName: String,

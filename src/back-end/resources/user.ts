@@ -53,7 +53,7 @@ async function validateCreateRequestBody(Model: UserSchema.Model, email: string,
   }
 }
 
-export type Resource = crud.Resource<UserSchema.Document, CreateRequestBody, UpdateRequestBody, CreateValidationErrors, null, null, null, null>;
+export type Resource = crud.Resource<UserSchema.Data, CreateRequestBody, UpdateRequestBody, CreateValidationErrors, null, null, null, null>;
 
 const resource: Resource = {
 
