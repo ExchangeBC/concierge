@@ -67,13 +67,15 @@ const resource: Resource = {
 
   create: {
 
-    async transformRequestBody(body, Model, ExtraModels, logger) {
-      const email = body.email ? String(body.email) : '';
-      const password = body.password ? String(body.password) : '';
-      const userType = body.userType ? String(body.userType) : '';
-      const profile = isObject(body.profile) ? body.profile : {};
-      logger.debug('create user', { email, password, userType, profile });
-      return await validateCreateRequestBody(Model, email, password, userType, profile);
+    transformRequestBody(Model, ExtraModels) {
+      return async request => {
+        const body = request.body;
+        const email = body.email ? String(body.email) : '';
+        const password = body.password ? String(body.password) : '';
+        const userType = body.userType ? String(body.userType) : '';
+        const profile = isObject(body.profile) ? body.profile : {};
+        return await validateCreateRequestBody(Model, email, password, userType, profile);
+      };
     },
 
     run(Model, ExtraModels) {

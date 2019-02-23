@@ -172,6 +172,8 @@ export function composeTransformRequest<RPA, RQA, RBA, RPB, RQB, RBB, RPC, RQC, 
   };
 }
 
+export type TransformRequestBody<RP, RQ, RBA, RBB> = (request: Request<RP, RQ, RBA>) => Promise<RBB>;
+
 export type Respond<RP, RQ, ReqB, ResB> = (request: Request<RP, RQ, ReqB>) => Promise<Response<ResB>>;
 
 export function mapRespond<RP, RQ, ReqB, ResBA, ResBB>(respond: Respond<RP, RQ, ReqB, ResBA>, fn: (response: Response<ResBA>) => Response<ResBB>): Respond<RP, RQ, ReqB, ResBB> {
