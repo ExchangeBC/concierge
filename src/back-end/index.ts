@@ -7,10 +7,7 @@ import { addHooksToRoute, JsonResponseBody, namespaceRoute, notFoundJsonRoute, R
 import { express } from 'back-end/lib/server/adapters';
 import userResource from 'back-end/resources/user';
 import frontEndRouter from 'back-end/routers/front-end';
-import * as BuyerProfileSchema from 'back-end/schemas/buyer-profile';
-import * as ProgramStaffProfileSchema from 'back-end/schemas/program-staff-profile';
 import * as UserSchema from 'back-end/schemas/user';
-import * as VendorProfileSchema from 'back-end/schemas/vendor-profile';
 import { Map, Set } from 'immutable';
 import { concat, flatten, flow, map } from 'lodash/fp';
 import mongoose from 'mongoose';
@@ -25,15 +22,12 @@ async function start() {
   });
   logger.info('connected to MongoDB');
   // Declare resources.
-  const resources: Array<crud.Resource<any, any, any, any, any, any, any, any>> = [
+  const resources: Array<crud.Resource<any, any, any, any, any, any, any, any, any, any, any, any, any>> = [
     userResource
   ];
   // Declare models as a map.
   const Models: Map<string, mongoose.Model<mongoose.Document>> = Map({
-    [UserSchema.NAME]: model(UserSchema.NAME, UserSchema.schema),
-    [BuyerProfileSchema.NAME]: model(BuyerProfileSchema.NAME, BuyerProfileSchema.schema),
-    [VendorProfileSchema.NAME]: model(VendorProfileSchema.NAME, VendorProfileSchema.schema),
-    [ProgramStaffProfileSchema.NAME]: model(ProgramStaffProfileSchema.NAME, ProgramStaffProfileSchema.schema)
+    [UserSchema.NAME]: model(UserSchema.NAME, UserSchema.schema)
   });
   // Declare global hooks.
   const hooks = [
@@ -44,7 +38,7 @@ async function start() {
   const flippedConcat = (a: any) => (b: any[]): any[] => concat(b)(a);
   const crudRoutes = flow([
     // Create routers from resources.
-    map((resource: crud.Resource<any, any, any, any, any, any, any, any>) => {
+    map((resource: crud.Resource<any, any, any, any, any, any, any, any, any, any, any, any, any>) => {
       const Model = Models.get(resource.model);
       const extraModels = resource.extraModels || Set([]);
       const ExtraModels = Models.filter((v, k) => !!extraModels.get(k));

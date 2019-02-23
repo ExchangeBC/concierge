@@ -1,5 +1,5 @@
-import * as ProgramStaffProfileSchema from 'back-end/schemas/program-staff-profile';
 import { getString } from 'shared/lib';
+import { ProgramStaffProfile } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, optional, valid, validateCity, validateCountry, validateFirstName, validateLastName, validatePhoneCountryCode, validatePhoneNumber, validatePhoneType, validatePositionTitle, validatePostalCode, validateProvince, validateStreetAddress, ValidOrInvalid } from './';
 
 export interface ProgramStaffProfileValidationErrors {
@@ -16,7 +16,7 @@ export interface ProgramStaffProfileValidationErrors {
   contactPhoneType: string[];
 }
 
-export function validateProgramStaffProfile(profile: object): ValidOrInvalid<ProgramStaffProfileSchema.Data, ProgramStaffProfileValidationErrors> {
+export function validateProgramStaffProfile(profile: object): ValidOrInvalid<ProgramStaffProfile, ProgramStaffProfileValidationErrors> {
   const validatedFirstName = optional(validateFirstName, getString(profile, 'firstName'), '');
   const validatedLastName = optional(validateLastName, getString(profile, 'lastName'), '');
   const validatedPositionTitle = optional(validatePositionTitle, getString(profile, 'positionTitle'), '');
@@ -30,6 +30,7 @@ export function validateProgramStaffProfile(profile: object): ValidOrInvalid<Pro
   const validatedContactPhoneType = optional(validatePhoneType, getString(profile, 'contactPhoneType'), '');
   if (allValid([validatedFirstName, validatedLastName, validatedPositionTitle, validatedContactStreetAddress, validatedContactCity, validatedContactProvince, validatedContactPostalCode, validatedContactCountry, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType])) {
     return valid({
+      type: 'program_staff' as 'program_staff',
       firstName: getValidValue(validatedFirstName, undefined),
       lastName: getValidValue(validatedLastName, undefined),
       positionTitle: getValidValue(validatedPositionTitle, undefined),
@@ -40,9 +41,7 @@ export function validateProgramStaffProfile(profile: object): ValidOrInvalid<Pro
       contactCountry: getValidValue(validatedContactCountry, undefined),
       contactPhoneNumber: getValidValue(validatedContactPhoneNumber, undefined),
       contactPhoneCountryCode: getValidValue(validatedContactPhoneCountryCode, undefined),
-      contactPhoneType: getValidValue(validatedContactPhoneType, undefined),
-      createdAt: new Date(),
-      updatedAt: new Date()
+      contactPhoneType: getValidValue(validatedContactPhoneType, undefined)
     });
   } else {
     return invalid({

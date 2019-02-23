@@ -59,3 +59,59 @@ export function parseBusinessType(raw: string): BusinessType | null {
       return null;
   }
 }
+
+export interface BuyerProfile {
+  type: 'buyer';
+  firstName?: string;
+  lastName?: string;
+  positionTitle?: string;
+  ministry?: string;
+  branch?: string;
+  contactStreetAddress?: string;
+  contactCity?: string;
+  contactProvince?: string;
+  contactPostalCode?: string;
+  contactCountry?: string;
+  contactPhoneNumber?: string;
+  contactPhoneCountryCode?: string;
+  contactPhoneType?: PhoneType;
+  industrySectors?: string[];
+  areasOfInterest?: string[];
+}
+
+export interface ProgramStaffProfile {
+  type: 'program_staff';
+  firstName?: string;
+  lastName?: string;
+  positionTitle?: string;
+  contactStreetAddress?: string;
+  contactCity?: string;
+  contactProvince?: string;
+  contactPostalCode?: string;
+  contactCountry?: string;
+  contactPhoneNumber?: string;
+  contactPhoneCountryCode?: string;
+  contactPhoneType?: PhoneType;
+}
+
+export interface VendorProfile {
+  type: 'vendor';
+  businessName?: string;
+  businessType?: BusinessType;
+  businessNumber?: string;
+  businessStreetAddress?: string;
+  businessCity?: string;
+  businessProvince?: string;
+  businessPostalCode?: string;
+  businessCountry?: string;
+  contactName?: string;
+  contactPositionTitle?: string;
+  contactEmail?: string;
+  contactPhoneNumber?: string;
+  contactPhoneCountryCode?: string;
+  contactPhoneType?: PhoneType;
+  industrySectors?: string[];
+  areasOfExpertise?: string[];
+}
+
+export type Profile = BuyerProfile | ProgramStaffProfile | VendorProfile;

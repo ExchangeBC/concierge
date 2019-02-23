@@ -1,6 +1,6 @@
-import * as BuyerProfileSchema from 'back-end/schemas/buyer-profile';
 import AVAILABLE_MINISTRIES from 'shared/data/ministries';
 import { getString, getStringArray } from 'shared/lib';
+import { BuyerProfile } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, optional, valid, validateCategories, validateCity, validateCountry, validateFirstName, validateGenericString, validateIndustrySectors, validateLastName, validatePhoneCountryCode, validatePhoneNumber, validatePhoneType, validatePositionTitle, validatePostalCode, validateProvince, validateStreetAddress, validateStringArray, Validation, ValidOrInvalid } from './';
 
 export interface BuyerProfileValidationErrors {
@@ -35,7 +35,7 @@ export function validateBranch(branch: string): Validation<string> {
   return validateGenericString(branch, 'Branch');
 }
 
-export async function validateBuyerProfile(profile: object): Promise<ValidOrInvalid<BuyerProfileSchema.Data, BuyerProfileValidationErrors>> {
+export async function validateBuyerProfile(profile: object): Promise<ValidOrInvalid<BuyerProfile, BuyerProfileValidationErrors>> {
   const validatedFirstName = optional(validateFirstName, getString(profile, 'firstName'), '');
   const validatedLastName = optional(validateLastName, getString(profile, 'lastName'), '');
   const validatedPositionTitle = optional(validatePositionTitle, getString(profile, 'positionTitle'), '');
@@ -53,6 +53,7 @@ export async function validateBuyerProfile(profile: object): Promise<ValidOrInva
   const validatedAreasOfInterest = optional(v => validateCategories(v, 'Areas of Interest'), getStringArray(profile, 'areasOfInterest'), []);
   if (allValid([validatedFirstName, validatedLastName, validatedPositionTitle, validatedMinistry, validatedBranch, validatedContactStreetAddress, validatedContactCity, validatedContactProvince, validatedContactPostalCode, validatedContactCountry, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedAreasOfInterest])) {
     return valid({
+      type: 'buyer' as 'buyer',
       firstName: getValidValue(validatedFirstName, undefined),
       lastName: getValidValue(validatedLastName, undefined),
       positionTitle: getValidValue(validatedPositionTitle, undefined),
@@ -67,9 +68,7 @@ export async function validateBuyerProfile(profile: object): Promise<ValidOrInva
       contactPhoneCountryCode: getValidValue(validatedContactPhoneCountryCode, undefined),
       contactPhoneType: getValidValue(validatedContactPhoneType, undefined),
       industrySectors: getValidValue(validatedIndustrySectors, undefined),
-      areasOfInterest: getValidValue(validatedAreasOfInterest, undefined),
-      createdAt: new Date(),
-      updatedAt: new Date()
+      areasOfInterest: getValidValue(validatedAreasOfInterest, undefined)
     });
   } else {
     return invalid({

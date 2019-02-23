@@ -1,6 +1,5 @@
-import * as VendorProfileSchema from 'back-end/schemas/vendor-profile';
 import { getString, getStringArray } from 'shared/lib';
-import { BusinessType, parseBusinessType } from 'shared/lib/types';
+import { BusinessType, parseBusinessType, VendorProfile } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, optional, valid, validateBusinessName, validateCategories, validateCity, validateContactName, validateCountry, validateEmail, validateGenericString, validateIndustrySectors, validatePhoneCountryCode, validatePhoneNumber, validatePhoneType, validatePositionTitle, validatePostalCode, validateProvince, validateStreetAddress, Validation, ValidOrInvalid } from './';
 
 export interface VendorProfileValidationErrors {
@@ -35,7 +34,7 @@ function validateBusinessNumber(businessNumber: string): Validation<string> {
   return validateGenericString(businessNumber, 'Business Number', 1, 20);
 }
 
-export function validateVendorProfile(profile: object): ValidOrInvalid<VendorProfileSchema.Data, VendorProfileValidationErrors> {
+export function validateVendorProfile(profile: object): ValidOrInvalid<VendorProfile, VendorProfileValidationErrors> {
   const validatedBusinessName = optional(validateBusinessName, getString(profile, 'businessName'), '');
   const validatedBusinessType = optional(validateBusinessType, getString(profile, 'businessType'), '');
   const validatedBusinessNumber = optional(validateBusinessNumber, getString(profile, 'businessNumber'), '');
@@ -54,6 +53,7 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
   const validatedAreasOfExpertise = optional(v => validateCategories(v, 'Areas of Expertise'), getStringArray(profile, 'areasOfExpertise'), []);
   if (allValid([validatedBusinessName, validatedBusinessType, validatedBusinessNumber, validatedBusinessStreetAddress, validatedBusinessCity, validatedBusinessProvince, validatedBusinessPostalCode, validatedBusinessCountry, validatedContactName, validatedContactPositionTitle, validatedContactEmail, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedAreasOfExpertise])) {
     return valid({
+      type: 'vendor' as 'vendor',
       businessName: getValidValue(validatedBusinessName, undefined),
       businessType: getValidValue(validatedBusinessType, undefined),
       businessNumber: getValidValue(validatedBusinessNumber, undefined),
@@ -69,9 +69,7 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
       contactPhoneCountryCode: getValidValue(validatedContactPhoneCountryCode, undefined),
       contactPhoneType: getValidValue(validatedContactPhoneType, undefined),
       industrySectors: getValidValue(validatedIndustrySectors, undefined),
-      areasOfExpertise: getValidValue(validatedAreasOfExpertise, undefined),
-      createdAt: new Date(),
-      updatedAt: new Date()
+      areasOfExpertise: getValidValue(validatedAreasOfExpertise, undefined)
     });
   } else {
     return invalid({

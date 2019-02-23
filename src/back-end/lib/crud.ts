@@ -1,4 +1,4 @@
-import { composeTransformRequest, HttpMethod, JsonResponseBody, mapJsonResponse, mapRespond, Respond, Route, Router, TransformRequestBody } from 'back-end/lib/server';
+import { composeTransformRequest, HttpMethod, JsonResponseBody, mapJsonResponse, mapRespond, namespaceRoute, Respond, Route, Router, TransformRequestBody } from 'back-end/lib/server';
 import { Map, Set } from 'immutable';
 import { get } from 'lodash';
 import mongoose from 'mongoose';
@@ -31,34 +31,34 @@ export interface DeleteRequestParams {
   id: string;
 }
 
-export interface Create<Data, CreateRequestBody, ErrorResponseBody> {
+export interface Create<Data, CreateRequestBody, SuccessResponseBody, ErrorResponseBody> {
   transformRequestBody(Model: Model<Data>, ExtraModels: ExtraModels): TransformRequestBody<null, null, any, CreateRequestBody>;
-  run(Model: Model<Data>, ExtraModels: ExtraModels): Respond<null, null, CreateRequestBody, Data | ErrorResponseBody>;
+  run(Model: Model<Data>, ExtraModels: ExtraModels): Respond<null, null, CreateRequestBody, SuccessResponseBody | ErrorResponseBody>;
 }
 
-export type ReadOne<Data, ErrorResponseBody> = (Model: Model<Data>, ExtraModels: ExtraModels) => Respond<ReadOneRequestParams, null, null, Data | ErrorResponseBody>;
+export type ReadOne<Data, SuccessResponseBody, ErrorResponseBody> = (Model: Model<Data>, ExtraModels: ExtraModels) => Respond<ReadOneRequestParams, null, null, SuccessResponseBody | ErrorResponseBody>;
 
-export type ReadMany<Data, ErrorResponseBody> = (Model: Model<Data>, ExtraModels: ExtraModels) => Respond<null, ReadManyRequestQuery, null, ReadManyResponse<Data> | ErrorResponseBody>;
+export type ReadMany<Data, SuccessResponseBodyItem, ErrorResponseBody> = (Model: Model<Data>, ExtraModels: ExtraModels) => Respond<null, ReadManyRequestQuery, null, ReadManyResponse<SuccessResponseBodyItem> | ErrorResponseBody>;
 
-export interface Update<Data, UpdateRequestBody, ErrorResponseBody> {
+export interface Update<Data, UpdateRequestBody, SuccessResponseBody, ErrorResponseBody> {
   transformRequestBody(Model: Model<Data>, ExtraModels: ExtraModels): TransformRequestBody<UpdateRequestParams, null, any, UpdateRequestBody>;
-  run(Model: Model<Data>, ExtraModels: ExtraModels): Respond<UpdateRequestParams, null, UpdateRequestBody, Data | ErrorResponseBody>;
+  run(Model: Model<Data>, ExtraModels: ExtraModels): Respond<UpdateRequestParams, null, UpdateRequestBody, SuccessResponseBody | ErrorResponseBody>;
 }
 
-export type Delete<Data, ErrorResponseBody> = (Model: Model<Data>, ExtraModels: ExtraModels) => Respond<DeleteRequestParams, null, null, null | ErrorResponseBody>;
+export type Delete<Data, SuccessResponseBody, ErrorResponseBody> = (Model: Model<Data>, ExtraModels: ExtraModels) => Respond<DeleteRequestParams, null, null, SuccessResponseBody | ErrorResponseBody>;
 
-export interface Resource<Data, CreateRequestBody, UpdateRequestBody, CreateErrorResponseBody, ReadOneErrorResponseBody, ReadManyErrorResponseBody, UpdateErrorResponseBody, DeleteErrorResponseBody> {
+export interface Resource<Data, CRB, CSRB, CERB, ROSRB, ROERB, RMSRBI, RMERB, URB, USRB, UERB, DSRB, DERB> {
   routeNamespace: string;
   model: string;
   extraModels?: Set<string>;
-  create?: Create<Data, CreateRequestBody, CreateErrorResponseBody>;
-  readOne?: ReadOne<Data, ReadOneErrorResponseBody>;
-  readMany?: ReadMany<Data, ReadManyErrorResponseBody>;
-  update?: Update<Data, UpdateRequestBody, UpdateErrorResponseBody>;
-  delete?: Delete<Data, DeleteErrorResponseBody>;
+  create?: Create<Data, CRB, CSRB, CERB>;
+  readOne?: ReadOne<Data, ROSRB, ROERB>;
+  readMany?: ReadMany<Data, RMSRBI, RMERB>;
+  update?: Update<Data, URB, USRB, UERB>;
+  delete?: Delete<Data, DSRB, DERB>;
 }
 
-export function makeCreateRoute<Data, CreateRequestBody, ErrorResponseBody>(Model: Model<Data>, ExtraModels: ExtraModels, create: Create<Data, CreateRequestBody, ErrorResponseBody>): Route<null, null, CreateRequestBody, JsonResponseBody, null> {
+export function makeCreateRoute<Data, RB, SRB, ERB>(Model: Model<Data>, ExtraModels: ExtraModels, create: Create<Data, RB, SRB, ERB>): Route<null, null, RB, JsonResponseBody, null> {
   return {
     method: HttpMethod.Post,
     path: '/',
@@ -80,7 +80,7 @@ export function makeCreateRoute<Data, CreateRequestBody, ErrorResponseBody>(Mode
   };
 }
 
-export function makeReadOneRoute<Data, ErrorResponseBody>(Model: Model<Data>, ExtraModels: ExtraModels, readOne: ReadOne<Data, ErrorResponseBody>): Route<ReadOneRequestParams, null, null, JsonResponseBody, null> {
+export function makeReadOneRoute<Data, SRB, ERB>(Model: Model<Data>, ExtraModels: ExtraModels, readOne: ReadOne<Data, SRB, ERB>): Route<ReadOneRequestParams, null, null, JsonResponseBody, null> {
   return {
     method: HttpMethod.Get,
     path: '/:id',
@@ -97,7 +97,7 @@ export function makeReadOneRoute<Data, ErrorResponseBody>(Model: Model<Data>, Ex
   };
 }
 
-export function makeReadManyRoute<Data, ErrorResponseBody>(Model: Model<Data>, ExtraModels: ExtraModels, readMany: ReadMany<Data, ErrorResponseBody>): Route<null, ReadManyRequestQuery, null, JsonResponseBody, null> {
+export function makeReadManyRoute<Data, SRB, ERB>(Model: Model<Data>, ExtraModels: ExtraModels, readMany: ReadMany<Data, SRB, ERB>): Route<null, ReadManyRequestQuery, null, JsonResponseBody, null> {
   return {
     method: HttpMethod.Get,
     path: '/',
@@ -115,7 +115,7 @@ export function makeReadManyRoute<Data, ErrorResponseBody>(Model: Model<Data>, E
   };
 }
 
-export function makeUpdateRoute<Data, UpdateRequestBody, ErrorResponseBody>(Model: Model<Data>, ExtraModels: ExtraModels, update: Update<Data, UpdateRequestBody, ErrorResponseBody>): Route<UpdateRequestParams, null, UpdateRequestBody, JsonResponseBody, null> {
+export function makeUpdateRoute<Data, URB, SRB, ERB>(Model: Model<Data>, ExtraModels: ExtraModels, update: Update<Data, URB, SRB, ERB>): Route<UpdateRequestParams, null, URB, JsonResponseBody, null> {
   return {
     method: HttpMethod.Put,
     path: '/:id',
@@ -139,7 +139,7 @@ export function makeUpdateRoute<Data, UpdateRequestBody, ErrorResponseBody>(Mode
   };
 }
 
-export function makeDeleteRoute<Data, ErrorResponseBody>(Model: Model<Data>, ExtraModels: ExtraModels, deleteFn: Delete<Data, ErrorResponseBody>): Route<DeleteRequestParams, null, null, JsonResponseBody, null> {
+export function makeDeleteRoute<Data, SRB, ERB>(Model: Model<Data>, ExtraModels: ExtraModels, deleteFn: Delete<Data, SRB, ERB>): Route<DeleteRequestParams, null, null, JsonResponseBody, null> {
   return {
     method: HttpMethod.Delete,
     path: '/:id',
@@ -156,7 +156,7 @@ export function makeDeleteRoute<Data, ErrorResponseBody>(Model: Model<Data>, Ext
   };
 }
 
-export function makeRouter<Data, CRB, URB, CERB, ROERB, RMERB, UERB, DERB>(resource: Resource<Data, CRB, URB, CERB, ROERB, RMERB, UERB, DERB>): (Model: Model<Data>, ExtraModels: ExtraModels) => Router<JsonResponseBody> {
+export function makeRouter<Data, CRB, CSRB, CERB, ROSRB, ROERB, RMSRBI, RMERB, URB, USRB, UERB, DSRB, DERB>(resource: Resource<Data, CRB, CSRB, CERB, ROSRB, ROERB, RMSRBI, RMERB, URB, USRB, UERB, DSRB, DERB>): (Model: Model<Data>, ExtraModels: ExtraModels) => Router<JsonResponseBody> {
   return (Model, ExtraModels) => {
     // We do not destructure `delete` because it conflicts with a TypeScript keyword.
     const { create, readOne, readMany, update } = resource;
@@ -166,8 +166,6 @@ export function makeRouter<Data, CRB, URB, CERB, ROERB, RMERB, UERB, DERB>(resou
     if (readMany) { routes.push(makeReadManyRoute(Model, ExtraModels, readMany)); }
     if (update) { routes.push(makeUpdateRoute(Model, ExtraModels, update)); }
     if (resource.delete) { routes.push(makeDeleteRoute(Model, ExtraModels, resource.delete)); }
-    // Add namespace prefix
-    routes.forEach(route => route.path = `${resource.routeNamespace}${route.path}`);
-    return routes;
+    return routes.map(route => namespaceRoute(resource.routeNamespace, route));
   };
 }

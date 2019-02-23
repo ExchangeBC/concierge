@@ -1,9 +1,6 @@
-import { createdAtSchema, updatedAtSchema, userTypeSchema } from 'back-end/lib/schemas';
-import * as BuyerProfileSchema from 'back-end/schemas/buyer-profile';
-import * as ProgramStaffProfileSchema from 'back-end/schemas/program-staff-profile';
-import * as VendorProfileSchema from 'back-end/schemas/vendor-profile';
+import { createdAtSchema, updatedAtSchema } from 'back-end/lib/schemas';
 import * as mongoose from 'mongoose';
-import { UserType } from 'shared/lib/types';
+import { Profile } from 'shared/lib/types';
 
 export const NAME = 'User';
 
@@ -14,8 +11,7 @@ export interface Data {
   // Is the user account active or not?
   // Deleting a user account marks it as inactive (`active = false`).
   active: boolean;
-  userType: UserType;
-  profile: mongoose.Types.ObjectId;
+  profile: Profile;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,24 +35,7 @@ export const schema: mongoose.Schema = new mongoose.Schema({
     required: true,
     default: true
   },
-  userType: userTypeSchema,
-  // The user's profile depends on its userType.
-  profile: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    ref() {
-      switch (this.userType as UserType) {
-        case UserType.Buyer:
-          return BuyerProfileSchema.NAME;
-        case UserType.Vendor:
-          return VendorProfileSchema.NAME;
-        case UserType.ProgramStaff:
-          return ProgramStaffProfileSchema.NAME;
-      }
-    }
-  },
+  profile: mongoose.Schema.Types.Mixed,
   createdAt: createdAtSchema,
   updatedAt: updatedAtSchema
 } as mongoose.SchemaTypeOpts<any>);
-
-export default schema;
