@@ -1,5 +1,6 @@
-import { createdAtSchema, PhoneType, phoneTypeSchema, updatedAtSchema } from 'back-end/lib/schemas';
+import { createdAtSchema, phoneTypeSchema, updatedAtSchema } from 'back-end/lib/schemas';
 import * as mongoose from 'mongoose';
+import { PhoneType } from 'shared/lib/types';
 
 export const NAME = 'BuyerProfile';
 

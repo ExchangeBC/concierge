@@ -1,8 +1,9 @@
-import { createdAtSchema, updatedAtSchema, UserType, userTypeSchema } from 'back-end/lib/schemas';
+import { createdAtSchema, updatedAtSchema, userTypeSchema } from 'back-end/lib/schemas';
 import * as BuyerProfileSchema from 'back-end/schemas/buyer-profile';
 import * as ProgramStaffProfileSchema from 'back-end/schemas/program-staff-profile';
 import * as VendorProfileSchema from 'back-end/schemas/vendor-profile';
 import * as mongoose from 'mongoose';
+import { UserType } from 'shared/lib/types';
 
 export const NAME = 'User';
 
