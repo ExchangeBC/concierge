@@ -9,7 +9,7 @@ export type ProfileValidationErrors = BuyerProfileValidationErrors | VendorProfi
 
 export type FullProfileValidationErrors = ProfileValidationErrors | string[];
 
-export async function validateProfile(profile: object): Promise<ValidOrInvalid<Profile, FullProfileValidationErrors>> {
+export function validateProfile(profile: object): ValidOrInvalid<Profile, FullProfileValidationErrors> {
   const validatedUserType = validateUserType(getString(profile, 'type'));
   if (validatedUserType.tag === 'invalid') {
     return invalid(['Cannot validate a user profile without a valid user type.']);
@@ -17,7 +17,7 @@ export async function validateProfile(profile: object): Promise<ValidOrInvalid<P
   let validatedProfile: ValidOrInvalid<Profile, ProfileValidationErrors> | undefined;
   switch (validatedUserType.value) {
     case UserType.Buyer:
-      validatedProfile = await validateBuyerProfile(profile);
+      validatedProfile = validateBuyerProfile(profile);
       break;
     case UserType.Vendor:
       validatedProfile = validateVendorProfile(profile);

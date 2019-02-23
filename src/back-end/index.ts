@@ -22,7 +22,7 @@ async function start() {
   });
   logger.info('connected to MongoDB');
   // Declare resources.
-  const resources: Array<crud.Resource<any, any, any, any, any, any, any, any, any, any, any, any, any>> = [
+  const resources: Array<crud.Resource<any, any, any, any, any, any, any, any, any>> = [
     userResource
   ];
   // Declare models as a map.
@@ -38,7 +38,7 @@ async function start() {
   const flippedConcat = (a: any) => (b: any[]): any[] => concat(b)(a);
   const crudRoutes = flow([
     // Create routers from resources.
-    map((resource: crud.Resource<any, any, any, any, any, any, any, any, any, any, any, any, any>) => {
+    map((resource: crud.Resource<any, any, any, any, any, any, any, any, any>) => {
       const Model = Models.get(resource.model);
       const extraModels = resource.extraModels || Set([]);
       const ExtraModels = Models.filter((v, k) => !!extraModels.get(k));

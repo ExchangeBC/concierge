@@ -35,7 +35,7 @@ export function validateBranch(branch: string): Validation<string> {
   return validateGenericString(branch, 'Branch');
 }
 
-export async function validateBuyerProfile(profile: object): Promise<ValidOrInvalid<BuyerProfile, BuyerProfileValidationErrors>> {
+export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfile, BuyerProfileValidationErrors> {
   const validatedFirstName = optional(validateFirstName, getString(profile, 'firstName'), '');
   const validatedLastName = optional(validateLastName, getString(profile, 'lastName'), '');
   const validatedPositionTitle = optional(validatePositionTitle, getString(profile, 'positionTitle'), '');

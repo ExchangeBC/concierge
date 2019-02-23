@@ -5,6 +5,7 @@ import { Profile } from 'shared/lib/types';
 export const NAME = 'User';
 
 export interface Data {
+  _id: mongoose.Types.ObjectId;
   email: string;
   passwordHash: string;
   acceptedTermsAt?: Date;

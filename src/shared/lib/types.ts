@@ -3,6 +3,8 @@ export interface ADT<Tag, Value> {
   value: Value;
 }
 
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+
 export enum PhoneType {
   Office = 'OFFICE',
   CellPhone = 'CELL_PHONE'
