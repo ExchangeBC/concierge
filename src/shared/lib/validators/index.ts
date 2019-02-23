@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { Set } from 'immutable';
 import { isEqual } from 'lodash';
+import * as mongoose from 'mongoose';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
 import { ADT, parsePhoneType, parseUserType, PhoneType, UserType } from 'shared/lib/types';
@@ -99,13 +100,13 @@ export function validateStringArray(values: string[], availableValues: Set<strin
   }
 }
 
-/*function validateObjectId(objectId: string, name: string): Validation<string> {
+export function validateObjectId(objectId: string, name: string): Validation<string> {
   if (mongoose.Types.ObjectId.isValid(objectId)) {
     return valid(objectId);
   } else {
     return invalid([ `${name} is an invalid ObjectId.` ]);
   }
-}*/
+}
 
 export function validateEmail(email: string): Validation<string> {
   if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/i)) {

@@ -11,7 +11,7 @@ export async function validateEmail<Document extends mongoose.Document>(Model: m
       if (!user) {
         return valid(validation.value);
       } else {
-        return invalid(['Email already exists']);
+        return invalid([`${email} is already associated with another account.`]);
       }
   }
 }
