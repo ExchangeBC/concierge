@@ -1,13 +1,13 @@
+import { AvailableModels } from 'back-end/lib/app';
 import * as crud from 'back-end/lib/crud';
 import * as permissions from 'back-end/lib/permissions';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, mapRequestBody } from 'back-end/lib/server';
-import { validateEmail } from 'back-end/lib/validators';
-import { Set } from 'immutable';
+import { validateEmail, validatePassword } from 'back-end/lib/validators';
 import { isBoolean, isObject } from 'lodash';
 import { getString, identityAsync } from 'shared/lib';
-import { allValid, getInvalidValue, invalid, valid, validatePassword, ValidOrInvalid } from 'shared/lib/validators';
+import { allValid, getInvalidValue, invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 import { FullProfileValidationErrors, validateProfile } from 'shared/lib/validators/profile';
 
 interface CreateValidationErrors {
@@ -41,7 +41,7 @@ type UpdateResponseBody = UserSchema.PublicUser | UpdateValidationErrors;
 
 async function validateCreateRequestBody(Model: UserSchema.Model, email: string, password: string, acceptedTerms: boolean, profile: object): Promise<CreateRequestBody> {
   const validatedEmail = await validateEmail(Model, email);
-  const validatedPassword = await validatePassword(Model, password);
+  const validatedPassword = await validatePassword(password);
   const validatedProfile = validateProfile(profile);
   const now = new Date();
   if (allValid([validatedEmail, validatedPassword, validatedProfile])) {
@@ -74,8 +74,8 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, id: string, em
   }
   // Change password.
   if (newPassword && currentPassword) {
-    const correctPassword = await Model.authenticate(user, currentPassword);
-    const validatedNewPassword = await validatePassword(Model, newPassword);
+    const correctPassword = await UserSchema.authenticate(user, currentPassword);
+    const validatedNewPassword = await validatePassword(newPassword);
     if (correctPassword && validatedNewPassword.tag === 'valid') {
       user.passwordHash = validatedNewPassword.value
     } else {
@@ -131,16 +131,17 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, id: string, em
   return valid(user);
 }
 
-export type Resource = crud.Resource<UserSchema.Model, CreateRequestBody, CreateResponseBody, ReadOneResponseBody, ReadManyResponseBodyItem, ReadManyErrorResponseBody, UpdateRequestBody, UpdateResponseBody, DeleteResponseBody, SessionSchema.AppSession>;
+type RequiredModels = 'User' | 'Session';
+
+export type Resource = crud.Resource<AvailableModels, RequiredModels, CreateRequestBody, CreateResponseBody, ReadOneResponseBody, ReadManyResponseBodyItem, ReadManyErrorResponseBody, UpdateRequestBody, UpdateResponseBody, DeleteResponseBody, SessionSchema.AppSession>;
 
 const resource: Resource = {
 
   routeNamespace: 'users',
-  model: UserSchema.NAME,
-  extraModels: Set([SessionSchema.NAME]),
 
-  create(Model, ExtraModels) {
-    const SessionModel = ExtraModels.get(SessionSchema.NAME) as SessionSchema.Model;
+  create(Models) {
+    const UserModel = Models.User as UserSchema.Model;
+    const SessionModel = Models.Session as SessionSchema.Model;
     return {
       async transformRequest(request) {
         if (!permissions.createUser(request.session)) {
@@ -153,7 +154,7 @@ const resource: Resource = {
         const password = body.password ? String(body.password) : '';
         const acceptedTerms = isBoolean(body.acceptedTerms) ? body.acceptedTerms : false;
         const profile = isObject(body.profile) ? body.profile : {};
-        const validatedBody = await validateCreateRequestBody(Model, email, password, acceptedTerms, profile);
+        const validatedBody = await validateCreateRequestBody(UserModel, email, password, acceptedTerms, profile);
         return mapRequestBody(request, validatedBody);
       },
       async respond(request) {
@@ -163,23 +164,24 @@ const resource: Resource = {
             return basicResponse(invalidCode, request.session, request.body.value);
           case 'valid':
             const body = request.body.value;
-            const user = new Model(body);
+            const user = new UserModel(body);
             await user.save();
-            const validSession = await SessionSchema.login(SessionModel, Model, request.session, user._id);
+            const validSession = await SessionSchema.login(SessionModel, UserModel, request.session, user._id);
             return basicResponse(201, validSession, UserSchema.makePublicUser(user));
         }
       }
     };
   },
 
-  readOne(Model) {
+  readOne(Models) {
+    const UserModel = Models.User as UserSchema.Model;
     return {
       transformRequest: identityAsync,
       async respond(request) {
         if (!permissions.readOneUser(request.session, request.params.id)) {
           return basicResponse(401, request.session, null);
         }
-        const user = await Model.findOne({ _id: request.params.id, active: true });
+        const user = await UserModel.findOne({ _id: request.params.id, active: true });
         if (!user) {
           return basicResponse(404, request.session, null);
         } else {
@@ -190,14 +192,15 @@ const resource: Resource = {
   },
 
   // TODO pagination.
-  readMany(Model) {
+  readMany(Models) {
+    const UserModel = Models.User as UserSchema.Model;
     return {
       transformRequest: identityAsync,
       async respond(request) {
         if (!permissions.readManyUsers(request.session)) {
           return basicResponse(401, request.session, null);
         }
-        const users = await Model
+        const users = await UserModel
           .find({ active: true })
           .sort({ email: 1 })
           .exec();
@@ -211,7 +214,8 @@ const resource: Resource = {
     };
   },
 
-  update(Model) {
+  update(Models) {
+    const UserModel = Models.User as UserSchema.Model;
     return {
       async transformRequest(request) {
         const body = request.body;
@@ -226,7 +230,7 @@ const resource: Resource = {
         const acceptedTerms = isBoolean(body.acceptedTerms) ? body.acceptedTerms : undefined;
         const newPassword = getString(body, 'newPassword') || undefined;
         const currentPassword = getString(body, 'currentPassword') || undefined;
-        const validatedBody = await validateUpdateRequestBody(Model, id, email, profile, acceptedTerms, newPassword, currentPassword);
+        const validatedBody = await validateUpdateRequestBody(UserModel, id, email, profile, acceptedTerms, newPassword, currentPassword);
         return mapRequestBody(request, validatedBody);
       },
       async respond(request) {
@@ -243,15 +247,16 @@ const resource: Resource = {
     };
   },
 
-  delete(Model, ExtraModels) {
-    const SessionModel = ExtraModels.get(SessionSchema.NAME) as SessionSchema.Model;
+  delete(Models) {
+    const UserModel = Models.User as UserSchema.Model;
+    const SessionModel = Models.Session as SessionSchema.Model;
     return {
       transformRequest: identityAsync,
       async respond(request) {
         if (!permissions.deleteUser(request.session, request.params.id)) {
           return basicResponse(401, request.session, null);
         }
-        const user = await Model.findOne({ _id: request.params.id, active: true });
+        const user = await UserModel.findOne({ _id: request.params.id, active: true });
         if (!user) {
           return basicResponse(404, request.session, null);
         } else {

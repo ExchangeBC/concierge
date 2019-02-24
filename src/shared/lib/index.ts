@@ -13,3 +13,9 @@ export function getStringArray(obj: any, keyPath: string | string[]): string[] {
 export async function identityAsync<T>(a: T): Promise<T> {
   return a;
 }
+
+export type CurriedFunction<A, B, C> = (a: A) => (b: B) => C;
+
+export function flipCurried<A, B, C>(fn: CurriedFunction<A, B, C>): CurriedFunction<B, A, C> {
+  return (b: B) => (a: A) => fn(a)(b);
+}

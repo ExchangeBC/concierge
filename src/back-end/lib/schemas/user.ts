@@ -34,10 +34,7 @@ export function makePublicUser(user: Data): PublicUser {
   };
 }
 
-export interface Model extends mongoose.Model<Data & mongoose.Document> {
-  authenticate(user: InstanceType<Model>, password: string): Promise<boolean>;
-  hashPassword(password: string): Promise<string>;
-}
+export type Model = mongoose.Model<Data & mongoose.Document>;
 
 export const schema: mongoose.Schema = new mongoose.Schema({
   createdAt: createdAtSchema,
@@ -61,14 +58,10 @@ export const schema: mongoose.Schema = new mongoose.Schema({
   profile: mongoose.Schema.Types.Mixed
 });
 
-schema.statics.authenticate = (user: InstanceType<Model>, password: string): Promise<boolean> => {
-  return (async () => {
-    return await bcrypt.compare(password, user.passwordHash);
-  })();
+export async function authenticate(user: InstanceType<Model>, password: string): Promise<boolean> {
+  return await bcrypt.compare(password, user.passwordHash);
 };
 
-schema.statics.hashPassword = (password: string): Promise<string> => {
-  return (async () => {
-    return await bcrypt.hash(password, 10);
-  })();
+export async function hashPassword(password: string): Promise<string> {
+  return await bcrypt.hash(password, 10);
 };
