@@ -5,8 +5,10 @@ import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
 import { addHooksToRoute, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route } from 'back-end/lib/server';
 import { express } from 'back-end/lib/server/adapters';
+import sessionResource from 'back-end/resources/session';
 import userResource from 'back-end/resources/user';
 import frontEndRouter from 'back-end/routers/front-end';
+import * as SessionSchema from 'back-end/schemas/session';
 import * as UserSchema from 'back-end/schemas/user';
 import { Map, Set } from 'immutable';
 import { concat, flatten, flow, map } from 'lodash/fp';
@@ -23,11 +25,13 @@ async function start() {
   logger.info('connected to MongoDB');
   // Declare resources.
   const resources: Array<crud.Resource<any, any, any, any, any, any, any, any, any>> = [
-    userResource
+    userResource,
+    sessionResource
   ];
   // Declare models as a map.
   const Models: Map<string, mongoose.Model<mongoose.Document>> = Map({
-    [UserSchema.NAME]: model(UserSchema.NAME, UserSchema.schema)
+    [UserSchema.NAME]: model(UserSchema.NAME, UserSchema.schema),
+    [SessionSchema.NAME]: model(SessionSchema.NAME, SessionSchema.schema)
   });
   // Declare global hooks.
   const hooks = [

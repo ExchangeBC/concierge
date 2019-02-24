@@ -5,7 +5,7 @@ import { existsSync, readFileSync, statSync } from 'fs';
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http';
 import { assign } from 'lodash';
 import { lookup } from 'mime-types';
-import mongoose from 'mongoose';
+import * as mongoose from 'mongoose';
 import { ADT } from 'shared/lib/types';
 
 export enum HttpMethod {
@@ -183,12 +183,12 @@ export function mapRespond<RP, RQ, ReqB, ResBA, ResBB>(respond: Respond<RP, RQ, 
   };
 }
 
-export interface Handler<RP, RQ, ReqB, ResB> {
-  transformRequest: TransformRequest<object, object, any, RP, RQ, ReqB>;
-  respond: Respond<RP, RQ, ReqB, ResB>;
+export interface Handler<RPA, RQA, ReqBA, RPB, RQB, ReqBB, ResB> {
+  transformRequest: TransformRequest<RPA, RQA, ReqBA, RPB, RQB, ReqBB>;
+  respond: Respond<RPB, RQB, ReqBB, ResB>;
 }
 
-export const notFoundJsonHandler: Handler<any, any, any, JsonResponseBody> = {
+export const notFoundJsonHandler: Handler<any, any, any, any, any, any, JsonResponseBody> = {
 
   async transformRequest(request) {
     return request;
@@ -234,7 +234,7 @@ export function combineHooks(hooks: Array<RouteHook<any, any, any, any, any>>): 
 export interface Route<RP, RQ, ReqB, ResB, HS> {
   method: HttpMethod;
   path: string;
-  handler: Handler<RP, RQ, ReqB, ResB>;
+  handler: Handler<object, object, any, RP, RQ, ReqB, ResB>;
   hook?: RouteHook<RP, RQ, ReqB, ResB, HS>;
 }
 

@@ -6,6 +6,8 @@ export const NAME = 'User';
 
 export interface Data {
   _id: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
   email: string;
   passwordHash: string;
   acceptedTermsAt?: Date;
@@ -13,13 +15,13 @@ export interface Data {
   // Deleting a user account marks it as inactive (`active = false`).
   active: boolean;
   profile: Profile;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export type Model = mongoose.Model<Data & mongoose.Document>;
 
 export const schema: mongoose.Schema = new mongoose.Schema({
+  createdAt: createdAtSchema,
+  updatedAt: updatedAtSchema,
   email: {
     type: String,
     required: true,
@@ -36,7 +38,5 @@ export const schema: mongoose.Schema = new mongoose.Schema({
     required: true,
     default: true
   },
-  profile: mongoose.Schema.Types.Mixed,
-  createdAt: createdAtSchema,
-  updatedAt: updatedAtSchema
-} as mongoose.SchemaTypeOpts<any>);
+  profile: mongoose.Schema.Types.Mixed
+});
