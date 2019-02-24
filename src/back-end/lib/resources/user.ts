@@ -176,7 +176,6 @@ const resource: Resource = {
           body: await validateCreateRequestBody(Model, email, password, acceptedTerms, profile)
         };
       },
-      // TODO log in user automatically by updating session.
       async respond(request) {
         switch (request.body.tag) {
           case 'invalid':
@@ -193,7 +192,7 @@ const resource: Resource = {
             return {
               code: 201,
               headers: {},
-              session: request.session,
+              session: await SessionSchema.login(request.session, user._id),
               body: UserSchema.makePublicUser(user)
             };
         }
@@ -290,14 +289,17 @@ const resource: Resource = {
     };
   },
 
-  // TODO authentication.
-  // TODO log out user.
   delete(Model) {
     return {
       transformRequest: identityAsync,
       async respond(request) {
-        const user = await Model.findById(request.params.id);
-        if (!user || !user.active) {
+        let user = null;
+        // Is the user deleting their own account? Are they logged in?
+        if (request.session.user && request.session.user.toString() === request.params.id) {
+          user = await Model.findOne({ _id: request.params.id, active: true });
+        }
+        // If not, respond with a 404.
+        if (!user) {
           return {
             code: 404,
             headers: {},
@@ -305,12 +307,14 @@ const resource: Resource = {
             body: null
           };
         }
+        // If they are logged in, deactivate the account.
         user.active = false;
         await user.save();
         return {
           code: 200,
           headers: {},
-          session: request.session,
+          // Log the user out.
+          session: await SessionSchema.logout(request.session),
           body: null
         };
       }

@@ -32,6 +32,9 @@ export async function makePublicSession(session: InstanceType<Model>, UserModel:
         sessionId: session.sessionId,
         user: UserSchema.makePublicUser(user)
       };
+    } else {
+      // Log the user out if the user is not available.
+      session = await logout(session);
     }
   }
   return {
@@ -56,14 +59,16 @@ export const schema: mongoose.Schema = new mongoose.Schema({
   }
 });
 
-export async function login(session: InstanceType<Model>, userId: mongoose.Types.ObjectId): Promise<void> {
+export async function login(session: PrivateSession, userId: mongoose.Types.ObjectId): Promise<PrivateSession> {
   session.user = userId;
   await session.save();
+  return session;
 };
 
-export async function logout(session: InstanceType<Model>): Promise<void> {
+export async function logout(session: PrivateSession): Promise<PrivateSession> {
   session.user = undefined;
   await session.save();
+  return session;
 };
 
 export async function newPrivateSession(Model: Model, sessionId?: mongoose.Types.ObjectId): Promise<PrivateSession> {
