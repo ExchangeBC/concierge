@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt';
 import { Set } from 'immutable';
 import { isEqual } from 'lodash';
 import * as mongoose from 'mongoose';
@@ -116,7 +115,11 @@ export function validateEmail(email: string): Validation<string> {
   }
 }
 
-export async function validatePassword(password: string, hashPassword = true): Promise<Validation<string>> {
+interface CanHashPassword {
+  hashPassword(password: string): Promise<string>;
+}
+
+export async function validatePassword(Model: CanHashPassword, password: string, hashPassword = true): Promise<Validation<string>> {
   const hasNumber = !!password.match(/[0-9]/);
   const hasLowercaseLetter = !!password.match(/[a-z]/);
   const hasUppercaseLetter = !!password.match(/[A-Z]/);
@@ -126,7 +129,7 @@ export async function validatePassword(password: string, hashPassword = true): P
   if (errors.length) {
     return invalid(errors);
   } else {
-    return valid(hashPassword ? await bcrypt.hash(password, 10) : password);
+    return valid(hashPassword ? await Model.hashPassword(password) : password);
   }
 }
 

@@ -1,27 +1,11 @@
 import * as crud from 'back-end/lib/crud';
+import * as SessionSchema from 'back-end/lib/schemas/session';
+import * as UserSchema from 'back-end/lib/schemas/user';
 import { validateEmail } from 'back-end/lib/validators';
-import * as UserSchema from 'back-end/schemas/user';
-import bcrypt from 'bcrypt';
 import { isBoolean, isObject } from 'lodash';
 import { getString, identityAsync } from 'shared/lib';
-import { Omit } from 'shared/lib/types';
 import { allValid, getInvalidValue, invalid, valid, validatePassword, ValidOrInvalid } from 'shared/lib/validators';
 import { FullProfileValidationErrors, validateProfile } from 'shared/lib/validators/profile';
-
-type PublicUser = Omit<UserSchema.Data, 'passwordHash'> & { passwordHash: undefined };
-
-function makePublicUser(user: UserSchema.Data): PublicUser {
-  return {
-    _id: user._id,
-    email: user.email,
-    active: user.active,
-    profile: user.profile,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-    acceptedTermsAt: user.acceptedTermsAt,
-    passwordHash: undefined
-  };
-}
 
 interface CreateValidationErrors {
   email: string[];
@@ -31,11 +15,11 @@ interface CreateValidationErrors {
 
 type CreateRequestBody = ValidOrInvalid<UserSchema.Data, CreateValidationErrors>;
 
-type CreateResponseBody = PublicUser | CreateValidationErrors;
+type CreateResponseBody = UserSchema.PublicUser | CreateValidationErrors;
 
-type ReadOneResponseBody = PublicUser | null;
+type ReadOneResponseBody = UserSchema.PublicUser | null;
 
-type ReadManyResponseBodyItem = PublicUser;
+type ReadManyResponseBodyItem = UserSchema.PublicUser;
 
 type ReadManyErrorResponseBody = null;
 
@@ -49,11 +33,11 @@ interface UpdateValidationErrors extends CreateValidationErrors {
 
 type UpdateRequestBody = ValidOrInvalid<InstanceType<UserSchema.Model>, UpdateValidationErrors>;
 
-type UpdateResponseBody = PublicUser | UpdateValidationErrors;
+type UpdateResponseBody = UserSchema.PublicUser | UpdateValidationErrors;
 
 async function validateCreateRequestBody(Model: UserSchema.Model, email: string, password: string, acceptedTerms: boolean, profile: object): Promise<CreateRequestBody> {
   const validatedEmail = await validateEmail(Model, email);
-  const validatedPassword = await validatePassword(password);
+  const validatedPassword = await validatePassword(Model, password);
   const validatedProfile = validateProfile(profile);
   const now = new Date();
   if (allValid([validatedEmail, validatedPassword, validatedProfile])) {
@@ -90,8 +74,8 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, id: string, em
   }
   // If the user wants to change the password, can they?
   if (newPassword && currentPassword) {
-    const correctPassword = await bcrypt.compare(currentPassword, user.passwordHash);
-    const validatedNewPassword = await validatePassword(newPassword);
+    const correctPassword = await Model.authenticate(user, currentPassword);
+    const validatedNewPassword = await validatePassword(Model, newPassword);
     if (correctPassword && validatedNewPassword.tag === 'valid') {
       user.passwordHash = validatedNewPassword.value
     } else {
@@ -171,7 +155,7 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, id: string, em
   return valid(user);
 }
 
-export type Resource = crud.Resource<UserSchema.Data, CreateRequestBody, CreateResponseBody, ReadOneResponseBody, ReadManyResponseBodyItem, ReadManyErrorResponseBody, UpdateRequestBody, UpdateResponseBody, DeleteResponseBody>;
+export type Resource = crud.Resource<UserSchema.Model, CreateRequestBody, CreateResponseBody, ReadOneResponseBody, ReadManyResponseBodyItem, ReadManyErrorResponseBody, UpdateRequestBody, UpdateResponseBody, DeleteResponseBody, SessionSchema.Data>;
 
 const resource: Resource = {
 
@@ -192,12 +176,14 @@ const resource: Resource = {
           body: await validateCreateRequestBody(Model, email, password, acceptedTerms, profile)
         };
       },
+      // TODO log in user automatically by updating session.
       async respond(request) {
         switch (request.body.tag) {
           case 'invalid':
             return {
               code: 400,
               headers: {},
+              session: request.session,
               body: request.body.value
             };
           case 'valid':
@@ -207,7 +193,8 @@ const resource: Resource = {
             return {
               code: 201,
               headers: {},
-              body: makePublicUser(user)
+              session: request.session,
+              body: UserSchema.makePublicUser(user)
             };
         }
       }
@@ -224,13 +211,15 @@ const resource: Resource = {
           return {
             code: 404,
             headers: {},
+            session: request.session,
             body: null
           };
         }
         return {
           code: 200,
           headers: {},
-          body: makePublicUser(user)
+          session: request.session,
+          body: UserSchema.makePublicUser(user)
         };
       }
     };
@@ -249,11 +238,12 @@ const resource: Resource = {
         return {
           code: 200,
           headers: {},
+          session: request.session,
           body: {
             total: users.length,
             offset: 0,
             count: users.length,
-            items: users.map(user => makePublicUser(user))
+            items: users.map(user => UserSchema.makePublicUser(user))
           }
         };
       }
@@ -283,6 +273,7 @@ const resource: Resource = {
             return {
               code: 400,
               headers: {},
+              session: request.session,
               body: request.body.value
             };
           case 'valid':
@@ -291,7 +282,8 @@ const resource: Resource = {
             return {
               code: 200,
               headers: {},
-              body: makePublicUser(user)
+              session: request.session,
+              body: UserSchema.makePublicUser(user)
             };
         }
       }
@@ -299,6 +291,7 @@ const resource: Resource = {
   },
 
   // TODO authentication.
+  // TODO log out user.
   delete(Model) {
     return {
       transformRequest: identityAsync,
@@ -308,6 +301,7 @@ const resource: Resource = {
           return {
             code: 404,
             headers: {},
+            session: request.session,
             body: null
           };
         }
@@ -316,6 +310,7 @@ const resource: Resource = {
         return {
           code: 200,
           headers: {},
+          session: request.session,
           body: null
         };
       }

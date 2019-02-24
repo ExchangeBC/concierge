@@ -13,6 +13,6 @@ export const PORT = parseInt(get('PORT', '3000'), 10);
 
 export const MONGO_URL = get('MONGO_URL', 'mongodb://localhost:27017/concierge');
 
-export const SECRET = get('SECRET', 'foobar');
+export const COOKIE_SECRET = get('COOKIE_SECRET', 'foobar');
 
 export const FRONT_END_BUILD_DIR = resolve(__dirname, '../../build/front-end');
