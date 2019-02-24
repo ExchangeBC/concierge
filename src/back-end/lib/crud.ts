@@ -1,4 +1,4 @@
-import { composeTransformRequest, HttpMethod, JsonResponseBody, mapJsonResponse, mapRespond, namespaceRoute, Respond, Route, Router, TransformRequestBody } from 'back-end/lib/server';
+import { composeTransformRequest, Handler, HttpMethod, JsonResponseBody, mapJsonResponse, mapRespond, namespaceRoute, Route, Router } from 'back-end/lib/server';
 import { Map, Set } from 'immutable';
 import { get } from 'lodash';
 import mongoose from 'mongoose';
@@ -31,21 +31,17 @@ export interface DeleteRequestParams {
   id: string;
 }
 
-export interface Create<Data, RequestBody, ResponseBody> {
-  transformRequestBody(Model: Model<Data>, ExtraModels: ExtraModels): TransformRequestBody<null, null, any, RequestBody>;
-  run(Model: Model<Data>, ExtraModels: ExtraModels): Respond<null, null, RequestBody, ResponseBody>;
-}
+export type CrudAction<Data, RPA, RQA, ReqA, RPB, RQB, ReqB, ResB> = (Model: Model<Data>, ExtraModels: ExtraModels) => Handler<RPA, RQA, ReqA, RPB, RQB, ReqB, ResB>;
 
-export type ReadOne<Data, ResponseBody> = (Model: Model<Data>, ExtraModels: ExtraModels) => Respond<ReadOneRequestParams, null, null, ResponseBody>;
+export type Create<Data, RequestBody, ResponseBody> = CrudAction<Data, null, null, any, null, null, RequestBody, ResponseBody>;
 
-export type ReadMany<Data, ResponseBodyItem, ErrorResponseBody> = (Model: Model<Data>, ExtraModels: ExtraModels) => Respond<null, ReadManyRequestQuery, null, ReadManyResponse<ResponseBodyItem> | ErrorResponseBody>;
+export type ReadOne<Data, ResponseBody> = CrudAction<Data, ReadOneRequestParams, null, null, ReadOneRequestParams, null, null, ResponseBody>;
 
-export interface Update<Data, UpdateRequestBody, ResponseBody> {
-  transformRequestBody(Model: Model<Data>, ExtraModels: ExtraModels): TransformRequestBody<UpdateRequestParams, null, any, UpdateRequestBody>;
-  run(Model: Model<Data>, ExtraModels: ExtraModels): Respond<UpdateRequestParams, null, UpdateRequestBody, ResponseBody>;
-}
+export type ReadMany<Data, RequestBodyItem, ErrorResponseBody> = CrudAction<Data, null, ReadManyRequestQuery, null, null, ReadManyRequestQuery, null, ReadManyResponse<RequestBodyItem> | ErrorResponseBody>;
 
-export type Delete<Data, ResponseBody> = (Model: Model<Data>, ExtraModels: ExtraModels) => Respond<DeleteRequestParams, null, null, ResponseBody>;
+export type Update<Data, RequestBody, ResponseBody> = CrudAction<Data, UpdateRequestParams, null, any, UpdateRequestParams, null, RequestBody, ResponseBody>;
+
+export type Delete<Data, ResponseBody> = CrudAction<Data, DeleteRequestParams, null, null, DeleteRequestParams, null, null, ResponseBody>;
 
 export interface Resource<Data, CReqB, CResB, ROResB, RMResBI, RMEResB, UReqB, UResB, DResB> {
   routeNamespace: string;
@@ -59,6 +55,7 @@ export interface Resource<Data, CReqB, CResB, ROResB, RMResBI, RMEResB, UReqB, U
 }
 
 export function makeCreateRoute<Data, ReqB, ResB>(Model: Model<Data>, ExtraModels: ExtraModels, create: Create<Data, ReqB, ResB>): Route<null, null, ReqB, JsonResponseBody, null> {
+  const handler = create(Model, ExtraModels);
   return {
     method: HttpMethod.Post,
     path: '/',
@@ -69,53 +66,58 @@ export function makeCreateRoute<Data, ReqB, ResB>(Model: Model<Data>, ExtraModel
           query: null,
           body: request.body
         }),
-        async request => ({
-          params: request.params,
-          query: request.query,
-          body: await create.transformRequestBody(Model, ExtraModels)(request)
-        })
+        handler.transformRequest
       ),
-      respond: mapRespond(create.run(Model, ExtraModels), mapJsonResponse)
+      respond: mapRespond(handler.respond, mapJsonResponse)
     }
   };
 }
 
 export function makeReadOneRoute<Data, ResB>(Model: Model<Data>, ExtraModels: ExtraModels, readOne: ReadOne<Data, ResB>): Route<ReadOneRequestParams, null, null, JsonResponseBody, null> {
+  const handler = readOne(Model, ExtraModels);
   return {
     method: HttpMethod.Get,
     path: '/:id',
     handler: {
-      transformRequest: async request => ({
-        params: {
-          id: get(request, ['params', 'id'], '')
-        },
-        query: null,
-        body: null
-      }),
-      respond: mapRespond(readOne(Model, ExtraModels), mapJsonResponse)
+      transformRequest: composeTransformRequest(
+        async request => ({
+          params: {
+            id: get(request, ['params', 'id'], '')
+          },
+          query: null,
+          body: null
+        }),
+        handler.transformRequest
+      ),
+      respond: mapRespond(handler.respond, mapJsonResponse)
     }
   };
 }
 
 export function makeReadManyRoute<Data, ResBI, ERB>(Model: Model<Data>, ExtraModels: ExtraModels, readMany: ReadMany<Data, ResBI, ERB>): Route<null, ReadManyRequestQuery, null, JsonResponseBody, null> {
+  const handler = readMany(Model, ExtraModels);
   return {
     method: HttpMethod.Get,
     path: '/',
     handler: {
-      transformRequest: async request => ({
-        params: null,
-        query: {
-          offset: get(request, ['params', 'offset'], ''),
-          count: get(request, ['params', 'count'], '')
-        },
-        body: null
-      }),
-      respond: mapRespond(readMany(Model, ExtraModels), mapJsonResponse)
+      transformRequest: composeTransformRequest(
+        async request => ({
+          params: null,
+          query: {
+            offset: get(request, ['params', 'offset'], ''),
+            count: get(request, ['params', 'count'], '')
+          },
+          body: null
+        }),
+        handler.transformRequest
+      ),
+      respond: mapRespond(handler.respond, mapJsonResponse)
     }
   };
 }
 
 export function makeUpdateRoute<Data, ReqB, ResB>(Model: Model<Data>, ExtraModels: ExtraModels, update: Update<Data, ReqB, ResB>): Route<UpdateRequestParams, null, ReqB, JsonResponseBody, null> {
+  const handler = update(Model, ExtraModels);
   return {
     method: HttpMethod.Put,
     path: '/:id',
@@ -128,30 +130,30 @@ export function makeUpdateRoute<Data, ReqB, ResB>(Model: Model<Data>, ExtraModel
           query: null,
           body: request.body
         }),
-        async request => ({
-          params: request.params,
-          query: request.query,
-          body: await update.transformRequestBody(Model, ExtraModels)(request)
-        })
+        handler.transformRequest
       ),
-      respond: mapRespond(update.run(Model, ExtraModels), mapJsonResponse)
+      respond: mapRespond(handler.respond, mapJsonResponse)
     }
   };
 }
 
 export function makeDeleteRoute<Data, ResB>(Model: Model<Data>, ExtraModels: ExtraModels, deleteFn: Delete<Data, ResB>): Route<DeleteRequestParams, null, null, JsonResponseBody, null> {
+  const handler = deleteFn(Model, ExtraModels);
   return {
     method: HttpMethod.Delete,
     path: '/:id',
     handler: {
-      transformRequest: async request => ({
-        params: {
-          id: get(request, ['params', 'id'], '')
-        },
-        query: null,
-        body: null
-      }),
-      respond: mapRespond(deleteFn(Model, ExtraModels), mapJsonResponse)
+      transformRequest: composeTransformRequest(
+        async request => ({
+          params: {
+            id: get(request, ['params', 'id'], '')
+          },
+          query: null,
+          body: null
+        }),
+        handler.transformRequest
+      ),
+      respond: mapRespond(handler.respond, mapJsonResponse)
     }
   };
 }

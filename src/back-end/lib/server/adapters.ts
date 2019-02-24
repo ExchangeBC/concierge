@@ -1,6 +1,6 @@
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
-import { ErrorResponseBody, FileResponseBody, JsonResponseBody, makeErrorResponseBody, parseHttpMethod, Request, Response, Route, Router, TextResponseBody } from 'back-end/lib/server';
+import { ErrorResponseBody, FileResponseBody, HttpMethod, JsonResponseBody, makeErrorResponseBody, parseHttpMethod, Request, Response, Route, Router, TextResponseBody } from 'back-end/lib/server';
 import bodyParser from 'body-parser';
 import expressLib from 'express';
 import { assign } from 'lodash';
@@ -61,7 +61,7 @@ export const express: Adapter<expressLib.Application, ExpressResponseBody> = {
       return asyncHandler(async (expressReq, expressRes, next) => {
           // Handle the request if it has the correct HTTP method.
           const method = parseHttpMethod(expressReq.method);
-          if (method !== route.method) { next(); return; }
+          if (method !== HttpMethod.Any && method !== route.method) { next(); return; }
           // Create the initial request.
           const requestId = new mongoose.Types.ObjectId();
           let request: InitialRequest = {
@@ -75,7 +75,10 @@ export const express: Adapter<expressLib.Application, ExpressResponseBody> = {
             body: expressReq.body
           };
           // Transform the request according to the route handler.
-          request = assign(request, await route.handler.transformRequest(request));
+          const transformRequest = route.handler.transformRequest;
+          if (transformRequest) {
+            request = assign(request, await transformRequest(request));
+          }
           // Run the before hook if specified.
           const hookState = route.hook ? await route.hook.before(request) : null;
           // Respond to the request using internal types.

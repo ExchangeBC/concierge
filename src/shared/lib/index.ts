@@ -9,3 +9,7 @@ export function getStringArray(obj: any, keyPath: string | string[]): string[] {
   if (!isArray(value)) { return []; }
   return value.map(v => String(v));
 }
+
+export async function identityAsync<T>(a: T): Promise<T> {
+  return a;
+}

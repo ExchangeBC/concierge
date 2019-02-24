@@ -3,7 +3,7 @@ import { validateEmail } from 'back-end/lib/validators';
 import * as UserSchema from 'back-end/schemas/user';
 import bcrypt from 'bcrypt';
 import { isBoolean, isObject } from 'lodash';
-import { getString } from 'shared/lib';
+import { getString, identityAsync } from 'shared/lib';
 import { Omit } from 'shared/lib/types';
 import { allValid, getInvalidValue, invalid, valid, validatePassword, ValidOrInvalid } from 'shared/lib/validators';
 import { FullProfileValidationErrors, validateProfile } from 'shared/lib/validators/profile';
@@ -178,21 +178,21 @@ const resource: Resource = {
   routeNamespace: 'users',
   model: UserSchema.NAME,
 
-  create: {
-
-    transformRequestBody(Model) {
-      return async request => {
+  create(Model) {
+    return {
+      async transformRequest(request) {
         const body = request.body;
         const email = body.email ? String(body.email) : '';
         const password = body.password ? String(body.password) : '';
         const acceptedTerms = isBoolean(body.acceptedTerms) ? body.acceptedTerms : false;
         const profile = isObject(body.profile) ? body.profile : {};
-        return await validateCreateRequestBody(Model, email, password, acceptedTerms, profile);
-      };
-    },
-
-    run(Model) {
-      return async request => {
+        return {
+          params: request.params,
+          query: request.query,
+          body: await validateCreateRequestBody(Model, email, password, acceptedTerms, profile)
+        };
+      },
+      async respond(request) {
         switch (request.body.tag) {
           case 'invalid':
             return {
@@ -210,56 +210,60 @@ const resource: Resource = {
               body: makePublicUser(user)
             };
         }
-      };
-    }
-
+      }
+    };
   },
 
   // TODO authentication.
   readOne(Model) {
-    return async request => {
-      const user = await Model.findById(request.params.id);
-      if (!user || !user.active) {
+    return {
+      transformRequest: identityAsync,
+      async respond(request) {
+        const user = await Model.findById(request.params.id);
+        if (!user || !user.active) {
+          return {
+            code: 404,
+            headers: {},
+            body: null
+          };
+        }
         return {
-          code: 404,
+          code: 200,
           headers: {},
-          body: null
+          body: makePublicUser(user)
         };
       }
-      return {
-        code: 200,
-        headers: {},
-        body: makePublicUser(user)
-      };
     };
   },
 
   // TODO authentication.
   // TODO pagination.
   readMany(Model) {
-    return async request => {
-      const users = await Model
-        .find({ active: true })
-        .sort({ email: 1 })
-        .exec();
-      return {
-        code: 200,
-        headers: {},
-        body: {
-          total: users.length,
-          offset: 0,
-          count: users.length,
-          items: users.map(user => makePublicUser(user))
-        }
-      };
+    return {
+      transformRequest: identityAsync,
+      async respond(request) {
+        const users = await Model
+          .find({ active: true })
+          .sort({ email: 1 })
+          .exec();
+        return {
+          code: 200,
+          headers: {},
+          body: {
+            total: users.length,
+            offset: 0,
+            count: users.length,
+            items: users.map(user => makePublicUser(user))
+          }
+        };
+      }
     };
   },
 
   // TODO authentication.
-  update: {
-
-    transformRequestBody(Model) {
-      return async request => {
+  update(Model) {
+    return {
+      async transformRequest(request) {
         const body = request.body;
         const id = request.params.id;
         const email = getString(body, 'email') || undefined;
@@ -267,12 +271,13 @@ const resource: Resource = {
         const acceptedTerms = isBoolean(body.acceptedTerms) ? body.acceptedTerms : undefined;
         const newPassword = getString(body, 'newPassword') || undefined;
         const currentPassword = getString(body, 'currentPassword') || undefined;
-        return await validateUpdateRequestBody(Model, id, email, profile, acceptedTerms, newPassword, currentPassword);
-      };
-    },
-
-    run(Model) {
-      return async request => {
+        return {
+          params: request.params,
+          query: request.query,
+          body: await validateUpdateRequestBody(Model, id, email, profile, acceptedTerms, newPassword, currentPassword)
+        };
+      },
+      async respond(request) {
         switch (request.body.tag) {
           case 'invalid':
             return {
@@ -289,32 +294,33 @@ const resource: Resource = {
               body: makePublicUser(user)
             };
         }
-      };
-    }
-
+      }
+    };
   },
 
   // TODO authentication.
   delete(Model) {
-    return async request => {
-      const user = await Model.findById(request.params.id);
-      if (!user || !user.active) {
+    return {
+      transformRequest: identityAsync,
+      async respond(request) {
+        const user = await Model.findById(request.params.id);
+        if (!user || !user.active) {
+          return {
+            code: 404,
+            headers: {},
+            body: null
+          };
+        }
+        user.active = false;
+        await user.save();
         return {
-          code: 404,
+          code: 200,
           headers: {},
           body: null
         };
       }
-      user.active = false;
-      await user.save();
-      return {
-        code: 200,
-        headers: {},
-        body: null
-      };
     };
   }
-
 };
 
 export default resource;

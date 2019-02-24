@@ -15,11 +15,10 @@ export enum HttpMethod {
   Put = 'PUT',
   Patch = 'PATCH',
   Delete = 'DELETE',
-  Options = 'OPTIONS',
-  Unknown = 'UNKNOWN'
+  Options = 'OPTIONS'
 }
 
-export function parseHttpMethod(raw: string): HttpMethod {
+export function parseHttpMethod(raw: string): HttpMethod | null {
   switch (raw.toLowerCase()) {
     case 'get':
       return HttpMethod.Get;
@@ -34,7 +33,7 @@ export function parseHttpMethod(raw: string): HttpMethod {
     case 'options':
       return HttpMethod.Options;
     default:
-      return HttpMethod.Unknown;
+      return null;
   }
 }
 
