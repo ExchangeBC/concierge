@@ -8,7 +8,11 @@ type CreateRequestBody = InstanceType<UserSchema.Model> | null;
 
 type CreateResponseBody = SessionSchema.PublicSession | null;
 
-export type Resource = crud.Resource<SessionSchema.Model, CreateRequestBody, CreateResponseBody, null, null, null, null, null, null, SessionSchema.Data>;
+type ReadOneResponseBody = SessionSchema.PublicSession | null;
+
+type DeleteResponseBody = SessionSchema.PublicSession;
+
+export type Resource = crud.Resource<SessionSchema.Model, CreateRequestBody, CreateResponseBody, ReadOneResponseBody, null, null, null, null, DeleteResponseBody, SessionSchema.PrivateSession>;
 
 export const resource: Resource = {
 
@@ -24,7 +28,7 @@ export const resource: Resource = {
         const email = getString(request.body, 'email');
         const password = getString(request.body, 'password');
         let body = null;
-        if (UserModel) {
+        if (!request.session.user && UserModel) {
           const user = await UserModel.findOne({ email, active: true }).exec();
           const authenticated = user ? await UserModel.authenticate(user, password) : false;
           body = authenticated ? user : null;
@@ -37,15 +41,12 @@ export const resource: Resource = {
       },
       async respond(request) {
         if (UserModel && request.body) {
-          const session = new Model({
-            user: request.body._id,
-            createdAt: new Date()
-          });
+          await SessionSchema.login(request.session, request.body._id);
           return {
             code: 200,
             headers: {},
             session: request.session,
-            body: await SessionSchema.makePublicSession(session, UserModel)
+            body: await SessionSchema.makePublicSession(request.session, UserModel)
           };
         } else {
           return {
@@ -59,30 +60,43 @@ export const resource: Resource = {
     };
   },
 
-  readOne(Model) {
+  readOne(Model, ExtraModels) {
+    const UserModel = ExtraModels.get(UserSchema.NAME) as UserSchema.Model;
     return {
       transformRequest: identityAsync,
       async respond(request) {
-        return {
-          code: 200,
-          headers: {},
-          session: request.session,
-          body: null
-        };
+        if (request.params.id !== request.session.sessionId.toString()) {
+          return {
+            code: 401,
+            headers: {},
+            session: request.session,
+            body: null
+          };
+        } else {
+          return {
+            code: 200,
+            headers: {},
+            session: request.session,
+            body: await SessionSchema.makePublicSession(request.session, UserModel)
+          };
+        }
       }
     };
   },
 
   // Log out.
-  delete(Model) {
+  delete(Model, ExtraModels) {
+    const UserModel = ExtraModels.get(UserSchema.NAME) as UserSchema.Model;
     return {
       transformRequest: identityAsync,
       async respond(request) {
+        await Model.findByIdAndDelete(request.session._id);
+        const newSession = await SessionSchema.newPrivateSession(Model);
         return {
           code: 200,
           headers: {},
-          session: request.session,
-          body: null
+          session: newSession,
+          body: await SessionSchema.makePublicSession(newSession, UserModel)
         };
       }
     }

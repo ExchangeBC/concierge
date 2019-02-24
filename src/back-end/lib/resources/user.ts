@@ -155,7 +155,7 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, id: string, em
   return valid(user);
 }
 
-export type Resource = crud.Resource<UserSchema.Model, CreateRequestBody, CreateResponseBody, ReadOneResponseBody, ReadManyResponseBodyItem, ReadManyErrorResponseBody, UpdateRequestBody, UpdateResponseBody, DeleteResponseBody, SessionSchema.Data>;
+export type Resource = crud.Resource<UserSchema.Model, CreateRequestBody, CreateResponseBody, ReadOneResponseBody, ReadManyResponseBodyItem, ReadManyErrorResponseBody, UpdateRequestBody, UpdateResponseBody, DeleteResponseBody, SessionSchema.PrivateSession>;
 
 const resource: Resource = {
 

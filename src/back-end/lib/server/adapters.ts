@@ -8,6 +8,8 @@ import expressLib from 'express';
 import { assign } from 'lodash';
 import mongoose from 'mongoose';
 
+// tslint:disable no-console
+
 const SESSION_COOKIE_NAME = 'sid';
 
 export type InitialRequest<Session> = Request<object, object, any, Session>;
@@ -64,6 +66,7 @@ export function express<Session>(): ExpressAdapter<Session> {
             .catch(err => {
               const body = makeErrorResponseBody(err);
               // Respond with a 500 if an error occurs.
+              console.error(err);
               expressRes
                 .status(500)
                 .json(body.value);
