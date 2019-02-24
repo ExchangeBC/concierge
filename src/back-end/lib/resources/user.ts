@@ -7,6 +7,8 @@ import { getString, identityAsync } from 'shared/lib';
 import { allValid, getInvalidValue, invalid, valid, validatePassword, ValidOrInvalid } from 'shared/lib/validators';
 import { FullProfileValidationErrors, validateProfile } from 'shared/lib/validators/profile';
 
+// TODO use user types to determine access control.
+
 interface CreateValidationErrors {
   email: string[];
   password: string[];
@@ -201,12 +203,17 @@ const resource: Resource = {
   },
 
   // TODO authentication.
+  // TODO program staff can access all user accounts.
   readOne(Model) {
     return {
       transformRequest: identityAsync,
       async respond(request) {
-        const user = await Model.findById(request.params.id);
-        if (!user || !user.active) {
+        let user = null;
+        // Is the user reading their own account? Are they logged in?
+        if (request.session.user && request.session.user.toString() === request.params.id) {
+          user = await Model.findOne({ _id: request.params.id, active: true });
+        }
+        if (!user) {
           return {
             code: 404,
             headers: {},
@@ -226,6 +233,7 @@ const resource: Resource = {
 
   // TODO authentication.
   // TODO pagination.
+  // TODO program staff can access all user accounts.
   readMany(Model) {
     return {
       transformRequest: identityAsync,
@@ -249,10 +257,23 @@ const resource: Resource = {
     };
   },
 
-  // TODO authentication.
   update(Model) {
     return {
       async transformRequest(request) {
+        if (request.session.user && request.session.user.toString() !== request.params.id) {
+          return {
+            params: request.params,
+            query: request.query,
+            body: invalid({
+              id: ['You do not have access to this account'],
+              currentPassword: [],
+              acceptedTerms: [],
+              email: [],
+              password: [],
+              profile: []
+            })
+          }
+        }
         const body = request.body;
         const id = request.params.id;
         const email = getString(body, 'email') || undefined;
@@ -298,7 +319,6 @@ const resource: Resource = {
         if (request.session.user && request.session.user.toString() === request.params.id) {
           user = await Model.findOne({ _id: request.params.id, active: true });
         }
-        // If not, respond with a 404.
         if (!user) {
           return {
             code: 404,
@@ -307,7 +327,7 @@ const resource: Resource = {
             body: null
           };
         }
-        // If they are logged in, deactivate the account.
+        // Deactivate the account.
         user.active = false;
         await user.save();
         return {

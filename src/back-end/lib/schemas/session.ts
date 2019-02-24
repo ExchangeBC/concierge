@@ -6,6 +6,13 @@ import mongooseDefault from 'mongoose';
 import { Omit } from 'shared/lib/types';
 
 // tslint:disable no-console
+// TODO
+// isAuthenticated()
+// isVendor()
+// isBuyer()
+// isProgramStaff()
+// Populate user object on session somehow in a type-safe way.
+//   Change PrivateSession to be JSON, use Model.findOneAndUpdate to perform mutations.
 
 export const NAME = 'Session';
 
