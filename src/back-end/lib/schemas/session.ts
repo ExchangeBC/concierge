@@ -1,108 +1,112 @@
-import { createdAtSchema } from 'back-end/lib/schemas';
+import { createdAtSchema, updatedAtSchema } from 'back-end/lib/schemas';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { SessionId } from 'back-end/lib/server';
 import * as mongoose from 'mongoose';
 import mongooseDefault from 'mongoose';
-import { Omit } from 'shared/lib/types';
+import { parseUserType, UserType } from 'shared/lib/types';
 
 // tslint:disable no-console
-// TODO
-// isAuthenticated()
-// isVendor()
-// isBuyer()
-// isProgramStaff()
-// Populate user object on session somehow in a type-safe way.
-//   Change PrivateSession to be JSON, use Model.findOneAndUpdate to perform mutations.
 
 export const NAME = 'Session';
+
+interface SessionUser {
+  id: mongoose.Types.ObjectId;
+  type: UserType;
+}
 
 export interface Data {
   _id: mongoose.Types.ObjectId;
   createdAt: Date;
+  updatedAt: Date;
   sessionId: mongoose.Types.ObjectId;
-  user?: mongoose.Types.ObjectId;
-}
-
-export type PrivateSession = InstanceType<Model>;
-
-export interface PublicSession extends Omit<Data, 'user'> {
-  user?: UserSchema.PublicUser;
-}
-
-export async function makePublicSession(session: InstanceType<Model>, UserModel: UserSchema.Model): Promise<PublicSession> {
-  if (session.user) {
-    const user = await UserModel.findOne({ _id: session.user, active: true }).exec();
-    if (user) {
-      return {
-        _id: session._id,
-        createdAt: session.createdAt,
-        sessionId: session.sessionId,
-        user: UserSchema.makePublicUser(user)
-      };
-    } else {
-      // Log the user out if the user is not available.
-      session = await logout(session);
-    }
-  }
-  return {
-    _id: session._id,
-    createdAt: session.createdAt,
-    sessionId: session.sessionId
-  };
+  user?: SessionUser
 }
 
 export type Model = mongoose.Model<Data & mongoose.Document>;
 
 export const schema: mongoose.Schema = new mongoose.Schema({
   createdAt: createdAtSchema,
+  updatedAt: updatedAtSchema,
   sessionId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
     unique: true
   },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: UserSchema.NAME
-  }
+  user: mongoose.Schema.Types.Mixed
 });
 
-export async function login(session: PrivateSession, userId: mongoose.Types.ObjectId): Promise<PrivateSession> {
-  session.user = userId;
-  await session.save();
-  return session;
+export type AppSession = Data;
+
+export async function login(SessionModel: Model, UserModel: UserSchema.Model, session: AppSession, userId: mongoose.Types.ObjectId): Promise<AppSession> {
+  try {
+    const user = await UserModel
+      .findById(userId)
+      .exec();
+    if (!user) { return session; }
+    const userType = parseUserType(user.profile.type);
+    if (!userType) { return session; }
+    const sessionDoc = await SessionModel
+      .findById(session._id)
+      .exec();
+    if (!sessionDoc) { return session; }
+    sessionDoc.user = {
+      id: user._id,
+      type: userType
+    };
+    sessionDoc.updatedAt = new Date();
+    await sessionDoc.save();
+    return sessionDoc.toJSON();
+  } catch (error) {
+    return session;
+  }
 };
 
-export async function logout(session: PrivateSession): Promise<PrivateSession> {
-  session.user = undefined;
-  await session.save();
-  return session;
+export async function logout(Model: Model, session: AppSession): Promise<AppSession> {
+  try {
+    await Model
+      .findByIdAndDelete(session._id)
+      .exec();
+    return await newAppSession(Model);
+  } catch (error) {
+    throw error;
+  }
 };
 
-export async function newPrivateSession(Model: Model, sessionId?: mongoose.Types.ObjectId): Promise<PrivateSession> {
-  const session = new Model({
-    sessionId: sessionId || new mongooseDefault.Types.ObjectId(),
-    createdAt: Date.now()
-  });
-  await session.save();
-  return session;
+export async function newAppSession(Model: Model, sessionId?: mongoose.Types.ObjectId): Promise<AppSession> {
+  try {
+    const now = new Date();
+    const session = new Model({
+      sessionId: sessionId || new mongooseDefault.Types.ObjectId(),
+      createdAt: now,
+      updatedAt: now
+    });
+    await session.save();
+    return session.toJSON();
+  } catch (error) {
+    throw error;
+  }
 }
 
-export function sessionIdToSession(Model: Model): (sessionId: SessionId) => Promise<PrivateSession> {
+export function sessionIdToSession(Model: Model): (sessionId: SessionId) => Promise<AppSession> {
   return async sessionId => {
     try {
       // Find existing session.
       const session = await Model
         .findOne({ sessionId })
         .exec();
-      if (session) { return session; }
-      // Otherwise, create a new one.
-      return await newPrivateSession(Model, sessionId);
+      if (session) {
+        // Return the existing session if it exists.
+        return session.toJSON();
+      } else {
+        // Otherwise, create a new one.
+        return await newAppSession(Model, sessionId);
+      }
     } catch (e) {
       throw e;
     }
   };
 }
 
-export function sessionToSessionId(Model: Model): (session: PrivateSession) => SessionId {
+export function sessionToSessionId(Model: Model): (session: AppSession) => SessionId {
   return session => session.sessionId;
 }

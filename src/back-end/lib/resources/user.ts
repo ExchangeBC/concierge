@@ -1,18 +1,20 @@
 import * as crud from 'back-end/lib/crud';
+import * as permissions from 'back-end/lib/permissions';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
+import { basicResponse, mapRequestBody } from 'back-end/lib/server';
 import { validateEmail } from 'back-end/lib/validators';
+import { Set } from 'immutable';
 import { isBoolean, isObject } from 'lodash';
 import { getString, identityAsync } from 'shared/lib';
 import { allValid, getInvalidValue, invalid, valid, validatePassword, ValidOrInvalid } from 'shared/lib/validators';
 import { FullProfileValidationErrors, validateProfile } from 'shared/lib/validators/profile';
 
-// TODO use user types to determine access control.
-
 interface CreateValidationErrors {
-  email: string[];
-  password: string[];
-  profile: FullProfileValidationErrors;
+  permissions?: string[];
+  email?: string[];
+  password?: string[];
+  profile?: FullProfileValidationErrors;
 }
 
 type CreateRequestBody = ValidOrInvalid<UserSchema.Data, CreateValidationErrors>;
@@ -28,9 +30,9 @@ type ReadManyErrorResponseBody = null;
 type DeleteResponseBody = null;
 
 interface UpdateValidationErrors extends CreateValidationErrors {
-  id: string[];
-  currentPassword: string[];
-  acceptedTerms: string[];
+  id?: string[];
+  currentPassword?: string[];
+  acceptedTerms?: string[];
 }
 
 type UpdateRequestBody = ValidOrInvalid<InstanceType<UserSchema.Model>, UpdateValidationErrors>;
@@ -61,20 +63,16 @@ async function validateCreateRequestBody(Model: UserSchema.Model, email: string,
   }
 }
 
+// TODO break this up into smaller functions.
 async function validateUpdateRequestBody(Model: UserSchema.Model, id: string, email?: string, profile?: object, acceptedTerms?: boolean, newPassword?: string, currentPassword?: string): Promise<UpdateRequestBody> {
   // Does the user exist? Is their account active?
   const user = await Model.findById(id);
   if (!user || !user.active) {
     return invalid({
-      id: ['Your user account does not exist or it is inactive.'],
-      currentPassword: [],
-      acceptedTerms: [],
-      email: [],
-      password: [],
-      profile: []
+      id: ['Your user account does not exist or it is inactive.']
     });
   }
-  // If the user wants to change the password, can they?
+  // Change password.
   if (newPassword && currentPassword) {
     const correctPassword = await Model.authenticate(user, currentPassword);
     const validatedNewPassword = await validatePassword(Model, newPassword);
@@ -82,30 +80,21 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, id: string, em
       user.passwordHash = validatedNewPassword.value
     } else {
       return invalid({
-        id: [],
         currentPassword: correctPassword ? [] : ['Please enter your correct password.'],
-        acceptedTerms: [],
-        email: [],
-        password: getInvalidValue(validatedNewPassword, []),
-        profile: []
+        password: getInvalidValue(validatedNewPassword, [])
       });
     }
   }
-  // User has accepted terms.
+  // Accepted terms?
   const now = new Date();
   if (!user.acceptedTermsAt && acceptedTerms) {
     user.acceptedTermsAt = now;
   } else if (user.acceptedTermsAt && acceptedTerms === false) {
     return invalid({
-      id: [],
-      currentPassword: [],
-      acceptedTerms: ['You cannot un-accept the terms.'],
-      email: [],
-      password: [],
-      profile: []
+      acceptedTerms: ['You cannot un-accept the terms.']
     });
   }
-  // Update email.
+  // Email.
   email = email && email.trim();
   if (email && user.email !== email) {
     const validatedEmail = await validateEmail(Model, email);
@@ -115,27 +104,17 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, id: string, em
         break;
       case 'invalid':
         return invalid({
-          id: [],
-          currentPassword: [],
-          acceptedTerms: [],
-          email: validatedEmail.value,
-          password: [],
-          profile: []
+          email: validatedEmail.value
         });
     }
   }
-  // Update profile.
+  // Profile.
   if (profile) {
     const validatedProfile = validateProfile(profile);
     switch (validatedProfile.tag) {
       case 'valid':
         if (validatedProfile.value.type !== user.profile.type) {
           return invalid({
-            id: [],
-            currentPassword: [],
-            acceptedTerms: [],
-            email: [],
-            password: [],
             profile: ['You cannot change your user\'s profile type.']
           });
         }
@@ -143,11 +122,6 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, id: string, em
         break;
       case 'invalid':
         return invalid({
-          id: [],
-          currentPassword: [],
-          acceptedTerms: [],
-          email: [],
-          password: [],
           profile: validatedProfile.value
         });
     }
@@ -157,102 +131,82 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, id: string, em
   return valid(user);
 }
 
-export type Resource = crud.Resource<UserSchema.Model, CreateRequestBody, CreateResponseBody, ReadOneResponseBody, ReadManyResponseBodyItem, ReadManyErrorResponseBody, UpdateRequestBody, UpdateResponseBody, DeleteResponseBody, SessionSchema.PrivateSession>;
+export type Resource = crud.Resource<UserSchema.Model, CreateRequestBody, CreateResponseBody, ReadOneResponseBody, ReadManyResponseBodyItem, ReadManyErrorResponseBody, UpdateRequestBody, UpdateResponseBody, DeleteResponseBody, SessionSchema.AppSession>;
 
 const resource: Resource = {
 
   routeNamespace: 'users',
   model: UserSchema.NAME,
+  extraModels: Set([SessionSchema.NAME]),
 
-  create(Model) {
+  create(Model, ExtraModels) {
+    const SessionModel = ExtraModels.get(SessionSchema.NAME) as SessionSchema.Model;
     return {
       async transformRequest(request) {
+        if (!permissions.createUser(request.session)) {
+          return mapRequestBody(request, invalid({
+            permissions: [permissions.ERROR_MESSAGE]
+          }));
+        }
         const body = request.body;
         const email = body.email ? String(body.email) : '';
         const password = body.password ? String(body.password) : '';
         const acceptedTerms = isBoolean(body.acceptedTerms) ? body.acceptedTerms : false;
         const profile = isObject(body.profile) ? body.profile : {};
-        return {
-          params: request.params,
-          query: request.query,
-          body: await validateCreateRequestBody(Model, email, password, acceptedTerms, profile)
-        };
+        const validatedBody = await validateCreateRequestBody(Model, email, password, acceptedTerms, profile);
+        return mapRequestBody(request, validatedBody);
       },
       async respond(request) {
         switch (request.body.tag) {
           case 'invalid':
-            return {
-              code: 400,
-              headers: {},
-              session: request.session,
-              body: request.body.value
-            };
+            const invalidCode = request.body.value.permissions ? 401 : 400;
+            return basicResponse(invalidCode, request.session, request.body.value);
           case 'valid':
             const body = request.body.value;
             const user = new Model(body);
             await user.save();
-            return {
-              code: 201,
-              headers: {},
-              session: await SessionSchema.login(request.session, user._id),
-              body: UserSchema.makePublicUser(user)
-            };
+            const validSession = await SessionSchema.login(SessionModel, Model, request.session, user._id);
+            return basicResponse(201, validSession, UserSchema.makePublicUser(user));
         }
       }
     };
   },
 
-  // TODO authentication.
-  // TODO program staff can access all user accounts.
   readOne(Model) {
     return {
       transformRequest: identityAsync,
       async respond(request) {
-        let user = null;
-        // Is the user reading their own account? Are they logged in?
-        if (request.session.user && request.session.user.toString() === request.params.id) {
-          user = await Model.findOne({ _id: request.params.id, active: true });
+        if (!permissions.readOneUser(request.session, request.params.id)) {
+          return basicResponse(401, request.session, null);
         }
+        const user = await Model.findOne({ _id: request.params.id, active: true });
         if (!user) {
-          return {
-            code: 404,
-            headers: {},
-            session: request.session,
-            body: null
-          };
+          return basicResponse(404, request.session, null);
+        } else {
+          return basicResponse(200, request.session, UserSchema.makePublicUser(user));
         }
-        return {
-          code: 200,
-          headers: {},
-          session: request.session,
-          body: UserSchema.makePublicUser(user)
-        };
       }
     };
   },
 
-  // TODO authentication.
   // TODO pagination.
-  // TODO program staff can access all user accounts.
   readMany(Model) {
     return {
       transformRequest: identityAsync,
       async respond(request) {
+        if (!permissions.readManyUsers(request.session)) {
+          return basicResponse(401, request.session, null);
+        }
         const users = await Model
           .find({ active: true })
           .sort({ email: 1 })
           .exec();
-        return {
-          code: 200,
-          headers: {},
-          session: request.session,
-          body: {
-            total: users.length,
-            offset: 0,
-            count: users.length,
-            items: users.map(user => UserSchema.makePublicUser(user))
-          }
-        };
+        return basicResponse(200, request.session, {
+          total: users.length,
+          offset: 0,
+          count: users.length,
+          items: users.map(user => UserSchema.makePublicUser(user))
+        });
       }
     };
   },
@@ -260,83 +214,52 @@ const resource: Resource = {
   update(Model) {
     return {
       async transformRequest(request) {
-        if (request.session.user && request.session.user.toString() !== request.params.id) {
-          return {
-            params: request.params,
-            query: request.query,
-            body: invalid({
-              id: ['You do not have access to this account'],
-              currentPassword: [],
-              acceptedTerms: [],
-              email: [],
-              password: [],
-              profile: []
-            })
-          }
-        }
         const body = request.body;
         const id = request.params.id;
+        if (!permissions.updateUser(request.session, id)) {
+          return mapRequestBody(request, invalid({
+            permissions: [permissions.ERROR_MESSAGE]
+          }));
+        }
         const email = getString(body, 'email') || undefined;
         const profile = isObject(body.profile) ? body.profile : undefined;
         const acceptedTerms = isBoolean(body.acceptedTerms) ? body.acceptedTerms : undefined;
         const newPassword = getString(body, 'newPassword') || undefined;
         const currentPassword = getString(body, 'currentPassword') || undefined;
-        return {
-          params: request.params,
-          query: request.query,
-          body: await validateUpdateRequestBody(Model, id, email, profile, acceptedTerms, newPassword, currentPassword)
-        };
+        const validatedBody = await validateUpdateRequestBody(Model, id, email, profile, acceptedTerms, newPassword, currentPassword);
+        return mapRequestBody(request, validatedBody);
       },
       async respond(request) {
         switch (request.body.tag) {
           case 'invalid':
-            return {
-              code: 400,
-              headers: {},
-              session: request.session,
-              body: request.body.value
-            };
+            const invalidCode = request.body.value.permissions ? 401 : 400;
+            return basicResponse(invalidCode, request.session, request.body.value);
           case 'valid':
             const user = request.body.value;
             await user.save();
-            return {
-              code: 200,
-              headers: {},
-              session: request.session,
-              body: UserSchema.makePublicUser(user)
-            };
+            return basicResponse(200, request.session, UserSchema.makePublicUser(user));
         }
       }
     };
   },
 
-  delete(Model) {
+  delete(Model, ExtraModels) {
+    const SessionModel = ExtraModels.get(SessionSchema.NAME) as SessionSchema.Model;
     return {
       transformRequest: identityAsync,
       async respond(request) {
-        let user = null;
-        // Is the user deleting their own account? Are they logged in?
-        if (request.session.user && request.session.user.toString() === request.params.id) {
-          user = await Model.findOne({ _id: request.params.id, active: true });
+        if (!permissions.deleteUser(request.session, request.params.id)) {
+          return basicResponse(401, request.session, null);
         }
+        const user = await Model.findOne({ _id: request.params.id, active: true });
         if (!user) {
-          return {
-            code: 404,
-            headers: {},
-            session: request.session,
-            body: null
-          };
+          return basicResponse(404, request.session, null);
+        } else {
+          user.active = false;
+          await user.save();
+          const session = await SessionSchema.logout(SessionModel, request.session);
+          return basicResponse(200, session, null);
         }
-        // Deactivate the account.
-        user.active = false;
-        await user.save();
-        return {
-          code: 200,
-          headers: {},
-          // Log the user out.
-          session: await SessionSchema.logout(request.session),
-          body: null
-        };
       }
     };
   }

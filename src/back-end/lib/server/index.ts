@@ -74,11 +74,28 @@ export interface Request<Params, Query, Body, Session> extends ConfigurableReque
   session: Session;
 }
 
+export function mapRequestBody<P, Q, BodyA, BodyB, Session>(request: Request<P, Q, BodyA, Session>, body: BodyB): ConfigurableRequest<P, Q, BodyB> {
+  return {
+    params: request.params,
+    query: request.query,
+    body
+  };
+}
+
 export interface Response<Body, Session> {
   code: number;
   headers: OutgoingHttpHeaders;
   session: Session;
   body: Body;
+}
+
+export function basicResponse<Body, Session>(code: number, session: Session, body: Body): Response<Body, Session> {
+  return {
+    code,
+    body,
+    session,
+    headers: {}
+  };
 }
 
 export type JsonResponseBody = ADT<'json', any>;

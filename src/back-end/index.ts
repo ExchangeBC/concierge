@@ -17,7 +17,7 @@ import { model } from 'mongoose';
 
 const logger = makeDomainLogger(consoleAdapter, 'back-end');
 
-type Session = SessionSchema.PrivateSession;
+type Session = SessionSchema.AppSession;
 
 async function start() {
   // Connect to MongoDB.
