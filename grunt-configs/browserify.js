@@ -1,15 +1,33 @@
+const { transform, assign } = require("lodash");
+const path = require("path");
+const root = path.resolve(__dirname, '..', gruntConfig.src.ts);
+const compilerOptions = require(path.join(root, 'tsconfig.json')).compilerOptions;
+const pathmodify = require("pathmodify");
+
 const makeConfig = debug => ({
   options: {
     plugin: [
       [
         "tsify",
         {
-          project: gruntConfig.src.ts
+          project: root
+        }
+      ],
+      // Modify paths because tsify does not fully support rewriting paths per
+      // tsconfig.json's `paths` option.
+      [
+        "pathmodify",
+        {
+          mods: [
+            pathmodify.mod.dir("front-end", root),
+            pathmodify.mod.dir("shared", path.resolve(root, "../../shared"))
+          ]
         }
       ]
     ],
     browserifyOptions: {
-      debug
+      debug,
+      extensions: [".js", ".json", ".ts", ".tsx", ".jsx"]
     }
   },
   src: [

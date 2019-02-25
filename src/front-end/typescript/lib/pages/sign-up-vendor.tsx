@@ -1,6 +1,6 @@
+import { Page } from 'front-end/lib/app/types';
+import { Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/lib/framework';
 import React from 'react';
-import { Page } from '../app/types';
-import { Component, ComponentMsg, ComponentView, Init, Update } from '../lib/framework';
 
 export interface State {
   value: null;

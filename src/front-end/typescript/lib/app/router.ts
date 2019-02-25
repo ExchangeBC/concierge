@@ -1,6 +1,6 @@
+import { Page } from 'front-end/lib/app/types';
+import { Router } from 'front-end/lib/framework';
 import { get } from 'lodash';
-import { Router } from '../lib/framework';
-import { Page } from './types';
 
 const router: Router<Page> = {
 
@@ -12,10 +12,6 @@ const router: Router<Page> = {
     {
       path: '/loading',
       pageId: 'loading'
-    },
-    {
-      path: '/loading-two',
-      pageId: 'loadingTwo'
     },
     {
       path: '/say/:message',
@@ -37,11 +33,6 @@ const router: Router<Page> = {
       case 'loading':
         return {
           tag: 'loading',
-          data: null
-        };
-      case 'loadingTwo':
-        return {
-          tag: 'loadingTwo',
           data: null
         };
       case 'say':
@@ -67,8 +58,6 @@ const router: Router<Page> = {
         return '/';
       case 'loading':
         return '/loading';
-      case 'loadingTwo':
-        return '/loading-two';
       case 'say':
         return `/say/${page.data.message}`;
       default:

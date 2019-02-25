@@ -1,6 +1,6 @@
+import { Page } from 'front-end/lib/app/types';
+import { ADT, Component, ComponentMsg, ComponentView, Init, replaceUrl, Update } from 'front-end/lib/framework';
 import React from 'react';
-import { Page } from '../app/types';
-import { ADT, Component, ComponentMsg, ComponentView, Init, replaceUrl, Update } from '../lib/framework';
 
 export interface Params {
   message: string;

@@ -1,9 +1,8 @@
-import { immutable, Update, updateChild } from '../lib/framework';
-import * as PageLanding from '../pages/landing';
-import * as PageLoading from '../pages/loading';
-import * as PageLoadingTwo from '../pages/loading-two';
-import * as PageSay from '../pages/say';
-import { Msg, State } from './types';
+import { Msg, State } from 'front-end/lib/app/types';
+import { immutable, Update, updateChild } from 'front-end/lib/framework';
+import * as PageLanding from 'front-end/lib/pages/landing';
+import * as PageLoading from 'front-end/lib/pages/loading';
+import * as PageSay from 'front-end/lib/pages/say';
 
 const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
@@ -24,8 +23,6 @@ const update: Update<State, Msg> = (state, msg) => {
               return state.setIn(['pages', 'landing'], immutable(await PageLanding.init(undefined)));
             case 'loading':
               return state.setIn(['pages', 'loading'], immutable(await PageLoading.init(null)));
-            case 'loadingTwo':
-              return state.setIn(['pages', 'loadingTwo'], immutable(await PageLoadingTwo.init(null)));
             case 'say':
               return state.setIn(['pages', 'say'], immutable(await PageSay.init(msg.data.data)));
             default:
@@ -47,14 +44,6 @@ const update: Update<State, Msg> = (state, msg) => {
         state,
         childStatePath: ['pages', 'loading'],
         updateChild: PageLoading.update,
-        childMsg: msg.data
-      });
-
-    case 'pageLoadingTwoMsg':
-      return updateChild({
-        state,
-        childStatePath: ['pages', 'loadingTwo'],
-        updateChild: PageLoadingTwo.update,
         childMsg: msg.data
       });
 

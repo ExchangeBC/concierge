@@ -1,7 +1,7 @@
+import { Page } from 'front-end/lib/app/types';
+import { ADT, Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/lib/framework';
 import React from 'react';
 import { Collapse, DropdownItem, DropdownMenu, DropdownToggle, Nav, Navbar, NavbarBrand, NavbarToggler, NavItem, NavLink, UncontrolledDropdown } from 'reactstrap'
-import { Page } from '../app/types';
-import { ADT, Component, ComponentMsg, ComponentView, Init, Update } from '../lib/framework';
 
 export type Params = undefined;
 

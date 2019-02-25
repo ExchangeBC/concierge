@@ -4,17 +4,19 @@
     "moduleResolution": "node",
     "jsx": "react",
     "allowJs": true,
-    "noEmit": true,
+    "noEmit": false,
     "strict": true,
     "noImplicitReturns": true,
     "forceConsistentCasingInFileNames": true,
     "noUnusedLocals": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "types": [
-      "node",
-      "mocha"
-    ]
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "front-end/*": ["./*"],
+      "shared/*": ["../../shared/*"]
+    }
   },
   "files": [
     "index.ts"
