@@ -1,7 +1,9 @@
 import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
+import * as SelectMulti from 'front-end/lib/components/input/select-multi';
+import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateChild } from 'front-end/lib/framework';
 import * as Dropdown from 'front-end/lib/views/input/dropdown';
 import * as ShortText from 'front-end/lib/views/input/short-text';
+import { reduce } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import { ADT } from 'shared/lib/types';
@@ -9,8 +11,37 @@ import { BusinessType, parseBusinessType, parsePhoneType, PhoneType, VendorProfi
 import { ValidOrInvalid } from 'shared/lib/validators';
 import { validateVendorProfile, VendorProfileValidationErrors } from 'shared/lib/validators/vendor-profile';
 
+export type ValidationErrors = VendorProfileValidationErrors;
+
+const validationErrorNameMap: Record<string, string> = {
+  businessName: 'Business Name',
+  businessType: 'Business Type',
+  businessNumber: 'Business Number',
+  businessStreetAddress: 'Business Street Address',
+  businessCity: 'Business City',
+  businessProvince: 'Business Province',
+  businessPostalCode: 'Business Postal Code',
+  businessCountry: 'Business Country',
+  contactName: 'Contact Name',
+  contactPositionTitle: 'Contact Position Title',
+  contactEmail: 'Contact Email',
+  contactPhoneNumber: 'Contact Phone Number',
+  contactPhoneCountryCode: 'Contact Country Code',
+  contactPhoneType: 'Contact Phone Type',
+  industrySectors: 'Industry Sectors',
+  areasOfExpertise: 'Areas of Expertise'
+};
+
+export function getValidationErrors(state: State): string[] {
+  return reduce(state.validationErrors, (acc: string[], v: string[] | undefined, k: string) => {
+    const name = validationErrorNameMap[k] || 'Other';
+    const errors = v || [];
+    return acc.concat(errors.map(msg => `${name}: ${msg}`));
+  }, []);
+}
+
 export interface State {
-  validationErrors: VendorProfileValidationErrors;
+  validationErrors: ValidationErrors;
   businessName: ShortText.State;
   businessType: Dropdown.State;
   businessNumber: ShortText.State;
@@ -25,7 +56,7 @@ export interface State {
   contactPhoneNumber: ShortText.State;
   contactPhoneCountryCode: ShortText.State;
   contactPhoneType: Dropdown.State;
-  // industrySectors?: string[];
+  industrySectors: Immutable<SelectMulti.State>;
   // areasOfExpertise?: string[];
 }
 
@@ -43,7 +74,8 @@ type InnerMsg
   | ADT<'onChangeContactEmail', string>
   | ADT<'onChangeContactPhoneNumber', string>
   | ADT<'onChangeContactPhoneCountryCode', string>
-  | ADT<'onChangeContactPhoneType', string>;
+  | ADT<'onChangeContactPhoneType', string>
+  | ADT<'industrySectors', SelectMulti.Msg>;
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
@@ -157,7 +189,13 @@ export const init: Init<undefined, State> = async () => {
         { value: PhoneType.Office, label: 'Office' },
         { value: PhoneType.CellPhone, label: 'Cell Phone' }
       ]
-    })
+    }),
+    industrySectors: immutable(await SelectMulti.init({
+      idNamespace: 'vendor-industry-sectors',
+      label: 'Industry Sectors',
+      labelClassName: 'h3',
+      fields: []
+    }))
   };
 };
 
@@ -191,6 +229,13 @@ export const update: Update<State, Msg> = (state, msg) => {
       return [validateAndUpdate(state, 'contactPhoneCountryCode', msg.value)];
     case 'onChangeContactPhoneType':
       return [validateAndUpdate(state, 'contactPhoneType', msg.value)];
+    case 'industrySectors':
+      return updateChild({
+        state,
+        childStatePath: ['industrySectors'],
+        childUpdate: SelectMulti.update,
+        childMsg: msg.value
+      });
     default:
       return [state];
   }
@@ -218,13 +263,13 @@ function getVendorProfile(state: Immutable<State>): VendorProfile {
     contactEmail: state.contactEmail.value || undefined,
     contactPhoneNumber: state.contactPhoneNumber.value || undefined,
     contactPhoneCountryCode: state.contactPhoneCountryCode.value || undefined,
-    contactPhoneType: parsePhoneType(state.contactPhoneType.value) || undefined
-    // industrySectors: state.industrySectors.value || undefined,
+    contactPhoneType: parsePhoneType(state.contactPhoneType.value) || undefined,
+    industrySectors: SelectMulti.getValues(state.industrySectors)
     // areasOfExpertise: state.areasOfExpertise.value || undefined
   };
 }
 
-function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<VendorProfile, VendorProfileValidationErrors>): Immutable<State> {
+function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<VendorProfile, ValidationErrors>): Immutable<State> {
   switch (validation.tag) {
     case 'valid':
       state = persistValues(state, validation.value);
@@ -249,10 +294,11 @@ function persistValues(state: Immutable<State>, profile: VendorProfile): Immutab
     .setIn(['contactEmail', 'value'], profile.contactEmail || '')
     .setIn(['contactPhoneNumber', 'value'], profile.contactPhoneNumber || '')
     .setIn(['contactPhoneCountryCode', 'value'], profile.contactPhoneCountryCode || '')
-    .setIn(['contactPhoneType', 'value'], profile.contactPhoneType || '');
+    .setIn(['contactPhoneType', 'value'], profile.contactPhoneType || '')
+    .set('industrySectors', SelectMulti.setValues(state.industrySectors, profile.industrySectors || []));
 }
 
-function persistErrors(state: Immutable<State>, errors: VendorProfileValidationErrors): Immutable<State> {
+function persistErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
   const isValid = (v?: any[]): boolean => !v || !v.length;
   return state
     .set('validationErrors', errors)
@@ -269,7 +315,8 @@ function persistErrors(state: Immutable<State>, errors: VendorProfileValidationE
     .setIn(['contactEmail', 'invalid'], !isValid(errors.contactEmail))
     .setIn(['contactPhoneNumber', 'invalid'], !isValid(errors.contactPhoneNumber))
     .setIn(['contactPhoneCountryCode', 'invalid'], !isValid(errors.contactPhoneCountryCode))
-    .setIn(['contactPhoneType', 'invalid'], !isValid(errors.contactPhoneType));
+    .setIn(['contactPhoneType', 'invalid'], !isValid(errors.contactPhoneType))
+    .setIn(['industrySectors', 'invalid'], !isValid(errors.industrySectors));
 }
 
 export const BusinessInformation: ComponentView<State, Msg> = ({ state, dispatch }) => {
@@ -340,7 +387,7 @@ export const ContactInformation: ComponentView<State, Msg> = ({ state, dispatch 
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const onChangeDropdown = (tag: any) => Dropdown.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
-    <div>
+    <div className='mt-3'>
       <Row>
         <Col xs='12'>
           <h3>Contact Information (Optional)</h3>
@@ -387,18 +434,23 @@ export const ContactInformation: ComponentView<State, Msg> = ({ state, dispatch 
 };
 
 export const IndustrySectors: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'industrySectors' as 'industrySectors', value }));
   return (
-    <div>
-      Industry Sectors
-    </div>
+    <Row className='mt-3'>
+      <Col xs='12' md='7'>
+        <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} />
+      </Col>
+    </Row>
   );
 };
 
 export const AreasOfExpertise: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
-    <div>
-      Areas of Expertise
-    </div>
+    <Row className='mt-3'>
+      <Col xs='12' md='7'>
+        Areas of Expertise
+      </Col>
+    </Row>
   );
 };
 
@@ -407,6 +459,8 @@ export const view: ComponentView<State, Msg> = props => {
     <div>
       <BusinessInformation {...props} />
       <ContactInformation {...props} />
+      <IndustrySectors {...props} />
+      <AreasOfExpertise {...props} />
     </div>
   );
 };

@@ -33,7 +33,7 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
     <div className={`page-${state.activePage.tag}`}>
       <Nav.view state={state.nav} dispatch={dispatchNav} />
-      <Container>
+      <Container className='mt-5'>
         <Row>
           <Col xs='12'>
             <ViewActivePage state={state} dispatch={dispatch} />

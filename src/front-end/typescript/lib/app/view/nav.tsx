@@ -28,6 +28,18 @@ export const update: Update<State, Msg> = (state, msg) => {
   }
 };
 
+function Link(props: { color?: string, href: string, text: string }) {
+  return (
+    <NavItem>
+      <NavLink href={props.href}>
+        <Button color={props.color || 'link'} className='text-light'>
+          {props.text}
+        </Button>
+      </NavLink>
+    </NavItem>
+  );
+}
+
 export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
     <Navbar expand='md' color='dark'>
@@ -37,40 +49,13 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
             <NavbarBrand href='/'>
               <img src='https://bcdevexchange.org/modules/core/client/img/logo/new-logo-white.svg' style={{ height: '45px' }}/>
             </NavbarBrand>
-            // Contextual nav based on active user's type.
             <Nav navbar>
-              <NavItem>
-                <NavLink href='/'>
-                  <Button color='link'>
-                    Users
-                  </Button>
-                </NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink href='/'>
-                  <Button color='link'>
-                    RFIs
-                  </Button>
-                </NavLink>
-              </NavItem>
+              <Link href='/' text='Users' />
+              <Link href='/' text='RFIs' />
             </Nav>
-            // Authentication nav.
-            // TODO user's email and logout button.
             <Nav navbar className='ml-auto'>
-              <NavItem>
-                <NavLink href='/'>
-                  <Button color='link'>
-                    Sign In
-                  </Button>
-                </NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink href='/sign-up'>
-                  <Button color='primary'>
-                    Sign Up
-                  </Button>
-                </NavLink>
-              </NavItem>
+              <Link href='/' text='Sign In' />
+              <Link href='/sign-up' text='Sign Up' color='primary' />
             </Nav>
           </Col>
         </Row>

@@ -2,9 +2,9 @@ import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateChild, View } from 'front-end/lib/framework';
 import * as AccountInformation from 'front-end/lib/pages/sign-up/account-information';
 import * as VendorProfile from 'front-end/lib/pages/sign-up/vendor-profile';
-import { reduce } from 'lodash';
+import { flatten, reduce } from 'lodash';
 import { default as React } from 'react';
-import { Button, Col, Container, Row, Spinner } from 'reactstrap';
+import { Alert, Button, Col, Container, Row, Spinner } from 'reactstrap';
 import { ADT } from 'shared/lib/types';
 
 export interface State {
@@ -68,13 +68,24 @@ export const update: Update<State, Msg> = (state, msg) => {
   }
 };
 
-function isValid(state: State): boolean {
+function validationErrorsToStrings(state: State): string[] {
+  return flatten([
+    AccountInformation.getValidationErrors(state.accountInformation),
+    VendorProfile.getValidationErrors(state.vendorProfile)
+  ]);
+}
+
+function hasErrors(state: State): boolean {
   const objectIsValid = (obj: object) => reduce(obj, (acc, v: string[]) => {
     return acc && !v.length
   }, true);
+  return !objectIsValid(state.accountInformation.validationErrors) || !objectIsValid(state.vendorProfile.validationErrors);
+}
+
+function isValid(state: State): boolean {
   const info = state.accountInformation;
   const providedRequiredFields = !!(info.email.value && info.password.value && info.confirmPassword.value);
-  return providedRequiredFields && objectIsValid(info.validationErrors) && objectIsValid(state.vendorProfile.validationErrors);
+  return providedRequiredFields && !hasErrors(state);
 }
 
 const CreateAccountChild: View<{ isLoading: boolean }> = ({ isLoading }) => {
@@ -82,6 +93,28 @@ const CreateAccountChild: View<{ isLoading: boolean }> = ({ isLoading }) => {
     return (<Spinner color='light' size='sm' />);
   } else {
     return (<div>Create Account</div>);
+  }
+};
+
+export const ConditionalErrors: ComponentView<State, Msg> = ({ state }) => {
+  if (hasErrors(state)) {
+    const errors = validationErrorsToStrings(state)
+      .map((s, i) => (
+        <div key={i}>
+          {s}
+        </div>
+      ));
+    return (
+      <Row className='mt-3'>
+        <Col xs='12'>
+          <Alert color='danger'>
+            {errors}
+          </Alert>
+        </Col>
+      </Row>
+    );
+  } else {
+    return null;
   }
 };
 
@@ -120,16 +153,18 @@ export const view: ComponentView<State, Msg> = props => {
       </Row>
       <Row>
         <Col xs='12' md='8'>
-          <p>{state.content.description}</p>
           <p>
+            {state.content.description}
+            <br />
             Already have an account?
-            <a href='/sign-in'>
+            <a href='/sign-in' className='ml-2'>
               Sign in here.
             </a>
           </p>
         </Col>
       </Row>
-      <Row>
+      <ConditionalErrors state={state} dispatch={dispatch} />
+      <Row className='mt-3'>
         <Col xs='12' md='4'>
           <AccountInformation.view state={state.accountInformation} dispatch={dispatchAccountInformation} />
         </Col>

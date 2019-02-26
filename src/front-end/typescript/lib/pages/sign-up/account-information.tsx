@@ -3,6 +3,7 @@ import { Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/
 import { validateConfirmPassword } from 'front-end/lib/validators';
 import { validateAndUpdateField } from 'front-end/lib/views/form-field';
 import * as ShortText from 'front-end/lib/views/input/short-text';
+import { reduce } from 'lodash';
 import { default as React } from 'react';
 import { Col, Form, FormGroup, Label, Row } from 'reactstrap';
 import { ADT } from 'shared/lib/types';
@@ -12,6 +13,20 @@ export interface ValidationErrors {
   email?: string[];
   password?: string[];
   confirmPassword?: string[];
+}
+
+const validationErrorNameMap: Record<string, string> = {
+  email: 'Email Address',
+  password: 'Password',
+  confirmPassword: 'Confirm Password'
+};
+
+export function getValidationErrors(state: State): string[] {
+  return reduce(state.validationErrors, (acc: string[], v: string[] | undefined, k: string) => {
+    const name = validationErrorNameMap[k] || 'Other';
+    const errors = v || [];
+    return acc.concat(errors.map(msg => `${name}: ${msg}`));
+  }, []);
 }
 
 export interface State {
