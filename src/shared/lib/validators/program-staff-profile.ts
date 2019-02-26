@@ -17,17 +17,17 @@ export interface ProgramStaffProfileValidationErrors {
 }
 
 export function validateProgramStaffProfile(profile: object): ValidOrInvalid<ProgramStaffProfile, ProgramStaffProfileValidationErrors> {
-  const validatedFirstName = optional(validateFirstName, getString(profile, 'firstName'), '');
-  const validatedLastName = optional(validateLastName, getString(profile, 'lastName'), '');
-  const validatedPositionTitle = optional(validatePositionTitle, getString(profile, 'positionTitle'), '');
-  const validatedContactStreetAddress = optional(validateStreetAddress, getString(profile, 'contactStreetAddress'), '');
-  const validatedContactCity = optional(validateCity, getString(profile, 'contactCity'), '');
-  const validatedContactProvince = optional(validateProvince, getString(profile, 'contactProvince'), '');
-  const validatedContactPostalCode = optional(validatePostalCode, getString(profile, 'contactPostalCode'), '');
-  const validatedContactCountry = optional(validateCountry, getString(profile, 'contactCountry'), '');
-  const validatedContactPhoneNumber = optional(validatePhoneNumber, getString(profile, 'contactPhoneNumber'), '');
-  const validatedContactPhoneCountryCode = optional(validatePhoneCountryCode, getString(profile, 'contactPhoneCountryCode'), '');
-  const validatedContactPhoneType = optional(validatePhoneType, getString(profile, 'contactPhoneType'), '');
+  const validatedFirstName = optional(validateFirstName, getString(profile, 'firstName'));
+  const validatedLastName = optional(validateLastName, getString(profile, 'lastName'));
+  const validatedPositionTitle = optional(validatePositionTitle, getString(profile, 'positionTitle'));
+  const validatedContactStreetAddress = optional(validateStreetAddress, getString(profile, 'contactStreetAddress'));
+  const validatedContactCity = optional(validateCity, getString(profile, 'contactCity'));
+  const validatedContactProvince = optional(validateProvince, getString(profile, 'contactProvince'));
+  const validatedContactPostalCode = optional(validatePostalCode, getString(profile, 'contactPostalCode'));
+  const validatedContactCountry = optional(validateCountry, getString(profile, 'contactCountry'));
+  const validatedContactPhoneNumber = optional(validatePhoneNumber, getString(profile, 'contactPhoneNumber'));
+  const validatedContactPhoneCountryCode = optional(validatePhoneCountryCode, getString(profile, 'contactPhoneCountryCode'));
+  const validatedContactPhoneType = optional(validatePhoneType, getString(profile, 'contactPhoneType'));
   if (allValid([validatedFirstName, validatedLastName, validatedPositionTitle, validatedContactStreetAddress, validatedContactCity, validatedContactProvince, validatedContactPostalCode, validatedContactCountry, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType])) {
     return valid({
       type: 'program_staff' as 'program_staff',

@@ -96,16 +96,16 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <Form>
         <Row>
           <Col xs='12'>
-            <FormGroup check inline>
+            <FormGroup check inline className='my-2'>
               <Label>
                 I am a*:
               </Label>
               <div className='custom-radio custom-control'>
-                <input id='sign-up-user-type-buyer' type='radio' value={UserType.Buyer} className='form-check-input' />
+                <input id='sign-up-user-type-buyer' type='radio' name='sign-up-user-type' value={UserType.Buyer} className='form-check-input' />
                 <Label for='sign-up-user-type-buyer'>Buyer</Label>
               </div>
               <div className='custom-radio custom-control'>
-                <input id='sign-up-user-type-vendor' type='radio' value={UserType.Vendor} className='form-check-input' checked/>
+                <input id='sign-up-user-type-vendor' type='radio' name='sign-up-user-type' value={UserType.Vendor} className='form-check-input' checked/>
                 <Label for='sign-up-user-type-vendor'>Vendor</Label>
               </div>
             </FormGroup>

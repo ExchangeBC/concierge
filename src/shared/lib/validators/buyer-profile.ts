@@ -36,21 +36,21 @@ export function validateBranch(branch: string): Validation<string> {
 }
 
 export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfile, BuyerProfileValidationErrors> {
-  const validatedFirstName = optional(validateFirstName, getString(profile, 'firstName'), '');
-  const validatedLastName = optional(validateLastName, getString(profile, 'lastName'), '');
-  const validatedPositionTitle = optional(validatePositionTitle, getString(profile, 'positionTitle'), '');
-  const validatedMinistry = optional(validateMinistry, getString(profile, 'ministry'), '');
-  const validatedBranch = optional(validateBranch, getString(profile, 'branch'), '');
-  const validatedContactStreetAddress = optional(validateStreetAddress, getString(profile, 'contactStreetAddress'), '');
-  const validatedContactCity = optional(validateCity, getString(profile, 'contactCity'), '');
-  const validatedContactProvince = optional(validateProvince, getString(profile, 'contactProvince'), '');
-  const validatedContactPostalCode = optional(validatePostalCode, getString(profile, 'contactPostalCode'), '');
-  const validatedContactCountry = optional(validateCountry, getString(profile, 'contactCountry'), '');
-  const validatedContactPhoneNumber = optional(validatePhoneNumber, getString(profile, 'contactPhoneNumber'), '');
-  const validatedContactPhoneCountryCode = optional(validatePhoneCountryCode, getString(profile, 'contactPhoneCountryCode'), '');
-  const validatedContactPhoneType = optional(validatePhoneType, getString(profile, 'contactPhoneType'), '');
-  const validatedIndustrySectors = optional(validateIndustrySectors, getStringArray(profile, 'industrySectors'), []);
-  const validatedAreasOfInterest = optional(v => validateCategories(v, 'Areas of Interest'), getStringArray(profile, 'areasOfInterest'), []);
+  const validatedFirstName = optional(validateFirstName, getString(profile, 'firstName'));
+  const validatedLastName = optional(validateLastName, getString(profile, 'lastName'));
+  const validatedPositionTitle = optional(validatePositionTitle, getString(profile, 'positionTitle'));
+  const validatedMinistry = optional(validateMinistry, getString(profile, 'ministry'));
+  const validatedBranch = optional(validateBranch, getString(profile, 'branch'));
+  const validatedContactStreetAddress = optional(validateStreetAddress, getString(profile, 'contactStreetAddress'));
+  const validatedContactCity = optional(validateCity, getString(profile, 'contactCity'));
+  const validatedContactProvince = optional(validateProvince, getString(profile, 'contactProvince'));
+  const validatedContactPostalCode = optional(validatePostalCode, getString(profile, 'contactPostalCode'));
+  const validatedContactCountry = optional(validateCountry, getString(profile, 'contactCountry'));
+  const validatedContactPhoneNumber = optional(validatePhoneNumber, getString(profile, 'contactPhoneNumber'));
+  const validatedContactPhoneCountryCode = optional(validatePhoneCountryCode, getString(profile, 'contactPhoneCountryCode'));
+  const validatedContactPhoneType = optional(validatePhoneType, getString(profile, 'contactPhoneType'));
+  const validatedIndustrySectors = optional(validateIndustrySectors, getStringArray(profile, 'industrySectors'));
+  const validatedAreasOfInterest = optional(v => validateCategories(v, 'Areas of Interest'), getStringArray(profile, 'areasOfInterest'));
   if (allValid([validatedFirstName, validatedLastName, validatedPositionTitle, validatedMinistry, validatedBranch, validatedContactStreetAddress, validatedContactCity, validatedContactProvince, validatedContactPostalCode, validatedContactCountry, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedAreasOfInterest])) {
     return valid({
       type: 'buyer' as 'buyer',
