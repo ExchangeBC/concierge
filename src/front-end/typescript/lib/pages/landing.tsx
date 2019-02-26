@@ -1,7 +1,6 @@
 import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/lib/framework';
 import React from 'react';
-import { Collapse, DropdownItem, DropdownMenu, DropdownToggle, Nav, Navbar, NavbarBrand, NavbarToggler, NavItem, NavLink, UncontrolledDropdown } from 'reactstrap'
 import { ADT } from 'shared/lib/types';
 
 export type Params = undefined;
@@ -34,41 +33,8 @@ export const update: Update<State, Msg> = (state, msg) => {
 };
 
 export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const jsState = state.toJSON();
   return (
-    <div>
-      <Navbar expand='md'>
-        <NavbarBrand href='/'>{jsState.content.title}</NavbarBrand>
-        <NavbarToggler onClick={() => dispatch({ tag: 'toggleNav', value: undefined })} />
-        <Collapse isOpen={jsState.isOpen} navbar>
-          <Nav className='ml-auto' navbar>
-            <NavItem>
-              <NavLink href='/components/'>Components</NavLink>
-            </NavItem>
-            <NavItem>
-              <NavLink href='https://github.com/reactstrap/reactstrap'>GitHub</NavLink>
-            </NavItem>
-            <UncontrolledDropdown nav inNavbar>
-              <DropdownToggle nav caret>
-                Options
-              </DropdownToggle>
-              <DropdownMenu right>
-                <DropdownItem>
-                  Option 1
-                </DropdownItem>
-                <DropdownItem>
-                  Option 2
-                </DropdownItem>
-                <DropdownItem divider />
-                <DropdownItem>
-                  Reset
-                </DropdownItem>
-              </DropdownMenu>
-            </UncontrolledDropdown>
-          </Nav>
-        </Collapse>
-      </Navbar>
-    </div>
+    <div></div>
   );
 };
 

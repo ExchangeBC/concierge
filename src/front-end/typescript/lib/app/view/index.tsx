@@ -1,5 +1,6 @@
 import { Msg, State } from 'front-end/lib/app/types';
-import { ComponentView, Dispatch, mapAppDispatch, newUrl } from 'front-end/lib/framework';
+import * as Nav from 'front-end/lib/app/view/nav';
+import { ComponentView, Dispatch, mapAppDispatch } from 'front-end/lib/framework';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageLoading from 'front-end/lib/pages/loading';
 import * as PageSay from 'front-end/lib/pages/say';
@@ -28,32 +29,18 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
 }
 
 const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  const dispatchNav: Dispatch<Nav.Msg> = mapAppDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'nav' as 'nav', value }));
   return (
-    <Container className={`page-${state.activePage.tag}`}>
-      <Row>
-        <Col xs='auto'>
-          <h1>Concierge</h1>
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='auto'>
-          <button onClick={() => dispatch(newUrl({ tag: 'say' as 'say', value: { message: 'hi' }}))}>
-            {`Say "hi"`}
-          </button>
-          <button onClick={() => dispatch(newUrl({ tag: 'say' as 'say', value: { message: 'hello' }}))}>
-            {`Say "hello"`}
-          </button>
-          <button onClick={() => dispatch(newUrl({ tag: 'loading' as 'loading', value: null }))}>
-            Loading
-          </button>
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='12'>
-          <ViewActivePage state={state} dispatch={dispatch} />
-        </Col>
-      </Row>
-    </Container>
+    <div className={`page-${state.activePage.tag}`}>
+      <Nav.view state={state.nav} dispatch={dispatchNav} />
+      <Container>
+        <Row>
+          <Col xs='12'>
+            <ViewActivePage state={state} dispatch={dispatch} />
+          </Col>
+        </Row>
+      </Container>
+    </div>
   );
 };
 
