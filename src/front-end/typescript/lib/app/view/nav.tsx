@@ -28,11 +28,11 @@ export const update: Update<State, Msg> = (state, msg) => {
   }
 };
 
-function Link(props: { color?: string, href: string, text: string }) {
+function Link(props: { buttonColor?: string, href: string, text: string }) {
   return (
     <NavItem>
       <NavLink href={props.href}>
-        <Button color={props.color || 'link'} className='text-light'>
+        <Button color={props.buttonColor || 'link'} className={props.buttonColor ? '' : 'text-light'}>
           {props.text}
         </Button>
       </NavLink>
@@ -55,7 +55,7 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
             </Nav>
             <Nav navbar className='ml-auto'>
               <Link href='/' text='Sign In' />
-              <Link href='/sign-up' text='Sign Up' color='primary' />
+              <Link href='/sign-up' text='Sign Up' buttonColor='primary' />
             </Nav>
           </Col>
         </Row>

@@ -6,7 +6,7 @@ import * as ShortText from 'front-end/lib/views/input/short-text';
 import { reduce } from 'lodash';
 import { default as React } from 'react';
 import { Col, Form, FormGroup, Label, Row } from 'reactstrap';
-import { ADT } from 'shared/lib/types';
+import { ADT, UserType } from 'shared/lib/types';
 import { validateEmail, validatePassword } from 'shared/lib/validators';
 
 export interface ValidationErrors {
@@ -101,12 +101,12 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
                 I am a*:
               </Label>
               <div className='custom-radio custom-control'>
-                <input type='radio' name='foo' value='bar' className='form-check-input' checked />
-                <Label>Buyer</Label>
+                <input id='sign-up-user-type-buyer' type='radio' value={UserType.Buyer} className='form-check-input' />
+                <Label for='sign-up-user-type-buyer'>Buyer</Label>
               </div>
               <div className='custom-radio custom-control'>
-                <input type='radio' name='foo' value='baz' className='form-check-input' />
-                <Label>Vendor</Label>
+                <input id='sign-up-user-type-vendor' type='radio' value={UserType.Vendor} className='form-check-input' checked/>
+                <Label for='sign-up-user-type-vendor'>Vendor</Label>
               </div>
             </FormGroup>
           </Col>
