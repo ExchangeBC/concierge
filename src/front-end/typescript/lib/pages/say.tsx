@@ -1,6 +1,7 @@
 import { Page } from 'front-end/lib/app/types';
-import { ADT, Component, ComponentMsg, ComponentView, Init, replaceUrl, Update } from 'front-end/lib/framework';
+import { Component, ComponentMsg, ComponentView, Init, replaceUrl, Update } from 'front-end/lib/framework';
 import React from 'react';
+import { ADT } from 'shared/lib/types';
 
 export interface Params {
   message: string;
@@ -21,7 +22,7 @@ export const init: Init<Params, State> = async ({ message }) => {
 export const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
     case 'setMessage':
-      return [state.set('message', msg.data)];
+      return [state.set('message', msg.value)];
     default:
       return [state];
   }
@@ -30,8 +31,8 @@ export const update: Update<State, Msg> = (state, msg) => {
 export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   function double() {
     const message = `${state.message} ${state.message}`;
-    dispatch({ tag: 'setMessage', data: message });
-    dispatch(replaceUrl({ tag: 'say' as 'say', data: { message } }));
+    dispatch({ tag: 'setMessage', value: message });
+    dispatch(replaceUrl({ tag: 'say' as 'say', value: { message } }));
   }
   return (
     <div>

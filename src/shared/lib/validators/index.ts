@@ -1,5 +1,5 @@
 import { Set } from 'immutable';
-import { isEqual } from 'lodash';
+import { isEmpty } from 'lodash';
 import * as mongoose from 'mongoose';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
@@ -66,8 +66,8 @@ export function getInvalidValue<Invalid, Fallback>(result: ValidOrInvalid<any, I
 }
 
 // Validate a field only if it is truthy.
-export function optional<Value, Valid, Invalid>(fn: (v: Value) => ValidOrInvalid<Valid, Invalid>, v: Value, undefinedValue: Value): ValidOrInvalid<Valid | undefined, Invalid> {
-  return isEqual(v, undefinedValue) ? valid(undefined) : fn(v);
+export function optional<Value, Valid, Invalid>(fn: (v: Value) => ValidOrInvalid<Valid, Invalid>, v: Value): ValidOrInvalid<Valid | undefined, Invalid> {
+  return isEmpty(v) ? valid(undefined) : fn(v);
 }
 
 export function validateGenericString(value: string, name: string, min = 1, max = 100, characters = 'characters'): Validation<string> {

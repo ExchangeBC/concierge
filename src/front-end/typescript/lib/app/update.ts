@@ -3,6 +3,7 @@ import { immutable, Update, updateChild } from 'front-end/lib/framework';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageLoading from 'front-end/lib/pages/loading';
 import * as PageSay from 'front-end/lib/pages/say';
+import * as PageSignUp from 'front-end/lib/pages/sign-up';
 
 const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
@@ -15,16 +16,18 @@ const update: Update<State, Msg> = (state, msg) => {
           const currentActivePage = state.getIn(['activePage', 'tag']);
           state = state
             .setIn(['pages', currentActivePage], undefined)
-            .set('activePage', msg.data);
+            .set('activePage', msg.value);
           // Set the new active page's state.
           // TODO why does the type system not care if these values aren't immutable?
-          switch (msg.data.tag) {
+          switch (msg.value.tag) {
             case 'landing':
               return state.setIn(['pages', 'landing'], immutable(await PageLanding.init(undefined)));
             case 'loading':
               return state.setIn(['pages', 'loading'], immutable(await PageLoading.init(null)));
+            case 'signUp':
+              return state.setIn(['pages', 'signUp'], immutable(await PageSignUp.init(null)));
             case 'say':
-              return state.setIn(['pages', 'say'], immutable(await PageSay.init(msg.data.data)));
+              return state.setIn(['pages', 'say'], immutable(await PageSay.init(msg.value.value)));
             default:
               return state;
           }
@@ -35,24 +38,32 @@ const update: Update<State, Msg> = (state, msg) => {
       return updateChild({
         state,
         childStatePath: ['pages', 'landing'],
-        updateChild: PageLanding.update,
-        childMsg: msg.data
+        childUpdate: PageLanding.update,
+        childMsg: msg.value
       });
 
     case 'pageLoadingMsg':
       return updateChild({
         state,
         childStatePath: ['pages', 'loading'],
-        updateChild: PageLoading.update,
-        childMsg: msg.data
+        childUpdate: PageLoading.update,
+        childMsg: msg.value
+      });
+
+    case 'pageSignUpMsg':
+      return updateChild({
+        state,
+        childStatePath: ['pages', 'signUp'],
+        childUpdate: PageSignUp.update,
+        childMsg: msg.value
       });
 
     case 'pageSayMsg':
       return updateChild({
         state,
         childStatePath: ['pages', 'say'],
-        updateChild: PageSay.update,
-        childMsg: msg.data
+        childUpdate: PageSay.update,
+        childMsg: msg.value
       });
 
     default:

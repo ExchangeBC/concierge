@@ -1,18 +1,60 @@
 @import '../../../node_modules/bootstrap/scss/bootstrap.scss';
 
 // Add in overrides/custom styling here
-@import 'include/variables';
-@import 'include/mixins';
-@import 'include/base';
-@import 'include/cards';
-@import 'include/concierge';
-@import 'include/labels';
-@import 'include/nav';
-@import 'include/navbar';
-@import 'include/footer';
-@import 'include/pages';
-@import 'include/badges';
-@import 'include/dropdowns';
-@import 'include/profiles';
-@import 'include/messages';
-@import 'include/tables';
+// @import 'include/variables';
+// @import 'include/mixins';
+// @import 'include/base';
+// @import 'include/cards';
+// @import 'include/concierge';
+// @import 'include/labels';
+// @import 'include/nav';
+// @import 'include/navbar';
+// @import 'include/footer';
+// @import 'include/pages';
+// @import 'include/badges';
+// @import 'include/dropdowns';
+// @import 'include/profiles';
+// @import 'include/messages';
+// @import 'include/tables';
+
+
+.vertical-line {
+  position: relative;
+
+  &:after {
+    content: ' ';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    bottom: 0;
+    border-right: 1px solid silver;
+  }
+}
+
+.page-signUp {
+  padding-bottom: 80px;
+
+  .fixed-bottom {
+    background-color: #fff;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid silver;
+
+    .button-wrapper {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    a, button {
+
+      &:not(:last-child) {
+        margin-right: 10px;
+      }
+
+      &.btn-primary {
+        min-width: 140px;
+      }
+    }
+  }
+}

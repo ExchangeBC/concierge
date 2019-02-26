@@ -14,6 +14,10 @@ const router: Router<Page> = {
       pageId: 'loading'
     },
     {
+      path: '/sign-up',
+      pageId: 'signUp'
+    },
+    {
       path: '/say/:message',
       pageId: 'say'
     },
@@ -28,24 +32,29 @@ const router: Router<Page> = {
       case 'landing':
         return {
           tag: 'landing',
-          data: undefined
+          value: undefined
         };
       case 'loading':
         return {
           tag: 'loading',
-          data: null
+          value: null
+        };
+      case 'signUp':
+        return {
+          tag: 'signUp',
+          value: null
         };
       case 'say':
         return {
           tag: 'say',
-          data: {
+          value: {
             message: get(params, 'message', '')
           }
         };
       default:
         return {
           tag: 'say',
-          data: {
+          value: {
             message: 'Not Found'
           }
         };
@@ -58,8 +67,10 @@ const router: Router<Page> = {
         return '/';
       case 'loading':
         return '/loading';
+      case 'signUp':
+        return '/sign-up';
       case 'say':
-        return `/say/${page.data.message}`;
+        return `/say/${page.value.message}`;
       default:
         return '/say/not-found';
     }

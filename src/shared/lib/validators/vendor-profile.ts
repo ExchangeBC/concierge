@@ -3,22 +3,22 @@ import { BusinessType, parseBusinessType, VendorProfile } from 'shared/lib/types
 import { allValid, getInvalidValue, getValidValue, invalid, optional, valid, validateBusinessName, validateCategories, validateCity, validateContactName, validateCountry, validateEmail, validateGenericString, validateIndustrySectors, validatePhoneCountryCode, validatePhoneNumber, validatePhoneType, validatePositionTitle, validatePostalCode, validateProvince, validateStreetAddress, Validation, ValidOrInvalid } from './';
 
 export interface VendorProfileValidationErrors {
-  businessName: string[];
-  businessType: string[];
-  businessNumber: string[];
-  businessStreetAddress: string[];
-  businessCity: string[];
-  businessProvince: string[];
-  businessPostalCode: string[];
-  businessCountry: string[];
-  contactName: string[];
-  contactPositionTitle: string[];
-  contactEmail: string[];
-  contactPhoneNumber: string[];
-  contactPhoneCountryCode: string[];
-  contactPhoneType: string[];
-  industrySectors: string[];
-  areasOfExpertise: string[];
+  businessName?: string[];
+  businessType?: string[];
+  businessNumber?: string[];
+  businessStreetAddress?: string[];
+  businessCity?: string[];
+  businessProvince?: string[];
+  businessPostalCode?: string[];
+  businessCountry?: string[];
+  contactName?: string[];
+  contactPositionTitle?: string[];
+  contactEmail?: string[];
+  contactPhoneNumber?: string[];
+  contactPhoneCountryCode?: string[];
+  contactPhoneType?: string[];
+  industrySectors?: string[];
+  areasOfExpertise?: string[];
 }
 
 export function validateBusinessType(userType: string): Validation<BusinessType> {
@@ -35,22 +35,22 @@ function validateBusinessNumber(businessNumber: string): Validation<string> {
 }
 
 export function validateVendorProfile(profile: object): ValidOrInvalid<VendorProfile, VendorProfileValidationErrors> {
-  const validatedBusinessName = optional(validateBusinessName, getString(profile, 'businessName'), '');
-  const validatedBusinessType = optional(validateBusinessType, getString(profile, 'businessType'), '');
-  const validatedBusinessNumber = optional(validateBusinessNumber, getString(profile, 'businessNumber'), '');
-  const validatedBusinessStreetAddress = optional(validateStreetAddress, getString(profile, 'businessAddress'), '');
-  const validatedBusinessCity = optional(validateCity, getString(profile, 'businessCity'), '');
-  const validatedBusinessProvince = optional(validateProvince, getString(profile, 'businessProvince'), '');
-  const validatedBusinessPostalCode = optional(validatePostalCode, getString(profile, 'businessPostalCode'), '');
-  const validatedBusinessCountry = optional(validateCountry, getString(profile, 'contactCountry'), '');
-  const validatedContactName = optional(validateContactName, getString(profile, 'contactName'), '');
-  const validatedContactPositionTitle = optional(validatePositionTitle, getString(profile, 'contactPositionTitle'), '');
-  const validatedContactEmail = optional(validateEmail, getString(profile, 'contactEmail'), '');
-  const validatedContactPhoneNumber = optional(validatePhoneNumber, getString(profile, 'contactPhoneNumber'), '');
-  const validatedContactPhoneCountryCode = optional(validatePhoneCountryCode, getString(profile, 'contactPhoneCountryCode'), '');
-  const validatedContactPhoneType = optional(validatePhoneType, getString(profile, 'contactPhoneType'), '');
-  const validatedIndustrySectors = optional(validateIndustrySectors, getStringArray(profile, 'industrySectors'), []);
-  const validatedAreasOfExpertise = optional(v => validateCategories(v, 'Areas of Expertise'), getStringArray(profile, 'areasOfExpertise'), []);
+  const validatedBusinessName = optional(validateBusinessName, getString(profile, 'businessName'));
+  const validatedBusinessType = optional(validateBusinessType, getString(profile, 'businessType'));
+  const validatedBusinessNumber = optional(validateBusinessNumber, getString(profile, 'businessNumber'));
+  const validatedBusinessStreetAddress = optional(validateStreetAddress, getString(profile, 'businessStreetAddress'));
+  const validatedBusinessCity = optional(validateCity, getString(profile, 'businessCity'));
+  const validatedBusinessProvince = optional(validateProvince, getString(profile, 'businessProvince'));
+  const validatedBusinessPostalCode = optional(validatePostalCode, getString(profile, 'businessPostalCode'));
+  const validatedBusinessCountry = optional(validateCountry, getString(profile, 'businessCountry'));
+  const validatedContactName = optional(validateContactName, getString(profile, 'contactName'));
+  const validatedContactPositionTitle = optional(validatePositionTitle, getString(profile, 'contactPositionTitle'));
+  const validatedContactEmail = optional(validateEmail, getString(profile, 'contactEmail'));
+  const validatedContactPhoneNumber = optional(validatePhoneNumber, getString(profile, 'contactPhoneNumber'));
+  const validatedContactPhoneCountryCode = optional(validatePhoneCountryCode, getString(profile, 'contactPhoneCountryCode'));
+  const validatedContactPhoneType = optional(validatePhoneType, getString(profile, 'contactPhoneType'));
+  const validatedIndustrySectors = optional(validateIndustrySectors, getStringArray(profile, 'industrySectors'));
+  const validatedAreasOfExpertise = optional(v => validateCategories(v, 'Areas of Expertise'), getStringArray(profile, 'areasOfExpertise'));
   if (allValid([validatedBusinessName, validatedBusinessType, validatedBusinessNumber, validatedBusinessStreetAddress, validatedBusinessCity, validatedBusinessProvince, validatedBusinessPostalCode, validatedBusinessCountry, validatedContactName, validatedContactPositionTitle, validatedContactEmail, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedAreasOfExpertise])) {
     return valid({
       type: 'vendor' as 'vendor',

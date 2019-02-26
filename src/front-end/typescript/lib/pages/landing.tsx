@@ -1,7 +1,8 @@
 import { Page } from 'front-end/lib/app/types';
-import { ADT, Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/lib/framework';
+import { Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/lib/framework';
 import React from 'react';
 import { Collapse, DropdownItem, DropdownMenu, DropdownToggle, Nav, Navbar, NavbarBrand, NavbarToggler, NavItem, NavLink, UncontrolledDropdown } from 'reactstrap'
+import { ADT } from 'shared/lib/types';
 
 export type Params = undefined;
 
@@ -38,7 +39,7 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
     <div>
       <Navbar expand='md'>
         <NavbarBrand href='/'>{jsState.content.title}</NavbarBrand>
-        <NavbarToggler onClick={() => dispatch({ tag: 'toggleNav', data: undefined })} />
+        <NavbarToggler onClick={() => dispatch({ tag: 'toggleNav', value: undefined })} />
         <Collapse isOpen={jsState.isOpen} navbar>
           <Nav className='ml-auto' navbar>
             <NavItem>

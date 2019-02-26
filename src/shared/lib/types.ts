@@ -1,4 +1,4 @@
-export interface ADT<Tag, Value> {
+export interface ADT<Tag, Value = undefined> {
   tag: Tag;
   value: Value;
 }
