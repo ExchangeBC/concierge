@@ -1,7 +1,7 @@
 import AVAILABLE_MINISTRIES from 'shared/data/ministries';
 import { getString, getStringArray } from 'shared/lib';
 import { BuyerProfile } from 'shared/lib/types';
-import { allValid, getInvalidValue, getValidValue, invalid, optional, valid, validateCategories, validateCity, validateCountry, validateFirstName, validateGenericString, validateIndustrySectors, validateLastName, validatePhoneCountryCode, validatePhoneNumber, validatePhoneType, validatePositionTitle, validatePostalCode, validateProvince, validateStreetAddress, validateStringArray, Validation, ValidOrInvalid } from './';
+import { allValid, getInvalidValue, getValidValue, invalid, optional, valid, validateCategories, validateCity, validateCountry, validateFirstName, validateGenericString, validateIndustrySectors, validateLastName, validatePhoneCountryCode, validatePhoneNumber, validatePhoneType, validatePositionTitle, validatePostalCode, validateProvince, validateStreetAddress, validateStringInArray, Validation, ValidOrInvalid } from './';
 
 export interface BuyerProfileValidationErrors {
   firstName: string[];
@@ -17,12 +17,12 @@ export interface BuyerProfileValidationErrors {
   contactPhoneNumber: string[];
   contactPhoneCountryCode: string[];
   contactPhoneType: string[];
-  industrySectors: string[];
-  areasOfInterest: string[];
+  industrySectors: string[][];
+  areasOfInterest: string[][];
 }
 
 export function validateMinistry(ministry: string): Validation<string> {
-  const result = validateStringArray([ministry], AVAILABLE_MINISTRIES, 'Ministry');
+  const result = validateStringInArray(ministry, AVAILABLE_MINISTRIES, 'Ministry');
   switch (result.tag) {
     case 'valid':
       return valid(ministry);
@@ -85,8 +85,8 @@ export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfi
       contactPhoneNumber: getInvalidValue(validatedContactPhoneNumber, [] as string[]),
       contactPhoneCountryCode: getInvalidValue(validatedContactPhoneCountryCode, [] as string[]),
       contactPhoneType: getInvalidValue(validatedContactPhoneType, [] as string[]),
-      industrySectors: getInvalidValue(validatedIndustrySectors, [] as string[]),
-      areasOfInterest: getInvalidValue(validatedAreasOfInterest, [] as string[])
+      industrySectors: getInvalidValue(validatedIndustrySectors, [] as string[][]),
+      areasOfInterest: getInvalidValue(validatedAreasOfInterest, [] as string[][])
     });
   }
 }

@@ -29,8 +29,7 @@ export function init(params: InitParams): State {
   return {
     id: params.id,
     value: params.value,
-    valid: false,
-    invalid: false,
+    errors: [],
     required: params.required,
     label: params.label,
     options,

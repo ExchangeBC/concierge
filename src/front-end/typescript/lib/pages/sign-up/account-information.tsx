@@ -1,39 +1,22 @@
 import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/lib/framework';
+import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
 import { validateConfirmPassword } from 'front-end/lib/validators';
 import { validateAndUpdateField } from 'front-end/lib/views/form-field';
+import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as ShortText from 'front-end/lib/views/input/short-text';
-import { reduce } from 'lodash';
 import { default as React } from 'react';
 import { Col, Form, FormGroup, Label, Row } from 'reactstrap';
 import { ADT, UserType } from 'shared/lib/types';
 import { validateEmail, validatePassword } from 'shared/lib/validators';
 
-export interface ValidationErrors {
-  email?: string[];
-  password?: string[];
-  confirmPassword?: string[];
-}
-
-const validationErrorNameMap: Record<string, string> = {
-  email: 'Email Address',
-  password: 'Password',
-  confirmPassword: 'Confirm Password'
-};
-
-export function getValidationErrors(state: State): string[] {
-  return reduce(state.validationErrors, (acc: string[], v: string[] | undefined, k: string) => {
-    const name = validationErrorNameMap[k] || 'Other';
-    const errors = v || [];
-    return acc.concat(errors.map(msg => `${name}: ${msg}`));
-  }, []);
-}
-
 export interface State {
-  validationErrors: ValidationErrors;
   email: ShortText.State;
   password: ShortText.State;
   confirmPassword: ShortText.State;
+}
+
+export function isValid(state: Immutable<State>): boolean {
+  return !state.email.errors.length && !state.password.errors.length && !state.confirmPassword.errors.length;
 }
 
 type InnerMsg
@@ -45,7 +28,6 @@ export type Msg = ComponentMsg<InnerMsg, Page>;
 
 export const init: Init<undefined, State> = async () => {
   return {
-    validationErrors: {},
     email: ShortText.init({
       id: 'email',
       required: true,
@@ -88,15 +70,11 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChange = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
     <div>
-      <Row>
-        <Col xs='12'>
-          <h3>Account Information</h3>
-        </Col>
-      </Row>
+      <FormSectionHeading text='Account Information' />
       <Form>
         <Row>
           <Col xs='12'>
-            <FormGroup check inline className='my-2'>
+            <FormGroup check inline className='mb-2'>
               <Label>
                 I am a*:
               </Label>

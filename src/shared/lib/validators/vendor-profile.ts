@@ -17,8 +17,8 @@ export interface VendorProfileValidationErrors {
   contactPhoneNumber?: string[];
   contactPhoneCountryCode?: string[];
   contactPhoneType?: string[];
-  industrySectors?: string[];
-  areasOfExpertise?: string[];
+  industrySectors?: string[][];
+  areasOfExpertise?: string[][];
 }
 
 export function validateBusinessType(userType: string): Validation<BusinessType> {
@@ -87,8 +87,8 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
       contactPhoneNumber: getInvalidValue(validatedContactPhoneNumber, [] as string[]),
       contactPhoneCountryCode: getInvalidValue(validatedContactPhoneCountryCode, [] as string[]),
       contactPhoneType: getInvalidValue(validatedContactPhoneType, [] as string[]),
-      industrySectors: getInvalidValue(validatedIndustrySectors, [] as string[]),
-      areasOfExpertise: getInvalidValue(validatedAreasOfExpertise, [] as string[])
+      industrySectors: getInvalidValue(validatedIndustrySectors, [] as string[][]),
+      areasOfExpertise: getInvalidValue(validatedAreasOfExpertise, [] as string[][])
     });
   }
 }

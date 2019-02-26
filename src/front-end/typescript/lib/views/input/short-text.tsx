@@ -18,8 +18,7 @@ export function init(params: Params): State {
   return {
     id: params.id,
     value: '',
-    valid: false,
-    invalid: false,
+    errors: [],
     required: params.required,
     type: params.type,
     label: params.label,

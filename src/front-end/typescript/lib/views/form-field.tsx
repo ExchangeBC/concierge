@@ -1,15 +1,14 @@
 import { Immutable, View } from 'front-end/lib/framework';
 import { default as React, FormEventHandler } from 'react';
-import { Alert, FormGroup, Label } from 'reactstrap';
-import { Validation } from 'shared/lib/validators';
+import { Alert, FormGroup, FormText, Label } from 'reactstrap';
+import { getInvalidValue, Validation } from 'shared/lib/validators';
 
 export interface State {
   value: string;
   id: string;
   required: boolean;
-  valid: boolean;
-  invalid: boolean;
-  label: string;
+  errors: string[];
+  label?: string;
   help?: {
     text: string;
     show: boolean;
@@ -42,14 +41,18 @@ const ConditionHelpToggle: View<Props<any, any>> = ({ state, toggleHelp }) => {
   }
 };
 
-const FieldLabel: View<Props<any, any>> = (props) => {
+const ConditionalLabel: View<Props<any, any>> = (props) => {
   const { id, label, required } = props.state;
-  return (
-    <Label for={id}>
-      {`${label}${required ? '*' : ''}`}
-      <ConditionHelpToggle {...props} />
-    </Label>
-  );
+  if (label) {
+    return (
+      <Label for={id}>
+        {`${label}${required ? '*' : ''}`}
+        <ConditionHelpToggle {...props} />
+      </Label>
+    );
+  } else {
+    return null;
+  }
 };
 
 const ConditionalHelp: View<State> = ({ help }) => {
@@ -64,24 +67,38 @@ const ConditionalHelp: View<State> = ({ help }) => {
   }
 }
 
+const ConditionalErrors: View<State> = ({ errors }) => {
+  if (errors.length) {
+    const errorElements = errors.map((error, i) => {
+      return (<div key={i}>{error}</div>);
+    });
+    return (
+      <FormText color='danger'>
+        {errorElements}
+      </FormText>
+    );
+  } else {
+    return null;
+  }
+}
+
 export function view<ChildState extends State, ChildElement>(props: Props<ChildState, ChildElement>) {
   const { state, Child, onChange } = props;
-  const className = `form-control ${state.valid ? 'is-valid' : ''} ${state.invalid ? 'is-invalid' : ''}`;
+  const invalid = !!state.errors.length;
+  const className = `form-control ${invalid ? 'is-invalid' : ''}`;
   return (
     <FormGroup className={`form-field-${state.id}`}>
-      <FieldLabel {...props} />
+      <ConditionalLabel {...props} />
       <ConditionalHelp {...state} />
       <Child state={state} onChange={onChange} className={className} />
+      <ConditionalErrors {...state} />
     </FormGroup>
   );
 };
 
 export function validateAndUpdateField<State>(state: Immutable<State>, key: string, value: string, validate: (value: string) => Validation<string>): Immutable<State> {
   const validation = validate(value);
-  const valid = validation.tag === 'valid';
   return state
     .setIn([key, 'value'], value)
-    .setIn([key, 'invalid'], !valid)
-    .setIn([key, 'valid'], valid)
-    .setIn(['validationErrors', key], valid ? [] : validation.value);
+    .setIn([key, 'errors'], getInvalidValue(validation, []));
 }

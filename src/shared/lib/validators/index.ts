@@ -83,19 +83,30 @@ export function validateNumberString(value: string, name: string, min?: number, 
   return validateGenericString(value, name, min, max, 'numbers');
 }
 
-export function validateStringArray(values: string[], availableValues: Set<string>, name: string): Validation<string[]> {
+export function validateStringInArray(value: string, availableValues: Set<string>, name: string, indefiniteArticle = 'a'): Validation<string> {
+  if (!value) {
+    return invalid([`Please select ${indefiniteArticle} ${name}`]);
+  }
   availableValues = availableValues.map(v => v.toUpperCase());
-  values.map(v => v.toUpperCase());
-  const errors: string[] = values.reduce((acc, v) => {
-    if (!availableValues.includes(v)) {
-      acc.push(`"${v}" is not a valid ${name}.`);
-    }
-    return acc;
-  }, [] as string[]);
-  if (errors.length) {
-    return invalid(errors);
+  value = value.toUpperCase();
+  if (!availableValues.includes(value)) {
+    return invalid([`"${value}" is not a valid ${name}.`]);
   } else {
-    return valid(values);
+    return valid(value);
+  }
+}
+
+export function validateStringArray(values: string[], availableValues: Set<string>, name: string, indefiniteArticle = 'a'): ValidOrInvalid<string[], string[][]> {
+  let isValid = true;
+  const validations = values.map(value => {
+    const validation = validateStringInArray(value, availableValues, name, indefiniteArticle);
+    isValid = isValid && validation.tag === 'valid';
+    return validation;
+  });
+  if (isValid) {
+    return valid(validations.map(validation => getValidValue(validation, '')));
+  } else {
+    return invalid(validations.map(validation => getInvalidValue(validation, [])));
   }
 }
 
@@ -195,14 +206,14 @@ export function validatePhoneType(phoneType: string): Validation<PhoneType> {
   }
 }
 
-export function validateCategories(categories: string[], name = 'Category'): Validation<string[]> {
-  return validateStringArray(categories, AVAILABLE_CATEGORIES, name);
+export function validateCategories(categories: string[], name = 'Category', indefiniteArticle = 'a'): ValidOrInvalid<string[], string[][]> {
+  return validateStringArray(categories, AVAILABLE_CATEGORIES, name, indefiniteArticle);
 }
 
 export function validatePositionTitle(positionTitle: string): Validation<string> {
   return validateGenericString(positionTitle, 'Position Title');
 }
 
-export function validateIndustrySectors(industrySectors: string[]): Validation<string[]> {
-  return validateStringArray(industrySectors, AVAILABLE_INDUSTRY_SECTORS, 'Industry Sector');
+export function validateIndustrySectors(industrySectors: string[]): ValidOrInvalid<string[], string[][]> {
+  return validateStringArray(industrySectors, AVAILABLE_INDUSTRY_SECTORS, 'Industry Sector', 'an');
 }
