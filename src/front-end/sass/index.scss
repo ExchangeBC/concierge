@@ -1,5 +1,36 @@
-@import '../../../node_modules/bootstrap/scss/bootstrap.scss';
+// Custom Bootstrap overrides.
 
+$enable-validation-icons: false;
+
+// Import Bootstrap.
+
+@import 'node_modules/bootstrap/scss/bootstrap.scss';
+
+// Custom utilities.
+
+.vertical-line {
+  position: relative;
+
+  &:after {
+    content: ' ';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    bottom: 0;
+    border-right: $border-width solid $border-color;
+  }
+}
+
+// Custom styles.
+
+// Ensure the footer is visible on with a .fixed-bottom
+.page-signUp {
+  footer {
+    padding-bottom: 8rem !important;
+  }
+}
+
+// DEPRECATED BCDevExchange Styles
 // Add in overrides/custom styling here
 // @import 'include/variables';
 // @import 'include/mixins';
@@ -16,45 +47,3 @@
 // @import 'include/profiles';
 // @import 'include/messages';
 // @import 'include/tables';
-
-
-.vertical-line {
-  position: relative;
-
-  &:after {
-    content: ' ';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    bottom: 0;
-    border-right: 1px solid silver;
-  }
-}
-
-.page-signUp {
-  padding-bottom: 80px;
-
-  .fixed-bottom {
-    background-color: #fff;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    border-top: 1px solid silver;
-
-    .button-wrapper {
-      display: flex;
-      justify-content: flex-end;
-    }
-
-    a, button {
-
-      &:not(:last-child) {
-        margin-right: 10px;
-      }
-
-      &.btn-primary {
-        min-width: 140px;
-      }
-    }
-  }
-}

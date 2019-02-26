@@ -90,11 +90,11 @@ export const Buttons: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isLoading = state.loading > 0;
   const isDisabled = isLoading || !isValid(state);
   return (
-    <div className='fixed-bottom'>
+    <div className='fixed-bottom bg-light py-3 border-top'>
       <Container>
         <Row>
-          <Col xs='12' className='button-wrapper'>
-            <a href='/'>
+          <Col xs='12' className='d-flex justify-content-xs-center justify-content-md-end align-items-center'>
+            <a href='/' className='mr-3'>
               <Button color='secondary' disabled={isLoading}>Cancel</Button>
             </a>
             <Button color='primary' onClick={createAccount} disabled={isDisabled}>

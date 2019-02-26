@@ -1,5 +1,6 @@
 import { Msg, State } from 'front-end/lib/app/types';
-import * as Nav from 'front-end/lib/app/view/nav';
+import Footer from 'front-end/lib/app/view/footer';
+import Nav from 'front-end/lib/app/view/nav';
 import { ComponentView, Dispatch, mapAppDispatch } from 'front-end/lib/framework';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageLoading from 'front-end/lib/pages/loading';
@@ -29,17 +30,17 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
 }
 
 const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const dispatchNav: Dispatch<Nav.Msg> = mapAppDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'nav' as 'nav', value }));
   return (
     <div className={`page-${state.activePage.tag}`}>
-      <Nav.view state={state.nav} dispatch={dispatchNav} />
-      <Container className='my-5'>
+      <Nav />
+      <Container className='py-5'>
         <Row>
           <Col xs='12'>
             <ViewActivePage state={state} dispatch={dispatch} />
           </Col>
         </Row>
       </Container>
+      <Footer />
     </div>
   );
 };

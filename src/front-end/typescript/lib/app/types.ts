@@ -1,4 +1,3 @@
-import * as Nav from 'front-end/lib/app/view/nav';
 import { AppMsg, Immutable } from 'front-end/lib/framework';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageLoading from 'front-end/lib/pages/loading';
@@ -13,7 +12,6 @@ export type Page
   | ADT<'say', PageSay.Params>;
 
 export interface State {
-  nav: Immutable<Nav.State>;
   activePage: Page;
   pages: {
     landing?: Immutable<PageLanding.State>;
@@ -24,8 +22,7 @@ export interface State {
 }
 
 type InnerMsg
-  = ADT<'nav', Nav.Msg>
-  | ADT<'pageLandingMsg', PageLanding.Msg>
+  = ADT<'pageLandingMsg', PageLanding.Msg>
   | ADT<'pageLoadingMsg', PageLoading.Msg>
   | ADT<'pageSignUpMsg', PageSignUp.Msg>
   | ADT<'pageSayMsg', PageSay.Msg>;

@@ -1,5 +1,4 @@
 import { Msg, State } from 'front-end/lib/app/types';
-import * as Nav from 'front-end/lib/app/view/nav';
 import { immutable, Update, updateChild } from 'front-end/lib/framework';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageLoading from 'front-end/lib/pages/loading';
@@ -34,14 +33,6 @@ const update: Update<State, Msg> = (state, msg) => {
           }
         })()
       ];
-
-    case 'nav':
-      return updateChild({
-        state,
-        childStatePath: ['nav'],
-        childUpdate: Nav.update,
-        childMsg: msg.value
-      });
 
     case 'pageLandingMsg':
       return updateChild({

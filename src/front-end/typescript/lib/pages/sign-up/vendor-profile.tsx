@@ -438,7 +438,7 @@ export const IndustrySectors: ComponentView<State, Msg> = ({ state, dispatch }) 
   const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'industrySectors' as 'industrySectors', value }));
   return (
     <Row className='mt-3'>
-      <Col xs='12' md='7'>
+      <Col xs='12' md='8'>
         <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} />
       </Col>
     </Row>
@@ -449,7 +449,7 @@ export const AreasOfExpertise: ComponentView<State, Msg> = ({ state, dispatch })
   const dispatchAreasOfExpertise: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'areasOfExpertise' as 'areasOfExpertise', value }));
   return (
     <Row className='mt-3'>
-      <Col xs='12' md='7'>
+      <Col xs='12' md='8'>
         <SelectMulti.view state={state.areasOfExpertise} dispatch={dispatchAreasOfExpertise} />
       </Col>
     </Row>

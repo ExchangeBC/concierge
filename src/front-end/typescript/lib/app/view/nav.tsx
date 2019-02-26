@@ -1,71 +1,30 @@
-import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/lib/framework';
+import { View } from 'front-end/lib/framework';
+import Link from 'front-end/lib/views/link';
 import React from 'react';
-import { Button, Col, Container, Nav, Navbar, NavbarBrand, NavItem, NavLink, Row } from 'reactstrap'
-import { ADT } from 'shared/lib/types';
+import { Col, Container, NavbarBrand, Row } from 'reactstrap'
 
-export type Params = undefined;
-
-export interface State {
-  title: string;
-}
-
-type InnerMsg
-  = ADT<'toggleNav'>;
-
-export type Msg = ComponentMsg<InnerMsg, Page>;
-
-export const init: Init<Params, State> = async () => {
-  return {
-    title: 'Concierge'
-  };
-};
-
-export const update: Update<State, Msg> = (state, msg) => {
-  switch (msg.tag) {
-    default:
-      return [state];
-  }
-};
-
-function Link(props: { buttonColor?: string, href: string, text: string }) {
+const Nav: View<{}> = () => {
   return (
-    <NavItem>
-      <NavLink href={props.href}>
-        <Button color={props.buttonColor || 'link'} className={props.buttonColor ? '' : 'text-light'}>
-          {props.text}
-        </Button>
-      </NavLink>
-    </NavItem>
-  );
-}
-
-export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  return (
-    <Navbar expand='md' color='dark'>
+    <nav className='w-100 bg-dark py-2'>
       <Container>
-        <Row className='w-100'>
-          <Col xs='12' className='d-flex'>
+        <Row>
+          <Col xs='12' className='d-flex align-items-center'>
             <NavbarBrand href='/'>
               <img src='https://bcdevexchange.org/modules/core/client/img/logo/new-logo-white.svg' style={{ height: '45px' }}/>
             </NavbarBrand>
-            <Nav navbar>
-              <Link href='/' text='Users' />
-              <Link href='/' text='RFIs' />
-            </Nav>
-            <Nav navbar className='ml-auto'>
-              <Link href='/' text='Sign In' />
+            <div>
+              <Link href='/' text='Users' textColor='light' />
+              <Link href='/' text='RFIs' textColor='light' />
+            </div>
+            <div className='ml-auto'>
+              <Link href='/' text='Sign In' textColor='light' />
               <Link href='/sign-up' text='Sign Up' buttonColor='primary' />
-            </Nav>
+            </div>
           </Col>
         </Row>
       </Container>
-    </Navbar>
+    </nav>
   );
 };
 
-export const component: Component<Params, State, Msg> = {
-  init,
-  update,
-  view
-};
+export default Nav;
