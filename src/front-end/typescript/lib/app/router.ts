@@ -14,8 +14,8 @@ const router: Router<Page> = {
       pageId: 'loading'
     },
     {
-      path: '/sign-up',
-      pageId: 'signUp',
+      path: '/sign-up/vendor',
+      pageId: 'signUpVendor',
       auth: {
         level: AuthLevel.SignedOut,
         redirect: '/say/test-redirect',
@@ -54,9 +54,9 @@ const router: Router<Page> = {
           tag: 'loading',
           value: null
         };
-      case 'signUp':
+      case 'signUpVendor':
         return {
-          tag: 'signUp',
+          tag: 'signUpVendor',
           value: null
         };
       case 'signOut':
@@ -87,7 +87,7 @@ const router: Router<Page> = {
         return '/';
       case 'loading':
         return '/loading';
-      case 'signUp':
+      case 'signUpVendor':
         return '/sign-up';
       case 'signOut':
         return '/sign-out';

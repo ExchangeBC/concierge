@@ -52,7 +52,9 @@ type InnerMsg
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
-export const init: Init<undefined, State> = async () => {
+export type Params = null;
+
+export const init: Init<Params, State> = async () => {
   return {
     email: ShortText.init({
       id: 'email',
@@ -135,7 +137,7 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   );
 };
 
-export const component: Component<undefined, State, Msg> = {
+export const component: Component<Params, State, Msg> = {
   init,
   update,
   view

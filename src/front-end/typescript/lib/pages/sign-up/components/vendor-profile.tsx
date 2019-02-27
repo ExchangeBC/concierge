@@ -1,6 +1,7 @@
 import { Page } from 'front-end/lib/app/types';
 import * as SelectMulti from 'front-end/lib/components/input/select-multi';
-import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
+import { ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
+import { ProfileComponent } from 'front-end/lib/pages/sign-up/types';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
@@ -105,7 +106,7 @@ export function isValid(state: Immutable<State>): boolean {
   }, true);
 }
 
-type InnerMsg
+export type InnerMsg
   = ADT<'onChangeBusinessName', string>
   | ADT<'onChangeBusinessType', string>
   | ADT<'onChangeBusinessNumber', string>
@@ -125,7 +126,9 @@ type InnerMsg
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
-export const init: Init<undefined, State> = async () => {
+export type Params = null;
+
+export const init: Init<Params, State> = async () => {
   return {
     validationErrors: {},
     businessName: ShortText.init({
@@ -469,8 +472,11 @@ export const view: ComponentView<State, Msg> = props => {
   );
 };
 
-export const component: Component<undefined, State, Msg> = {
+export const component: ProfileComponent<State, InnerMsg> = {
   init,
   update,
-  view
+  view,
+  getValues,
+  setErrors,
+  isValid
 };

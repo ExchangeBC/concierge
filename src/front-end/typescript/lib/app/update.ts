@@ -5,7 +5,7 @@ import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageLoading from 'front-end/lib/pages/loading';
 import * as PageSay from 'front-end/lib/pages/say';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
-import * as PageSignUp from 'front-end/lib/pages/sign-up';
+import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import { get } from 'lodash';
 import { ValidOrInvalid } from 'shared/lib/validators';
 
@@ -54,8 +54,8 @@ const update: Update<State, Msg> = (state, msg) => {
               return state.setIn(['pages', 'landing'], immutable(await PageLanding.init(undefined)));
             case 'loading':
               return state.setIn(['pages', 'loading'], immutable(await PageLoading.init(null)));
-            case 'signUp':
-              return state.setIn(['pages', 'signUp'], immutable(await PageSignUp.init(null)));
+            case 'signUpVendor':
+              return state.setIn(['pages', 'signUpVendor'], immutable(await PageSignUpVendor.init(null)));
             case 'signOut':
               return state.setIn(['pages', 'signOut'], immutable(await PageSignOut.init(null)));
             case 'say':
@@ -84,12 +84,12 @@ const update: Update<State, Msg> = (state, msg) => {
         childMsg: msg.value
       });
 
-    case 'pageSignUp':
+    case 'pageSignUpVendor':
       return updateAppChild({
         state,
-        mapChildMsg: value => ({ tag: 'pageSignUp', value }),
-        childStatePath: ['pages', 'signUp'],
-        childUpdate: PageSignUp.update,
+        mapChildMsg: value => ({ tag: 'pageSignUpVendor', value }),
+        childStatePath: ['pages', 'signUpVendor'],
+        childUpdate: PageSignUpVendor.update,
         childMsg: msg.value
       });
 

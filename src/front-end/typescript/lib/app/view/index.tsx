@@ -6,7 +6,7 @@ import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageLoading from 'front-end/lib/pages/loading';
 import * as PageSay from 'front-end/lib/pages/say';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
-import * as PageSignUp from 'front-end/lib/pages/sign-up';
+import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import { default as React, ReactElement } from 'react';
 import { Col, Container, Row } from 'reactstrap';
 
@@ -46,13 +46,13 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageLoading', value })}
           View={PageLoading.view} />
       );
-    case 'signUp':
+    case 'signUpVendor':
       return (
         <ViewPage
           dispatch={dispatch}
-          pageState={state.pages.signUp}
-          mapPageMsg={value => ({ tag: 'pageSignUp', value })}
-          View={PageSignUp.view} />
+          pageState={state.pages.signUpVendor}
+          mapPageMsg={value => ({ tag: 'pageSignUpVendor', value })}
+          View={PageSignUpVendor.view} />
       );
     case 'signOut':
       return (
