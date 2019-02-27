@@ -1,5 +1,5 @@
 import { Record, RecordOf } from 'immutable';
-import { get, remove } from 'lodash';
+import { defaults, get, remove } from 'lodash';
 import page from 'page';
 import { default as React, ReactElement } from 'react';
 import ReactDOM from 'react-dom';
@@ -81,9 +81,15 @@ export interface Component<Params, State, Msg> {
   view: ComponentView<State, Msg>;
 }
 
+export interface RouteAuthDefinition {
+  level: AuthLevel;
+  redirect: string;
+}
+
 export interface RouteDefinition {
   path: string;
   pageId: string;
+  auth?: RouteAuthDefinition;
 }
 
 export interface Router<Page> {
@@ -92,7 +98,27 @@ export interface Router<Page> {
   pageToUrl(page: Page): string;
 }
 
-export type IncomingPageMsg<Page> = ADT<'@incomingPage', Page>;
+export enum AuthLevel {
+  Any = 'ANY',
+  SignedIn = 'SIGNED_IN',
+  SignedOut = 'SIGNED_OUT'
+}
+
+export interface IncomingPageMsgValue<Page> {
+  page: Page;
+  auth: RouteAuthDefinition;
+}
+
+export type IncomingPageMsg<Page> = ADT<'@incomingPage', IncomingPageMsgValue<Page>>;
+
+export type RedirectMsg = ADT<'@redirect', string>;
+
+export function redirect(path: string): RedirectMsg {
+  return {
+    tag: '@redirect',
+    value: path
+  };
+}
 
 export type NewUrlMsg<Page> = ADT<'@newUrl', Page>;
 
@@ -112,7 +138,7 @@ export function replaceUrl<Page>(page: Page): ReplaceUrlMsg<Page> {
   };
 }
 
-export type GlobalMsg<Page> = NewUrlMsg<Page> | ReplaceUrlMsg<Page>;
+export type GlobalMsg<Page> = NewUrlMsg<Page> | ReplaceUrlMsg<Page> | RedirectMsg;
 
 export type ComponentMsg<Msg, Page> = Msg | GlobalMsg<Page>;
 
@@ -159,11 +185,18 @@ export interface StateManager<State, Msg> {
 
 export function initializeRouter<Msg, Page>(router: Router<Page>, dispatch: Dispatch<AppMsg<Msg, Page>>): void {
   // Bind all routes for pushState.
-  router.routes.forEach(({ path, pageId }) => {
+  router.routes.forEach(({ path, pageId, auth }) => {
+    const authDefinition = defaults(auth, {
+      level: AuthLevel.Any,
+      redirect: '/'
+    });
     page(path, ctx => {
       dispatch({
         tag: '@incomingPage',
-        value: router.locationToPage(pageId, get(ctx, 'params', {}))
+        value: {
+          auth: authDefinition,
+          page: router.locationToPage(pageId, get(ctx, 'params', {}))
+        }
       });
     });
   });
@@ -198,12 +231,18 @@ export async function start<State, Msg extends ADT<any, any>, Page>(app: App<Sta
     if (debug) { console.log('dispatch', msg); }
     promise = promise
       .then(() => {
-        if (msg.tag === '@newUrl') {
-          runNewUrl(app.router.pageToUrl(msg.value));
-          return state;
-        } else if (msg.tag === '@replaceUrl') {
-          runReplaceUrl(app.router.pageToUrl(msg.value));
-          return state;
+        switch (msg.tag) {
+          case '@redirect':
+            runNewUrl(msg.value);
+            return state;
+          case '@newUrl':
+            runNewUrl(app.router.pageToUrl(msg.value));
+            return state;
+          case '@replaceUrl':
+            runReplaceUrl(app.router.pageToUrl(msg.value));
+            return state;
+          default:
+            break;
         }
         const [newState, promiseState] = app.update(state, msg);
         // Update state with its synchronous change.

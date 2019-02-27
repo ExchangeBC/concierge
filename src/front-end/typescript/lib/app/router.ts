@@ -1,5 +1,5 @@
 import { Page } from 'front-end/lib/app/types';
-import { Router } from 'front-end/lib/framework';
+import { AuthLevel, Router } from 'front-end/lib/framework';
 import { get } from 'lodash';
 
 const router: Router<Page> = {
@@ -15,7 +15,15 @@ const router: Router<Page> = {
     },
     {
       path: '/sign-up',
-      pageId: 'signUp'
+      pageId: 'signUp',
+      auth: {
+        level: AuthLevel.SignedOut,
+        redirect: '/say/test-redirect'
+      }
+    },
+    {
+      path: '/sign-out',
+      pageId: 'signOut'
     },
     {
       path: '/say/:message',
@@ -44,6 +52,11 @@ const router: Router<Page> = {
           tag: 'signUp',
           value: null
         };
+      case 'signOut':
+        return {
+          tag: 'signOut',
+          value: null
+        };
       case 'say':
         return {
           tag: 'say',
@@ -69,6 +82,8 @@ const router: Router<Page> = {
         return '/loading';
       case 'signUp':
         return '/sign-up';
+      case 'signOut':
+        return '/sign-out';
       case 'say':
         return `/say/${page.value.message}`;
       default:

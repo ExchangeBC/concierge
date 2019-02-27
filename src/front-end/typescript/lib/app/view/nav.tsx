@@ -1,9 +1,33 @@
 import { View } from 'front-end/lib/framework';
+import { Session } from 'front-end/lib/http/api';
 import Link from 'front-end/lib/views/link';
+import { get } from 'lodash';
 import React from 'react';
 import { Col, Container, NavbarBrand, Row } from 'reactstrap'
 
-const Nav: View<{}> = () => {
+interface State {
+  session?: Session;
+}
+
+const AuthLinks: View<State> = ({ session }) => {
+  if (get(session, 'user')) {
+    return (
+      <div className='ml-auto'>
+        <Link href='' text='Authenticated' textColor='secondary' disabled />
+        <Link href='/sign-out' text='Sign Out' textColor='light' />
+      </div>
+    );
+  } else {
+    return (
+      <div className='ml-auto'>
+        <Link href='/' text='Sign In' textColor='light' />
+        <Link href='/sign-up' text='Sign Up' buttonColor='primary' />
+      </div>
+    );
+  }
+};
+
+const Nav: View<State> = ({ session }) => {
   return (
     <nav className='w-100 bg-dark py-2'>
       <Container>
@@ -16,10 +40,7 @@ const Nav: View<{}> = () => {
               <Link href='/' text='Users' textColor='light' />
               <Link href='/' text='RFIs' textColor='light' />
             </div>
-            <div className='ml-auto'>
-              <Link href='/' text='Sign In' textColor='light' />
-              <Link href='/sign-up' text='Sign Up' buttonColor='primary' />
-            </div>
+            <AuthLinks session={session} />
           </Col>
         </Row>
       </Container>

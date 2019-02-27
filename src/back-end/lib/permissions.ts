@@ -3,6 +3,8 @@ import { UserType } from 'shared/lib/types';
 
 type Session = SessionSchema.AppSession;
 
+export const CURRENT_SESSION_ID = 'current';
+
 export const ERROR_MESSAGE = 'You do not have permission to perform this action.';
 
 export function isLoggedIn(session: Session): boolean {
@@ -27,6 +29,10 @@ export function isOwnAccount(session: Session, id: string): boolean {
 
 export function isOwnSession(session: Session, id: string): boolean {
   return session.sessionId.toString() === id;
+}
+
+export function isCurrentSession(id: string): boolean {
+  return id === CURRENT_SESSION_ID;
 }
 
 // Users.
@@ -62,9 +68,9 @@ export function createSession(session: Session): boolean {
 }
 
 export function readOneSession(session: Session, id: string): boolean {
-  return isOwnSession(session, id);
+  return isCurrentSession(id) || isOwnSession(session, id);
 }
 
 export function deleteSession(session: Session, id: string): boolean {
-  return isOwnSession(session, id);
+  return isCurrentSession(id) || isOwnSession(session, id);
 }

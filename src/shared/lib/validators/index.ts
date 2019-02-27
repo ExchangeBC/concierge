@@ -147,7 +147,9 @@ export function validatePassword(password: string): Validation<string> {
   const hasUppercaseLetter = !!password.match(/[A-Z]/);
   const errors: string[] = [];
   if (password.length < 8) { errors.push('Passwords must be at least 8 characters long.'); }
-  if (!hasNumber || !hasLowercaseLetter || !hasUppercaseLetter) { errors.push('Passwords must contain at least one number, lowercase letter and uppercase letter.'); }
+  if (!hasLowercaseLetter) { errors.push('Passwords must contain at least one lowercase letter.'); }
+  if (!hasUppercaseLetter) { errors.push('Passwords must contain at least one uppercase letter.'); }
+  if (!hasNumber) { errors.push('Passwords must contain at least one number.'); }
   if (errors.length) {
     return invalid(errors);
   } else {

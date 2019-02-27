@@ -1,13 +1,20 @@
 import { default as React } from 'react';
 import { Button } from 'reactstrap';
 
-function Link(props: { buttonColor?: string, textColor?: string, href: string, text: string }) {
-  const buttonColor = props.buttonColor || 'link';
-  const textColor = props.textColor || 'primary';
+interface Props {
+  buttonColor?: string;
+  textColor?: string;
+  href: string;
+  text: string;
+  disabled?: boolean;
+}
+
+function Link(props: Props) {
+  const { buttonColor = 'link', textColor = 'primary', href, text, disabled = false } = props;
   return (
-    <a href={props.href}>
-      <Button color={buttonColor} className={props.buttonColor ? '' : `text-${textColor}`}>
-        {props.text}
+    <a href={href}>
+      <Button color={buttonColor} className={props.buttonColor ? '' : `text-${textColor}`} disabled={disabled}>
+        {text}
       </Button>
     </a>
   );
