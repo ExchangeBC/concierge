@@ -18,12 +18,19 @@ const router: Router<Page> = {
       pageId: 'signUp',
       auth: {
         level: AuthLevel.SignedOut,
-        redirect: '/say/test-redirect'
+        redirect: '/say/test-redirect',
+        signOut: false
       }
     },
     {
       path: '/sign-out',
-      pageId: 'signOut'
+      pageId: 'signOut',
+      auth: {
+        level: AuthLevel.SignedOut,
+        redirect: '/sign-out',
+        // signOut must be true, or this will trigger an infinite loop.
+        signOut: true
+      }
     },
     {
       path: '/say/:message',

@@ -22,8 +22,10 @@ const update: Update<State, Msg> = (state, msg) => {
             state = state.set('session', validated.tag === 'valid' ? validated.value : undefined);
           };
           await setSession(await getSession());
-          const signOut = async (path: string) => {
-            await setSession(await deleteSession());
+          const signOut = async (path: string, signOut: boolean) => {
+            if (signOut) {
+              await setSession(await deleteSession());
+            }
             dispatch(redirect(path));
           };
           const auth = msg.value.auth;
@@ -32,12 +34,12 @@ const update: Update<State, Msg> = (state, msg) => {
               break;
             case AuthLevel.SignedIn:
               if (!get(state.session, 'user')) {
-                signOut(auth.redirect);
+                signOut(auth.redirect, auth.signOut);
                 return state;
               }
             case AuthLevel.SignedOut:
               if (get(state.session, 'user')) {
-                signOut(auth.redirect);
+                signOut(auth.redirect, auth.signOut);
                 return state;
               }
           }

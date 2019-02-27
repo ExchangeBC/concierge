@@ -84,6 +84,7 @@ export interface Component<Params, State, Msg> {
 export interface RouteAuthDefinition {
   level: AuthLevel;
   redirect: string;
+  signOut: boolean;
 }
 
 export interface RouteDefinition {
@@ -188,7 +189,8 @@ export function initializeRouter<Msg, Page>(router: Router<Page>, dispatch: Disp
   router.routes.forEach(({ path, pageId, auth }) => {
     const authDefinition = defaults(auth, {
       level: AuthLevel.Any,
-      redirect: '/'
+      redirect: '/',
+      signOut: false
     });
     page(path, ctx => {
       dispatch({
@@ -233,7 +235,7 @@ export async function start<State, Msg extends ADT<any, any>, Page>(app: App<Sta
       .then(() => {
         switch (msg.tag) {
           case '@redirect':
-            runNewUrl(msg.value);
+            runReplaceUrl(msg.value);
             return state;
           case '@newUrl':
             runNewUrl(app.router.pageToUrl(msg.value));

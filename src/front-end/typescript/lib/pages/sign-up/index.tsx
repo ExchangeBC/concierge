@@ -143,7 +143,7 @@ export const view: ComponentView<State, Msg> = props => {
         <Col xs='12' md='8'>
           <p>
             Create an account to gain access to all features of the Concierge Web Application.
-            <br />
+            <br className='d-none d-md-block' />
             Already have an account?
             <a href='/sign-in' className='ml-2'>
               Sign in here.
