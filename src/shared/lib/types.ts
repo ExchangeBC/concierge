@@ -5,6 +5,16 @@ export interface ADT<Tag, Value = undefined> {
 
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
+export enum HttpMethod {
+  Any = '*',
+  Get = 'GET',
+  Post = 'POST',
+  Put = 'PUT',
+  Patch = 'PATCH',
+  Delete = 'DELETE',
+  Options = 'OPTIONS'
+}
+
 export enum PhoneType {
   Office = 'OFFICE',
   CellPhone = 'CELL_PHONE'

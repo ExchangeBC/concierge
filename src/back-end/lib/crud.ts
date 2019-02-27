@@ -1,5 +1,6 @@
-import { composeTransformRequest, Handler, HttpMethod, JsonResponseBody, mapJsonResponse, mapRespond, namespaceRoute, Route, Router } from 'back-end/lib/server';
+import { composeTransformRequest, Handler, JsonResponseBody, mapJsonResponse, mapRespond, namespaceRoute, Route, Router } from 'back-end/lib/server';
 import { get } from 'lodash';
+import { HttpMethod } from 'shared/lib/types';
 
 // This type allows a resource to indicate which Models it needs at the type level.
 // Then, when creating routers for each resource, we provide it an object containing

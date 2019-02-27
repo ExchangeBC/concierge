@@ -14,31 +14,55 @@ export function immutable<State>(state: State): Immutable<State> {
 export type Init<Params, State> = (params: Params) => Promise<State>;
 
 // Update returns a tuple representing sync and async state mutations.
-type UpdateReturnValue<State> = [Immutable<State>, Promise<Immutable<State>>?];
+type UpdateReturnValue<State, Msg> = [Immutable<State>, ((dispatch: Dispatch<Msg>) => Promise<Immutable<State>>)?];
 
-export type Update<State, Msg> = (state: Immutable<State>, msg: Msg) => UpdateReturnValue<State>;
+export type Update<State, Msg> = (state: Immutable<State>, msg: Msg) => UpdateReturnValue<State, Msg>;
 
-interface UpdateChildParams<ParentState, ChildState, ChildMsg> {
+interface UpdateChildParams<ParentState, ParentMsg, ChildState, ChildMsg> {
   state: Immutable<ParentState>;
   childStatePath: string[];
   childUpdate: Update<ChildState, ChildMsg>;
   childMsg: ChildMsg;
+  mapChildMsg(msg: ChildMsg): ParentMsg,
 }
 
-export function updateChild<PS, CS, CM>(params: UpdateChildParams<PS, CS, CM>): UpdateReturnValue<PS> {
-  const { childStatePath, childUpdate, childMsg } = params;
+export function updateAppChild<PS, PM, CS, CM, Page>(params: UpdateChildParams<PS, AppMsg<PM, Page>, CS, ComponentMsg<CM, Page>>): UpdateReturnValue<PS, AppMsg<PM, Page>> {
+  const { childStatePath, childUpdate, childMsg, mapChildMsg } = params;
   let { state } = params;
   const childState = state.getIn(childStatePath);
   if (!childState) { return [state]; }
   const [newChildState, newAsyncChildState] = childUpdate(childState, childMsg);
   state = state.setIn(childStatePath, newChildState);
+  let asyncStateUpdate;
+  if (newAsyncChildState) {
+    asyncStateUpdate = async (dispatch: Dispatch<AppMsg<PM, Page>>) => {
+      const mappedDispatch = mapAppDispatch(dispatch, mapChildMsg);
+      return state.setIn(childStatePath, await newAsyncChildState(mappedDispatch));
+    }
+  }
   return [
     state,
-    (async () => {
-      const newChildState = await newAsyncChildState;
-      if (!newChildState) { return state; }
-      return state.setIn(childStatePath, newChildState);
-    })()
+    asyncStateUpdate
+  ];
+}
+
+export function updateComponentChild<PS, PM, CS, CM, Page>(params: UpdateChildParams<PS, ComponentMsg<PM, Page>, CS, ComponentMsg<CM, Page>>): UpdateReturnValue<PS, ComponentMsg<PM, Page>> {
+  const { childStatePath, childUpdate, childMsg, mapChildMsg } = params;
+  let { state } = params;
+  const childState = state.getIn(childStatePath);
+  if (!childState) { return [state]; }
+  const [newChildState, newAsyncChildState] = childUpdate(childState, childMsg);
+  state = state.setIn(childStatePath, newChildState);
+  let asyncStateUpdate;
+  if (newAsyncChildState) {
+    asyncStateUpdate = async (dispatch: Dispatch<ComponentMsg<PM, Page>>) => {
+      const mappedDispatch = mapComponentDispatch(dispatch, mapChildMsg);
+      return state.setIn(childStatePath, await newAsyncChildState(mappedDispatch));
+    }
+  }
+  return [
+    state,
+    asyncStateUpdate
   ];
 }
 
@@ -186,7 +210,7 @@ export async function start<State, Msg extends ADT<any, any>, Page>(app: App<Sta
         state = newState;
         if (promiseState) {
           notify();
-          return promiseState;
+          return promiseState(dispatch);
         } else {
           return newState;
         }

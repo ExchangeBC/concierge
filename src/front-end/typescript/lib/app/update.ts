@@ -1,5 +1,5 @@
 import { Msg, State } from 'front-end/lib/app/types';
-import { immutable, Update, updateChild } from 'front-end/lib/framework';
+import { immutable, Update, updateAppChild } from 'front-end/lib/framework';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageLoading from 'front-end/lib/pages/loading';
 import * as PageSay from 'front-end/lib/pages/say';
@@ -11,14 +11,13 @@ const update: Update<State, Msg> = (state, msg) => {
     case '@incomingPage':
       return [
         state,
-        (async () => {
+        async () => {
           // Clear the current active page's state.
           const currentActivePage = state.getIn(['activePage', 'tag']);
           state = state
             .setIn(['pages', currentActivePage], undefined)
             .set('activePage', msg.value);
           // Set the new active page's state.
-          // TODO why does the type system not care if these values aren't immutable?
           switch (msg.value.tag) {
             case 'landing':
               return state.setIn(['pages', 'landing'], immutable(await PageLanding.init(undefined)));
@@ -31,36 +30,40 @@ const update: Update<State, Msg> = (state, msg) => {
             default:
               return state;
           }
-        })()
+        }
       ];
 
-    case 'pageLandingMsg':
-      return updateChild({
+    case 'pageLanding':
+      return updateAppChild({
         state,
+        mapChildMsg: value => ({ tag: 'pageLanding', value }),
         childStatePath: ['pages', 'landing'],
         childUpdate: PageLanding.update,
         childMsg: msg.value
       });
 
-    case 'pageLoadingMsg':
-      return updateChild({
+    case 'pageLoading':
+      return updateAppChild({
         state,
+        mapChildMsg: value => ({ tag: 'pageLoading', value }),
         childStatePath: ['pages', 'loading'],
         childUpdate: PageLoading.update,
         childMsg: msg.value
       });
 
-    case 'pageSignUpMsg':
-      return updateChild({
+    case 'pageSignUp':
+      return updateAppChild({
         state,
+        mapChildMsg: value => ({ tag: 'pageSignUp', value }),
         childStatePath: ['pages', 'signUp'],
         childUpdate: PageSignUp.update,
         childMsg: msg.value
       });
 
-    case 'pageSayMsg':
-      return updateChild({
+    case 'pageSay':
+      return updateAppChild({
         state,
+        mapChildMsg: value => ({ tag: 'pageSay', value }),
         childStatePath: ['pages', 'say'],
         childUpdate: PageSay.update,
         childMsg: msg.value

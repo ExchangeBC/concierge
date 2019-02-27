@@ -15,6 +15,32 @@ export interface State {
   confirmPassword: ShortText.State;
 }
 
+export interface AccountInformation {
+  email: string;
+  password: string;
+}
+
+export function getValues(state: State): AccountInformation {
+  return {
+    email: state.email.value,
+    password: state.password.value
+  };
+}
+
+export interface ValidationErrors {
+  email?: string[];
+  password?: string[];
+  confirmPassword?: string[];
+}
+
+export function setErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
+  return state
+    .updateIn(['email', 'errors'], v => errors.email || v)
+    .updateIn(['password', 'errors'], v => errors.password || v)
+    .updateIn(['confirmPassword', 'errors'], v => errors.confirmPassword || v);
+
+}
+
 export function isValid(state: Immutable<State>): boolean {
   return !state.email.errors.length && !state.password.errors.length && !state.confirmPassword.errors.length;
 }

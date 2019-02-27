@@ -7,37 +7,13 @@ import { basicResponse, mapRequestBody } from 'back-end/lib/server';
 import { validateEmail, validatePassword } from 'back-end/lib/validators';
 import { isBoolean, isObject } from 'lodash';
 import { getString, identityAsync } from 'shared/lib';
+import { CreateResponseBody, CreateValidationErrors, DeleteResponseBody, ReadManyErrorResponseBody, ReadManyResponseBodyItem, ReadOneResponseBody, UpdateResponseBody, UpdateValidationErrors } from 'shared/lib/resources/user';
 import { allValid, getInvalidValue, invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
-import { FullProfileValidationErrors, validateProfile } from 'shared/lib/validators/profile';
-
-interface CreateValidationErrors {
-  permissions?: string[];
-  email?: string[];
-  password?: string[];
-  profile?: FullProfileValidationErrors;
-}
+import { validateProfile } from 'shared/lib/validators/profile';
 
 type CreateRequestBody = ValidOrInvalid<UserSchema.Data, CreateValidationErrors>;
 
-type CreateResponseBody = UserSchema.PublicUser | CreateValidationErrors;
-
-type ReadOneResponseBody = UserSchema.PublicUser | null;
-
-type ReadManyResponseBodyItem = UserSchema.PublicUser;
-
-type ReadManyErrorResponseBody = null;
-
-type DeleteResponseBody = null;
-
-interface UpdateValidationErrors extends CreateValidationErrors {
-  id?: string[];
-  currentPassword?: string[];
-  acceptedTerms?: string[];
-}
-
 type UpdateRequestBody = ValidOrInvalid<InstanceType<UserSchema.Model>, UpdateValidationErrors>;
-
-type UpdateResponseBody = UserSchema.PublicUser | UpdateValidationErrors;
 
 async function validateCreateRequestBody(Model: UserSchema.Model, email: string, password: string, acceptedTerms: boolean, profile: object): Promise<CreateRequestBody> {
   const validatedEmail = await validateEmail(Model, email);

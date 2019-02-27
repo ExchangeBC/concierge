@@ -1,6 +1,6 @@
 import { Set } from 'immutable';
 import { isEmpty } from 'lodash';
-import * as mongoose from 'mongoose';
+import moment from 'moment';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
 import { ADT, parsePhoneType, parseUserType, PhoneType, UserType } from 'shared/lib/types';
@@ -70,6 +70,16 @@ export function optional<Value, Valid, Invalid>(fn: (v: Value) => ValidOrInvalid
   return isEmpty(v) ? valid(undefined) : fn(v);
 }
 
+export function validateBoolean(value: any): Validation<boolean> {
+  if (value === true || value === 'true') {
+    return valid(true);
+  } else if (value === false || value === 'false') {
+    return valid(false);
+  } else {
+    return invalid(['Not a valid boolean or boolean string']);
+  }
+}
+
 export function validateGenericString(value: string, name: string, min = 1, max = 100, characters = 'characters'): Validation<string> {
   if (value.length < min || value.length > max) {
     return invalid([`${name} must be between ${min} and ${max} ${characters} long.`]);
@@ -110,12 +120,17 @@ export function validateStringArray(values: string[], availableValues: Set<strin
   }
 }
 
-export function validateObjectId(objectId: string, name: string): Validation<string> {
-  if (mongoose.Types.ObjectId.isValid(objectId)) {
-    return valid(objectId);
+export function validateDate(date: string): Validation<Date> {
+  const parsed = moment(date);
+  if (parsed.isValid()) {
+    return valid(new Date(parsed.valueOf()));
   } else {
-    return invalid([ `${name} is an invalid ObjectId.` ]);
+    return invalid([`${date} is an invalid date.`]);
   }
+}
+
+export function validateStringId(id: string, name = 'ID'): Validation<string> {
+  return validateGenericString(id, name);
 }
 
 export function validateEmail(email: string): Validation<string> {

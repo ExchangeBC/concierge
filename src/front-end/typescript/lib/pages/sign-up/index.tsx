@@ -1,17 +1,15 @@
 import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateChild, View } from 'front-end/lib/framework';
+import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import * as api from 'front-end/lib/http/api';
 import * as AccountInformation from 'front-end/lib/pages/sign-up/account-information';
 import * as VendorProfile from 'front-end/lib/pages/sign-up/vendor-profile';
+import { isArray } from 'lodash';
 import { default as React } from 'react';
 import { Button, Col, Container, Row, Spinner } from 'reactstrap';
 import { ADT } from 'shared/lib/types';
 
 export interface State {
   loading: number;
-  content: {
-    title: string;
-    description: string;
-  };
   accountInformation: Immutable<AccountInformation.State>;
   vendorProfile: Immutable<VendorProfile.State>;
 }
@@ -28,10 +26,6 @@ export type Msg = ComponentMsg<InnerMsg, Page>;
 export const init: Init<null, State> = async () => {
   return {
     loading: 0,
-    content: {
-      title: 'Create Account',
-      description: 'Create account to gain access to all features of the Concierge Web Application.'
-    },
     accountInformation: immutable(await AccountInformation.init(undefined)),
     vendorProfile: immutable(await VendorProfile.init(undefined))
   };
@@ -41,22 +35,49 @@ export const update: Update<State, Msg> = (state, msg) => {
   // const json = state.toJSON();
   switch (msg.tag) {
     case 'accountInformation':
-      return updateChild({
+      return updateComponentChild({
         state,
+        mapChildMsg: value => ({ tag: 'accountInformation', value }),
         childStatePath: ['accountInformation'],
         childUpdate: AccountInformation.update,
         childMsg: msg.value
       });
     case 'vendorProfile':
-      return updateChild({
+      return updateComponentChild({
         state,
+        mapChildMsg: value => ({ tag: 'vendorProfile', value }),
         childStatePath: ['vendorProfile'],
         childUpdate: VendorProfile.update,
         childMsg: msg.value
       });
     case 'createAccount':
       return [
-        update(state, { tag: 'startLoading', value: undefined })[0]
+        update(state, { tag: 'startLoading', value: undefined })[0],
+        async dispatch => {
+          const { email, password } = AccountInformation.getValues(state.accountInformation);
+          const user = {
+            email,
+            password,
+            acceptedTerms: false,
+            profile: VendorProfile.getValues(state.vendorProfile)
+          };
+          const result = await api.createUser(user);
+          switch (result.tag) {
+            case 'valid':
+              dispatch({ tag:
+                '@newUrl',
+                value: { tag: 'say', value: { message: 'Sign Up Successful' }}
+              });
+              return state;
+            case 'invalid':
+              const profileErrors = result.value.profile;
+              if (profileErrors && !isArray(profileErrors) && profileErrors as VendorProfile.ValidationErrors) {
+                state = state.set('vendorProfile', VendorProfile.setErrors(state.vendorProfile, profileErrors));
+              }
+              return state
+                .set('accountInformation', AccountInformation.setErrors(state.accountInformation, result.value));
+          }
+        }
       ];
     case 'startLoading':
       return [state.set('loading', state.loading + 1)];
@@ -115,13 +136,13 @@ export const view: ComponentView<State, Msg> = props => {
     <div>
       <Row>
         <Col xs='12'>
-          <h1>{state.content.title}</h1>
+          <h1>Create an Account</h1>
         </Col>
       </Row>
       <Row>
         <Col xs='12' md='8'>
           <p>
-            {state.content.description}
+            Create an account to gain access to all features of the Concierge Web Application.
             <br />
             Already have an account?
             <a href='/sign-in' className='ml-2'>

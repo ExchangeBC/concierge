@@ -1,6 +1,6 @@
 import { Page } from 'front-end/lib/app/types';
 import * as SelectMulti from 'front-end/lib/components/input/select-multi';
-import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateChild } from 'front-end/lib/framework';
+import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
@@ -34,6 +34,69 @@ export interface State {
   contactPhoneType: Select.State;
   industrySectors: Immutable<SelectMulti.State>;
   areasOfExpertise: Immutable<SelectMulti.State>;
+}
+
+export function getValues(state: Immutable<State>): VendorProfile {
+  return {
+    type: 'vendor' as 'vendor',
+    businessName: state.businessName.value || undefined,
+    businessType: parseBusinessType(state.businessType.value) || undefined,
+    businessNumber: state.businessNumber.value || undefined,
+    businessStreetAddress: state.businessStreetAddress.value || undefined,
+    businessCity: state.businessCity.value || undefined,
+    businessProvince: state.businessProvince.value || undefined,
+    businessPostalCode: state.businessPostalCode.value || undefined,
+    businessCountry: state.businessCountry.value || undefined,
+    contactName: state.contactName.value || undefined,
+    contactPositionTitle: state.contactPositionTitle.value || undefined,
+    contactEmail: state.contactEmail.value || undefined,
+    contactPhoneNumber: state.contactPhoneNumber.value || undefined,
+    contactPhoneCountryCode: state.contactPhoneCountryCode.value || undefined,
+    contactPhoneType: parsePhoneType(state.contactPhoneType.value) || undefined,
+    industrySectors: SelectMulti.getValues(state.industrySectors),
+    areasOfExpertise: SelectMulti.getValues(state.areasOfExpertise)
+  };
+}
+
+export function setValues(state: Immutable<State>, profile: VendorProfile): Immutable<State> {
+  return state
+    .setIn(['businessName', 'value'], profile.businessName || '')
+    .setIn(['businessType', 'value'], profile.businessType || '')
+    .setIn(['businessNumber', 'value'], profile.businessNumber || '')
+    .setIn(['businessStreetAddress', 'value'], profile.businessStreetAddress || '')
+    .setIn(['businessCity', 'value'], profile.businessCity || '')
+    .setIn(['businessProvince', 'value'], profile.businessProvince || '')
+    .setIn(['businessPostalCode', 'value'], profile.businessPostalCode || '')
+    .setIn(['businessCountry', 'value'], profile.businessCountry || '')
+    .setIn(['contactName', 'value'], profile.contactName || '')
+    .setIn(['contactPositionTitle', 'value'], profile.contactPositionTitle || '')
+    .setIn(['contactEmail', 'value'], profile.contactEmail || '')
+    .setIn(['contactPhoneNumber', 'value'], profile.contactPhoneNumber || '')
+    .setIn(['contactPhoneCountryCode', 'value'], profile.contactPhoneCountryCode || '')
+    .setIn(['contactPhoneType', 'value'], profile.contactPhoneType || '')
+    .set('industrySectors', SelectMulti.setValues(state.industrySectors, profile.industrySectors || []))
+    .set('areasOfExpertise', SelectMulti.setValues(state.areasOfExpertise, profile.areasOfExpertise || []));
+}
+
+export function setErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
+  return state
+    .set('validationErrors', errors)
+    .setIn(['businessName', 'errors'], errors.businessName || [])
+    .setIn(['businessType', 'errors'], errors.businessType || [])
+    .setIn(['businessNumber', 'errors'], errors.businessNumber || [])
+    .setIn(['businessStreetAddress', 'errors'], errors.businessStreetAddress || [])
+    .setIn(['businessCity', 'errors'], errors.businessCity || [])
+    .setIn(['businessProvince', 'errors'], errors.businessProvince || [])
+    .setIn(['businessPostalCode', 'errors'], errors.businessPostalCode || [])
+    .setIn(['businessCountry', 'errors'], errors.businessCountry || [])
+    .setIn(['contactName', 'errors'], errors.contactName || [])
+    .setIn(['contactPositionTitle', 'errors'], errors.contactPositionTitle || [])
+    .setIn(['contactEmail', 'errors'], errors.contactEmail || [])
+    .setIn(['contactPhoneNumber', 'errors'], errors.contactPhoneNumber || [])
+    .setIn(['contactPhoneCountryCode', 'errors'], errors.contactPhoneCountryCode || [])
+    .setIn(['contactPhoneType', 'errors'], errors.contactPhoneType || [])
+    .set('industrySectors', SelectMulti.setErrors(state.industrySectors, errors.industrySectors || []))
+    .set('areasOfExpertise', SelectMulti.setErrors(state.areasOfExpertise, errors.areasOfExpertise || []));
 }
 
 export function isValid(state: Immutable<State>): boolean {
@@ -227,16 +290,18 @@ export const update: Update<State, Msg> = (state, msg) => {
     case 'onChangeContactPhoneType':
       return [validateAndUpdate(state, 'contactPhoneType', msg.value)];
     case 'industrySectors':
-      state = updateChild({
+      state = updateComponentChild({
         state,
+        mapChildMsg: value => ({ tag: 'industrySectors', value }),
         childStatePath: ['industrySectors'],
         childUpdate: SelectMulti.update,
         childMsg: msg.value
       })[0];
       return [validateAndUpdate(state)];
     case 'areasOfExpertise':
-      state = updateChild({
+      state = updateComponentChild({
         state,
+        mapChildMsg: value => ({ tag: 'areasOfExpertise', value }),
         childStatePath: ['areasOfExpertise'],
         childUpdate: SelectMulti.update,
         childMsg: msg.value
@@ -248,91 +313,28 @@ export const update: Update<State, Msg> = (state, msg) => {
 };
 
 function validateAndUpdate(state: Immutable<State>, key?: string, value?: string): Immutable<State> {
-  if (key && value) {
+  if (key && value !== undefined) {
     state = state.setIn([key, 'value'], value);
   }
-  const validation = validateVendorProfile(getVendorProfile(state));
+  const validation = validateVendorProfile(getValues(state));
   return persistValidations(state, validation);
-}
-
-function getVendorProfile(state: Immutable<State>): VendorProfile {
-  return {
-    type: 'vendor' as 'vendor',
-    businessName: state.businessName.value || undefined,
-    businessType: parseBusinessType(state.businessType.value) || undefined,
-    businessNumber: state.businessNumber.value || undefined,
-    businessStreetAddress: state.businessStreetAddress.value || undefined,
-    businessCity: state.businessCity.value || undefined,
-    businessProvince: state.businessProvince.value || undefined,
-    businessPostalCode: state.businessPostalCode.value || undefined,
-    businessCountry: state.businessCountry.value || undefined,
-    contactName: state.contactName.value || undefined,
-    contactPositionTitle: state.contactPositionTitle.value || undefined,
-    contactEmail: state.contactEmail.value || undefined,
-    contactPhoneNumber: state.contactPhoneNumber.value || undefined,
-    contactPhoneCountryCode: state.contactPhoneCountryCode.value || undefined,
-    contactPhoneType: parsePhoneType(state.contactPhoneType.value) || undefined,
-    industrySectors: SelectMulti.getValues(state.industrySectors),
-    areasOfExpertise: SelectMulti.getValues(state.areasOfExpertise)
-  };
 }
 
 function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<VendorProfile, ValidationErrors>): Immutable<State> {
   switch (validation.tag) {
     case 'valid':
-      state = persistValues(state, validation.value);
-      return persistErrors(state, {});
+      state = setValues(state, validation.value);
+      return setErrors(state, {});
     case 'invalid':
-      return persistErrors(state, validation.value);
+      return setErrors(state, validation.value);
   }
-}
-
-function persistValues(state: Immutable<State>, profile: VendorProfile): Immutable<State> {
-  return state
-    .setIn(['businessName', 'value'], profile.businessName || '')
-    .setIn(['businessType', 'value'], profile.businessType || '')
-    .setIn(['businessNumber', 'value'], profile.businessNumber || '')
-    .setIn(['businessStreetAddress', 'value'], profile.businessStreetAddress || '')
-    .setIn(['businessCity', 'value'], profile.businessCity || '')
-    .setIn(['businessProvince', 'value'], profile.businessProvince || '')
-    .setIn(['businessPostalCode', 'value'], profile.businessPostalCode || '')
-    .setIn(['businessCountry', 'value'], profile.businessCountry || '')
-    .setIn(['contactName', 'value'], profile.contactName || '')
-    .setIn(['contactPositionTitle', 'value'], profile.contactPositionTitle || '')
-    .setIn(['contactEmail', 'value'], profile.contactEmail || '')
-    .setIn(['contactPhoneNumber', 'value'], profile.contactPhoneNumber || '')
-    .setIn(['contactPhoneCountryCode', 'value'], profile.contactPhoneCountryCode || '')
-    .setIn(['contactPhoneType', 'value'], profile.contactPhoneType || '')
-    .set('industrySectors', SelectMulti.setValues(state.industrySectors, profile.industrySectors || []))
-    .set('areasOfExpertise', SelectMulti.setValues(state.areasOfExpertise, profile.areasOfExpertise || []));
-}
-
-function persistErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
-  return state
-    .set('validationErrors', errors)
-    .setIn(['businessName', 'errors'], errors.businessName || [])
-    .setIn(['businessType', 'errors'], errors.businessType || [])
-    .setIn(['businessNumber', 'errors'], errors.businessNumber || [])
-    .setIn(['businessStreetAddress', 'errors'], errors.businessStreetAddress || [])
-    .setIn(['businessCity', 'errors'], errors.businessCity || [])
-    .setIn(['businessProvince', 'errors'], errors.businessProvince || [])
-    .setIn(['businessPostalCode', 'errors'], errors.businessPostalCode || [])
-    .setIn(['businessCountry', 'errors'], errors.businessCountry || [])
-    .setIn(['contactName', 'errors'], errors.contactName || [])
-    .setIn(['contactPositionTitle', 'errors'], errors.contactPositionTitle || [])
-    .setIn(['contactEmail', 'errors'], errors.contactEmail || [])
-    .setIn(['contactPhoneNumber', 'errors'], errors.contactPhoneNumber || [])
-    .setIn(['contactPhoneCountryCode', 'errors'], errors.contactPhoneCountryCode || [])
-    .setIn(['contactPhoneType', 'errors'], errors.contactPhoneType || [])
-    .set('industrySectors', SelectMulti.setErrors(state.industrySectors, errors.industrySectors || []))
-    .set('areasOfExpertise', SelectMulti.setErrors(state.areasOfExpertise, errors.areasOfExpertise || []));
 }
 
 export const BusinessInformation: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
-    <div>
+    <div className='mt-3 mt-md-0'>
       <FormSectionHeading text='Business Information (Optional)' />
       <Row>
         <Col xs='12'>

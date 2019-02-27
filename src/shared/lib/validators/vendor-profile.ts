@@ -50,7 +50,7 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
   const validatedContactPhoneCountryCode = optional(validatePhoneCountryCode, getString(profile, 'contactPhoneCountryCode'));
   const validatedContactPhoneType = optional(validatePhoneType, getString(profile, 'contactPhoneType'));
   const validatedIndustrySectors = optional(validateIndustrySectors, getStringArray(profile, 'industrySectors'));
-  const validatedAreasOfExpertise = optional(v => validateCategories(v, 'Areas of Expertise'), getStringArray(profile, 'areasOfExpertise'));
+  const validatedAreasOfExpertise = optional(v => validateCategories(v, 'Area of Expertise'), getStringArray(profile, 'areasOfExpertise'));
   if (allValid([validatedBusinessName, validatedBusinessType, validatedBusinessNumber, validatedBusinessStreetAddress, validatedBusinessCity, validatedBusinessProvince, validatedBusinessPostalCode, validatedBusinessCountry, validatedContactName, validatedContactPositionTitle, validatedContactEmail, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedAreasOfExpertise])) {
     return valid({
       type: 'vendor' as 'vendor',

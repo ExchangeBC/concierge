@@ -22,9 +22,9 @@ export interface State {
 }
 
 type InnerMsg
-  = ADT<'pageLandingMsg', PageLanding.Msg>
-  | ADT<'pageLoadingMsg', PageLoading.Msg>
-  | ADT<'pageSignUpMsg', PageSignUp.Msg>
-  | ADT<'pageSayMsg', PageSay.Msg>;
+  = ADT<'pageLanding', PageLanding.Msg>
+  | ADT<'pageLoading', PageLoading.Msg>
+  | ADT<'pageSignUp', PageSignUp.Msg>
+  | ADT<'pageSay', PageSay.Msg>;
 
 export type Msg = AppMsg<InnerMsg, Page>;

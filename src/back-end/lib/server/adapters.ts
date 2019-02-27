@@ -1,12 +1,13 @@
 import { COOKIE_SECRET } from 'back-end/config';
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
-import { ErrorResponseBody, FileResponseBody, HttpMethod, JsonResponseBody, makeErrorResponseBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
+import { ErrorResponseBody, FileResponseBody, JsonResponseBody, makeErrorResponseBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import expressLib from 'express';
 import { assign } from 'lodash';
 import mongoose from 'mongoose';
+import { HttpMethod } from 'shared/lib/types';
 
 // tslint:disable no-console
 

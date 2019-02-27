@@ -1,8 +1,8 @@
 import { createdAtSchema, updatedAtSchema } from 'back-end/lib/schemas';
 import bcrypt from 'bcrypt';
 import * as mongoose from 'mongoose';
+import { PublicUser } from 'shared/lib/resources/user';
 import { Profile } from 'shared/lib/types';
-import { Omit } from 'shared/lib/types';
 
 export const NAME = 'User';
 
@@ -19,18 +19,15 @@ export interface Data {
   profile: Profile;
 }
 
-export type PublicUser = Omit<Data, 'passwordHash'> & { passwordHash: undefined };
-
 export function makePublicUser(user: Data): PublicUser {
   return {
-    _id: user._id,
+    _id: user._id.toString(),
     email: user.email,
     active: user.active,
     profile: user.profile,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
-    acceptedTermsAt: user.acceptedTermsAt,
-    passwordHash: undefined
+    acceptedTermsAt: user.acceptedTermsAt
   };
 }
 

@@ -6,17 +6,7 @@ import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http';
 import { assign } from 'lodash';
 import { lookup } from 'mime-types';
 import mongoose from 'mongoose';
-import { ADT } from 'shared/lib/types';
-
-export enum HttpMethod {
-  Any = '*',
-  Get = 'GET',
-  Post = 'POST',
-  Put = 'PUT',
-  Patch = 'PATCH',
-  Delete = 'DELETE',
-  Options = 'OPTIONS'
-}
+import { ADT, HttpMethod } from 'shared/lib/types';
 
 export function parseHttpMethod(raw: string): HttpMethod | null {
   switch (raw.toLowerCase()) {

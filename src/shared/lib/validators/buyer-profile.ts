@@ -50,7 +50,7 @@ export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfi
   const validatedContactPhoneCountryCode = optional(validatePhoneCountryCode, getString(profile, 'contactPhoneCountryCode'));
   const validatedContactPhoneType = optional(validatePhoneType, getString(profile, 'contactPhoneType'));
   const validatedIndustrySectors = optional(validateIndustrySectors, getStringArray(profile, 'industrySectors'));
-  const validatedAreasOfInterest = optional(v => validateCategories(v, 'Areas of Interest'), getStringArray(profile, 'areasOfInterest'));
+  const validatedAreasOfInterest = optional(v => validateCategories(v, 'Area of Interest'), getStringArray(profile, 'areasOfInterest'));
   if (allValid([validatedFirstName, validatedLastName, validatedPositionTitle, validatedMinistry, validatedBranch, validatedContactStreetAddress, validatedContactCity, validatedContactProvince, validatedContactPostalCode, validatedContactCountry, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedAreasOfInterest])) {
     return valid({
       type: 'buyer' as 'buyer',

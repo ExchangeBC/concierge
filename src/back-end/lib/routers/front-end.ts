@@ -1,6 +1,7 @@
 import { FRONT_END_BUILD_DIR } from 'back-end/config';
-import { FileResponseBody, HttpMethod, makeFileResponseBody, nullConfigurableRequest, Route, Router } from 'back-end/lib/server';
+import { FileResponseBody, makeFileResponseBody, nullConfigurableRequest, Route, Router } from 'back-end/lib/server';
 import { join } from 'path';
+import { HttpMethod } from 'shared/lib/types';
 
 const FALLBACK_FILE_PATH = join(FRONT_END_BUILD_DIR, 'index.html');
 
