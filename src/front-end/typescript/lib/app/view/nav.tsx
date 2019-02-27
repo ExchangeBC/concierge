@@ -21,7 +21,7 @@ const AuthLinks: View<State> = ({ session }) => {
     return (
       <div className='ml-auto'>
         <Link href='/' text='Sign In' textColor='light' />
-        <Link href='/sign-up' text='Sign Up' buttonColor='primary' />
+        <Link href='/sign-up/buyer' text='Sign Up' buttonColor='primary' />
       </div>
     );
   }

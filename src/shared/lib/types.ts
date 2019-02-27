@@ -50,6 +50,17 @@ export function parseUserType(raw: string): UserType | null {
   }
 }
 
+export function userTypeToTitleCase(userType: UserType): string {
+  switch (userType) {
+    case UserType.Buyer:
+      return 'Buyer';
+    case UserType.Vendor:
+      return 'Vendor';
+    case UserType.ProgramStaff:
+      return 'Program Staff';
+  }
+}
+
 export enum BusinessType {
   Corporation = 'CORPORATION',
   LimitedLiabilityCompany = 'LIMITED_LIABILITY_COMPANY',

@@ -479,5 +479,5 @@ export const component: ProfileComponent<State, InnerMsg> = {
   getValues,
   setErrors,
   isValid,
-  userType: UserType.Vendor
+  userType: UserType.ProgramStaff
 };

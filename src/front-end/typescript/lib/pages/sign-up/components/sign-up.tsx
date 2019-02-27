@@ -29,7 +29,7 @@ function init<PS, PM>(Profile: ProfileComponent<PS, PM>): Init<Params, State<PS>
   return async () => {
     return {
       loading: 0,
-      accountInformation: immutable(await AccountInformation.init(null)),
+      accountInformation: immutable(await AccountInformation.init({ userType: Profile.userType })),
       profile: immutable(await Profile.init(null))
     };
   }

@@ -1,15 +1,17 @@
 import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
+import { Component, ComponentMsg, ComponentView, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import { validateConfirmPassword } from 'front-end/lib/validators';
 import { validateAndUpdateField } from 'front-end/lib/views/form-field';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as ShortText from 'front-end/lib/views/input/short-text';
+import Link from 'front-end/lib/views/link';
 import { default as React } from 'react';
 import { Col, Form, FormGroup, Label, Row } from 'reactstrap';
-import { ADT, UserType } from 'shared/lib/types';
+import { ADT, UserType, userTypeToTitleCase } from 'shared/lib/types';
 import { validateEmail, validatePassword } from 'shared/lib/validators';
 
 export interface State {
+  userType: UserType;
   email: ShortText.State;
   password: ShortText.State;
   confirmPassword: ShortText.State;
@@ -52,10 +54,13 @@ type InnerMsg
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
-export type Params = null;
+export interface Params {
+  userType: UserType;
+}
 
-export const init: Init<Params, State> = async () => {
+export const init: Init<Params, State> = async ({ userType }) => {
   return {
+    userType,
     email: ShortText.init({
       id: 'email',
       required: true,
@@ -94,6 +99,42 @@ export const update: Update<State, Msg> = (state, msg) => {
   }
 };
 
+const UserTypeRadio: View<{ state: State, userType: UserType }> = ({ state, userType }) => {
+  const id = `sign-up-user-type-${userType}`;
+  const isChecked = state.userType === userType;
+  const style = { cursor: 'pointer' };
+  return (
+    <Link href={`/sign-up/${userType.toLowerCase().replace('_', '-')}`} className='custom-radio custom-control' buttonClassName='p-0 d-flex align-items-center' textColor='body'>
+      <input
+        id={id}
+        type='radio'
+        name='sign-up-user-type'
+        value={UserType.Vendor}
+        className='form-check-input'
+        checked={isChecked}
+        style={style}
+        readOnly />
+      <Label for={id} className='mb-0' style={style} >{userTypeToTitleCase(userType)}</Label>
+    </Link>
+  );
+};
+
+const UserTypeToggle: View<{ state: State }> = ({ state }) => {
+  if (state.userType === UserType.ProgramStaff) {
+    return null;
+  } else {
+    return (
+      <FormGroup check inline className='mb-3'>
+        <Label className='mb-0'>
+          I am a*:
+        </Label>
+        <UserTypeRadio state={state} userType={UserType.Buyer} />
+        <UserTypeRadio state={state} userType={UserType.Vendor} />
+      </FormGroup>
+    );
+  }
+}
+
 export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChange = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
@@ -102,19 +143,7 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <Form>
         <Row>
           <Col xs='12'>
-            <FormGroup check inline className='mb-2'>
-              <Label>
-                I am a*:
-              </Label>
-              <div className='custom-radio custom-control'>
-                <input id='sign-up-user-type-buyer' type='radio' name='sign-up-user-type' value={UserType.Buyer} className='form-check-input' />
-                <Label for='sign-up-user-type-buyer'>Buyer</Label>
-              </div>
-              <div className='custom-radio custom-control'>
-                <input id='sign-up-user-type-vendor' type='radio' name='sign-up-user-type' value={UserType.Vendor} className='form-check-input' checked/>
-                <Label for='sign-up-user-type-vendor'>Vendor</Label>
-              </div>
-            </FormGroup>
+            <UserTypeToggle state={state} />
           </Col>
           <Col xs='12'>
             <ShortText.view
