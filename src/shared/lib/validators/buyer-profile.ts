@@ -1,34 +1,27 @@
-import AVAILABLE_MINISTRIES from 'shared/data/ministries';
 import { getString, getStringArray } from 'shared/lib';
 import { BuyerProfile } from 'shared/lib/types';
-import { allValid, getInvalidValue, getValidValue, invalid, optional, valid, validateCategories, validateCity, validateCountry, validateFirstName, validateGenericString, validateIndustrySectors, validateLastName, validatePhoneCountryCode, validatePhoneNumber, validatePhoneType, validatePositionTitle, validatePostalCode, validateProvince, validateStreetAddress, validateStringInArray, Validation, ValidOrInvalid } from './';
+import { allValid, getInvalidValue, getValidValue, invalid, optional, valid, validateCategories, validateCity, validateCountry, validateFirstName, validateGenericString, validateIndustrySectors, validateLastName, validatePhoneCountryCode, validatePhoneNumber, validatePhoneType, validatePositionTitle, validatePostalCode, validateProvince, validateStreetAddress, Validation, ValidOrInvalid } from './';
 
 export interface BuyerProfileValidationErrors {
-  firstName: string[];
-  lastName: string[];
-  positionTitle: string[];
-  ministry: string[];
-  branch: string[];
-  contactStreetAddress: string[];
-  contactCity: string[];
-  contactProvince: string[];
-  contactPostalCode: string[];
-  contactCountry: string[];
-  contactPhoneNumber: string[];
-  contactPhoneCountryCode: string[];
-  contactPhoneType: string[];
-  industrySectors: string[][];
-  areasOfInterest: string[][];
+  firstName?: string[];
+  lastName?: string[];
+  positionTitle?: string[];
+  publicSectorEntity?: string[];
+  branch?: string[];
+  contactStreetAddress?: string[];
+  contactCity?: string[];
+  contactProvince?: string[];
+  contactPostalCode?: string[];
+  contactCountry?: string[];
+  contactPhoneNumber?: string[];
+  contactPhoneCountryCode?: string[];
+  contactPhoneType?: string[];
+  industrySectors?: string[][];
+  areasOfInterest?: string[][];
 }
 
-export function validateMinistry(ministry: string): Validation<string> {
-  const result = validateStringInArray(ministry, AVAILABLE_MINISTRIES, 'Ministry');
-  switch (result.tag) {
-    case 'valid':
-      return valid(ministry);
-    case 'invalid':
-      return result;
-  }
+export function validatePublicSectorEntity(value: string): Validation<string> {
+  return validateGenericString(value, 'Public Sector Entities');
 }
 
 export function validateBranch(branch: string): Validation<string> {
@@ -39,7 +32,7 @@ export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfi
   const validatedFirstName = optional(validateFirstName, getString(profile, 'firstName'));
   const validatedLastName = optional(validateLastName, getString(profile, 'lastName'));
   const validatedPositionTitle = optional(validatePositionTitle, getString(profile, 'positionTitle'));
-  const validatedMinistry = optional(validateMinistry, getString(profile, 'ministry'));
+  const validatedPublicSectorEntity = optional(validatePublicSectorEntity, getString(profile, 'publicSectorEntity'));
   const validatedBranch = optional(validateBranch, getString(profile, 'branch'));
   const validatedContactStreetAddress = optional(validateStreetAddress, getString(profile, 'contactStreetAddress'));
   const validatedContactCity = optional(validateCity, getString(profile, 'contactCity'));
@@ -51,13 +44,13 @@ export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfi
   const validatedContactPhoneType = optional(validatePhoneType, getString(profile, 'contactPhoneType'));
   const validatedIndustrySectors = optional(validateIndustrySectors, getStringArray(profile, 'industrySectors'));
   const validatedAreasOfInterest = optional(v => validateCategories(v, 'Area of Interest'), getStringArray(profile, 'areasOfInterest'));
-  if (allValid([validatedFirstName, validatedLastName, validatedPositionTitle, validatedMinistry, validatedBranch, validatedContactStreetAddress, validatedContactCity, validatedContactProvince, validatedContactPostalCode, validatedContactCountry, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedAreasOfInterest])) {
+  if (allValid([validatedFirstName, validatedLastName, validatedPositionTitle, validatedPublicSectorEntity, validatedBranch, validatedContactStreetAddress, validatedContactCity, validatedContactProvince, validatedContactPostalCode, validatedContactCountry, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedAreasOfInterest])) {
     return valid({
       type: 'buyer' as 'buyer',
       firstName: getValidValue(validatedFirstName, undefined),
       lastName: getValidValue(validatedLastName, undefined),
       positionTitle: getValidValue(validatedPositionTitle, undefined),
-      ministry: getValidValue(validatedMinistry, undefined),
+      publicSectorEntity: getValidValue(validatedPublicSectorEntity, undefined),
       branch: getValidValue(validatedBranch, undefined),
       contactStreetAddress: getValidValue(validatedContactStreetAddress, undefined),
       contactCity: getValidValue(validatedContactCity, undefined),
@@ -75,7 +68,7 @@ export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfi
       firstName: getInvalidValue(validatedFirstName, [] as string[]),
       lastName: getInvalidValue(validatedLastName, [] as string[]),
       positionTitle: getInvalidValue(validatedPositionTitle, [] as string[]),
-      ministry: getInvalidValue(validatedMinistry, [] as string[]),
+      publicSectorEntity: getInvalidValue(validatedPublicSectorEntity, [] as string[]),
       branch: getInvalidValue(validatedBranch, [] as string[]),
       contactStreetAddress: getInvalidValue(validatedContactStreetAddress, [] as string[]),
       contactCity: getInvalidValue(validatedContactCity, [] as string[]),

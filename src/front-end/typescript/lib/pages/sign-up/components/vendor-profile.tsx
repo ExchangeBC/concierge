@@ -222,7 +222,7 @@ export const init: Init<Params, State> = async () => {
       placeholder: 'e.g. 888-888-8888'
     }),
     contactPhoneCountryCode: ShortText.init({
-      id: 'vendor-profile-contact-country-code',
+      id: 'vendor-profile-contact-phone-country-code',
       type: 'text',
       required: false,
       label: 'Country Code',

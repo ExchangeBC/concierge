@@ -11,93 +11,89 @@ import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
 import { ADT, UserType } from 'shared/lib/types';
-import { BusinessType, parseBusinessType, parsePhoneType, PhoneType, VendorProfile } from 'shared/lib/types';
+import { BuyerProfile, parsePhoneType, PhoneType } from 'shared/lib/types';
 import { ValidOrInvalid } from 'shared/lib/validators';
-import { validateVendorProfile, VendorProfileValidationErrors } from 'shared/lib/validators/vendor-profile';
+import { BuyerProfileValidationErrors, validateBuyerProfile } from 'shared/lib/validators/buyer-profile';
 
-export type ValidationErrors = VendorProfileValidationErrors;
+export type ValidationErrors = BuyerProfileValidationErrors;
 
 export interface State {
   validationErrors: ValidationErrors;
-  businessName: ShortText.State;
-  businessType: Select.State;
-  businessNumber: ShortText.State;
-  businessStreetAddress: ShortText.State;
-  businessCity: ShortText.State;
-  businessProvince: ShortText.State;
-  businessPostalCode: ShortText.State;
-  businessCountry: ShortText.State;
-  contactName: ShortText.State;
-  contactPositionTitle: ShortText.State;
-  contactEmail: ShortText.State;
+  firstName: ShortText.State;
+  lastName: ShortText.State;
+  positionTitle: ShortText.State;
+  publicSectorEntity: ShortText.State;
+  branch: ShortText.State;
+  contactStreetAddress: ShortText.State;
+  contactCity: ShortText.State;
+  contactProvince: ShortText.State;
+  contactPostalCode: ShortText.State;
+  contactCountry: ShortText.State;
   contactPhoneNumber: ShortText.State;
   contactPhoneCountryCode: ShortText.State;
   contactPhoneType: Select.State;
   industrySectors: Immutable<SelectMulti.State>;
-  areasOfExpertise: Immutable<SelectMulti.State>;
+  areasOfInterest: Immutable<SelectMulti.State>;
 }
 
-export function getValues(state: Immutable<State>): VendorProfile {
+export function getValues(state: Immutable<State>): BuyerProfile {
   return {
-    type: 'vendor' as 'vendor',
-    businessName: state.businessName.value || undefined,
-    businessType: parseBusinessType(state.businessType.value) || undefined,
-    businessNumber: state.businessNumber.value || undefined,
-    businessStreetAddress: state.businessStreetAddress.value || undefined,
-    businessCity: state.businessCity.value || undefined,
-    businessProvince: state.businessProvince.value || undefined,
-    businessPostalCode: state.businessPostalCode.value || undefined,
-    businessCountry: state.businessCountry.value || undefined,
-    contactName: state.contactName.value || undefined,
-    contactPositionTitle: state.contactPositionTitle.value || undefined,
-    contactEmail: state.contactEmail.value || undefined,
+    type: 'buyer' as 'buyer',
+    firstName: state.firstName.value || undefined,
+    lastName: state.lastName.value || undefined,
+    positionTitle: state.positionTitle.value || undefined,
+    publicSectorEntity: state.publicSectorEntity.value || undefined,
+    branch: state.branch.value || undefined,
+    contactStreetAddress: state.contactStreetAddress.value || undefined,
+    contactCity: state.contactCity.value || undefined,
+    contactProvince: state.contactProvince.value || undefined,
+    contactPostalCode: state.contactPostalCode.value || undefined,
+    contactCountry: state.contactCountry.value || undefined,
     contactPhoneNumber: state.contactPhoneNumber.value || undefined,
     contactPhoneCountryCode: state.contactPhoneCountryCode.value || undefined,
     contactPhoneType: parsePhoneType(state.contactPhoneType.value) || undefined,
     industrySectors: SelectMulti.getValues(state.industrySectors),
-    areasOfExpertise: SelectMulti.getValues(state.areasOfExpertise)
+    areasOfInterest: SelectMulti.getValues(state.areasOfInterest)
   };
 }
 
-export function setValues(state: Immutable<State>, profile: VendorProfile): Immutable<State> {
+export function setValues(state: Immutable<State>, profile: BuyerProfile): Immutable<State> {
   return state
-    .setIn(['businessName', 'value'], profile.businessName || '')
-    .setIn(['businessType', 'value'], profile.businessType || '')
-    .setIn(['businessNumber', 'value'], profile.businessNumber || '')
-    .setIn(['businessStreetAddress', 'value'], profile.businessStreetAddress || '')
-    .setIn(['businessCity', 'value'], profile.businessCity || '')
-    .setIn(['businessProvince', 'value'], profile.businessProvince || '')
-    .setIn(['businessPostalCode', 'value'], profile.businessPostalCode || '')
-    .setIn(['businessCountry', 'value'], profile.businessCountry || '')
-    .setIn(['contactName', 'value'], profile.contactName || '')
-    .setIn(['contactPositionTitle', 'value'], profile.contactPositionTitle || '')
-    .setIn(['contactEmail', 'value'], profile.contactEmail || '')
+    .setIn(['firstName', 'value'], profile.firstName || '')
+    .setIn(['lastName', 'value'], profile.lastName || '')
+    .setIn(['positionTitle', 'value'], profile.positionTitle || '')
+    .setIn(['publicSectorEntity', 'value'], profile.publicSectorEntity || '')
+    .setIn(['branch', 'value'], profile.branch || '')
+    .setIn(['contactStreetAddress', 'value'], profile.contactStreetAddress || '')
+    .setIn(['contactCity', 'value'], profile.contactCity || '')
+    .setIn(['contactProvince', 'value'], profile.contactProvince || '')
+    .setIn(['contactPostalCode', 'value'], profile.contactPostalCode || '')
+    .setIn(['contactCountry', 'value'], profile.contactCountry || '')
     .setIn(['contactPhoneNumber', 'value'], profile.contactPhoneNumber || '')
     .setIn(['contactPhoneCountryCode', 'value'], profile.contactPhoneCountryCode || '')
     .setIn(['contactPhoneType', 'value'], profile.contactPhoneType || '')
     .set('industrySectors', SelectMulti.setValues(state.industrySectors, profile.industrySectors || []))
-    .set('areasOfExpertise', SelectMulti.setValues(state.areasOfExpertise, profile.areasOfExpertise || []));
+    .set('areasOfInterest', SelectMulti.setValues(state.areasOfInterest, profile.areasOfInterest || []));
 }
 
 export function setErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
   return state
     .set('validationErrors', errors)
-    .setIn(['businessName', 'errors'], errors.businessName || [])
-    .setIn(['businessType', 'errors'], errors.businessType || [])
-    .setIn(['businessNumber', 'errors'], errors.businessNumber || [])
-    .setIn(['businessStreetAddress', 'errors'], errors.businessStreetAddress || [])
-    .setIn(['businessCity', 'errors'], errors.businessCity || [])
-    .setIn(['businessProvince', 'errors'], errors.businessProvince || [])
-    .setIn(['businessPostalCode', 'errors'], errors.businessPostalCode || [])
-    .setIn(['businessCountry', 'errors'], errors.businessCountry || [])
-    .setIn(['contactName', 'errors'], errors.contactName || [])
-    .setIn(['contactPositionTitle', 'errors'], errors.contactPositionTitle || [])
-    .setIn(['contactEmail', 'errors'], errors.contactEmail || [])
+    .setIn(['firstName', 'errors'], errors.firstName || [])
+    .setIn(['lastName', 'errors'], errors.lastName || [])
+    .setIn(['positionTitle', 'errors'], errors.positionTitle || [])
+    .setIn(['publicSectorEntity', 'errors'], errors.publicSectorEntity || [])
+    .setIn(['branch', 'errors'], errors.branch || [])
+    .setIn(['contactStreetAddress', 'errors'], errors.contactStreetAddress || [])
+    .setIn(['contactCity', 'errors'], errors.contactCity || [])
+    .setIn(['contactProvince', 'errors'], errors.contactProvince || [])
+    .setIn(['contactPostalCode', 'errors'], errors.contactPostalCode || [])
+    .setIn(['contactCountry', 'errors'], errors.contactCountry || [])
     .setIn(['contactPhoneNumber', 'errors'], errors.contactPhoneNumber || [])
     .setIn(['contactPhoneCountryCode', 'errors'], errors.contactPhoneCountryCode || [])
     .setIn(['contactPhoneType', 'errors'], errors.contactPhoneType || [])
     .set('industrySectors', SelectMulti.setErrors(state.industrySectors, errors.industrySectors || []))
-    .set('areasOfExpertise', SelectMulti.setErrors(state.areasOfExpertise, errors.areasOfExpertise || []));
+    .set('areasOfInterest', SelectMulti.setErrors(state.areasOfInterest, errors.areasOfInterest || []));
 }
 
 export function isValid(state: Immutable<State>): boolean {
@@ -107,22 +103,21 @@ export function isValid(state: Immutable<State>): boolean {
 }
 
 export type InnerMsg
-  = ADT<'onChangeBusinessName', string>
-  | ADT<'onChangeBusinessType', string>
-  | ADT<'onChangeBusinessNumber', string>
-  | ADT<'onChangeBusinessStreetAddress', string>
-  | ADT<'onChangeBusinessCity', string>
-  | ADT<'onChangeBusinessProvince', string>
-  | ADT<'onChangeBusinessPostalCode', string>
-  | ADT<'onChangeBusinessCountry', string>
-  | ADT<'onChangeContactName', string>
-  | ADT<'onChangeContactPositionTitle', string>
-  | ADT<'onChangeContactEmail', string>
-  | ADT<'onChangeContactPhoneNumber', string>
-  | ADT<'onChangeContactPhoneCountryCode', string>
-  | ADT<'onChangeContactPhoneType', string>
+  = ADT<'firstName', string>
+  | ADT<'lastName', string>
+  | ADT<'positionTitle', string>
+  | ADT<'publicSectorEntity', string>
+  | ADT<'branch', string>
+  | ADT<'contactStreetAddress', string>
+  | ADT<'contactCity', string>
+  | ADT<'contactProvince', string>
+  | ADT<'contactPostalCode', string>
+  | ADT<'contactCountry', string>
+  | ADT<'contactPhoneNumber', string>
+  | ADT<'contactPhoneCountryCode', string>
+  | ADT<'contactPhoneType', string>
   | ADT<'industrySectors', SelectMulti.Msg>
-  | ADT<'areasOfExpertise', SelectMulti.Msg>;
+  | ADT<'areasOfInterest', SelectMulti.Msg>;
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
@@ -131,105 +126,92 @@ export type Params = null;
 export const init: Init<Params, State> = async () => {
   return {
     validationErrors: {},
-    businessName: ShortText.init({
-      id: 'vendor-profile-business-name',
+    firstName: ShortText.init({
+      id: 'buyer-profile-first-name',
       type: 'text',
       required: false,
-      label: 'Name',
-      placeholder: 'Name'
+      label: 'First Name',
+      placeholder: 'First Name'
     }),
-    businessType: Select.init({
-      id: 'vendor-profile-business-type',
-      value: '',
-      required: false,
-      label: 'Business Type',
-      unselectedLabel: 'Select Type',
-      options: [
-        { value: BusinessType.Corporation, label: 'Corporation' },
-        { value: BusinessType.LimitedLiabilityCompany, label: 'Limited Liability Company' },
-        { value: BusinessType.Partnership, label: 'Partnership' },
-        { value: BusinessType.SoleProprietor, label: 'Sole Proprietor' }
-      ]
-    }),
-    businessNumber: ShortText.init({
-      id: 'vendor-profile-business-number',
+    lastName: ShortText.init({
+      id: 'buyer-profile-last-name',
       type: 'text',
       required: false,
-      label: 'Business Number',
-      placeholder: 'Business Number'
+      label: 'Last Name',
+      placeholder: 'Last Name'
     }),
-    businessStreetAddress: ShortText.init({
-      id: 'vendor-profile-business-street-address',
-      type: 'text',
-      required: false,
-      label: 'Street Address',
-      placeholder: 'Street Address'
-    }),
-    businessCity: ShortText.init({
-      id: 'vendor-profile-business-city',
-      type: 'text',
-      required: false,
-      label: 'City',
-      placeholder: 'City'
-    }),
-    businessProvince: ShortText.init({
-      id: 'vendor-profile-business-province',
-      type: 'text',
-      required: false,
-      label: 'Province',
-      placeholder: 'Province'
-    }),
-    businessPostalCode: ShortText.init({
-      id: 'vendor-profile-business-postal-code',
-      type: 'text',
-      required: false,
-      label: 'Postal/Zip Code',
-      placeholder: 'Postal/Zip Code'
-    }),
-    businessCountry: ShortText.init({
-      id: 'vendor-profile-business-country',
-      type: 'text',
-      required: false,
-      label: 'Country',
-      placeholder: 'Country'
-    }),
-    contactName: ShortText.init({
-      id: 'vendor-profile-contact-name',
-      type: 'text',
-      required: false,
-      label: 'Name',
-      placeholder: 'Name'
-    }),
-    contactPositionTitle: ShortText.init({
-      id: 'vendor-profile-contact-position-title',
+    positionTitle: ShortText.init({
+      id: 'buyer-profile-position-title',
       type: 'text',
       required: false,
       label: 'Position Title',
       placeholder: 'Position Title'
     }),
-    contactEmail: ShortText.init({
-      id: 'vendor-profile-contact-email',
+    publicSectorEntity: ShortText.init({
+      id: 'buyer-profile-public-sector-entity',
+      type: 'text',
+      required: false,
+      label: 'Public Sector Entity',
+      placeholder: 'Public Sector Entity'
+    }),
+    branch: ShortText.init({
+      id: 'buyer-profile-branch',
+      type: 'text',
+      required: false,
+      label: 'Branch',
+      placeholder: 'Branch'
+    }),
+    contactStreetAddress: ShortText.init({
+      id: 'buyer-profile-contact-street-address',
+      type: 'text',
+      required: false,
+      label: 'Street Address',
+      placeholder: 'Street Address'
+    }),
+    contactCity: ShortText.init({
+      id: 'buyer-profile-contact-city',
       type: 'email',
       required: false,
-      label: 'Email Address',
-      placeholder: 'Email Address'
+      label: 'City',
+      placeholder: 'City'
+    }),
+    contactProvince: ShortText.init({
+      id: 'buyer-profile-contact-province',
+      type: 'email',
+      required: false,
+      label: 'Province',
+      placeholder: 'Province'
+    }),
+    contactPostalCode: ShortText.init({
+      id: 'buyer-profile-contact-postal-code',
+      type: 'text',
+      required: false,
+      label: 'Postal/Zip Code',
+      placeholder: 'Postal/Zip Code'
+    }),
+    contactCountry: ShortText.init({
+      id: 'buyer-profile-contact-country',
+      type: 'text',
+      required: false,
+      label: 'Country',
+      placeholder: 'Country'
     }),
     contactPhoneNumber: ShortText.init({
-      id: 'vendor-profile-contact-phone-number',
+      id: 'buyer-profile-contact-phone-number',
       type: 'text',
       required: false,
       label: 'Phone Number',
       placeholder: 'e.g. 888-888-8888'
     }),
     contactPhoneCountryCode: ShortText.init({
-      id: 'vendor-profile-contact-country-code',
+      id: 'buyer-profile-contact-phone-country-code',
       type: 'text',
       required: false,
       label: 'Country Code',
       placeholder: 'e.g. 1'
     }),
     contactPhoneType: Select.init({
-      id: 'vendor-profile-contact-phone-type',
+      id: 'buyer-profile-contact-phone-type',
       value: '',
       required: false,
       label: 'Phone Type',
@@ -243,18 +225,18 @@ export const init: Init<Params, State> = async () => {
       options: AVAILABLE_INDUSTRY_SECTORS.toJS().map(value => ({ label: value, value })),
       unselectedLabel: 'Select Industry Sector',
       formFieldMulti: {
-        idNamespace: 'vendor-industry-sectors',
+        idNamespace: 'buyer-industry-sectors',
         label: 'Industry Sector(s)',
         labelClassName: 'h3 mb-3',
         fields: []
       }
     })),
-    areasOfExpertise: immutable(await SelectMulti.init({
+    areasOfInterest: immutable(await SelectMulti.init({
       options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value })),
-      unselectedLabel: 'Select Area of Expertise',
+      unselectedLabel: 'Select Area of Interest',
       formFieldMulti: {
-        idNamespace: 'vendor-areas-of-expertise',
-        label: 'Area(s) of Expertise',
+        idNamespace: 'buyer-areas-of-interest',
+        label: 'Area(s) of Interest',
         labelClassName: 'h3 mb-3',
         fields: []
       }
@@ -264,33 +246,31 @@ export const init: Init<Params, State> = async () => {
 
 export const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
-    case 'onChangeBusinessName':
-      return [validateAndUpdate(state, 'businessName', msg.value)];
-    case 'onChangeBusinessType':
-      return [validateAndUpdate(state, 'businessType', msg.value)];
-    case 'onChangeBusinessNumber':
-      return [validateAndUpdate(state, 'businessNumber', msg.value)];
-    case 'onChangeBusinessStreetAddress':
-      return [validateAndUpdate(state, 'businessStreetAddress', msg.value)];
-    case 'onChangeBusinessCity':
-      return [validateAndUpdate(state, 'businessCity', msg.value)];
-    case 'onChangeBusinessProvince':
-      return [validateAndUpdate(state, 'businessProvince', msg.value)];
-    case 'onChangeBusinessPostalCode':
-      return [validateAndUpdate(state, 'businessPostalCode', msg.value)];
-    case 'onChangeBusinessCountry':
-      return [validateAndUpdate(state, 'businessCountry', msg.value)];
-    case 'onChangeContactName':
-      return [validateAndUpdate(state, 'contactName', msg.value)];
-    case 'onChangeContactPositionTitle':
-      return [validateAndUpdate(state, 'contactPositionTitle', msg.value)];
-    case 'onChangeContactEmail':
-      return [validateAndUpdate(state, 'contactEmail', msg.value)];
-    case 'onChangeContactPhoneNumber':
+    case 'firstName':
+      return [validateAndUpdate(state, 'firstName', msg.value)];
+    case 'lastName':
+      return [validateAndUpdate(state, 'lastName', msg.value)];
+    case 'positionTitle':
+      return [validateAndUpdate(state, 'positionTitle', msg.value)];
+    case 'publicSectorEntity':
+      return [validateAndUpdate(state, 'publicSectorEntity', msg.value)];
+    case 'branch':
+      return [validateAndUpdate(state, 'branch', msg.value)];
+    case 'contactStreetAddress':
+      return [validateAndUpdate(state, 'contactStreetAddress', msg.value)];
+    case 'contactCity':
+      return [validateAndUpdate(state, 'contactCity', msg.value)];
+    case 'contactProvince':
+      return [validateAndUpdate(state, 'contactProvince', msg.value)];
+    case 'contactPostalCode':
+      return [validateAndUpdate(state, 'contactPostalCode', msg.value)];
+    case 'contactCountry':
+      return [validateAndUpdate(state, 'contactCountry', msg.value)];
+    case 'contactPhoneNumber':
       return [validateAndUpdate(state, 'contactPhoneNumber', msg.value)];
-    case 'onChangeContactPhoneCountryCode':
+    case 'contactPhoneCountryCode':
       return [validateAndUpdate(state, 'contactPhoneCountryCode', msg.value)];
-    case 'onChangeContactPhoneType':
+    case 'contactPhoneType':
       return [validateAndUpdate(state, 'contactPhoneType', msg.value)];
     case 'industrySectors':
       state = updateComponentChild({
@@ -301,11 +281,11 @@ export const update: Update<State, Msg> = (state, msg) => {
         childMsg: msg.value
       })[0];
       return [validateAndUpdate(state)];
-    case 'areasOfExpertise':
+    case 'areasOfInterest':
       state = updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'areasOfExpertise', value }),
-        childStatePath: ['areasOfExpertise'],
+        mapChildMsg: value => ({ tag: 'areasOfInterest', value }),
+        childStatePath: ['areasOfInterest'],
         childUpdate: SelectMulti.update,
         childMsg: msg.value
       })[0];
@@ -319,11 +299,11 @@ function validateAndUpdate(state: Immutable<State>, key?: string, value?: string
   if (key && value !== undefined) {
     state = state.setIn([key, 'value'], value);
   }
-  const validation = validateVendorProfile(getValues(state));
+  const validation = validateBuyerProfile(getValues(state));
   return persistValidations(state, validation);
 }
 
-function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<VendorProfile, ValidationErrors>): Immutable<State> {
+function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<BuyerProfile, ValidationErrors>): Immutable<State> {
   switch (validation.tag) {
     case 'valid':
       state = setValues(state, validation.value);
@@ -333,60 +313,40 @@ function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<
   }
 }
 
-export const BusinessInformation: ComponentView<State, Msg> = ({ state, dispatch }) => {
+export const PersonalInformation: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
     <div className='mt-3 mt-md-0'>
-      <FormSectionHeading text='Business Information (Optional)' />
+      <FormSectionHeading text='Personal Information (Optional)' />
       <Row>
-        <Col xs='12'>
+        <Col xs='12' md='5'>
           <ShortText.view
-            state={state.businessName}
-            onChange={onChangeShortText('onChangeBusinessName')} />
+            state={state.firstName}
+            onChange={onChangeShortText('firstName')} />
+        </Col>
+        <Col xs='12' md='5'>
+          <ShortText.view
+            state={state.lastName}
+            onChange={onChangeShortText('lastName')} />
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='6'>
-          <Select.view
-            state={state.businessType}
-            onChange={onChangeSelect('onChangeBusinessType')} />
-        </Col>
-        <Col xs='12' md='6'>
+        <Col xs='12' md='7'>
           <ShortText.view
-            state={state.businessNumber}
-            onChange={onChangeShortText('onChangeBusinessNumber')} />
+            state={state.positionTitle}
+            onChange={onChangeShortText('positionTitle')} />
         </Col>
       </Row>
       <Row>
-        <Col xs='12'>
+        <Col xs='12' md='7'>
           <ShortText.view
-            state={state.businessStreetAddress}
-            onChange={onChangeShortText('onChangeBusinessStreetAddress')} />
+            state={state.publicSectorEntity}
+            onChange={onChangeShortText('publicSectorEntity')} />
         </Col>
-      </Row>
-      <Row>
-        <Col xs='12' md='6'>
+        <Col xs='12' md='5'>
           <ShortText.view
-            state={state.businessCity}
-            onChange={onChangeShortText('onChangeBusinessCity')} />
-        </Col>
-        <Col xs='12' md='6'>
-          <ShortText.view
-            state={state.businessProvince}
-            onChange={onChangeShortText('onChangeBusinessProvince')} />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='12' md='4'>
-          <ShortText.view
-            state={state.businessPostalCode}
-            onChange={onChangeShortText('onChangeBusinessPostalCode')} />
-        </Col>
-        <Col xs='12' md='6'>
-          <ShortText.view
-            state={state.businessCountry}
-            onChange={onChangeShortText('onChangeBusinessCountry')} />
+            state={state.branch}
+            onChange={onChangeShortText('branch')} />
         </Col>
       </Row>
     </div>
@@ -400,39 +360,51 @@ export const ContactInformation: ComponentView<State, Msg> = ({ state, dispatch 
     <div className='mt-3'>
       <FormSectionHeading text='Contact Information (Optional)' />
       <Row>
-        <Col xs='12' md='6'>
+        <Col xs='12'>
           <ShortText.view
-            state={state.contactName}
-            onChange={onChangeShortText('onChangeContactName')} />
-        </Col>
-        <Col xs='12' md='6'>
-          <ShortText.view
-            state={state.contactPositionTitle}
-            onChange={onChangeShortText('onChangeContactPositionTitle')} />
+            state={state.contactStreetAddress}
+            onChange={onChangeShortText('contactStreetAddress')} />
         </Col>
       </Row>
       <Row>
-        <Col xs='12'>
+        <Col xs='12' md='7'>
           <ShortText.view
-            state={state.contactEmail}
-            onChange={onChangeShortText('onChangeContactEmail')} />
+            state={state.contactCity}
+            onChange={onChangeShortText('contactCity')} />
+        </Col>
+        <Col xs='12' md='5'>
+          <ShortText.view
+            state={state.contactProvince}
+            onChange={onChangeShortText('contactProvince')} />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12' md='4'>
+          <ShortText.view
+            state={state.contactPostalCode}
+            onChange={onChangeShortText('contactPostalCode')} />
+        </Col>
+        <Col xs='12' md='6'>
+          <ShortText.view
+            state={state.contactCountry}
+            onChange={onChangeShortText('contactCountry')} />
         </Col>
       </Row>
       <Row>
         <Col xs='12' md='4'>
           <ShortText.view
             state={state.contactPhoneNumber}
-            onChange={onChangeShortText('onChangeContactPhoneNumber')} />
+            onChange={onChangeShortText('contactPhoneNumber')} />
         </Col>
         <Col xs='12' md='4'>
           <ShortText.view
             state={state.contactPhoneCountryCode}
-            onChange={onChangeShortText('onChangeContactPhoneCountryCode')} />
+            onChange={onChangeShortText('contactPhoneCountryCode')} />
         </Col>
         <Col xs='12' md='4'>
           <Select.view
             state={state.contactPhoneType}
-            onChange={onChangeSelect('onChangeContactPhoneType')} />
+            onChange={onChangeSelect('contactPhoneType')} />
         </Col>
       </Row>
     </div>
@@ -450,12 +422,12 @@ export const IndustrySectors: ComponentView<State, Msg> = ({ state, dispatch }) 
   );
 };
 
-export const AreasOfExpertise: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const dispatchAreasOfExpertise: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'areasOfExpertise' as 'areasOfExpertise', value }));
+export const AreasOfInterest: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  const dispatchAreasOfInterest: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'areasOfInterest' as 'areasOfInterest', value }));
   return (
     <Row className='mt-3'>
       <Col xs='12' md='8'>
-        <SelectMulti.view state={state.areasOfExpertise} dispatch={dispatchAreasOfExpertise} />
+        <SelectMulti.view state={state.areasOfInterest} dispatch={dispatchAreasOfInterest} />
       </Col>
     </Row>
   );
@@ -464,10 +436,10 @@ export const AreasOfExpertise: ComponentView<State, Msg> = ({ state, dispatch })
 export const view: ComponentView<State, Msg> = props => {
   return (
     <div>
-      <BusinessInformation {...props} />
+      <PersonalInformation {...props} />
       <ContactInformation {...props} />
       <IndustrySectors {...props} />
-      <AreasOfExpertise {...props} />
+      <AreasOfInterest {...props} />
     </div>
   );
 };

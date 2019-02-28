@@ -88,7 +88,7 @@ export interface BuyerProfile {
   firstName?: string;
   lastName?: string;
   positionTitle?: string;
-  ministry?: string;
+  publicSectorEntity?: string;
   branch?: string;
   contactStreetAddress?: string;
   contactCity?: string;
