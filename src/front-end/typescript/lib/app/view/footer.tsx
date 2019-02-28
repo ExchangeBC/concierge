@@ -10,7 +10,7 @@ export interface State {
 const Links: View<{}> = () => {
   return (
     <Row className='mb-3'>
-      <Col xs='12' className='d-flex justify-content-center'>
+      <Col xs='12' className='d-flex flex-column flex-md-row justify-content-center align-items-center'>
         <Link href='/' text='Feedback' textColor='secondary' />
         <Link href='/about' text='About' textColor='secondary' />
         <Link href='/copyright' text='Copyright' textColor='secondary' />
