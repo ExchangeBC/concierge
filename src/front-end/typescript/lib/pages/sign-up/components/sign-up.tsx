@@ -3,9 +3,11 @@ import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable,
 import * as api from 'front-end/lib/http/api';
 import * as AccountInformation from 'front-end/lib/pages/sign-up/components/account-information';
 import { ProfileComponent } from 'front-end/lib/pages/sign-up/types';
+import Link from 'front-end/lib/views/link';
+import LoadingButton from 'front-end/lib/views/loading-button';
 import { isArray } from 'lodash';
 import { default as React, ReactElement } from 'react';
-import { Button, Col, Container, Row, Spinner } from 'reactstrap';
+import { Col, Container, Row } from 'reactstrap';
 import { ADT } from 'shared/lib/types';
 
 export interface State<ProfileState> {
@@ -17,9 +19,7 @@ export interface State<ProfileState> {
 type InnerMsg<ProfileMsg>
   = ADT<'accountInformation', AccountInformation.Msg>
   | ADT<'profile', ComponentMsg<ProfileMsg, Page>>
-  | ADT<'createAccount'>
-  | ADT<'startLoading'>
-  | ADT<'stopLoading'>;
+  | ADT<'createAccount'>;
 
 export type Msg<ProfileMsg> = ComponentMsg<InnerMsg<ProfileMsg>, Page>;
 
@@ -34,6 +34,14 @@ function init<PS, PM>(Profile: ProfileComponent<PS, PM>): Init<Params, State<PS>
     };
   }
 };
+
+function startLoading<PS>(state: Immutable<State<PS>>): Immutable<State<PS>> {
+  return state.set('loading', state.loading + 1);
+}
+
+function stopLoading<PS>(state: Immutable<State<PS>>): Immutable<State<PS>> {
+  return state.set('loading', Math.max(state.loading - 1, 0));
+}
 
 export function update<PS, PM>(Profile: ProfileComponent<PS, PM>): Update<State<PS>, Msg<PM>> {
   return (state, msg) => {
@@ -55,8 +63,9 @@ export function update<PS, PM>(Profile: ProfileComponent<PS, PM>): Update<State<
           childMsg: msg.value
         });
       case 'createAccount':
+        state = startLoading(state);
         return [
-          update(Profile)(state, { tag: 'startLoading', value: undefined })[0],
+          state,
           async dispatch => {
             const { email, password } = AccountInformation.getValues(state.accountInformation);
             const user = {
@@ -78,15 +87,11 @@ export function update<PS, PM>(Profile: ProfileComponent<PS, PM>): Update<State<
                 if (profileErrors && !isArray(profileErrors)) {
                   state = state.set('profile', Profile.setErrors(state.profile, profileErrors));
                 }
-                return state
+                return stopLoading(state)
                   .set('accountInformation', AccountInformation.setErrors(state.accountInformation, result.value));
             }
           }
         ];
-      case 'startLoading':
-        return [state.set('loading', state.loading + 1)];
-      case 'stopLoading':
-        return [state.set('loading', Math.max(state.loading - 1, 0))];
       default:
         return [state];
     }
@@ -102,14 +107,6 @@ function isValid<PS, PM>(state: State<PS>, Profile: ProfileComponent<PS, PM>): b
   const providedRequiredFields = !!(info.email.value && info.password.value && info.confirmPassword.value);
   return providedRequiredFields && !isInvalid(state, Profile);
 }
-
-const CreateAccountChild: View<{ isLoading: boolean }> = ({ isLoading }) => {
-  if (isLoading) {
-    return (<Spinner color='light' size='sm' />);
-  } else {
-    return (<div>Create Account</div>);
-  }
-};
 
 export const Buttons: View<{ children: Array<ReactElement<any>> }> = ({ children }) => {
   return (
@@ -162,12 +159,10 @@ function view<PS, PM>(Profile: ProfileComponent<PS, PM>): ComponentView<State<PS
           </Col>
         </Row>
         <Buttons>
-          <a href='/' className='mr-3'>
-            <Button color='secondary' disabled={isLoading}>Cancel</Button>
-          </a>
-          <Button color='primary' onClick={createAccount} disabled={isDisabled}>
-            <CreateAccountChild isLoading={isLoading} />
-          </Button>
+          <Link href='/' text='Cancel' textColor='secondary' disabled={isLoading} />
+          <LoadingButton color='primary' onClick={createAccount} loading={isLoading} disabled={isDisabled}>
+            Create Account
+          </LoadingButton>
         </Buttons>
       </div>
     );

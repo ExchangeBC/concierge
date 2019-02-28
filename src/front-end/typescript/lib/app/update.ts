@@ -4,6 +4,7 @@ import { deleteSession, getSession, Session } from 'front-end/lib/http/api';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageLoading from 'front-end/lib/pages/loading';
 import * as PageSay from 'front-end/lib/pages/say';
+import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
 import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
@@ -53,9 +54,11 @@ const update: Update<State, Msg> = (state, msg) => {
           // Set the new active page's state.
           switch (msg.value.page.tag) {
             case 'landing':
-              return state.setIn(['pages', 'landing'], immutable(await PageLanding.init(undefined)));
+              return state.setIn(['pages', 'landing'], immutable(await PageLanding.init(null)));
             case 'loading':
               return state.setIn(['pages', 'loading'], immutable(await PageLoading.init(null)));
+            case 'signIn':
+              return state.setIn(['pages', 'signIn'], immutable(await PageSignIn.init(null)));
             case 'signUpBuyer':
               return state.setIn(['pages', 'signUpBuyer'], immutable(await PageSignUpBuyer.init(null)));
             case 'signUpVendor':
@@ -87,6 +90,15 @@ const update: Update<State, Msg> = (state, msg) => {
         mapChildMsg: value => ({ tag: 'pageLoading', value }),
         childStatePath: ['pages', 'loading'],
         childUpdate: PageLoading.update,
+        childMsg: msg.value
+      });
+
+    case 'pageSignIn':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageSignIn', value }),
+        childStatePath: ['pages', 'signIn'],
+        childUpdate: PageSignIn.update,
         childMsg: msg.value
       });
 

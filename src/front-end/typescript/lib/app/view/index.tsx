@@ -5,6 +5,7 @@ import { AppMsg, ComponentMsg, ComponentView, Dispatch, Immutable, mapAppDispatc
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageLoading from 'front-end/lib/pages/loading';
 import * as PageSay from 'front-end/lib/pages/say';
+import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
 import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
@@ -47,6 +48,14 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.loading}
           mapPageMsg={value => ({ tag: 'pageLoading', value })}
           View={PageLoading.view} />
+      );
+    case 'signIn':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.signIn}
+          mapPageMsg={value => ({ tag: 'pageSignIn', value })}
+          View={PageSignIn.view} />
       );
     case 'signUpBuyer':
       return (

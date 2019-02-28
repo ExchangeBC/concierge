@@ -9,7 +9,7 @@ export function request(method: HttpMethod, path: string, data?: object): Promis
     url: `/api/${path.replace(/^\/*/, '')}`,
     data,
     validateStatus(code) {
-      return (code >= 200 && code < 300) || code === 400;
+      return (code >= 200 && code < 300) || code === 400 || code === 401;
     }
   });
 }
@@ -50,6 +50,24 @@ export interface Session {
     id: string;
     type: UserType;
     email: string;
+  }
+}
+
+export async function createSession(email: string, password: string): Promise<ValidOrInvalid<Session, string[]>> {
+  try {
+    const response = await request(HttpMethod.Post, 'sessions', { email, password });
+    switch (response.status) {
+      case 201:
+        return valid(response.data as Session);
+      case 401:
+        return invalid(response.data as string[]);
+      default:
+        return fail({});
+    }
+  } catch (error) {
+    // tslint:disable:next-line no-console
+    console.error(error);
+    return fail([]);
   }
 }
 

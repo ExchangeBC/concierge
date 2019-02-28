@@ -1,6 +1,8 @@
 import { default as React, MouseEvent, ReactElement } from 'react';
 import { Button } from 'reactstrap';
 
+// TODO refactor this view and provide a better, cleaner API.
+
 interface Props {
   href: string;
   text?: string;
@@ -10,7 +12,7 @@ interface Props {
   buttonTag?: 'button' | 'a' | 'span';
   buttonClassName?: string;
   disabled?: boolean;
-  children?: Array<ReactElement<any>>
+  children?: Array<ReactElement<any>> | string;
 }
 
 function Link(props: Props) {

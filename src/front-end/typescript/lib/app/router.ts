@@ -2,7 +2,7 @@ import { Page } from 'front-end/lib/app/types';
 import { AuthLevel, RouteAuthDefinition, Router } from 'front-end/lib/framework';
 import { get } from 'lodash';
 
-const signUpAuth: RouteAuthDefinition = {
+const isSignedOut: RouteAuthDefinition = {
   level: AuthLevel.SignedOut,
   redirect: '/',
   signOut: false
@@ -20,25 +20,30 @@ const router: Router<Page> = {
       pageId: 'loading'
     },
     {
+      path: '/sign-in',
+      pageId: 'signIn',
+      auth: isSignedOut
+    },
+    {
       // Alias the buyer page here.
       path: '/sign-up',
       pageId: 'signUpBuyer',
-      auth: signUpAuth
+      auth: isSignedOut
     },
     {
       path: '/sign-up/buyer',
       pageId: 'signUpBuyer',
-      auth: signUpAuth
+      auth: isSignedOut
     },
     {
       path: '/sign-up/vendor',
       pageId: 'signUpVendor',
-      auth: signUpAuth
+      auth: isSignedOut
     },
     {
       path: '/sign-up/program-staff',
       pageId: 'signUpProgramStaff',
-      auth: signUpAuth
+      auth: isSignedOut
     },
     {
       path: '/sign-out',
@@ -77,11 +82,16 @@ const router: Router<Page> = {
       case 'landing':
         return {
           tag: 'landing',
-          value: undefined
+          value: null
         };
       case 'loading':
         return {
           tag: 'loading',
+          value: null
+        };
+      case 'signIn':
+        return {
+          tag: 'signIn',
           value: null
         };
       case 'signUpBuyer':
@@ -142,6 +152,8 @@ const router: Router<Page> = {
         return '/';
       case 'loading':
         return '/loading';
+      case 'signIn':
+        return '/sign-in';
       case 'signUpBuyer':
         return '/sign-up/buyer';
       case 'signUpVendor':

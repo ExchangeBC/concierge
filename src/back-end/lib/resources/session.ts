@@ -8,7 +8,7 @@ import { getString, identityAsync } from 'shared/lib';
 
 type CreateRequestBody = InstanceType<UserSchema.Model> | null;
 
-type CreateResponseBody = SessionSchema.AppSession | null;
+type CreateResponseBody = SessionSchema.AppSession | string[];
 
 type ReadOneResponseBody = SessionSchema.AppSession | null;
 
@@ -42,9 +42,9 @@ export const resource: Resource = {
       async respond(request) {
         if (request.body) {
           const session = await SessionSchema.signIn(SessionModel, UserModel, request.session, request.body._id);
-          return basicResponse(200, session, session);
+          return basicResponse(201, session, session);
         } else {
-          return basicResponse(401, request.session, null);
+          return basicResponse(401, request.session, ['Your email and password combination do not match.']);
         }
       }
     };

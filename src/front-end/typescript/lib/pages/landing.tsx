@@ -3,7 +3,7 @@ import { Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/
 import React from 'react';
 import { ADT } from 'shared/lib/types';
 
-export type Params = undefined;
+export type Params = null;
 
 export interface State {
   isOpen: boolean;

@@ -6,7 +6,7 @@ import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as ShortText from 'front-end/lib/views/input/short-text';
 import Link from 'front-end/lib/views/link';
 import { default as React } from 'react';
-import { Col, Form, FormGroup, Label, Row } from 'reactstrap';
+import { Col, FormGroup, Label, Row } from 'reactstrap';
 import { ADT, UserType, userTypeToTitleCase } from 'shared/lib/types';
 import { validateEmail, validatePassword } from 'shared/lib/validators';
 
@@ -86,14 +86,13 @@ export const init: Init<Params, State> = async ({ userType }) => {
 };
 
 export const update: Update<State, Msg> = (state, msg) => {
-  const json = state.toJSON();
   switch (msg.tag) {
     case 'onChangeEmail':
       return [validateAndUpdateField(state, 'email', msg.value, validateEmail)];
     case 'onChangePassword':
       return [validateAndUpdateField(state, 'password', msg.value, validatePassword)];
     case 'onChangeConfirmPassword':
-      return [validateAndUpdateField(state, 'confirmPassword', msg.value, v => validateConfirmPassword(json.password.value, v))];
+      return [validateAndUpdateField(state, 'confirmPassword', msg.value, v => validateConfirmPassword(state.password.value, v))];
     default:
       return [state];
   }
@@ -140,28 +139,32 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
     <div>
       <FormSectionHeading text='Account Information' />
-      <Form>
-        <Row>
-          <Col xs='12'>
-            <UserTypeToggle state={state} />
-          </Col>
-          <Col xs='12'>
-            <ShortText.view
-              state={state.email}
-              onChange={onChange('onChangeEmail')} />
-          </Col>
-          <Col xs='12'>
-            <ShortText.view
-              state={state.password}
-              onChange={onChange('onChangePassword')} />
-          </Col>
-          <Col xs='12'>
-            <ShortText.view
-              state={state.confirmPassword}
-              onChange={onChange('onChangeConfirmPassword')} />
-          </Col>
-        </Row>
-      </Form>
+      <Row>
+        <Col xs='12'>
+          <UserTypeToggle state={state} />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12'>
+          <ShortText.view
+            state={state.email}
+            onChange={onChange('onChangeEmail')} />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12'>
+          <ShortText.view
+            state={state.password}
+            onChange={onChange('onChangePassword')} />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12'>
+          <ShortText.view
+            state={state.confirmPassword}
+            onChange={onChange('onChangeConfirmPassword')} />
+        </Col>
+      </Row>
     </div>
   );
 };
