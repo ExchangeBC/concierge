@@ -107,20 +107,20 @@ export function isValid(state: Immutable<State>): boolean {
 }
 
 export type InnerMsg
-  = ADT<'onChangeBusinessName', string>
-  | ADT<'onChangeBusinessType', string>
-  | ADT<'onChangeBusinessNumber', string>
-  | ADT<'onChangeBusinessStreetAddress', string>
-  | ADT<'onChangeBusinessCity', string>
-  | ADT<'onChangeBusinessProvince', string>
-  | ADT<'onChangeBusinessPostalCode', string>
-  | ADT<'onChangeBusinessCountry', string>
-  | ADT<'onChangeContactName', string>
-  | ADT<'onChangeContactPositionTitle', string>
-  | ADT<'onChangeContactEmail', string>
-  | ADT<'onChangeContactPhoneNumber', string>
-  | ADT<'onChangeContactPhoneCountryCode', string>
-  | ADT<'onChangeContactPhoneType', string>
+  = ADT<'businessName', string>
+  | ADT<'businessType', string>
+  | ADT<'businessNumber', string>
+  | ADT<'businessStreetAddress', string>
+  | ADT<'businessCity', string>
+  | ADT<'businessProvince', string>
+  | ADT<'businessPostalCode', string>
+  | ADT<'businessCountry', string>
+  | ADT<'contactName', string>
+  | ADT<'contactPositionTitle', string>
+  | ADT<'contactEmail', string>
+  | ADT<'contactPhoneNumber', string>
+  | ADT<'contactPhoneCountryCode', string>
+  | ADT<'contactPhoneType', string>
   | ADT<'industrySectors', SelectMulti.Msg>
   | ADT<'areasOfExpertise', SelectMulti.Msg>;
 
@@ -264,33 +264,33 @@ export const init: Init<Params, State> = async () => {
 
 export const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
-    case 'onChangeBusinessName':
+    case 'businessName':
       return [validateAndUpdate(state, 'businessName', msg.value)];
-    case 'onChangeBusinessType':
+    case 'businessType':
       return [validateAndUpdate(state, 'businessType', msg.value)];
-    case 'onChangeBusinessNumber':
+    case 'businessNumber':
       return [validateAndUpdate(state, 'businessNumber', msg.value)];
-    case 'onChangeBusinessStreetAddress':
+    case 'businessStreetAddress':
       return [validateAndUpdate(state, 'businessStreetAddress', msg.value)];
-    case 'onChangeBusinessCity':
+    case 'businessCity':
       return [validateAndUpdate(state, 'businessCity', msg.value)];
-    case 'onChangeBusinessProvince':
+    case 'businessProvince':
       return [validateAndUpdate(state, 'businessProvince', msg.value)];
-    case 'onChangeBusinessPostalCode':
+    case 'businessPostalCode':
       return [validateAndUpdate(state, 'businessPostalCode', msg.value)];
-    case 'onChangeBusinessCountry':
+    case 'businessCountry':
       return [validateAndUpdate(state, 'businessCountry', msg.value)];
-    case 'onChangeContactName':
+    case 'contactName':
       return [validateAndUpdate(state, 'contactName', msg.value)];
-    case 'onChangeContactPositionTitle':
+    case 'contactPositionTitle':
       return [validateAndUpdate(state, 'contactPositionTitle', msg.value)];
-    case 'onChangeContactEmail':
+    case 'contactEmail':
       return [validateAndUpdate(state, 'contactEmail', msg.value)];
-    case 'onChangeContactPhoneNumber':
+    case 'contactPhoneNumber':
       return [validateAndUpdate(state, 'contactPhoneNumber', msg.value)];
-    case 'onChangeContactPhoneCountryCode':
+    case 'contactPhoneCountryCode':
       return [validateAndUpdate(state, 'contactPhoneCountryCode', msg.value)];
-    case 'onChangeContactPhoneType':
+    case 'contactPhoneType':
       return [validateAndUpdate(state, 'contactPhoneType', msg.value)];
     case 'industrySectors':
       state = updateComponentChild({
@@ -343,50 +343,50 @@ export const BusinessInformation: ComponentView<State, Msg> = ({ state, dispatch
         <Col xs='12'>
           <ShortText.view
             state={state.businessName}
-            onChange={onChangeShortText('onChangeBusinessName')} />
+            onChange={onChangeShortText('businessName')} />
         </Col>
       </Row>
       <Row>
         <Col xs='12' md='6'>
           <Select.view
             state={state.businessType}
-            onChange={onChangeSelect('onChangeBusinessType')} />
+            onChange={onChangeSelect('businessType')} />
         </Col>
         <Col xs='12' md='6'>
           <ShortText.view
             state={state.businessNumber}
-            onChange={onChangeShortText('onChangeBusinessNumber')} />
+            onChange={onChangeShortText('businessNumber')} />
         </Col>
       </Row>
       <Row>
         <Col xs='12'>
           <ShortText.view
             state={state.businessStreetAddress}
-            onChange={onChangeShortText('onChangeBusinessStreetAddress')} />
+            onChange={onChangeShortText('businessStreetAddress')} />
         </Col>
       </Row>
       <Row>
         <Col xs='12' md='6'>
           <ShortText.view
             state={state.businessCity}
-            onChange={onChangeShortText('onChangeBusinessCity')} />
+            onChange={onChangeShortText('businessCity')} />
         </Col>
         <Col xs='12' md='6'>
           <ShortText.view
             state={state.businessProvince}
-            onChange={onChangeShortText('onChangeBusinessProvince')} />
+            onChange={onChangeShortText('businessProvince')} />
         </Col>
       </Row>
       <Row>
         <Col xs='12' md='4'>
           <ShortText.view
             state={state.businessPostalCode}
-            onChange={onChangeShortText('onChangeBusinessPostalCode')} />
+            onChange={onChangeShortText('businessPostalCode')} />
         </Col>
         <Col xs='12' md='6'>
           <ShortText.view
             state={state.businessCountry}
-            onChange={onChangeShortText('onChangeBusinessCountry')} />
+            onChange={onChangeShortText('businessCountry')} />
         </Col>
       </Row>
     </div>
@@ -403,36 +403,36 @@ export const ContactInformation: ComponentView<State, Msg> = ({ state, dispatch 
         <Col xs='12' md='6'>
           <ShortText.view
             state={state.contactName}
-            onChange={onChangeShortText('onChangeContactName')} />
+            onChange={onChangeShortText('contactName')} />
         </Col>
         <Col xs='12' md='6'>
           <ShortText.view
             state={state.contactPositionTitle}
-            onChange={onChangeShortText('onChangeContactPositionTitle')} />
+            onChange={onChangeShortText('contactPositionTitle')} />
         </Col>
       </Row>
       <Row>
         <Col xs='12'>
           <ShortText.view
             state={state.contactEmail}
-            onChange={onChangeShortText('onChangeContactEmail')} />
+            onChange={onChangeShortText('contactEmail')} />
         </Col>
       </Row>
       <Row>
         <Col xs='12' md='4'>
           <ShortText.view
             state={state.contactPhoneNumber}
-            onChange={onChangeShortText('onChangeContactPhoneNumber')} />
+            onChange={onChangeShortText('contactPhoneNumber')} />
         </Col>
         <Col xs='12' md='4'>
           <ShortText.view
             state={state.contactPhoneCountryCode}
-            onChange={onChangeShortText('onChangeContactPhoneCountryCode')} />
+            onChange={onChangeShortText('contactPhoneCountryCode')} />
         </Col>
         <Col xs='12' md='4'>
           <Select.view
             state={state.contactPhoneType}
-            onChange={onChangeSelect('onChangeContactPhoneType')} />
+            onChange={onChangeSelect('contactPhoneType')} />
         </Col>
       </Row>
     </div>
