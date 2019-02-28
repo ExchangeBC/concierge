@@ -142,7 +142,7 @@ const resource: Resource = {
             const body = request.body.value;
             const user = new UserModel(body);
             await user.save();
-            const validSession = await SessionSchema.login(SessionModel, UserModel, request.session, user._id);
+            const validSession = await SessionSchema.signIn(SessionModel, UserModel, request.session, user._id);
             return basicResponse(201, validSession, UserSchema.makePublicUser(user));
         }
       }

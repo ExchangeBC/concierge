@@ -38,7 +38,7 @@ export const schema: mongoose.Schema = new mongoose.Schema({
 
 export type AppSession = Data;
 
-export async function login(SessionModel: Model, UserModel: UserSchema.Model, session: AppSession, userId: mongoose.Types.ObjectId): Promise<AppSession> {
+export async function signIn(SessionModel: Model, UserModel: UserSchema.Model, session: AppSession, userId: mongoose.Types.ObjectId): Promise<AppSession> {
   try {
     const user = await UserModel
       .findById(userId)

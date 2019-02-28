@@ -41,7 +41,7 @@ export const resource: Resource = {
       },
       async respond(request) {
         if (request.body) {
-          const session = await SessionSchema.login(SessionModel, UserModel, request.session, request.body._id);
+          const session = await SessionSchema.signIn(SessionModel, UserModel, request.session, request.body._id);
           return basicResponse(200, session, session);
         } else {
           return basicResponse(401, request.session, null);
