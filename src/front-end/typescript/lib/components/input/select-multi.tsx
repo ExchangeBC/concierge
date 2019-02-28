@@ -84,7 +84,7 @@ function makeChild(state: State): View<FormFieldMulti.ChildProps<HTMLSelectEleme
   return props => {
     const { id, className, state: field, onChange } = props;
     const children = state.options.map((o, i) => {
-      return (<option key={`${o.value}-${i}`} value={o.value}>{o.label}</option>);
+      return (<option key={`select-multi-option-${o.value}-${i}`} value={o.value}>{o.label}</option>);
     });
     return (
       <select

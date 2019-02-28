@@ -1,15 +1,23 @@
 import { Dispatch, View } from 'front-end/lib/framework';
 import * as FormField from 'front-end/lib/views/form-field';
-import { default as React, FormEventHandler, SyntheticEvent } from 'react';
+import { noop } from 'lodash';
+import { default as React, FormEventHandler, KeyboardEventHandler, SyntheticEvent } from 'react';
 
 export interface State extends FormField.State {
   type: 'text' | 'email' | 'password';
   placeholder?: string;
 }
 
-export interface Props extends Pick<FormField.Props<State, HTMLInputElement>, 'toggleHelp'> {
+type OnEnter = () => void;
+
+interface ExtraProps {
+  onKeyPress: KeyboardEventHandler<HTMLInputElement>;
+}
+
+export interface Props extends Pick<FormField.Props<State, HTMLInputElement, ExtraProps>, 'toggleHelp'> {
   state: State;
   onChange: FormEventHandler<HTMLInputElement>;
+  onEnter?: OnEnter;
 }
 
 type Params = Pick<State, 'id' | 'required' | 'type' | 'label' | 'placeholder' | 'help'>;
@@ -32,8 +40,15 @@ export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (event: Synthetic
   };
 }
 
-const Child: View<FormField.ChildProps<State, HTMLInputElement>> = props => {
-  const { state, onChange, className } = props;
+function makeOnKeyPress(onEnter?: OnEnter): KeyboardEventHandler<HTMLInputElement> {
+  return event => {
+    if (event.key === 'Enter' && onEnter) { onEnter(); }
+  };
+};
+
+const Child: View<FormField.ChildProps<State, HTMLInputElement, ExtraProps>> = props => {
+  const { state, onChange, className, extraProps } = props;
+  const onKeyPress = (extraProps && extraProps.onKeyPress) || noop;
   return (
     <input
       type={state.type}
@@ -42,12 +57,16 @@ const Child: View<FormField.ChildProps<State, HTMLInputElement>> = props => {
       value={state.value || ''}
       placeholder={state.placeholder || ''}
       className={className}
-      onChange={onChange} />
+      onChange={onChange}
+      onKeyPress={onKeyPress} />
   );
 };
 
-export const view: View<Props> = ({ state, onChange, toggleHelp }) => {
+export const view: View<Props> = ({ state, onChange, onEnter, toggleHelp }) => {
+  const extraProps = {
+    onKeyPress: makeOnKeyPress(onEnter)
+  };
   return (
-    <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} />
+    <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={extraProps} />
   );
 };

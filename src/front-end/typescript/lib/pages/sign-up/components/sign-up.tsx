@@ -127,9 +127,9 @@ function view<PS, PM>(Profile: ProfileComponent<PS, PM>): ComponentView<State<PS
     const { state, dispatch } = props;
     const dispatchAccountInformation: Dispatch<AccountInformation.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'accountInformation' as 'accountInformation', value }));
     const dispatchProfile: Dispatch<ComponentMsg<PM, Page>> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'profile' as 'profile', value }));
-    const createAccount = () => dispatch({ tag: 'createAccount', value: undefined });
     const isLoading = state.loading > 0;
     const isDisabled = isLoading || !isValid(state, Profile);
+    const createAccount = () => !isDisabled && dispatch({ tag: 'createAccount', value: undefined });
     return (
       <div>
         <Row>

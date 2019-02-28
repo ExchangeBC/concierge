@@ -106,7 +106,7 @@ const ConditionalHelp: View<State> = ({ help }) => {
 const ConditionalFieldErrors: View<Field> = ({ errors }) => {
   if (errors.length) {
     const errorElements = errors.map((error, i) => {
-      return (<div key={i}>{error}</div>);
+      return (<div key={`form-field-multi-conditional-errors-${i}`}>{error}</div>);
     });
     return (
       <FormText color='danger'>
@@ -124,7 +124,7 @@ function Children<ChildElement>({ Child, state, onChange, onRemove }: Props<Chil
     const invalid = !!field.errors.length;
     const className = `form-control ${invalid ? 'is-invalid' : ''}`;
     return (
-      <FormGroup key={i}>
+      <FormGroup key={`form-field-multi-child-${i}`}>
         <InputGroup>
           <Child id={id} className={className} state={field} onChange={onChange(i)} />
           <InputGroupAddon addonType='append'>

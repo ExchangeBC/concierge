@@ -15,20 +15,22 @@ export interface State {
   }
 }
 
-export interface ChildProps<State, ChildElement> {
+export interface ChildProps<State, ChildElement, ExtraProps> {
   state: State;
   onChange: FormEventHandler<ChildElement>;
   className: string;
+  extraProps?: ExtraProps;
 }
 
-export interface Props<ChildState extends State, ChildElement> {
+export interface Props<ChildState extends State, ChildElement, ChildExtraProps> {
   state: ChildState;
-  Child: View<ChildProps<ChildState, ChildElement>>;
+  Child: View<ChildProps<ChildState, ChildElement, ChildExtraProps>>;
   onChange: FormEventHandler<ChildElement>;
+  extraProps?: ChildExtraProps;
   toggleHelp?(): void;
 }
 
-const ConditionHelpToggle: View<Props<any, any>> = ({ state, toggleHelp }) => {
+const ConditionHelpToggle: View<Props<any, any, any>> = ({ state, toggleHelp }) => {
   const { help } = state;
   if (help && toggleHelp) {
     return (
@@ -41,7 +43,7 @@ const ConditionHelpToggle: View<Props<any, any>> = ({ state, toggleHelp }) => {
   }
 };
 
-const ConditionalLabel: View<Props<any, any>> = (props) => {
+const ConditionalLabel: View<Props<any, any, any>> = (props) => {
   const { id, label, required } = props.state;
   if (label) {
     return (
@@ -70,7 +72,7 @@ const ConditionalHelp: View<State> = ({ help }) => {
 const ConditionalErrors: View<State> = ({ errors }) => {
   if (errors.length) {
     const errorElements = errors.map((error, i) => {
-      return (<div key={i}>{error}</div>);
+      return (<div key={`form-field-conditional-errors-${i}`}>{error}</div>);
     });
     return (
       <FormText color='danger'>
@@ -82,15 +84,15 @@ const ConditionalErrors: View<State> = ({ errors }) => {
   }
 }
 
-export function view<ChildState extends State, ChildElement>(props: Props<ChildState, ChildElement>) {
-  const { state, Child, onChange } = props;
+export function view<ChildState extends State, ChildElement, ChildExtraProps>(props: Props<ChildState, ChildElement, ChildExtraProps>) {
+  const { state, Child, onChange, extraProps } = props;
   const invalid = !!state.errors.length;
   const className = `form-control ${invalid ? 'is-invalid' : ''}`;
   return (
     <FormGroup className={`form-field-${state.id}`}>
       <ConditionalLabel {...props} />
       <ConditionalHelp {...state} />
-      <Child state={state} onChange={onChange} className={className} />
+      <Child state={state} onChange={onChange} className={className} extraProps={extraProps} />
       <ConditionalErrors {...state} />
     </FormGroup>
   );

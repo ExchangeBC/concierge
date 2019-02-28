@@ -5,7 +5,7 @@ import { validateAndUpdateField } from 'front-end/lib/views/form-field';
 import * as ShortText from 'front-end/lib/views/input/short-text';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
-import React from 'react';
+import { default as React } from 'react';
 import { Alert, Col, Row } from 'reactstrap';
 import { ADT } from 'shared/lib/types';
 import { validateEmail, validatePassword } from 'shared/lib/validators';
@@ -114,9 +114,9 @@ const ConditionalErrors: ComponentView<State, Msg> = ({ state }) => {
 export const view: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   const onChange = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
-  const signIn = () => dispatch({ tag: 'signIn', value: undefined });
   const isLoading = state.loading > 0;
   const isDisabled = isLoading || !isValid(state);
+  const signIn = () => !isDisabled && dispatch({ tag: 'signIn', value: undefined });
   return (
     <div>
       <Row>
@@ -139,14 +139,16 @@ export const view: ComponentView<State, Msg> = props => {
             <Col xs='12'>
               <ShortText.view
                 state={state.email}
-                onChange={onChange('onChangeEmail')} />
+                onChange={onChange('onChangeEmail')}
+                onEnter={signIn} />
             </Col>
           </Row>
           <Row>
             <Col xs='12'>
               <ShortText.view
                 state={state.password}
-                onChange={onChange('onChangePassword')} />
+                onChange={onChange('onChangePassword')}
+                onEnter={signIn} />
             </Col>
           </Row>
           <Row className='mb-3 pb-3'>

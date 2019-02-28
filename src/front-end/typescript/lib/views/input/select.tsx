@@ -12,12 +12,12 @@ export interface State extends FormField.State {
   unselectedLabel?: string;
 }
 
-export interface Props extends Pick<FormField.Props<State, HTMLSelectElement>, 'toggleHelp'> {
+export interface Props extends Pick<FormField.Props<State, HTMLSelectElement, undefined>, 'toggleHelp'> {
   state: State;
   onChange: FormEventHandler<HTMLSelectElement>;
 }
 
-type ChildProps = FormField.ChildProps<State, HTMLSelectElement>;
+type ChildProps = FormField.ChildProps<State, HTMLSelectElement, undefined>;
 
 type InitParams = Pick<State, 'id' | 'value' | 'required' | 'label' | 'help' | 'options' | 'unselectedLabel'>;
 
@@ -46,7 +46,7 @@ export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (event: Synthetic
 const Child: View<ChildProps> = props => {
   const { state, onChange, className } = props;
   const children = state.options.map((o, i) => {
-    return (<option key={`${o.value}-${i}`} value={o.value}>{o.label}</option>);
+    return (<option key={`select-option-${o.value}-${i}`} value={o.value}>{o.label}</option>);
   });
   return (
     <select
