@@ -14,6 +14,7 @@ interface Props {
   disabled?: boolean;
   nav?: boolean;
   children?: Array<ReactElement<any>> | string;
+  onClick?(): void;
 }
 
 function Link(props: Props) {
@@ -27,18 +28,22 @@ function Link(props: Props) {
     text = '',
     disabled = false,
     nav = false,
-    children = []
+    children = [],
+    onClick
   } = props;
   const aProps = {
-    onClick: (e: MouseEvent<HTMLAnchorElement>) => disabled ? e.preventDefault() : undefined,
+    onClick: (e: MouseEvent<HTMLAnchorElement>) => {
+      if (disabled) { e.preventDefault(); }
+      if (onClick) { onClick(); }
+    },
     style: { cursor: disabled ? 'default' : 'pointer' },
-    className: `${nav ? 'nav-link ' : ''}${className}`,
+    className: `${nav ? 'nav-link py-0 py-md-2 ' : ''}${className}`,
     href: disabled ? undefined : href
   };
   const buttonProps = {
     color: buttonColor,
     tag: buttonTag,
-    className: `${nav ? 'p-0 ' : ''}${!props.buttonColor && props.textColor ? `text-${textColor} ` : ''}${buttonClassName}`,
+    className: `${nav && buttonColor !== 'link' ? 'mb-2 mb-md-0 ' : ''}${!props.buttonColor && props.textColor ? `text-${textColor} ` : ''}${buttonClassName}`,
     disabled
   }
   return (

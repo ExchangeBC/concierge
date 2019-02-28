@@ -29,10 +29,10 @@ export function validateBranch(branch: string): Validation<string> {
 }
 
 export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfile, BuyerProfileValidationErrors> {
-  const validatedFirstName = optional(validateFirstName, getString(profile, 'firstName'));
-  const validatedLastName = optional(validateLastName, getString(profile, 'lastName'));
-  const validatedPositionTitle = optional(validatePositionTitle, getString(profile, 'positionTitle'));
-  const validatedPublicSectorEntity = optional(validatePublicSectorEntity, getString(profile, 'publicSectorEntity'));
+  const validatedFirstName = validateFirstName(getString(profile, 'firstName'));
+  const validatedLastName = validateLastName(getString(profile, 'lastName'));
+  const validatedPositionTitle = validatePositionTitle(getString(profile, 'positionTitle'));
+  const validatedPublicSectorEntity = validatePublicSectorEntity(getString(profile, 'publicSectorEntity'));
   const validatedBranch = optional(validateBranch, getString(profile, 'branch'));
   const validatedContactStreetAddress = optional(validateStreetAddress, getString(profile, 'contactStreetAddress'));
   const validatedContactCity = optional(validateCity, getString(profile, 'contactCity'));

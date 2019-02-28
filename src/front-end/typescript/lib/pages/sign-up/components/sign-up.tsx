@@ -113,7 +113,7 @@ export const Buttons: View<{ children: Array<ReactElement<any>> }> = ({ children
     <div className='fixed-bottom bg-light py-3 border-top'>
       <Container>
         <Row>
-          <Col xs='12' className='d-flex justify-content-xs-center justify-content-md-end align-items-center'>
+          <Col xs='12' className='d-flex flex-md-row-reverse justify-content-xs-center justify-content-md-start align-items-center'>
             {children}
           </Col>
         </Row>
@@ -140,29 +140,27 @@ function view<PS, PM>(Profile: ProfileComponent<PS, PM>): ComponentView<State<PS
         <Row>
           <Col xs='12' md='8'>
             <p>
-              Create an account to gain access to all features of the Concierge Web Application.
-              <br className='d-none d-md-block' />
-              <span className='pl-1 pl-md-0'>Already have an account?</span>
-              <a href='/sign-in' className='ml-1'>
+              Create an account to gain access to all features of the Concierge Web Application. Already have an account?{' '}
+              <a href='/sign-in'>
                 Sign in here.
               </a>
             </p>
           </Col>
         </Row>
         <Row className='mt-3'>
-          <Col xs='12' md='4'>
+          <Col xs='12' md='4' xl='3'>
             <AccountInformation.view state={state.accountInformation} dispatch={dispatchAccountInformation} />
           </Col>
           <Col md='1' className='vertical-line'></Col>
-          <Col xs='12' md='7'>
+          <Col xs='12' md='7' xl='8'>
             <Profile.view state={state.profile} dispatch={dispatchProfile} />
           </Col>
         </Row>
         <Buttons>
-          <Link href='/' text='Cancel' textColor='secondary' disabled={isLoading} />
-          <LoadingButton color='primary' onClick={createAccount} loading={isLoading} disabled={isDisabled}>
+          <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={createAccount} loading={isLoading} disabled={isDisabled}>
             Create Account
           </LoadingButton>
+          <Link href='/' text='Cancel' textColor='secondary' disabled={isLoading} />
         </Buttons>
       </div>
     );

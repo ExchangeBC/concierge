@@ -35,7 +35,7 @@ function validateBusinessNumber(businessNumber: string): Validation<string> {
 }
 
 export function validateVendorProfile(profile: object): ValidOrInvalid<VendorProfile, VendorProfileValidationErrors> {
-  const validatedBusinessName = optional(validateBusinessName, getString(profile, 'businessName'));
+  const validatedBusinessName = validateBusinessName(getString(profile, 'businessName'));
   const validatedBusinessType = optional(validateBusinessType, getString(profile, 'businessType'));
   const validatedBusinessNumber = optional(validateBusinessNumber, getString(profile, 'businessNumber'));
   const validatedBusinessStreetAddress = optional(validateStreetAddress, getString(profile, 'businessStreetAddress'));

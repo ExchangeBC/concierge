@@ -41,7 +41,7 @@ export interface State {
 }
 
 type InnerMsg
-  = ADT<'toggleIsNavOpen'>
+  = ADT<'toggleIsNavOpen', boolean | undefined >
   | ADT<'pageLanding', PageLanding.Msg>
   | ADT<'pageLoading', PageLoading.Msg>
   | ADT<'pageSignIn', PageSignIn.Msg>

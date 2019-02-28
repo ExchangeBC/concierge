@@ -79,10 +79,12 @@ export function setValues(state: Immutable<State>, profile: BuyerProfile): Immut
 export function setErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
   return state
     .set('validationErrors', errors)
-    .setIn(['firstName', 'errors'], errors.firstName || [])
-    .setIn(['lastName', 'errors'], errors.lastName || [])
-    .setIn(['positionTitle', 'errors'], errors.positionTitle || [])
-    .setIn(['publicSectorEntity', 'errors'], errors.publicSectorEntity || [])
+    // Don't show validation errors for empty required fields.
+    .setIn(['firstName', 'errors'], state.firstName.value ? errors.firstName || [] : [])
+    // All other fields are optional.
+    .setIn(['lastName', 'errors'], state.lastName.value ? errors.lastName || [] : [])
+    .setIn(['positionTitle', 'errors'], state.positionTitle.value ? errors.positionTitle || [] : [])
+    .setIn(['publicSectorEntity', 'errors'], state.publicSectorEntity.value ? errors.publicSectorEntity || [] : [])
     .setIn(['branch', 'errors'], errors.branch || [])
     .setIn(['contactStreetAddress', 'errors'], errors.contactStreetAddress || [])
     .setIn(['contactCity', 'errors'], errors.contactCity || [])
@@ -97,9 +99,11 @@ export function setErrors(state: Immutable<State>, errors: ValidationErrors): Im
 }
 
 export function isValid(state: Immutable<State>): boolean {
-  return reduce(state.validationErrors, (acc: boolean, v: string[] | string[][] | undefined, k: string) => {
+  const providedRequiredFields = !!(state.firstName.value && state.lastName.value && state.positionTitle.value && state.publicSectorEntity.value);
+  const noValidationErrors = reduce(state.validationErrors, (acc: boolean, v: string[] | string[][] | undefined, k: string) => {
     return acc && (!v || !v.length);
   }, true);
+  return providedRequiredFields && noValidationErrors;
 }
 
 export type InnerMsg
@@ -129,28 +133,28 @@ export const init: Init<Params, State> = async () => {
     firstName: ShortText.init({
       id: 'buyer-profile-first-name',
       type: 'text',
-      required: false,
+      required: true,
       label: 'First Name',
       placeholder: 'First Name'
     }),
     lastName: ShortText.init({
       id: 'buyer-profile-last-name',
       type: 'text',
-      required: false,
+      required: true,
       label: 'Last Name',
       placeholder: 'Last Name'
     }),
     positionTitle: ShortText.init({
       id: 'buyer-profile-position-title',
       type: 'text',
-      required: false,
+      required: true,
       label: 'Position Title',
       placeholder: 'Position Title'
     }),
     publicSectorEntity: ShortText.init({
       id: 'buyer-profile-public-sector-entity',
       type: 'text',
-      required: false,
+      required: true,
       label: 'Public Sector Entity',
       placeholder: 'Public Sector Entity'
     }),

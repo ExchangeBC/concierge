@@ -46,6 +46,8 @@ const update: Update<State, Msg> = (state, msg) => {
                 return state;
               }
           }
+          // Scroll to the top-left of the page for page changes.
+          if (window.scrollTo) { window.scrollTo(0, 0); }
           state = state
             .setIn(['pages', currentActivePage], undefined)
             .set('activePage', msg.value.page)
@@ -76,7 +78,7 @@ const update: Update<State, Msg> = (state, msg) => {
       ];
 
     case 'toggleIsNavOpen':
-      return [state.set('isNavOpen', !state.isNavOpen)];
+      return [state.set('isNavOpen', msg.value === undefined ? !state.isNavOpen : msg.value)];
 
     case 'pageLanding':
       return updateAppChild({

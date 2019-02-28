@@ -82,7 +82,9 @@ export function setValues(state: Immutable<State>, profile: VendorProfile): Immu
 export function setErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
   return state
     .set('validationErrors', errors)
-    .setIn(['businessName', 'errors'], errors.businessName || [])
+    // Don't show validation errors for empty required fields.
+    .setIn(['businessName', 'errors'], state.businessName.value ? errors.businessName || [] : [])
+    // All other fields are optional.
     .setIn(['businessType', 'errors'], errors.businessType || [])
     .setIn(['businessNumber', 'errors'], errors.businessNumber || [])
     .setIn(['businessStreetAddress', 'errors'], errors.businessStreetAddress || [])
@@ -101,9 +103,11 @@ export function setErrors(state: Immutable<State>, errors: ValidationErrors): Im
 }
 
 export function isValid(state: Immutable<State>): boolean {
-  return reduce(state.validationErrors, (acc: boolean, v: string[] | string[][] | undefined, k: string) => {
+  const providedRequiredFields = !!state.businessName.value;
+  const noValidationErrors = reduce(state.validationErrors, (acc: boolean, v: string[] | string[][] | undefined, k: string) => {
     return acc && (!v || !v.length);
   }, true);
+  return providedRequiredFields && noValidationErrors;
 }
 
 export type InnerMsg
@@ -134,7 +138,7 @@ export const init: Init<Params, State> = async () => {
     businessName: ShortText.init({
       id: 'vendor-profile-business-name',
       type: 'text',
-      required: false,
+      required: true,
       label: 'Name',
       placeholder: 'Name'
     }),
@@ -338,7 +342,7 @@ export const BusinessInformation: ComponentView<State, Msg> = ({ state, dispatch
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
     <div className='mt-3 mt-md-0'>
-      <FormSectionHeading text='Business Information (Optional)' />
+      <FormSectionHeading text='Business Information' />
       <Row>
         <Col xs='12'>
           <ShortText.view

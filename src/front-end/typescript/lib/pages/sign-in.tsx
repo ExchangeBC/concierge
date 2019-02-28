@@ -127,8 +127,8 @@ export const view: ComponentView<State, Msg> = props => {
       <Row className='mb-3'>
         <Col xs='12' md='8'>
           <p>
-            Welcome back to the Concierge. If you don't already have an account
-            <Link href='/sign-up' text='sign up here' textColor='primary' className='ml-1' buttonClassName='p-0' />.
+            Welcome back to the Concierge. If you don't already have an account{' '}
+            <Link href='/sign-up' text='sign up here' textColor='primary' buttonClassName='p-0' />.
           </p>
         </Col>
       </Row>
@@ -158,7 +158,7 @@ export const view: ComponentView<State, Msg> = props => {
           </Row>
           <Row>
             <Col xs='12'>
-              <LoadingButton color='primary' onClick={signIn} loading={isLoading} disabled={isDisabled}>
+              <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={signIn} loading={isLoading} disabled={isDisabled}>
                 Sign In
               </LoadingButton>
               <Link href='/' text='Cancel' textColor='secondary' />
