@@ -75,6 +75,9 @@ const update: Update<State, Msg> = (state, msg) => {
         }
       ];
 
+    case 'toggleIsNavOpen':
+      return [state.set('isNavOpen', !state.isNavOpen)];
+
     case 'pageLanding':
       return updateAppChild({
         state,
@@ -147,6 +150,7 @@ const update: Update<State, Msg> = (state, msg) => {
         childMsg: msg.value
       });
 
+    // TODO remove
     default:
       return [state];
   }

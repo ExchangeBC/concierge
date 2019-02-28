@@ -5,6 +5,7 @@ import * as PageLoading from 'front-end/lib/pages/loading';
 const init: Init<null, State> = async () => {
   return {
     ready: false,
+    isNavOpen: false,
     session: undefined,
     activePage: { tag: 'loading', value: null },
     pages: {

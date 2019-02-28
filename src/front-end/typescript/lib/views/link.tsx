@@ -12,6 +12,7 @@ interface Props {
   buttonTag?: 'button' | 'a' | 'span';
   buttonClassName?: string;
   disabled?: boolean;
+  nav?: boolean;
   children?: Array<ReactElement<any>> | string;
 }
 
@@ -25,18 +26,19 @@ function Link(props: Props) {
     buttonClassName = '',
     text = '',
     disabled = false,
+    nav = false,
     children = []
   } = props;
   const aProps = {
     onClick: (e: MouseEvent<HTMLAnchorElement>) => disabled ? e.preventDefault() : undefined,
     style: { cursor: disabled ? 'default' : 'pointer' },
-    className,
+    className: `${nav ? 'nav-link ' : ''}${className}`,
     href: disabled ? undefined : href
   };
   const buttonProps = {
     color: buttonColor,
     tag: buttonTag,
-    className: `${!props.buttonColor && props.textColor ? `text-${textColor}` : ''} ${buttonClassName}`,
+    className: `${nav ? 'p-0 ' : ''}${!props.buttonColor && props.textColor ? `text-${textColor} ` : ''}${buttonClassName}`,
     disabled
   }
   return (

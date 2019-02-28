@@ -25,6 +25,7 @@ export type Page
 
 export interface State {
   ready: boolean;
+  isNavOpen: boolean;
   session?: Session;
   activePage: Page;
   pages: {
@@ -40,7 +41,8 @@ export interface State {
 }
 
 type InnerMsg
-  = ADT<'pageLanding', PageLanding.Msg>
+  = ADT<'toggleIsNavOpen'>
+  | ADT<'pageLanding', PageLanding.Msg>
   | ADT<'pageLoading', PageLoading.Msg>
   | ADT<'pageSignIn', PageSignIn.Msg>
   | ADT<'pageSignUpBuyer', PageSignUpBuyer.Msg>
