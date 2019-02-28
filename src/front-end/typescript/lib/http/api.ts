@@ -48,7 +48,8 @@ export interface Session {
   sessionId: string;
   user?: {
     id: string;
-    type: UserType
+    type: UserType;
+    email: string;
   }
 }
 

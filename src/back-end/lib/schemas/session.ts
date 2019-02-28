@@ -12,6 +12,7 @@ export const NAME = 'Session';
 interface SessionUser {
   id: mongoose.Types.ObjectId;
   type: UserType;
+  email: string;
 }
 
 export interface Data {
@@ -51,7 +52,8 @@ export async function login(SessionModel: Model, UserModel: UserSchema.Model, se
     if (!sessionDoc) { return session; }
     sessionDoc.user = {
       id: user._id,
-      type: userType
+      type: userType,
+      email: user.email
     };
     sessionDoc.updatedAt = new Date();
     await sessionDoc.save();

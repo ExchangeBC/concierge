@@ -1,7 +1,6 @@
 import { View } from 'front-end/lib/framework';
 import { Session } from 'front-end/lib/http/api';
 import Link from 'front-end/lib/views/link';
-import { get } from 'lodash';
 import React from 'react';
 import { Col, Container, NavbarBrand, Row } from 'reactstrap'
 
@@ -10,10 +9,10 @@ interface State {
 }
 
 const AuthLinks: View<State> = ({ session }) => {
-  if (get(session, 'user')) {
+  if (session && session.user) {
     return (
       <div className='ml-auto'>
-        <Link href='' text='Authenticated' textColor='secondary' disabled />
+        <Link href='' text={session.user.email} textColor='secondary' disabled />
         <Link href='/sign-out' text='Sign Out' textColor='light' />
       </div>
     );
