@@ -51,6 +51,18 @@ const router: Router<Page> = {
       }
     },
     {
+      path: '/settings',
+      pageId: 'settings'
+    },
+    {
+      path: '/users',
+      pageId: 'userList'
+    },
+    {
+      path: '/requests-for-information',
+      pageId: 'requestForInformationList'
+    },
+    {
       path: '/say/:message',
       pageId: 'say'
     },
@@ -92,6 +104,21 @@ const router: Router<Page> = {
           tag: 'signOut',
           value: null
         };
+      case 'settings':
+        return {
+          tag: 'settings',
+          value: null
+        };
+      case 'userList':
+        return {
+          tag: 'userList',
+          value: null
+        };
+      case 'requestForInformationList':
+        return {
+          tag: 'requestForInformationList',
+          value: null
+        };
       case 'say':
         return {
           tag: 'say',
@@ -123,6 +150,12 @@ const router: Router<Page> = {
         return '/sign-up/program-staff';
       case 'signOut':
         return '/sign-out';
+      case 'settings':
+        return '/settings';
+      case 'userList':
+        return '/users';
+      case 'requestForInformationList':
+        return '/request-for-information';
       case 'say':
         return `/say/${page.value.message}`;
       default:

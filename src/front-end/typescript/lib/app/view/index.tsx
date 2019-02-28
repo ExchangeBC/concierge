@@ -88,6 +88,9 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageSay', value })}
           View={PageSay.view} />
       );
+    // TODO remove
+    default:
+      return (<div>Undefined Page</div>);
   }
 }
 
@@ -97,7 +100,7 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   } else {
     return (
       <div className={`page-${state.activePage.tag} d-flex flex-column`} style={{ minHeight: '100vh' }}>
-        <Nav session={state.session} />
+        <Nav session={state.session} activePage={state.activePage} />
         <Container className='py-5 mb-auto'>
           <Row>
             <Col xs='12'>

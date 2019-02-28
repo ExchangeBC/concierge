@@ -1,4 +1,4 @@
-import { default as React, ReactElement } from 'react';
+import { default as React, MouseEvent, ReactElement } from 'react';
 import { Button } from 'reactstrap';
 
 interface Props {
@@ -25,9 +25,21 @@ function Link(props: Props) {
     disabled = false,
     children = []
   } = props;
+  const aProps = {
+    onClick: (e: MouseEvent<HTMLAnchorElement>) => disabled ? e.preventDefault() : undefined,
+    style: { cursor: disabled ? 'default' : 'pointer' },
+    className,
+    href: disabled ? undefined : href
+  };
+  const buttonProps = {
+    color: buttonColor,
+    tag: buttonTag,
+    className: `${!props.buttonColor && props.textColor ? `text-${textColor}` : ''} ${buttonClassName}`,
+    disabled
+  }
   return (
-    <a href={href} style={{ pointerEvents: disabled ? 'none' : undefined }} className={className}>
-      <Button color={buttonColor} tag={buttonTag} className={props.buttonColor ? '' : `text-${textColor} ${buttonClassName}`} disabled={disabled}>
+    <a {...aProps}>
+      <Button {...buttonProps}>
         {children.length ? children : text}
       </Button>
     </a>

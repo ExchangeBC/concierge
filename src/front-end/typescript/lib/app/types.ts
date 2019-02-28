@@ -16,6 +16,9 @@ export type Page
   | ADT<'signUpVendor', null>
   | ADT<'signUpProgramStaff', null>
   | ADT<'signOut', null>
+  | ADT<'settings', null>
+  | ADT<'userList', null>
+  | ADT<'requestForInformationList', null>
   | ADT<'say', PageSay.Params>;
 
 export interface State {
