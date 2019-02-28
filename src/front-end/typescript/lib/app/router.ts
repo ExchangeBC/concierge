@@ -170,8 +170,6 @@ const router: Router<Page> = {
         return '/request-for-information';
       case 'say':
         return `/say/${page.value.message}`;
-      default:
-        return '/say/not-found';
     }
   }
 

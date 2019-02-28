@@ -71,8 +71,8 @@ export const update: Update<State, Msg> = (state, msg) => {
           const result = await api.createSession(state.email.value, state.password.value);
           switch (result.tag) {
             case 'valid':
-              dispatch({ tag:
-                '@newUrl',
+              dispatch({
+                tag: '@newUrl',
                 value: { tag: 'say', value: { message: 'Sign In Successful' }}
               });
               return state;

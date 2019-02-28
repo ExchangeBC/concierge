@@ -82,7 +82,7 @@ export interface Component<Params, State, Msg> {
 }
 
 // TODO refactor type naming in this module for this type to be useful.
-export type PageComponent<Params, State, Msg, Page> = Component<Params, State, ComponentMsg<Msg, Page>>;
+// export type PageComponent<Params, State, Msg, Page> = Component<Params, State, ComponentMsg<Msg, Page>>;
 
 export interface RouteAuthDefinition {
   level: AuthLevel;
