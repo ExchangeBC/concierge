@@ -27,7 +27,7 @@ export const resource: Resource = {
     const SessionModel = Models.Session as SessionSchema.Model;
     const UserModel = Models.User as UserSchema.Model;
     return {
-      transformRequest: async request => {
+      async transformRequest(request) {
         if (!permissions.createSession(request.session)) {
           return mapRequestBody(request, null);
         } else {

@@ -10,6 +10,7 @@ import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import { get } from 'lodash';
+import { UserType } from 'shared/lib/types';
 import { ValidOrInvalid } from 'shared/lib/validators';
 
 const update: Update<State, Msg> = (state, msg) => {
@@ -20,7 +21,7 @@ const update: Update<State, Msg> = (state, msg) => {
         state,
         async dispatch => {
           // Clear the current active page's state.
-          const currentActivePage = state.getIn(['activePage', 'tag']);
+          const currentPageTag = state.getIn(['activePage', 'tag']);
           const setSession = (validated: ValidOrInvalid<Session, null>) => {
             state = state.set('session', validated.tag === 'valid' ? validated.value : undefined);
           };
@@ -49,31 +50,52 @@ const update: Update<State, Msg> = (state, msg) => {
           // Scroll to the top-left of the page for page changes.
           if (window.scrollTo) { window.scrollTo(0, 0); }
           state = state
-            .setIn(['pages', currentActivePage], undefined)
             .set('activePage', msg.value.page)
             // We switch this flag to true so the view function knows to display the page.
             .set('ready', true);
           // Set the new active page's state.
           switch (msg.value.page.tag) {
             case 'landing':
-              return state.setIn(['pages', 'landing'], immutable(await PageLanding.init(null)));
+              state = state.setIn(['pages', 'landing'], immutable(await PageLanding.init(null)));
+              break;
             case 'loading':
-              return state.setIn(['pages', 'loading'], immutable(await PageLoading.init(null)));
+              state = state.setIn(['pages', 'loading'], immutable(await PageLoading.init(null)));
+              break;
             case 'signIn':
-              return state.setIn(['pages', 'signIn'], immutable(await PageSignIn.init(null)));
+              state = state.setIn(['pages', 'signIn'], immutable(await PageSignIn.init(null)));
+              break;
             case 'signUpBuyer':
-              return state.setIn(['pages', 'signUpBuyer'], immutable(await PageSignUpBuyer.init(null)));
+              let signUpBuyerParams = {};
+              if (currentPageTag === 'signUpVendor' && state.pages.signUpVendor) {
+                signUpBuyerParams = {
+                  accountInformation: state.pages.signUpVendor.accountInformation.set('userType', UserType.Buyer)
+                };
+              }
+              state = state.setIn(['pages', 'signUpBuyer'], immutable(await PageSignUpBuyer.init(signUpBuyerParams)));
+              break;
             case 'signUpVendor':
-              return state.setIn(['pages', 'signUpVendor'], immutable(await PageSignUpVendor.init(null)));
+              let signUpVendorParams = {};
+              if (currentPageTag === 'signUpBuyer' && state.pages.signUpBuyer) {
+                signUpVendorParams = {
+                  accountInformation: state.pages.signUpBuyer.accountInformation.set('userType', UserType.Vendor)
+                };
+              }
+              state = state.setIn(['pages', 'signUpVendor'], immutable(await PageSignUpVendor.init(signUpVendorParams)));
+              break;
             case 'signUpProgramStaff':
-              return state.setIn(['pages', 'signUpProgramStaff'], immutable(await PageSignUpProgramStaff.init(null)));
+              state = state.setIn(['pages', 'signUpProgramStaff'], immutable(await PageSignUpProgramStaff.init({})));
+              break;
             case 'signOut':
-              return state.setIn(['pages', 'signOut'], immutable(await PageSignOut.init(null)));
+              state = state.setIn(['pages', 'signOut'], immutable(await PageSignOut.init(null)));
+              break;
             case 'say':
-              return state.setIn(['pages', 'say'], immutable(await PageSay.init(msg.value.page.value)));
+              state = state.setIn(['pages', 'say'], immutable(await PageSay.init(msg.value.page.value)));
+              break;
             default:
-              return state;
+              break;
           }
+          // Unset the previous page's state.
+          return state.setIn(['pages', currentPageTag], undefined);
         }
       ];
 

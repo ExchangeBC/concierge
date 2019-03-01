@@ -3,6 +3,8 @@ import * as VendorProfile from 'front-end/lib/pages/sign-up/components/vendor-pr
 
 export const component = SignUp.component(VendorProfile.component);
 
+export type Params = SignUp.Params;
+
 export type Msg = SignUp.Msg<VendorProfile.InnerMsg>;
 
 export type State = SignUp.State<VendorProfile.State>;

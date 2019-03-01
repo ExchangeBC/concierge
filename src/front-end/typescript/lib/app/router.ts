@@ -1,5 +1,8 @@
 import { Page } from 'front-end/lib/app/types';
 import { AuthLevel, RouteAuthDefinition, Router } from 'front-end/lib/framework';
+import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
+import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
+import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import { get } from 'lodash';
 
 const isSignedOut: RouteAuthDefinition = {
@@ -97,17 +100,17 @@ const router: Router<Page> = {
       case 'signUpBuyer':
         return {
           tag: 'signUpBuyer',
-          value: null
+          value: {} as PageSignUpBuyer.Params
         };
       case 'signUpVendor':
         return {
           tag: 'signUpVendor',
-          value: null
+          value: {} as PageSignUpVendor.Params
         };
       case 'signUpProgramStaff':
         return {
           tag: 'signUpProgramStaff',
-          value: null
+          value: {} as PageSignUpProgramStaff.Params
         };
       case 'signOut':
         return {

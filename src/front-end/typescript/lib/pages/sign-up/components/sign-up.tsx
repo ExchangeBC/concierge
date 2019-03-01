@@ -23,13 +23,17 @@ type InnerMsg<ProfileMsg>
 
 export type Msg<ProfileMsg> = ComponentMsg<InnerMsg<ProfileMsg>, Page>;
 
-export type Params = null;
+export interface Params {
+  accountInformation?: Immutable<AccountInformation.State>;
+}
 
 function init<PS, PM>(Profile: ProfileComponent<PS, PM>): Init<Params, State<PS>> {
-  return async () => {
+  return async ({ accountInformation }) => {
     return {
       loading: 0,
-      accountInformation: immutable(await AccountInformation.init({ userType: Profile.userType })),
+      accountInformation: accountInformation || immutable(await AccountInformation.init({
+        userType: Profile.userType
+      })),
       profile: immutable(await Profile.init(null))
     };
   }

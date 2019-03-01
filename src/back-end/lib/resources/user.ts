@@ -126,6 +126,7 @@ const resource: Resource = {
           }));
         }
         const body = request.body;
+        // TODO use getString
         const email = body.email ? String(body.email) : '';
         const password = body.password ? String(body.password) : '';
         const acceptedTerms = isBoolean(body.acceptedTerms) ? body.acceptedTerms : false;
@@ -194,13 +195,13 @@ const resource: Resource = {
     const UserModel = Models.User as UserSchema.Model;
     return {
       async transformRequest(request) {
-        const body = request.body;
         const id = request.params.id;
         if (!permissions.updateUser(request.session, id)) {
           return mapRequestBody(request, invalid({
             permissions: [permissions.ERROR_MESSAGE]
           }));
         }
+        const body = request.body;
         const email = getString(body, 'email') || undefined;
         const profile = isObject(body.profile) ? body.profile : undefined;
         const acceptedTerms = isBoolean(body.acceptedTerms) ? body.acceptedTerms : undefined;

@@ -134,6 +134,7 @@ export function validateStringId(id: string, name = 'ID'): Validation<string> {
 }
 
 export function validateEmail(email: string): Validation<string> {
+  email = email.toLowerCase();
   if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/i)) {
     return invalid([ 'Please enter a valid email.' ]);
   } else {

@@ -20,12 +20,14 @@ export interface Props extends Pick<FormField.Props<State, HTMLInputElement, Ext
   onEnter?: OnEnter;
 }
 
-type Params = Pick<State, 'id' | 'required' | 'type' | 'label' | 'placeholder' | 'help'>;
+interface Params extends Pick<State, 'id' | 'required' | 'type' | 'label' | 'placeholder' | 'help'> {
+  value?: string;
+}
 
 export function init(params: Params): State {
   return {
     id: params.id,
-    value: '',
+    value: params.value || '',
     errors: [],
     required: params.required,
     type: params.type,

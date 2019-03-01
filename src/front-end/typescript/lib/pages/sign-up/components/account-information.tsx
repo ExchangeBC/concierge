@@ -66,21 +66,24 @@ export const init: Init<Params, State> = async ({ userType }) => {
       required: true,
       type: 'email',
       label: 'Email Address',
-      placeholder: 'Email Address'
+      placeholder: 'Email Address',
+      value: ''
     }),
     password: ShortText.init({
       id: 'password',
       required: true,
       type: 'password',
       label: 'Password',
-      placeholder: 'Password'
+      placeholder: 'Password',
+      value: ''
     }),
     confirmPassword: ShortText.init({
       id: 'confirmPassword',
       required: true,
       type: 'password',
       label: 'Confirm Password',
-      placeholder: 'Confirm Password'
+      placeholder: 'Confirm Password',
+      value: ''
     })
   };
 };

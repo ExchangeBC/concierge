@@ -14,9 +14,9 @@ export type Page
   = ADT<'landing', PageLanding.Params>
   | ADT<'loading', null>
   | ADT<'signIn', null>
-  | ADT<'signUpBuyer', null>
-  | ADT<'signUpVendor', null>
-  | ADT<'signUpProgramStaff', null>
+  | ADT<'signUpBuyer', PageSignUpBuyer.Params>
+  | ADT<'signUpVendor', PageSignUpVendor.Params>
+  | ADT<'signUpProgramStaff', PageSignUpProgramStaff.Params>
   | ADT<'signOut', null>
   | ADT<'settings', null>
   | ADT<'userList', null>

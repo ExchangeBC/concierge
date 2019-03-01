@@ -23,6 +23,7 @@ async function start() {
     sessionToSessionId: SessionSchema.sessionToSessionId(SessionModel),
     port: PORT
   });
+  // TODO broadcast on 0.0.0.0
   logger.info('server started', { host: '0.0.0.0', port: String(PORT) });
 }
 

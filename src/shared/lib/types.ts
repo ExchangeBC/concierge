@@ -83,6 +83,7 @@ export function parseBusinessType(raw: string): BusinessType | null {
   }
 }
 
+// TODO make profile fields required per feedback from liz.
 export interface BuyerProfile {
   type: 'buyer';
   firstName?: string;
