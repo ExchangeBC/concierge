@@ -63,7 +63,7 @@ export async function signIn(SessionModel: Model, UserModel: UserSchema.Model, s
   }
 };
 
-export async function logout(Model: Model, session: AppSession): Promise<AppSession> {
+export async function signOut(Model: Model, session: AppSession): Promise<AppSession> {
   try {
     await Model
       .findByIdAndDelete(session._id)

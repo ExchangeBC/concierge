@@ -72,7 +72,7 @@ export const resource: Resource = {
         if (!permissions.deleteSession(request.session, request.params.id)) {
           return basicResponse(401, request.session, null);
         } else {
-          const newSession = await SessionSchema.logout(SessionModel, request.session);
+          const newSession = await SessionSchema.signOut(SessionModel, request.session);
           return basicResponse(200, newSession, newSession);
         }
       }

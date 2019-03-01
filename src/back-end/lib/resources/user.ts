@@ -239,7 +239,7 @@ const resource: Resource = {
         } else {
           user.active = false;
           await user.save();
-          const session = await SessionSchema.logout(SessionModel, request.session);
+          const session = await SessionSchema.signOut(SessionModel, request.session);
           return basicResponse(200, session, null);
         }
       }
