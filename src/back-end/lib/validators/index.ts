@@ -12,7 +12,7 @@ export async function validateEmail(Model: mongoose.Model<HasEmail & mongoose.Do
     case 'invalid':
       return validation;
     case 'valid':
-      const user = await Model.findOne({ email }).exec();
+      const user = await Model.findOne({ email: validation.value }).exec();
       if (!user) {
         return valid(validation.value);
       } else {

@@ -54,7 +54,7 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
   if (allValid([validatedBusinessName, validatedBusinessType, validatedBusinessNumber, validatedBusinessStreetAddress, validatedBusinessCity, validatedBusinessProvince, validatedBusinessPostalCode, validatedBusinessCountry, validatedContactName, validatedContactPositionTitle, validatedContactEmail, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedAreasOfExpertise])) {
     return valid({
       type: 'vendor' as 'vendor',
-      businessName: getValidValue(validatedBusinessName, undefined),
+      businessName: validatedBusinessName.value as string,
       businessType: getValidValue(validatedBusinessType, undefined),
       businessNumber: getValidValue(validatedBusinessNumber, undefined),
       businessStreetAddress: getValidValue(validatedBusinessStreetAddress, undefined),

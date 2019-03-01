@@ -41,6 +41,34 @@ export async function createUser(user: CreateUserRequestBody): Promise<ValidOrIn
   }
 };
 
+export interface UpdateUserRequestBody {
+  _id: string;
+  email?: string;
+  currentPassword?: string;
+  newPassword?: string;
+  profile?: Profile;
+  acceptedTerms?: boolean;
+}
+
+export async function updateUser(user: UpdateUserRequestBody): Promise<ValidOrInvalid<UserResource.PublicUser, UserResource.UpdateValidationErrors>> {
+  try {
+    const response = await request(HttpMethod.Put, `users/${user._id}`, user);
+    switch (response.status) {
+      case 200:
+        return valid(response.data as UserResource.PublicUser);
+      case 400:
+      case 401:
+        return invalid(response.data as UserResource.CreateValidationErrors);
+      default:
+        return fail({});
+    }
+  } catch (error) {
+    // tslint:disable:next-line no-console
+    console.error(error);
+    return fail({});
+  }
+}
+
 export interface Session {
   _id: string;
   createdAt: Date;

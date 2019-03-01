@@ -17,9 +17,9 @@ export interface ProgramStaffProfileValidationErrors {
 }
 
 export function validateProgramStaffProfile(profile: object): ValidOrInvalid<ProgramStaffProfile, ProgramStaffProfileValidationErrors> {
-  const validatedFirstName = optional(validateFirstName, getString(profile, 'firstName'));
-  const validatedLastName = optional(validateLastName, getString(profile, 'lastName'));
-  const validatedPositionTitle = optional(validatePositionTitle, getString(profile, 'positionTitle'));
+  const validatedFirstName = validateFirstName(getString(profile, 'firstName'));
+  const validatedLastName = validateLastName(getString(profile, 'lastName'));
+  const validatedPositionTitle = validatePositionTitle(getString(profile, 'positionTitle'));
   const validatedContactStreetAddress = optional(validateStreetAddress, getString(profile, 'contactStreetAddress'));
   const validatedContactCity = optional(validateCity, getString(profile, 'contactCity'));
   const validatedContactProvince = optional(validateProvince, getString(profile, 'contactProvince'));
@@ -31,9 +31,9 @@ export function validateProgramStaffProfile(profile: object): ValidOrInvalid<Pro
   if (allValid([validatedFirstName, validatedLastName, validatedPositionTitle, validatedContactStreetAddress, validatedContactCity, validatedContactProvince, validatedContactPostalCode, validatedContactCountry, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType])) {
     return valid({
       type: 'program_staff' as 'program_staff',
-      firstName: getValidValue(validatedFirstName, undefined),
-      lastName: getValidValue(validatedLastName, undefined),
-      positionTitle: getValidValue(validatedPositionTitle, undefined),
+      firstName: validatedFirstName.value as string,
+      lastName: validatedLastName.value as string,
+      positionTitle: validatedPositionTitle.value as string,
       contactStreetAddress: getValidValue(validatedContactStreetAddress, undefined),
       contactCity: getValidValue(validatedContactCity, undefined),
       contactProvince: getValidValue(validatedContactProvince, undefined),

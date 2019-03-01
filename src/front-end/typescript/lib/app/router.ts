@@ -11,6 +11,12 @@ const isSignedOut: RouteAuthDefinition = {
   signOut: false
 };
 
+const isSignedIn: RouteAuthDefinition = {
+  level: AuthLevel.SignedIn,
+  redirect: '/sign-in',
+  signOut: false
+};
+
 const router: Router<Page> = {
 
   routes: [
@@ -57,6 +63,11 @@ const router: Router<Page> = {
         // signOut must be true, or this will trigger an infinite loop.
         signOut: true
       }
+    },
+    {
+      path: '/change-password',
+      pageId: 'changePassword',
+      auth: isSignedIn
     },
     {
       path: '/settings',
@@ -117,6 +128,11 @@ const router: Router<Page> = {
           tag: 'signOut',
           value: null
         };
+      case 'changePassword':
+        return {
+          tag: 'changePassword',
+          value: null
+        };
       case 'settings':
         return {
           tag: 'settings',
@@ -165,6 +181,8 @@ const router: Router<Page> = {
         return '/sign-up/program-staff';
       case 'signOut':
         return '/sign-out';
+      case 'changePassword':
+        return '/change-password';
       case 'settings':
         return '/settings';
       case 'userList':

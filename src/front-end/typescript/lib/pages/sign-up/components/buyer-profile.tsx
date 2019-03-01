@@ -39,10 +39,10 @@ export interface State {
 export function getValues(state: Immutable<State>): BuyerProfile {
   return {
     type: 'buyer' as 'buyer',
-    firstName: state.firstName.value || undefined,
-    lastName: state.lastName.value || undefined,
-    positionTitle: state.positionTitle.value || undefined,
-    publicSectorEntity: state.publicSectorEntity.value || undefined,
+    firstName: state.firstName.value,
+    lastName: state.lastName.value,
+    positionTitle: state.positionTitle.value,
+    publicSectorEntity: state.publicSectorEntity.value,
     branch: state.branch.value || undefined,
     contactStreetAddress: state.contactStreetAddress.value || undefined,
     contactCity: state.contactCity.value || undefined,

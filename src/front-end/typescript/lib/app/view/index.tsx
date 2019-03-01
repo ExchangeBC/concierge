@@ -2,6 +2,7 @@ import { Msg, Page, State } from 'front-end/lib/app/types';
 import Footer from 'front-end/lib/app/view/footer';
 import Nav from 'front-end/lib/app/view/nav';
 import { AppMsg, ComponentMsg, ComponentView, Dispatch, Immutable, mapAppDispatch, newUrl } from 'front-end/lib/framework';
+import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageLoading from 'front-end/lib/pages/loading';
 import * as PageSay from 'front-end/lib/pages/say';
@@ -88,6 +89,14 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.signOut}
           mapPageMsg={value => ({ tag: 'pageSignOut', value })}
           View={PageSignOut.view} />
+      );
+    case 'changePassword':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.changePassword}
+          mapPageMsg={value => ({ tag: 'pageChangePassword', value })}
+          View={PageChangePassword.view} />
       );
     case 'say':
       return (

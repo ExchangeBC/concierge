@@ -86,10 +86,10 @@ export function parseBusinessType(raw: string): BusinessType | null {
 // TODO make profile fields required per feedback from liz.
 export interface BuyerProfile {
   type: 'buyer';
-  firstName?: string;
-  lastName?: string;
-  positionTitle?: string;
-  publicSectorEntity?: string;
+  firstName: string;
+  lastName: string;
+  positionTitle: string;
+  publicSectorEntity: string;
   branch?: string;
   contactStreetAddress?: string;
   contactCity?: string;
@@ -105,9 +105,9 @@ export interface BuyerProfile {
 
 export interface ProgramStaffProfile {
   type: 'program_staff';
-  firstName?: string;
-  lastName?: string;
-  positionTitle?: string;
+  firstName: string;
+  lastName: string;
+  positionTitle: string;
   contactStreetAddress?: string;
   contactCity?: string;
   contactProvince?: string;
@@ -120,7 +120,7 @@ export interface ProgramStaffProfile {
 
 export interface VendorProfile {
   type: 'vendor';
-  businessName?: string;
+  businessName: string;
   businessType?: BusinessType;
   businessNumber?: string;
   businessStreetAddress?: string;

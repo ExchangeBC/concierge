@@ -47,10 +47,10 @@ export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfi
   if (allValid([validatedFirstName, validatedLastName, validatedPositionTitle, validatedPublicSectorEntity, validatedBranch, validatedContactStreetAddress, validatedContactCity, validatedContactProvince, validatedContactPostalCode, validatedContactCountry, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedAreasOfInterest])) {
     return valid({
       type: 'buyer' as 'buyer',
-      firstName: getValidValue(validatedFirstName, undefined),
-      lastName: getValidValue(validatedLastName, undefined),
-      positionTitle: getValidValue(validatedPositionTitle, undefined),
-      publicSectorEntity: getValidValue(validatedPublicSectorEntity, undefined),
+      firstName: validatedFirstName.value as string,
+      lastName: validatedLastName.value as string,
+      positionTitle: validatedPositionTitle.value as string,
+      publicSectorEntity: validatedPublicSectorEntity.value as string,
       branch: getValidValue(validatedBranch, undefined),
       contactStreetAddress: getValidValue(validatedContactStreetAddress, undefined),
       contactCity: getValidValue(validatedContactCity, undefined),

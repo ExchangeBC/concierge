@@ -1,5 +1,6 @@
 import { AppMsg, Immutable } from 'front-end/lib/framework';
 import { Session } from 'front-end/lib/http/api';
+import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageLoading from 'front-end/lib/pages/loading';
 import * as PageSay from 'front-end/lib/pages/say';
@@ -18,6 +19,7 @@ export type Page
   | ADT<'signUpVendor', PageSignUpVendor.Params>
   | ADT<'signUpProgramStaff', PageSignUpProgramStaff.Params>
   | ADT<'signOut', null>
+  | ADT<'changePassword', null>
   | ADT<'settings', null>
   | ADT<'userList', null>
   | ADT<'requestForInformationList', null>
@@ -36,6 +38,7 @@ export interface State {
     signUpVendor?: Immutable<PageSignUpVendor.State>;
     signUpProgramStaff?: Immutable<PageSignUpProgramStaff.State>;
     signOut?: Immutable<PageSignOut.State>;
+    changePassword?: Immutable<PageChangePassword.State>;
     say?: Immutable<PageSay.State>;
   };
 }
@@ -49,6 +52,7 @@ type InnerMsg
   | ADT<'pageSignUpVendor', PageSignUpVendor.Msg>
   | ADT<'pageSignUpProgramStaff', PageSignUpProgramStaff.Msg>
   | ADT<'pageSignOut', PageSignOut.Msg>
+  | ADT<'pageChangePassword', PageChangePassword.Msg>
   | ADT<'pageSay', PageSay.Msg>;
 
 export type Msg = AppMsg<InnerMsg, Page>;

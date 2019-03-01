@@ -1,6 +1,7 @@
 import { Msg, State } from 'front-end/lib/app/types';
 import { AuthLevel, immutable, redirect, Update, updateAppChild } from 'front-end/lib/framework';
 import { deleteSession, getSession, Session } from 'front-end/lib/http/api';
+import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageLoading from 'front-end/lib/pages/loading';
 import * as PageSay from 'front-end/lib/pages/say';
@@ -41,11 +42,13 @@ const update: Update<State, Msg> = (state, msg) => {
                 signOut(auth.redirect, auth.signOut);
                 return state;
               }
+              break;
             case AuthLevel.SignedOut:
               if (get(state.session, 'user')) {
                 signOut(auth.redirect, auth.signOut);
                 return state;
               }
+              break;
           }
           // Scroll to the top-left of the page for page changes.
           if (window.scrollTo) { window.scrollTo(0, 0); }
@@ -87,6 +90,11 @@ const update: Update<State, Msg> = (state, msg) => {
               break;
             case 'signOut':
               state = state.setIn(['pages', 'signOut'], immutable(await PageSignOut.init(null)));
+              break;
+            case 'changePassword':
+              state = state.setIn(['pages', 'changePassword'], immutable(await PageChangePassword.init({
+                userId: get(state.session, ['user', 'id'], '')
+              })));
               break;
             case 'say':
               state = state.setIn(['pages', 'say'], immutable(await PageSay.init(msg.value.page.value)));
@@ -162,6 +170,15 @@ const update: Update<State, Msg> = (state, msg) => {
         mapChildMsg: value => ({ tag: 'pageSignOut', value }),
         childStatePath: ['pages', 'signOut'],
         childUpdate: PageSignOut.update,
+        childMsg: msg.value
+      });
+
+    case 'pageChangePassword':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageChangePassword', value }),
+        childStatePath: ['pages', 'changePassword'],
+        childUpdate: PageChangePassword.update,
         childMsg: msg.value
       });
 

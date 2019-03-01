@@ -40,7 +40,7 @@ export interface State {
 export function getValues(state: Immutable<State>): VendorProfile {
   return {
     type: 'vendor' as 'vendor',
-    businessName: state.businessName.value || undefined,
+    businessName: state.businessName.value,
     businessType: parseBusinessType(state.businessType.value) || undefined,
     businessNumber: state.businessNumber.value || undefined,
     businessStreetAddress: state.businessStreetAddress.value || undefined,
