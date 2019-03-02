@@ -1,20 +1,11 @@
-import { AxiosResponse, default as axios } from 'axios';
+import { prefixRequest } from 'front-end/lib/http';
 import shajs from 'sha.js';
 import * as ForgotPasswordTokenResource from 'shared/lib/resources/forgot-password-token';
 import * as UserResource from 'shared/lib/resources/user';
 import { HttpMethod, Profile, UserType } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
-export function request(method: HttpMethod, path: string, data?: object): Promise<AxiosResponse<any>> {
-  return axios({
-    method,
-    url: `/api/${path.replace(/^\/*/, '')}`,
-    data,
-    validateStatus(code) {
-      return (code >= 200 && code < 300) || code === 400 || code === 401;
-    }
-  });
-}
+const request = prefixRequest('api');
 
 // Use this function to hash passwords before sending them to the server.
 // It's important not to send plaintext passwords to the back-end.
@@ -75,6 +66,22 @@ export async function updateUser(user: UpdateUserRequestBody): Promise<ValidOrIn
     // tslint:disable:next-line no-console
     console.error(error);
     return invalid({});
+  }
+}
+
+export async function readOneUser(userId: string): Promise<ValidOrInvalid<UserResource.PublicUser, null>> {
+  try {
+    const response = await request(HttpMethod.Get, `users/${userId}`);
+    switch (response.status) {
+      case 200:
+        return valid(response.data as UserResource.PublicUser);
+      default:
+        return invalid(null);
+    }
+  } catch (error) {
+    // tslint:disable:next-line no-console
+    console.error(error);
+    return invalid(null);
   }
 }
 

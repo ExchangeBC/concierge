@@ -1,9 +1,9 @@
-import { Page } from 'front-end/lib/app/types';
+import { Page, State } from 'front-end/lib/app/types';
 import { AuthLevel, RouteAuthDefinition, Router } from 'front-end/lib/framework';
-import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
-import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
+import { get } from 'lodash';
 import { getString } from 'shared/lib';
+import { UserType } from 'shared/lib/types';
 
 const isSignedOut: RouteAuthDefinition = {
   level: AuthLevel.SignedOut,
@@ -17,7 +17,7 @@ const isSignedIn: RouteAuthDefinition = {
   signOut: false
 };
 
-const router: Router<Page> = {
+const router: Router<State, Page> = {
 
   routes: [
     {
@@ -79,6 +79,12 @@ const router: Router<Page> = {
       pageId: 'settings'
     },
     {
+      path: '/terms-and-conditions',
+      pageId: 'termsAndConditions',
+      // TODO restrict to Buyers and Vendors
+      auth: isSignedIn
+    },
+    {
       path: '/users',
       pageId: 'userList'
     },
@@ -104,7 +110,8 @@ const router: Router<Page> = {
     }
   ],
 
-  locationToPage(pageId, params) {
+  locationToPage(pageId, params, state) {
+    const outgoingPage = state.activePage;
     switch (pageId) {
       case 'landing':
         return {
@@ -117,14 +124,26 @@ const router: Router<Page> = {
           value: null
         };
       case 'signUpBuyer':
+        let signUpBuyerParams = {};
+        if (outgoingPage.tag === 'signUpVendor' && state.pages.signUpVendor) {
+          signUpBuyerParams = {
+            accountInformation: state.pages.signUpVendor.accountInformation.set('userType', UserType.Buyer)
+          };
+        }
         return {
           tag: 'signUpBuyer',
-          value: {} as PageSignUpBuyer.Params
+          value: signUpBuyerParams
         };
       case 'signUpVendor':
+        let signUpVendorParams = {};
+        if (outgoingPage.tag === 'signUpBuyer' && state.pages.signUpBuyer) {
+          signUpVendorParams = {
+            accountInformation: state.pages.signUpBuyer.accountInformation.set('userType', UserType.Vendor)
+          };
+        }
         return {
           tag: 'signUpVendor',
-          value: {} as PageSignUpVendor.Params
+          value: signUpVendorParams
         };
       case 'signUpProgramStaff':
         return {
@@ -139,7 +158,9 @@ const router: Router<Page> = {
       case 'changePassword':
         return {
           tag: 'changePassword',
-          value: null
+          value: {
+            userId: getString(state.session, ['user', 'id'])
+          }
         };
       case 'resetPassword':
         return {
@@ -158,6 +179,13 @@ const router: Router<Page> = {
         return {
           tag: 'settings',
           value: null
+        };
+      case 'termsAndConditions':
+        return {
+          tag: 'termsAndConditions',
+          value: {
+            userId: get(state.session, ['user', 'id'], '')
+          }
         };
       case 'userList':
         return {
@@ -220,6 +248,8 @@ const router: Router<Page> = {
         return '/forgot-password';
       case 'settings':
         return '/settings';
+      case 'termsAndConditions':
+        return '/terms-and-conditions';
       case 'userList':
         return '/users';
       case 'requestForInformationList':

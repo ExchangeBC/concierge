@@ -96,9 +96,9 @@ export interface RouteDefinition {
   auth?: RouteAuthDefinition;
 }
 
-export interface Router<Page> {
+export interface Router<State, Page> {
   routes: RouteDefinition[];
-  locationToPage(pageId: string, params: object): Page;
+  locationToPage(pageId: string, params: object, state: Immutable<State>): Page;
   pageToUrl(page: Page): string;
 }
 
@@ -112,6 +112,8 @@ export interface IncomingPageMsgValue<Page> {
   page: Page;
   auth: RouteAuthDefinition;
 }
+
+export type BeforeIncomingPageMsg = ADT<'@beforeIncomingPage'>;
 
 export type IncomingPageMsg<Page> = ADT<'@incomingPage', IncomingPageMsgValue<Page>>;
 
@@ -146,20 +148,20 @@ export type GlobalMsg<Page> = NewUrlMsg<Page> | ReplaceUrlMsg<Page> | RedirectMs
 
 export type ComponentMsg<Msg, Page> = Msg | GlobalMsg<Page>;
 
-export type AppMsg<Msg, Page> = ComponentMsg<Msg, Page> | IncomingPageMsg<Page>;
+export type AppMsg<Msg, Page> = ComponentMsg<Msg, Page> | BeforeIncomingPageMsg | IncomingPageMsg<Page>;
 
 export interface App<State, Msg, Page> extends Component<null, State, AppMsg<Msg, Page>> {
-  router: Router<Page>;
+  router: Router<State, Page>;
 }
 
-export type Dispatch<Msg> = (msg: Msg) => void;
+export type Dispatch<Msg> = (msg: Msg) => Promise<any>;
 
 export function mapAppDispatch<ParentMsg, ChildMsg, Page>(dispatch: Dispatch<AppMsg<ParentMsg, Page>>, fn: (childMsg: ComponentMsg<ChildMsg, Page>) => AppMsg<ParentMsg, Page>): Dispatch<ComponentMsg<ChildMsg, Page>> {
   return childMsg => {
     if ((childMsg as GlobalMsg<Page>).tag === '@newUrl' || (childMsg as GlobalMsg<Page>).tag === '@replaceUrl') {
-      dispatch(childMsg as GlobalMsg<Page>);
+      return dispatch(childMsg as GlobalMsg<Page>);
     } else {
-      dispatch(fn(childMsg));
+      return dispatch(fn(childMsg));
     }
   };
 }
@@ -167,9 +169,9 @@ export function mapAppDispatch<ParentMsg, ChildMsg, Page>(dispatch: Dispatch<App
 export function mapComponentDispatch<ParentMsg, ChildMsg, Page>(dispatch: Dispatch<ComponentMsg<ParentMsg, Page>>, fn: (childMsg: ComponentMsg<ChildMsg, Page>) => ComponentMsg<ParentMsg, Page>): Dispatch<ComponentMsg<ChildMsg, Page>> {
   return childMsg => {
     if ((childMsg as GlobalMsg<Page>).tag === '@newUrl' || (childMsg as GlobalMsg<Page>).tag === '@replaceUrl') {
-      dispatch(childMsg as GlobalMsg<Page>);
+      return dispatch(childMsg as GlobalMsg<Page>);
     } else {
-      dispatch(fn(childMsg));
+      return dispatch(fn(childMsg));
     }
   };
 }
@@ -184,10 +186,10 @@ export interface StateManager<State, Msg> {
   dispatch: Dispatch<Msg>;
   subscribe: StateSubscribe<State, Msg>;
   unsubscribe: StateUnsubscribe<State, Msg>;
-  getState(): State;
+  getState(): Immutable<State>;
 }
 
-export function initializeRouter<Msg, Page>(router: Router<Page>, dispatch: Dispatch<AppMsg<Msg, Page>>): void {
+export function initializeRouter<State, Msg, Page>(router: Router<State, Page>, stateManager: StateManager<State, AppMsg<Msg, Page>>): void {
   // Bind all routes for pushState.
   router.routes.forEach(({ path, pageId, auth }) => {
     const authDefinition = defaults(auth, {
@@ -196,12 +198,20 @@ export function initializeRouter<Msg, Page>(router: Router<Page>, dispatch: Disp
       signOut: false
     });
     page(path, ctx => {
-      dispatch({
-        tag: '@incomingPage',
-        value: {
-          auth: authDefinition,
-          page: router.locationToPage(pageId, get(ctx, 'params', {}))
-        }
+      // We need to determine the page via locationToPage
+      // after running beforeIncomingPage since state updates
+      // can be asynchronous.
+      stateManager.dispatch({
+        tag: '@beforeIncomingPage',
+        value: undefined
+      }).then(() => {
+        stateManager.dispatch({
+          tag: '@incomingPage',
+          value: {
+            auth: authDefinition,
+            page: router.locationToPage(pageId, get(ctx, 'params', {}), stateManager.getState())
+          }
+        });
       });
     });
   });
@@ -264,6 +274,7 @@ export async function start<State, Msg extends ADT<any, any>, Page>(app: App<Sta
         state = newState;
         notify();
       });
+    return promise;
   };
   // Render the view whenever state changes.
   const render = (state: Immutable<State>, dispatch: Dispatch<AppMsg<Msg, Page>>): void => {
@@ -281,13 +292,15 @@ export async function start<State, Msg extends ADT<any, any>, Page>(app: App<Sta
   }
   // Trigger state initialization notification.
   notify();
-  // Initialize the router.
-  initializeRouter(app.router, dispatch);
-  // Return StateManager.
-  return {
+  // Create the StateManager.
+  const stateManager = {
     dispatch,
     subscribe,
     unsubscribe,
     getState
   };
+  // Initialize the router.
+  initializeRouter(app.router, stateManager);
+  // Return StateManager.
+  return stateManager;
 };

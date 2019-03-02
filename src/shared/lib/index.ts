@@ -1,3 +1,5 @@
+import moment from 'moment-timezone';
+
 import { get, isArray, isBoolean } from 'lodash';
 
 export function getString(obj: any, keyPath: string | string[]): string {
@@ -27,4 +29,22 @@ export type CurriedFunction<A, B, C> = (a: A) => (b: B) => C;
 
 export function flipCurried<A, B, C>(fn: CurriedFunction<A, B, C>): CurriedFunction<B, A, C> {
   return (b: B) => (a: A) => fn(a)(b);
+}
+
+const TIMEZONE = 'America/Vancouver';
+
+export function rawFormatDate(date: Date, formatType: string, withTimeZone: boolean): string {
+  return moment(date).tz(TIMEZONE).format(`${formatType}${withTimeZone ? ' z' : ''}`);
+}
+
+export function formatDateAndTime(date: Date, withTimeZone = false): string {
+  return rawFormatDate(date, 'lll', withTimeZone);
+}
+
+export function formatDate(date: Date, withTimeZone = false): string {
+  return rawFormatDate(date, 'll', withTimeZone);
+}
+
+export function formatTime(date: Date, withTimeZone = false): string {
+  return rawFormatDate(date, 'LT', withTimeZone);
 }

@@ -15,6 +15,7 @@ import * as PageSignOut from 'front-end/lib/pages/sign-out';
 import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
+import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
 import { default as React, ReactElement } from 'react';
 import { Col, Container, Row } from 'reactstrap';
 
@@ -109,6 +110,14 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.forgotPassword}
           mapPageMsg={value => ({ tag: 'pageForgotPassword', value })}
           View={PageForgotPassword.view} />
+      );
+    case 'termsAndConditions':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.termsAndConditions}
+          mapPageMsg={value => ({ tag: 'pageTermsAndConditions', value })}
+          View={PageTermsAndConditions.view} />
       );
     case 'noticeNotFound':
       return (

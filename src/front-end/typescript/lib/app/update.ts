@@ -1,5 +1,5 @@
 import { Msg, State } from 'front-end/lib/app/types';
-import { AuthLevel, immutable, redirect, Update, updateAppChild } from 'front-end/lib/framework';
+import { AuthLevel, Dispatch, Immutable, immutable, redirect, Update, updateAppChild } from 'front-end/lib/framework';
 import { deleteSession, getSession, Session } from 'front-end/lib/http/api';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
@@ -14,45 +14,55 @@ import * as PageSignOut from 'front-end/lib/pages/sign-out';
 import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
+import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
 import { get } from 'lodash';
-import { UserType } from 'shared/lib/types';
 import { ValidOrInvalid } from 'shared/lib/validators';
+
+function setSession(state: Immutable<State>, validated: ValidOrInvalid<Session, null>): Immutable<State> {
+  return state.set('session', validated.tag === 'valid' ? validated.value : undefined);
+};
+
+async function signOut(state: Immutable<State>, dispatch: Dispatch<Msg>, path: string, signOut: boolean): Promise<Immutable<State>> {
+  if (signOut) {
+    state = setSession(state, await deleteSession());
+  }
+  dispatch(redirect(path));
+  return state;
+};
 
 const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
+
+    case '@beforeIncomingPage':
+      return [
+        state,
+        async () => {
+          // Refresh the front-end's view of the current session.
+          return setSession(state, await getSession());
+        }
+      ];
 
     case '@incomingPage':
       return [
         state,
         async dispatch => {
-          // Clear the current active page's state.
           const outgoingPage = state.activePage;
-          const setSession = (validated: ValidOrInvalid<Session, null>) => {
-            state = state.set('session', validated.tag === 'valid' ? validated.value : undefined);
-          };
-          await setSession(await getSession());
-          const signOut = async (path: string, signOut: boolean) => {
-            if (signOut) {
-              await setSession(await deleteSession());
-            }
-            dispatch(redirect(path));
-          };
           const auth = msg.value.auth;
           switch (auth.level) {
             case AuthLevel.Any:
               break;
             case AuthLevel.SignedIn:
               if (!get(state.session, 'user')) {
-                signOut(auth.redirect, auth.signOut);
-                return state;
+                return signOut(state, dispatch, auth.redirect, auth.signOut);
+              } else {
+                break;
               }
-              break;
             case AuthLevel.SignedOut:
               if (get(state.session, 'user')) {
-                signOut(auth.redirect, auth.signOut);
-                return state;
+                return signOut(state, dispatch, auth.redirect, auth.signOut);
+              } else {
+                break;
               }
-              break;
           }
           // Scroll to the top-left of the page for page changes.
           if (window.scrollTo) { window.scrollTo(0, 0); }
@@ -69,39 +79,28 @@ const update: Update<State, Msg> = (state, msg) => {
               state = state.setIn(['pages', 'signIn'], immutable(await PageSignIn.init(null)));
               break;
             case 'signUpBuyer':
-              let signUpBuyerParams = {};
-              if (outgoingPage.tag === 'signUpVendor' && state.pages.signUpVendor) {
-                signUpBuyerParams = {
-                  accountInformation: state.pages.signUpVendor.accountInformation.set('userType', UserType.Buyer)
-                };
-              }
-              state = state.setIn(['pages', 'signUpBuyer'], immutable(await PageSignUpBuyer.init(signUpBuyerParams)));
+              state = state.setIn(['pages', 'signUpBuyer'], immutable(await PageSignUpBuyer.init(msg.value.page.value)));
               break;
             case 'signUpVendor':
-              let signUpVendorParams = {};
-              if (outgoingPage.tag === 'signUpBuyer' && state.pages.signUpBuyer) {
-                signUpVendorParams = {
-                  accountInformation: state.pages.signUpBuyer.accountInformation.set('userType', UserType.Vendor)
-                };
-              }
-              state = state.setIn(['pages', 'signUpVendor'], immutable(await PageSignUpVendor.init(signUpVendorParams)));
+              state = state.setIn(['pages', 'signUpVendor'], immutable(await PageSignUpVendor.init(msg.value.page.value)));
               break;
             case 'signUpProgramStaff':
-              state = state.setIn(['pages', 'signUpProgramStaff'], immutable(await PageSignUpProgramStaff.init({})));
+              state = state.setIn(['pages', 'signUpProgramStaff'], immutable(await PageSignUpProgramStaff.init(msg.value.page.value)));
               break;
             case 'signOut':
               state = state.setIn(['pages', 'signOut'], immutable(await PageSignOut.init(null)));
               break;
             case 'changePassword':
-              state = state.setIn(['pages', 'changePassword'], immutable(await PageChangePassword.init({
-                userId: get(state.session, ['user', 'id'], '')
-              })));
+              state = state.setIn(['pages', 'changePassword'], immutable(await PageChangePassword.init(msg.value.page.value)));
               break;
             case 'resetPassword':
               state = state.setIn(['pages', 'resetPassword'], immutable(await PageResetPassword.init(msg.value.page.value)));
               break;
             case 'forgotPassword':
               state = state.setIn(['pages', 'forgotPassword'], immutable(await PageForgotPassword.init(null)));
+              break;
+            case 'termsAndConditions':
+              state = state.setIn(['pages', 'termsAndConditions'], immutable(await PageTermsAndConditions.init(msg.value.page.value)));
               break;
             case 'noticeChangePassword':
               state = state.setIn(['pages', 'noticeChangePassword'], immutable(await PageNoticeChangePassword.init(null)));
@@ -211,6 +210,15 @@ const update: Update<State, Msg> = (state, msg) => {
         mapChildMsg: value => ({ tag: 'pageForgotPassword', value }),
         childStatePath: ['pages', 'forgotPassword'],
         childUpdate: PageForgotPassword.update,
+        childMsg: msg.value
+      });
+
+    case 'pageTermsAndConditions':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageTermsAndConditions', value }),
+        childStatePath: ['pages', 'termsAndConditions'],
+        childUpdate: PageTermsAndConditions.update,
         childMsg: msg.value
       });
 

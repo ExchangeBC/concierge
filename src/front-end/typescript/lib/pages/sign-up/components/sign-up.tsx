@@ -1,13 +1,14 @@
 import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as AccountInformation from 'front-end/lib/pages/sign-up/components/account-information';
 import { ProfileComponent } from 'front-end/lib/pages/sign-up/types';
+import FixedBar from 'front-end/lib/views/fixed-bar';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { isArray } from 'lodash';
-import { default as React, ReactElement } from 'react';
-import { Col, Container, Row } from 'reactstrap';
+import { default as React } from 'react';
+import { Col, Row } from 'reactstrap';
 import { ADT } from 'shared/lib/types';
 
 export interface State<ProfileState> {
@@ -81,9 +82,12 @@ export function update<PS, PM>(Profile: ProfileComponent<PS, PM>): Update<State<
             const result = await api.createUser(user);
             switch (result.tag) {
               case 'valid':
-                dispatch({ tag:
-                  '@newUrl',
-                  value: { tag: 'landing', value: null }
+                dispatch({
+                  tag: '@newUrl',
+                  value: {
+                    tag: 'termsAndConditions',
+                    value: { userId: result.value._id }
+                  }
                 });
                 return state;
               case 'invalid':
@@ -111,20 +115,6 @@ function isValid<PS, PM>(state: State<PS>, Profile: ProfileComponent<PS, PM>): b
   const providedRequiredFields = !!(info.email.value && info.password.value && info.confirmPassword.value);
   return providedRequiredFields && !isInvalid(state, Profile);
 }
-
-export const Buttons: View<{ children: Array<ReactElement<any>> }> = ({ children }) => {
-  return (
-    <div className='fixed-bottom bg-light py-3 border-top'>
-      <Container>
-        <Row>
-          <Col xs='12' className='d-flex flex-md-row-reverse justify-content-xs-center justify-content-md-start align-items-center'>
-            {children}
-          </Col>
-        </Row>
-      </Container>
-    </div>
-  );
-};
 
 function view<PS, PM>(Profile: ProfileComponent<PS, PM>): ComponentView<State<PS>, Msg<PM>> {
   return props => {
@@ -160,12 +150,12 @@ function view<PS, PM>(Profile: ProfileComponent<PS, PM>): ComponentView<State<PS
             <Profile.view state={state.profile} dispatch={dispatchProfile} />
           </Col>
         </Row>
-        <Buttons>
+        <FixedBar location='bottom'>
           <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={createAccount} loading={isLoading} disabled={isDisabled}>
             Create Account
           </LoadingButton>
           <Link href='/' text='Cancel' textColor='secondary' disabled={isLoading} />
-        </Buttons>
+        </FixedBar>
       </div>
     );
   };

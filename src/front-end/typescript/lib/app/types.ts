@@ -13,6 +13,7 @@ import * as PageSignOut from 'front-end/lib/pages/sign-out';
 import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
+import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
 import { ADT } from 'shared/lib/types';
 
 export type Page
@@ -22,9 +23,10 @@ export type Page
   | ADT<'signUpVendor', PageSignUpVendor.Params>
   | ADT<'signUpProgramStaff', PageSignUpProgramStaff.Params>
   | ADT<'signOut', null>
-  | ADT<'changePassword', null>
+  | ADT<'changePassword', PageChangePassword.Params>
   | ADT<'resetPassword', PageResetPassword.Params>
   | ADT<'forgotPassword', null>
+  | ADT<'termsAndConditions', PageTermsAndConditions.Params>
   | ADT<'settings', null>
   | ADT<'userList', null>
   | ADT<'requestForInformationList', null>
@@ -48,6 +50,7 @@ export interface State {
     changePassword?: Immutable<PageChangePassword.State>;
     resetPassword?: Immutable<PageResetPassword.State>;
     forgotPassword?: Immutable<PageForgotPassword.State>;
+    termsAndConditions?: Immutable<PageTermsAndConditions.State>;
     noticeNotFound?: Immutable<PageNoticeNotFound.State>;
     noticeChangePassword?: Immutable<PageNoticeChangePassword.State>;
     noticeResetPassword?: Immutable<PageNoticeResetPassword.State>;
@@ -66,6 +69,7 @@ type InnerMsg
   | ADT<'pageChangePassword', PageChangePassword.Msg>
   | ADT<'pageResetPassword', PageResetPassword.Msg>
   | ADT<'pageForgotPassword', PageForgotPassword.Msg>
+  | ADT<'pageTermsAndConditions', PageTermsAndConditions.Msg>
   | ADT<'pageNoticeNotFound', PageNoticeNotFound.Msg>
   | ADT<'pageNoticeChangePassword', PageNoticeChangePassword.Msg>
   | ADT<'pageNoticeResetPassword', PageNoticeResetPassword.Msg>
