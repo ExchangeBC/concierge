@@ -1,8 +1,10 @@
 import * as crud from 'back-end/lib/crud';
 import loggerHook from 'back-end/lib/hooks/logger';
-import sessionResource from 'back-end/lib/resources/session';
-import userResource from 'back-end/lib/resources/user';
-import frontEndRouter from 'back-end/lib/routers/front-end';
+import ForgotPasswordTokenResource from 'back-end/lib/resources/forgot-password-token';
+import SessionResource from 'back-end/lib/resources/session';
+import UserResource from 'back-end/lib/resources/user';
+import FrontEndRouter from 'back-end/lib/routers/front-end';
+import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { addHooksToRoute, FileResponseBody, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route, Router } from 'back-end/lib/server';
@@ -24,13 +26,15 @@ export async function connectToDatabase(mongoUrl: string): Promise<mongoose.Conn
 export interface AvailableModels {
   Session: SessionSchema.Model;
   User: UserSchema.Model;
+  ForgotPasswordToken: ForgotPasswordTokenSchema.Model;
 }
 
 export function createModels(): AvailableModels {
   // Add new models to this object.
   return {
-    Session: mongoose.model(SessionSchema.NAME, SessionSchema.schema),
-    User: mongoose.model(UserSchema.NAME, UserSchema.schema)
+    Session: mongoose.model('Session', SessionSchema.schema),
+    User: mongoose.model('User', UserSchema.schema),
+    ForgotPasswordToken: mongoose.model('ForgotPasswordToken', ForgotPasswordTokenSchema.schema)
   };
 };
 
@@ -43,8 +47,9 @@ export function createRouter(Models: AvailableModels): Router<SupportedResponseB
 
   // Add new resources to this array.
   const resources: Array<crud.Resource<AvailableModels, any, any, any, any, any, any, any, any, any, Session>> = [
-    userResource,
-    sessionResource
+    UserResource,
+    SessionResource,
+    ForgotPasswordTokenResource
   ];
 
   // Define CRUD routes.
@@ -68,7 +73,7 @@ export function createRouter(Models: AvailableModels): Router<SupportedResponseB
     // API routes.
     flippedConcat(crudRoutes),
     // Front-end router.
-    flippedConcat(frontEndRouter),
+    flippedConcat(FrontEndRouter),
     // Add global hooks to all routes.
     map((route: Route<any, any, any, any, any, Session>) => addHooksToRoute(hooks, route))
   ])([]);

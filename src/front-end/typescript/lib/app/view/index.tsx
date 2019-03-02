@@ -3,8 +3,10 @@ import Footer from 'front-end/lib/app/view/footer';
 import Nav from 'front-end/lib/app/view/nav';
 import { AppMsg, ComponentMsg, ComponentView, Dispatch, Immutable, mapAppDispatch, newUrl } from 'front-end/lib/framework';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
+import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
+import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
@@ -90,6 +92,14 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageChangePassword', value })}
           View={PageChangePassword.view} />
       );
+    case 'forgotPassword':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.forgotPassword}
+          mapPageMsg={value => ({ tag: 'pageForgotPassword', value })}
+          View={PageForgotPassword.view} />
+      );
     case 'noticeNotFound':
       return (
         <ViewPage
@@ -105,6 +115,14 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.noticeChangePassword}
           mapPageMsg={value => ({ tag: 'pageNoticeChangePassword', value })}
           View={PageNoticeChangePassword.view} />
+      );
+    case 'noticeForgotPassword':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.noticeForgotPassword}
+          mapPageMsg={value => ({ tag: 'pageNoticeForgotPassword', value })}
+          View={PageNoticeForgotPassword.view} />
       );
     // TODO remove
     default:

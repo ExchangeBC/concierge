@@ -1,8 +1,10 @@
 import { AppMsg, Immutable } from 'front-end/lib/framework';
 import { Session } from 'front-end/lib/http/api';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
+import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
+import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
@@ -19,11 +21,13 @@ export type Page
   | ADT<'signUpProgramStaff', PageSignUpProgramStaff.Params>
   | ADT<'signOut', null>
   | ADT<'changePassword', null>
+  | ADT<'forgotPassword', null>
   | ADT<'settings', null>
   | ADT<'userList', null>
   | ADT<'requestForInformationList', null>
   | ADT<'noticeNotFound', PageNoticeNotFound.Params>
-  | ADT<'noticeChangePassword', PageNoticeChangePassword.Params>;
+  | ADT<'noticeChangePassword', PageNoticeChangePassword.Params>
+  | ADT<'noticeForgotPassword', PageNoticeForgotPassword.Params>;
 
 export interface State {
   ready: boolean;
@@ -38,8 +42,10 @@ export interface State {
     signUpProgramStaff?: Immutable<PageSignUpProgramStaff.State>;
     signOut?: Immutable<PageSignOut.State>;
     changePassword?: Immutable<PageChangePassword.State>;
+    forgotPassword?: Immutable<PageForgotPassword.State>;
     noticeNotFound?: Immutable<PageNoticeNotFound.State>;
     noticeChangePassword?: Immutable<PageNoticeChangePassword.State>;
+    noticeForgotPassword?: Immutable<PageNoticeForgotPassword.State>;
   };
 }
 
@@ -52,7 +58,9 @@ type InnerMsg
   | ADT<'pageSignUpProgramStaff', PageSignUpProgramStaff.Msg>
   | ADT<'pageSignOut', PageSignOut.Msg>
   | ADT<'pageChangePassword', PageChangePassword.Msg>
+  | ADT<'pageForgotPassword', PageForgotPassword.Msg>
   | ADT<'pageNoticeNotFound', PageNoticeNotFound.Msg>
-  | ADT<'pageNoticeChangePassword', PageNoticeChangePassword.Msg>;
+  | ADT<'pageNoticeChangePassword', PageNoticeChangePassword.Msg>
+  | ADT<'pageNoticeForgotPassword', PageNoticeForgotPassword.Msg>;
 
 export type Msg = AppMsg<InnerMsg, Page>;

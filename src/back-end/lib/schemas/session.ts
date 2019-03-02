@@ -5,10 +5,6 @@ import * as mongoose from 'mongoose';
 import mongooseDefault from 'mongoose';
 import { parseUserType, UserType } from 'shared/lib/types';
 
-// tslint:disable no-console
-
-export const NAME = 'Session';
-
 interface SessionUser {
   id: mongoose.Types.ObjectId;
   type: UserType;

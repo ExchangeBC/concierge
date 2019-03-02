@@ -1,4 +1,5 @@
 import { AxiosResponse, default as axios } from 'axios';
+import * as ForgotPasswordTokenResource from 'shared/lib/resources/forgot-password-token';
 import * as UserResource from 'shared/lib/resources/user';
 import { HttpMethod, Profile, UserType } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
@@ -13,8 +14,6 @@ export function request(method: HttpMethod, path: string, data?: object): Promis
     }
   });
 }
-
-const fail = (value?: any) => invalid(value || null);
 
 export interface CreateUserRequestBody {
   email: string;
@@ -32,12 +31,12 @@ export async function createUser(user: CreateUserRequestBody): Promise<ValidOrIn
       case 400:
         return invalid(response.data as UserResource.CreateValidationErrors);
       default:
-        return fail({});
+        return invalid({});
     }
   } catch (error) {
     // tslint:disable:next-line no-console
     console.error(error);
-    return fail({});
+    return invalid({});
   }
 };
 
@@ -60,12 +59,12 @@ export async function updateUser(user: UpdateUserRequestBody): Promise<ValidOrIn
       case 401:
         return invalid(response.data as UserResource.CreateValidationErrors);
       default:
-        return fail({});
+        return invalid({});
     }
   } catch (error) {
     // tslint:disable:next-line no-console
     console.error(error);
-    return fail({});
+    return invalid({});
   }
 }
 
@@ -90,12 +89,12 @@ export async function createSession(email: string, password: string): Promise<Va
       case 401:
         return invalid(response.data as string[]);
       default:
-        return fail({});
+        return invalid([]);
     }
   } catch (error) {
     // tslint:disable:next-line no-console
     console.error(error);
-    return fail([]);
+    return invalid([]);
   }
 }
 
@@ -107,12 +106,12 @@ function withCurrentSession(method: HttpMethod): () => Promise<ValidOrInvalid<Se
         case 200:
           return valid(response.data as Session);
         default:
-          return fail();
+          return invalid(null);
       }
     } catch (error) {
       // tslint:disable:next-line no-console
       console.error(error);
-      return fail();
+      return invalid(null);
     }
   }
 }
@@ -120,3 +119,36 @@ function withCurrentSession(method: HttpMethod): () => Promise<ValidOrInvalid<Se
 export const getSession = withCurrentSession(HttpMethod.Get);
 
 export const deleteSession = withCurrentSession(HttpMethod.Delete);
+
+export async function createForgotPasswordToken(email: string): Promise<ValidOrInvalid<null, null>> {
+  try {
+    const response = await request(HttpMethod.Post, 'forgot-password-tokens', { email });
+    switch (response.status) {
+      case 201:
+        return valid(null);
+      default:
+        return invalid(null);
+    }
+  } catch (error) {
+    // tslint:disable:next-line no-console
+    console.error(error);
+    return invalid(null);
+  }
+}
+
+// i.e. Reset password using forgot-password token.
+export async function updateForgotPasswordToken(token: string, password: string): Promise<ValidOrInvalid<null, ForgotPasswordTokenResource.UpdateValidationErrors>> {
+  try {
+    const response = await request(HttpMethod.Put, `forgot-password-tokens/${token}`, { password });
+    switch (response.status) {
+      case 200:
+        return valid(null);
+      default:
+        return invalid(response.data as ForgotPasswordTokenResource.UpdateValidationErrors);
+    }
+  } catch (error) {
+    // tslint:disable:next-line no-console
+    console.error(error);
+    return invalid({});
+  }
+}

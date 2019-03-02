@@ -4,8 +4,6 @@ import * as mongoose from 'mongoose';
 import { PublicUser } from 'shared/lib/resources/user';
 import { Profile } from 'shared/lib/types';
 
-export const NAME = 'User';
-
 export interface Data {
   _id: mongoose.Types.ObjectId;
   createdAt: Date;

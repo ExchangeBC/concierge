@@ -1,5 +1,6 @@
 import * as UserSchema from 'back-end/lib/schemas/user';
 import * as mongoose from 'mongoose';
+import mongooseDefault from 'mongoose';
 import { invalid, valid, validateEmail as validateEmailShared, validatePassword as validatePasswordShared, Validation } from 'shared/lib/validators';
 
 interface HasEmail {
@@ -28,5 +29,14 @@ export async function validatePassword(password: string): Promise<Validation<str
       return validation;
     case 'valid':
       return valid(await UserSchema.hashPassword(validation.value));
+  }
+}
+
+export function validateObjectIdString(id: string): Validation<mongoose.Types.ObjectId> {
+  const isValid = mongooseDefault.Types.ObjectId.isValid(id);
+  if (isValid) {
+    return valid(mongooseDefault.Types.ObjectId(id));
+  } else {
+    return invalid([`${id} is not a valid ObjectId.`]);
   }
 }

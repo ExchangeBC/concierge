@@ -65,6 +65,11 @@ const router: Router<Page> = {
       auth: isSignedIn
     },
     {
+      path: '/forgot-password',
+      pageId: 'forgotPassword',
+      auth: isSignedOut
+    },
+    {
       path: '/settings',
       pageId: 'settings'
     },
@@ -79,6 +84,10 @@ const router: Router<Page> = {
     {
       path: '/notice/change-password',
       pageId: 'noticeChangePassword'
+    },
+    {
+      path: '/notice/forgot-password',
+      pageId: 'noticeForgotPassword'
     },
     {
       path: '*',
@@ -123,6 +132,11 @@ const router: Router<Page> = {
           tag: 'changePassword',
           value: null
         };
+      case 'forgotPassword':
+        return {
+          tag: 'forgotPassword',
+          value: null
+        };
       case 'settings':
         return {
           tag: 'settings',
@@ -141,6 +155,11 @@ const router: Router<Page> = {
       case 'noticeChangePassword':
         return {
           tag: 'noticeChangePassword',
+          value: null
+        };
+      case 'noticeForgotPassword':
+        return {
+          tag: 'noticeForgotPassword',
           value: null
         };
       case 'noticeNotFound':
@@ -173,6 +192,8 @@ const router: Router<Page> = {
         return '/sign-out';
       case 'changePassword':
         return '/change-password';
+      case 'forgotPassword':
+        return '/forgot-password';
       case 'settings':
         return '/settings';
       case 'userList':
@@ -181,6 +202,8 @@ const router: Router<Page> = {
         return '/request-for-information';
       case 'noticeChangePassword':
         return '/notice/change-password';
+      case 'noticeForgotPassword':
+        return '/notice/forgot-password';
       case 'noticeNotFound':
         return '/not-found';
     }

@@ -74,3 +74,9 @@ export function readOneSession(session: Session, id: string): boolean {
 export function deleteSession(session: Session, id: string): boolean {
   return isCurrentSession(id) || isOwnSession(session, id);
 }
+
+// Forgot Password Tokens.
+
+export function createForgotPasswordToken(session: Session): boolean {
+  return !isLoggedIn(session);
+}

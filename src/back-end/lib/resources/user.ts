@@ -6,14 +6,26 @@ import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, mapRequestBody } from 'back-end/lib/server';
 import { validateEmail, validatePassword } from 'back-end/lib/validators';
 import { isBoolean, isObject } from 'lodash';
-import { getString, identityAsync } from 'shared/lib';
-import { CreateResponseBody, CreateValidationErrors, DeleteResponseBody, ReadManyErrorResponseBody, ReadManyResponseBodyItem, ReadOneResponseBody, UpdateResponseBody, UpdateValidationErrors } from 'shared/lib/resources/user';
+import { getBoolean, getString, identityAsync } from 'shared/lib';
+import { CreateValidationErrors, PublicUser, UpdateValidationErrors } from 'shared/lib/resources/user';
 import { allValid, getInvalidValue, invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 import { validateProfile } from 'shared/lib/validators/profile';
 
 type CreateRequestBody = ValidOrInvalid<UserSchema.Data, CreateValidationErrors>;
 
+export type CreateResponseBody = PublicUser | CreateValidationErrors;
+
+export type ReadOneResponseBody = PublicUser | null;
+
+export type ReadManyResponseBodyItem = PublicUser;
+
+export type ReadManyErrorResponseBody = null;
+
 type UpdateRequestBody = ValidOrInvalid<InstanceType<UserSchema.Model>, UpdateValidationErrors>;
+
+type UpdateResponseBody = PublicUser | UpdateValidationErrors;
+
+export type DeleteResponseBody = null;
 
 async function validateCreateRequestBody(Model: UserSchema.Model, email: string, password: string, acceptedTerms: boolean, profile: object): Promise<CreateRequestBody> {
   const validatedEmail = await validateEmail(Model, email);
@@ -126,10 +138,9 @@ const resource: Resource = {
           }));
         }
         const body = request.body;
-        // TODO use getString
-        const email = body.email ? String(body.email) : '';
-        const password = body.password ? String(body.password) : '';
-        const acceptedTerms = isBoolean(body.acceptedTerms) ? body.acceptedTerms : false;
+        const email = getString(body, 'email');
+        const password = getString(body, 'password');
+        const acceptedTerms = getBoolean(body, 'acceptedTerms');
         const profile = isObject(body.profile) ? body.profile : {};
         const validatedBody = await validateCreateRequestBody(UserModel, email, password, acceptedTerms, profile);
         return mapRequestBody(request, validatedBody);
