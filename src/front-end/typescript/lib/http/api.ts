@@ -1,4 +1,5 @@
 import { AxiosResponse, default as axios } from 'axios';
+import shajs from 'sha.js';
 import * as ForgotPasswordTokenResource from 'shared/lib/resources/forgot-password-token';
 import * as UserResource from 'shared/lib/resources/user';
 import { HttpMethod, Profile, UserType } from 'shared/lib/types';
@@ -15,6 +16,12 @@ export function request(method: HttpMethod, path: string, data?: object): Promis
   });
 }
 
+// Use this function to hash passwords before sending them to the server.
+// It's important not to send plaintext passwords to the back-end.
+export function hashPassword(plaintext: string): string {
+  return shajs('sha256').update(plaintext).digest('base64');
+}
+
 export interface CreateUserRequestBody {
   email: string;
   password: string;
@@ -24,6 +31,7 @@ export interface CreateUserRequestBody {
 
 export async function createUser(user: CreateUserRequestBody): Promise<ValidOrInvalid<UserResource.PublicUser, UserResource.CreateValidationErrors>> {
   try {
+    user.password = hashPassword(user.password);
     const response = await request(HttpMethod.Post, 'users', user);
     switch (response.status) {
       case 201:
@@ -51,6 +59,8 @@ export interface UpdateUserRequestBody {
 
 export async function updateUser(user: UpdateUserRequestBody): Promise<ValidOrInvalid<UserResource.PublicUser, UserResource.UpdateValidationErrors>> {
   try {
+    user.currentPassword = user.currentPassword ? hashPassword(user.currentPassword) : undefined;
+    user.newPassword = user.newPassword ? hashPassword(user.newPassword) : undefined;
     const response = await request(HttpMethod.Put, `users/${user._id}`, user);
     switch (response.status) {
       case 200:
@@ -82,6 +92,7 @@ export interface Session {
 
 export async function createSession(email: string, password: string): Promise<ValidOrInvalid<Session, string[]>> {
   try {
+    password = hashPassword(password);
     const response = await request(HttpMethod.Post, 'sessions', { email, password });
     switch (response.status) {
       case 201:
@@ -139,6 +150,7 @@ export async function createForgotPasswordToken(email: string): Promise<ValidOrI
 // i.e. Reset password using forgot-password token.
 export async function updateForgotPasswordToken(token: string, userId: string, password: string): Promise<ValidOrInvalid<null, ForgotPasswordTokenResource.UpdateValidationErrors>> {
   try {
+    password = hashPassword(password);
     const response = await request(HttpMethod.Put, `forgot-password-tokens/${token}`, { userId, password });
     switch (response.status) {
       case 200:
