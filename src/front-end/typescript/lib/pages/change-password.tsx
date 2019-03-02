@@ -36,21 +36,21 @@ export const init: Init<Params, State> = async ({ userId }) => {
     loading: 0,
     userId,
     currentPassword: ShortText.init({
-      id: 'password',
+      id: 'change-password-password',
       required: true,
       type: 'password',
       label: 'Current Password',
       placeholder: 'Current Password'
     }),
     newPassword: ShortText.init({
-      id: 'password',
+      id: 'change-password-new-password',
       required: true,
       type: 'password',
       label: 'New Password',
       placeholder: 'New Password'
     }),
     confirmNewPassword: ShortText.init({
-      id: 'password',
+      id: 'change-password-confirm-new-password',
       required: true,
       type: 'password',
       label: 'Confirm New Password',

@@ -137,9 +137,9 @@ export async function createForgotPasswordToken(email: string): Promise<ValidOrI
 }
 
 // i.e. Reset password using forgot-password token.
-export async function updateForgotPasswordToken(token: string, password: string): Promise<ValidOrInvalid<null, ForgotPasswordTokenResource.UpdateValidationErrors>> {
+export async function updateForgotPasswordToken(token: string, userId: string, password: string): Promise<ValidOrInvalid<null, ForgotPasswordTokenResource.UpdateValidationErrors>> {
   try {
-    const response = await request(HttpMethod.Put, `forgot-password-tokens/${token}`, { password });
+    const response = await request(HttpMethod.Put, `forgot-password-tokens/${token}`, { userId, password });
     switch (response.status) {
       case 200:
         return valid(null);

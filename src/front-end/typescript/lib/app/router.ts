@@ -3,6 +3,7 @@ import { AuthLevel, RouteAuthDefinition, Router } from 'front-end/lib/framework'
 import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
+import { getString } from 'shared/lib';
 
 const isSignedOut: RouteAuthDefinition = {
   level: AuthLevel.SignedOut,
@@ -65,6 +66,10 @@ const router: Router<Page> = {
       auth: isSignedIn
     },
     {
+      path: '/reset-password/:forgotPasswordToken/:userId',
+      pageId: 'resetPassword'
+    },
+    {
       path: '/forgot-password',
       pageId: 'forgotPassword',
       auth: isSignedOut
@@ -84,6 +89,10 @@ const router: Router<Page> = {
     {
       path: '/notice/change-password',
       pageId: 'noticeChangePassword'
+    },
+    {
+      path: '/notice/reset-password',
+      pageId: 'noticeResetPassword'
     },
     {
       path: '/notice/forgot-password',
@@ -132,6 +141,14 @@ const router: Router<Page> = {
           tag: 'changePassword',
           value: null
         };
+      case 'resetPassword':
+        return {
+          tag: 'resetPassword',
+          value: {
+            forgotPasswordToken: getString(params, 'forgotPasswordToken'),
+            userId: getString(params, 'userId')
+          }
+        };
       case 'forgotPassword':
         return {
           tag: 'forgotPassword',
@@ -155,6 +172,11 @@ const router: Router<Page> = {
       case 'noticeChangePassword':
         return {
           tag: 'noticeChangePassword',
+          value: null
+        };
+      case 'noticeResetPassword':
+        return {
+          tag: 'noticeResetPassword',
           value: null
         };
       case 'noticeForgotPassword':
@@ -192,6 +214,8 @@ const router: Router<Page> = {
         return '/sign-out';
       case 'changePassword':
         return '/change-password';
+      case 'resetPassword':
+        return `/reset-password/${page.value.forgotPasswordToken}/${page.value.userId}`;
       case 'forgotPassword':
         return '/forgot-password';
       case 'settings':
@@ -202,6 +226,8 @@ const router: Router<Page> = {
         return '/request-for-information';
       case 'noticeChangePassword':
         return '/notice/change-password';
+      case 'noticeResetPassword':
+        return '/notice/reset-password';
       case 'noticeForgotPassword':
         return '/notice/forgot-password';
       case 'noticeNotFound':

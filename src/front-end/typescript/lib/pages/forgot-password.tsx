@@ -86,7 +86,7 @@ export const view: ComponentView<State, Msg> = props => {
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
     <div>
-      <Row className='mb-3'>
+      <Row>
         <Col xs='12'>
           <h1>Forgot Your Password?</h1>
         </Col>

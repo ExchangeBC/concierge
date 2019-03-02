@@ -8,6 +8,8 @@ import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
+import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
+import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
 import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
@@ -92,6 +94,14 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageChangePassword', value })}
           View={PageChangePassword.view} />
       );
+    case 'resetPassword':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.resetPassword}
+          mapPageMsg={value => ({ tag: 'pageResetPassword', value })}
+          View={PageResetPassword.view} />
+      );
     case 'forgotPassword':
       return (
         <ViewPage
@@ -115,6 +125,14 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.noticeChangePassword}
           mapPageMsg={value => ({ tag: 'pageNoticeChangePassword', value })}
           View={PageNoticeChangePassword.view} />
+      );
+    case 'noticeResetPassword':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.noticeResetPassword}
+          mapPageMsg={value => ({ tag: 'pageNoticeResetPassword', value })}
+          View={PageNoticeResetPassword.view} />
       );
     case 'noticeForgotPassword':
       return (

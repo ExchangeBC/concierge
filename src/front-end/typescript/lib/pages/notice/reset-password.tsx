@@ -9,12 +9,12 @@ export type State = Notice.State;
 
 export const init: Init<Params, State> = async () => {
   return {
-    title: 'You\'ve Got Mail',
-    body: 'We have sent you an email with instructions on how to reset your password.',
+    title: 'Password Reset',
+    body: 'Your password has been successfully reset.',
     button: {
-      text: 'Return to the Home Page',
+      text: 'Sign In',
       page: {
-        tag: 'landing',
+        tag: 'signIn',
         value: null
       }
     }
