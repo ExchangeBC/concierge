@@ -18,9 +18,10 @@ import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
 import { default as React, ReactElement } from 'react';
 import { Col, Container, Row } from 'reactstrap';
+import { UserType } from 'shared/lib/types';
 
 interface ViewPageProps<PageState, PageMsg> {
-  dispatch: Dispatch<AppMsg<Msg, Page>>;
+  dispatch: Dispatch<AppMsg<Msg, Page, UserType>>;
   pageState?: Immutable<PageState>;
   View: ComponentView<PageState, ComponentMsg<PageMsg, Page>>;
   mapPageMsg(msg: ComponentMsg<PageMsg, Page>): Msg;

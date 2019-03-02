@@ -1,5 +1,5 @@
 import { Msg, State } from 'front-end/lib/app/types';
-import { AuthLevel, Dispatch, Immutable, immutable, redirect, Update, updateAppChild } from 'front-end/lib/framework';
+import { Dispatch, Immutable, immutable, redirect, Update, updateAppChild } from 'front-end/lib/framework';
 import { deleteSession, getSession, Session } from 'front-end/lib/http/api';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
@@ -48,17 +48,23 @@ const update: Update<State, Msg> = (state, msg) => {
         async dispatch => {
           const outgoingPage = state.activePage;
           const auth = msg.value.auth;
-          switch (auth.level) {
-            case AuthLevel.Any:
+          switch (auth.level.tag) {
+            case 'any':
               break;
-            case AuthLevel.SignedIn:
+            case 'signedIn':
               if (!get(state.session, 'user')) {
                 return signOut(state, dispatch, auth.redirect, auth.signOut);
               } else {
                 break;
               }
-            case AuthLevel.SignedOut:
+            case 'signedOut':
               if (get(state.session, 'user')) {
+                return signOut(state, dispatch, auth.redirect, auth.signOut);
+              } else {
+                break;
+              }
+            case 'userType':
+              if (!auth.level.value.includes(get(state.session, ['user', 'type']))) {
                 return signOut(state, dispatch, auth.redirect, auth.signOut);
               } else {
                 break;

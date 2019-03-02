@@ -14,6 +14,7 @@ import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
+import { UserType } from 'shared/lib/types';
 import { ADT } from 'shared/lib/types';
 
 export type Page
@@ -75,4 +76,4 @@ type InnerMsg
   | ADT<'pageNoticeResetPassword', PageNoticeResetPassword.Msg>
   | ADT<'pageNoticeForgotPassword', PageNoticeForgotPassword.Msg>;
 
-export type Msg = AppMsg<InnerMsg, Page>;
+export type Msg = AppMsg<InnerMsg, Page, UserType>;

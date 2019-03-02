@@ -97,7 +97,7 @@ const AcceptedAt: ComponentView<State, Msg> = props => {
   if (state.acceptedTermsAt) {
     return (
       <FixedBar location='bottom'>
-        <p className='font-weight-bold text-align-right mb-0'>
+        <p className='text-align-right mb-0'>
           You agreed to these Terms & Conditions on {formatDate(state.acceptedTermsAt)} at {formatTime(state.acceptedTermsAt, true)}.
         </p>
       </FixedBar>

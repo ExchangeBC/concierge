@@ -26,7 +26,7 @@ interface UpdateChildParams<ParentState, ParentMsg, ChildState, ChildMsg> {
   mapChildMsg(msg: ChildMsg): ParentMsg,
 }
 
-export function updateAppChild<PS, PM, CS, CM, Page>(params: UpdateChildParams<PS, AppMsg<PM, Page>, CS, ComponentMsg<CM, Page>>): UpdateReturnValue<PS, AppMsg<PM, Page>> {
+export function updateAppChild<PS, PM, CS, CM, Page, UserType>(params: UpdateChildParams<PS, AppMsg<PM, Page, UserType>, CS, ComponentMsg<CM, Page>>): UpdateReturnValue<PS, AppMsg<PM, Page, UserType>> {
   const { childStatePath, childUpdate, childMsg, mapChildMsg } = params;
   let { state } = params;
   const childState = state.getIn(childStatePath);
@@ -35,7 +35,7 @@ export function updateAppChild<PS, PM, CS, CM, Page>(params: UpdateChildParams<P
   state = state.setIn(childStatePath, newChildState);
   let asyncStateUpdate;
   if (newAsyncChildState) {
-    asyncStateUpdate = async (dispatch: Dispatch<AppMsg<PM, Page>>) => {
+    asyncStateUpdate = async (dispatch: Dispatch<AppMsg<PM, Page, UserType>>) => {
       const mappedDispatch = mapAppDispatch(dispatch, mapChildMsg);
       return state.setIn(childStatePath, await newAsyncChildState(mappedDispatch));
     }
@@ -81,41 +81,38 @@ export interface Component<Params, State, Msg> {
   view: ComponentView<State, Msg>;
 }
 
-// TODO refactor type naming in this module for this type to be useful.
-// export type PageComponent<Params, State, Msg, Page> = Component<Params, State, ComponentMsg<Msg, Page>>;
+export type AuthLevel<UserType>
+  = ADT<'any'>
+  | ADT<'signedIn'>
+  | ADT<'signedOut'>
+  | ADT<'userType', UserType[]>;
 
-export interface RouteAuthDefinition {
-  level: AuthLevel;
+export interface RouteAuthDefinition<UserType> {
+  level: AuthLevel<UserType>;
   redirect: string;
   signOut: boolean;
 }
 
-export interface RouteDefinition {
+export interface RouteDefinition<UserType> {
   path: string;
   pageId: string;
-  auth?: RouteAuthDefinition;
+  auth?: RouteAuthDefinition<UserType>;
 }
 
-export interface Router<State, Page> {
-  routes: RouteDefinition[];
+export interface Router<State, Page, UserType> {
+  routes: Array<RouteDefinition<UserType>>;
   locationToPage(pageId: string, params: object, state: Immutable<State>): Page;
   pageToUrl(page: Page): string;
 }
 
-export enum AuthLevel {
-  Any = 'ANY',
-  SignedIn = 'SIGNED_IN',
-  SignedOut = 'SIGNED_OUT'
-}
-
-export interface IncomingPageMsgValue<Page> {
+export interface IncomingPageMsgValue<Page, UserType> {
   page: Page;
-  auth: RouteAuthDefinition;
+  auth: RouteAuthDefinition<UserType>;
 }
 
 export type BeforeIncomingPageMsg = ADT<'@beforeIncomingPage'>;
 
-export type IncomingPageMsg<Page> = ADT<'@incomingPage', IncomingPageMsgValue<Page>>;
+export type IncomingPageMsg<Page, UserType> = ADT<'@incomingPage', IncomingPageMsgValue<Page, UserType>>;
 
 export type RedirectMsg = ADT<'@redirect', string>;
 
@@ -148,15 +145,15 @@ export type GlobalMsg<Page> = NewUrlMsg<Page> | ReplaceUrlMsg<Page> | RedirectMs
 
 export type ComponentMsg<Msg, Page> = Msg | GlobalMsg<Page>;
 
-export type AppMsg<Msg, Page> = ComponentMsg<Msg, Page> | BeforeIncomingPageMsg | IncomingPageMsg<Page>;
+export type AppMsg<Msg, Page, UserType> = ComponentMsg<Msg, Page> | BeforeIncomingPageMsg | IncomingPageMsg<Page, UserType>;
 
-export interface App<State, Msg, Page> extends Component<null, State, AppMsg<Msg, Page>> {
-  router: Router<State, Page>;
+export interface App<State, Msg, Page, UserType> extends Component<null, State, AppMsg<Msg, Page, UserType>> {
+  router: Router<State, Page, UserType>;
 }
 
 export type Dispatch<Msg> = (msg: Msg) => Promise<any>;
 
-export function mapAppDispatch<ParentMsg, ChildMsg, Page>(dispatch: Dispatch<AppMsg<ParentMsg, Page>>, fn: (childMsg: ComponentMsg<ChildMsg, Page>) => AppMsg<ParentMsg, Page>): Dispatch<ComponentMsg<ChildMsg, Page>> {
+export function mapAppDispatch<ParentMsg, ChildMsg, Page, UserType>(dispatch: Dispatch<AppMsg<ParentMsg, Page, UserType>>, fn: (childMsg: ComponentMsg<ChildMsg, Page>) => AppMsg<ParentMsg, Page, UserType>): Dispatch<ComponentMsg<ChildMsg, Page>> {
   return childMsg => {
     if ((childMsg as GlobalMsg<Page>).tag === '@newUrl' || (childMsg as GlobalMsg<Page>).tag === '@replaceUrl') {
       return dispatch(childMsg as GlobalMsg<Page>);
@@ -189,11 +186,11 @@ export interface StateManager<State, Msg> {
   getState(): Immutable<State>;
 }
 
-export function initializeRouter<State, Msg, Page>(router: Router<State, Page>, stateManager: StateManager<State, AppMsg<Msg, Page>>): void {
+export function initializeRouter<State, Msg, Page, UserType>(router: Router<State, Page, UserType>, stateManager: StateManager<State, AppMsg<Msg, Page, UserType>>): void {
   // Bind all routes for pushState.
   router.routes.forEach(({ path, pageId, auth }) => {
     const authDefinition = defaults(auth, {
-      level: AuthLevel.Any,
+      level: { tag: 'any', value: undefined },
       redirect: '/',
       signOut: false
     });
@@ -227,21 +224,21 @@ export function runReplaceUrl(path: string): void {
   page.redirect(path);
 }
 
-export async function start<State, Msg extends ADT<any, any>, Page>(app: App<State, Msg, Page>, element: HTMLElement, debug: boolean): Promise<StateManager<State, AppMsg<Msg, Page>>> {
+export async function start<State, Msg extends ADT<any, any>, Page, UserType>(app: App<State, Msg, Page, UserType>, element: HTMLElement, debug: boolean): Promise<StateManager<State, AppMsg<Msg, Page, UserType>>> {
   // Initialize state.
   // We do not need the RecordFactory, so we create the Record immediately.
   let state = Record(await app.init(null))({});
   // Set up subscription state.
-  const subscriptions: Array<StateSubscription<State, AppMsg<Msg, Page>>> = [];
-  const subscribe: StateSubscribe<State, AppMsg<Msg, Page>> = fn => (subscriptions.push(fn) && true) || false;
-  const unsubscribe: StateUnsubscribe<State, AppMsg<Msg, Page>> = fn => (remove(subscriptions, a => a === fn) && true) || false;
+  const subscriptions: Array<StateSubscription<State, AppMsg<Msg, Page, UserType>>> = [];
+  const subscribe: StateSubscribe<State, AppMsg<Msg, Page, UserType>> = fn => (subscriptions.push(fn) && true) || false;
+  const unsubscribe: StateUnsubscribe<State, AppMsg<Msg, Page, UserType>> = fn => (remove(subscriptions, a => a === fn) && true) || false;
   // Set up state accessor function.
   const getState = () => state;
   // Initialize state mutation promise chain.
   // i.e. Mutate state sequentially in a single thread.
   let promise = Promise.resolve();
   // Set up dispatch function to queue state mutations.
-  const dispatch: Dispatch<AppMsg<Msg, Page>> = msg => {
+  const dispatch: Dispatch<AppMsg<Msg, Page, UserType>> = msg => {
     // tslint:disable:next-line no-console
     if (debug) { console.log('dispatch', msg); }
     promise = promise
@@ -277,7 +274,7 @@ export async function start<State, Msg extends ADT<any, any>, Page>(app: App<Sta
     return promise;
   };
   // Render the view whenever state changes.
-  const render = (state: Immutable<State>, dispatch: Dispatch<AppMsg<Msg, Page>>): void => {
+  const render = (state: Immutable<State>, dispatch: Dispatch<AppMsg<Msg, Page, UserType>>): void => {
     ReactDOM.render(
       <app.view state={state} dispatch={dispatch} />,
       element

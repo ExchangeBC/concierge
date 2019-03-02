@@ -1,23 +1,35 @@
 import { Page, State } from 'front-end/lib/app/types';
-import { AuthLevel, RouteAuthDefinition, Router } from 'front-end/lib/framework';
+import { RouteAuthDefinition, Router } from 'front-end/lib/framework';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import { get } from 'lodash';
 import { getString } from 'shared/lib';
 import { UserType } from 'shared/lib/types';
 
-const isSignedOut: RouteAuthDefinition = {
-  level: AuthLevel.SignedOut,
+const isSignedOut: RouteAuthDefinition<UserType> = {
+  level: { tag: 'signedOut', value: undefined },
   redirect: '/',
   signOut: false
 };
 
-const isSignedIn: RouteAuthDefinition = {
-  level: AuthLevel.SignedIn,
+const isSignedIn: RouteAuthDefinition<UserType> = {
+  level: { tag: 'signedIn', value: undefined },
   redirect: '/sign-in',
   signOut: false
 };
 
-const router: Router<State, Page> = {
+const isBuyerOrVendor: RouteAuthDefinition<UserType> = {
+  level: { tag: 'userType', value: [UserType.Buyer, UserType.Vendor] },
+  redirect: '/',
+  signOut: false
+};
+
+const isProgramStaff: RouteAuthDefinition<UserType> = {
+  level: { tag: 'userType', value: [UserType.ProgramStaff] },
+  redirect: '/',
+  signOut: false
+};
+
+const router: Router<State, Page, UserType> = {
 
   routes: [
     {
@@ -30,7 +42,7 @@ const router: Router<State, Page> = {
       auth: isSignedOut
     },
     {
-      // Alias the buyer page here.
+      // Alias the buyer sign-up page here.
       path: '/sign-up',
       pageId: 'signUpBuyer',
       auth: isSignedOut
@@ -48,13 +60,13 @@ const router: Router<State, Page> = {
     {
       path: '/sign-up/program-staff',
       pageId: 'signUpProgramStaff',
-      auth: isSignedOut
+      auth: isProgramStaff
     },
     {
       path: '/sign-out',
       pageId: 'signOut',
       auth: {
-        level: AuthLevel.SignedOut,
+        level: { tag: 'signedOut', value: undefined },
         redirect: '/sign-out',
         // signOut must be true, or this will trigger an infinite loop.
         signOut: true
@@ -76,21 +88,23 @@ const router: Router<State, Page> = {
     },
     {
       path: '/settings',
-      pageId: 'settings'
+      pageId: 'settings',
+      auth: isSignedIn
     },
     {
       path: '/terms-and-conditions',
       pageId: 'termsAndConditions',
-      // TODO restrict to Buyers and Vendors
-      auth: isSignedIn
+      auth: isBuyerOrVendor
     },
     {
       path: '/users',
-      pageId: 'userList'
+      pageId: 'userList',
+      auth: isProgramStaff
     },
     {
       path: '/requests-for-information',
-      pageId: 'requestForInformationList'
+      pageId: 'requestForInformationList',
+      auth: isSignedIn
     },
     {
       path: '/notice/change-password',
