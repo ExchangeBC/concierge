@@ -4,8 +4,8 @@ import Nav from 'front-end/lib/app/view/nav';
 import { AppMsg, ComponentMsg, ComponentView, Dispatch, Immutable, mapAppDispatch, newUrl } from 'front-end/lib/framework';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
-import * as PageLoading from 'front-end/lib/pages/loading';
-import * as PageSay from 'front-end/lib/pages/say';
+import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
+import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
 import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
@@ -23,11 +23,11 @@ interface ViewPageProps<PageState, PageMsg> {
 
 function ViewPage<PageState, PageMsg>(props: ViewPageProps<PageState, PageMsg>): ReactElement<ViewPageProps<PageState, PageMsg>> {
   const { dispatch, pageState, mapPageMsg, View } = props;
-  if (pageState) {
+  if (pageState !== undefined) {
     const dispatchPage: Dispatch<ComponentMsg<PageMsg, Page>> = mapAppDispatch(dispatch, mapPageMsg);
     return (<View dispatch={dispatchPage} state={pageState} />);
   } else {
-    dispatch(newUrl({ tag: 'say' as 'say', value: { message: 'Not Found' }}));
+    dispatch(newUrl({ tag: 'noticeNotFound' as 'noticeNotFound', value: null }));
     return (<div></div>);
   }
 }
@@ -41,14 +41,6 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.landing}
           mapPageMsg={value => ({ tag: 'pageLanding', value })}
           View={PageLanding.view} />
-      );
-    case 'loading':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.loading}
-          mapPageMsg={value => ({ tag: 'pageLoading', value })}
-          View={PageLoading.view} />
       );
     case 'signIn':
       return (
@@ -98,13 +90,21 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageChangePassword', value })}
           View={PageChangePassword.view} />
       );
-    case 'say':
+    case 'noticeNotFound':
       return (
         <ViewPage
           dispatch={dispatch}
-          pageState={state.pages.say}
-          mapPageMsg={value => ({ tag: 'pageSay', value })}
-          View={PageSay.view} />
+          pageState={state.pages.noticeNotFound}
+          mapPageMsg={value => ({ tag: 'pageNoticeNotFound', value })}
+          View={PageNoticeNotFound.view} />
+      );
+    case 'noticeChangePassword':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.noticeChangePassword}
+          mapPageMsg={value => ({ tag: 'pageNoticeChangePassword', value })}
+          View={PageNoticeChangePassword.view} />
       );
     // TODO remove
     default:

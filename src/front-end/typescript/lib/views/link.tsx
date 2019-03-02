@@ -1,10 +1,13 @@
+import AppRouter from 'front-end/lib/app/router';
+import { Page } from 'front-end/lib/app/types';
 import { default as React, MouseEvent, ReactElement } from 'react';
 import { Button } from 'reactstrap';
 
 // TODO refactor this view and provide a better, cleaner API.
 
 interface Props {
-  href: string;
+  href?: string;
+  page?: Page;
   text?: string;
   buttonColor?: string;
   textColor?: string;
@@ -19,7 +22,6 @@ interface Props {
 
 function Link(props: Props) {
   const {
-    href,
     buttonColor = 'link',
     textColor = 'primary',
     className = '',
@@ -31,6 +33,7 @@ function Link(props: Props) {
     children = [],
     onClick
   } = props;
+  const href = props.page ? AppRouter.pageToUrl(props.page) : (props.href || '');
   const aProps = {
     onClick: (e: MouseEvent<HTMLAnchorElement>) => {
       if (disabled) { e.preventDefault(); }

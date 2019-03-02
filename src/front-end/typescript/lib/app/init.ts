@@ -1,15 +1,15 @@
 import { State } from 'front-end/lib/app/types';
 import { immutable, Init } from 'front-end/lib/framework';
-import * as PageLoading from 'front-end/lib/pages/loading';
+import * as PageLanding from 'front-end/lib/pages/landing';
 
 const init: Init<null, State> = async () => {
   return {
     ready: false,
     isNavOpen: false,
     session: undefined,
-    activePage: { tag: 'loading', value: null },
+    activePage: { tag: 'landing', value: null },
     pages: {
-      loading: immutable(await PageLoading.init(null))
+      landing: immutable(await PageLanding.init(null))
     }
   };
 };

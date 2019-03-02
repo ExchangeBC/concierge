@@ -16,7 +16,7 @@ export type Msg = ComponentMsg<ADT<'noop'>, Page>;
 export const init: Init<null, State> = async () => {
   const session = await deleteSession();
   if (!get(session, 'user')) {
-    return { message: 'You have been successfully signed out.' };
+    return { message: 'You have been successfully signed out. Thank you for using the Concierge Web Application.' };
   } else {
     return { message: 'Signing out of the application failed.' };
   }
@@ -29,14 +29,14 @@ export const update: Update<State, Msg> = (state, msg) => {
 export const view: ComponentView<State, Msg> = ({ state }) => {
   return (
     <div>
-      <Row>
+      <Row className='mb-3 pb-3'>
         <Col xs='12'>
           {state.message}
         </Col>
       </Row>
-      <Row className='mt-3'>
+      <Row>
         <Col xs='12'>
-          <Link href='/' text='Return to the home page.' buttonColor='secondary' />
+          <Link href='/' text='Return to the Home Page.' buttonColor='secondary' />
         </Col>
       </Row>
     </div>

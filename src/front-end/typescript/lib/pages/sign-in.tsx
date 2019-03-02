@@ -73,7 +73,7 @@ export const update: Update<State, Msg> = (state, msg) => {
             case 'valid':
               dispatch({
                 tag: '@newUrl',
-                value: { tag: 'say', value: { message: 'Sign In Successful' }}
+                value: { tag: 'landing', value: null }
               });
               return state;
             case 'invalid':

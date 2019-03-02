@@ -83,7 +83,7 @@ export function update<PS, PM>(Profile: ProfileComponent<PS, PM>): Update<State<
               case 'valid':
                 dispatch({ tag:
                   '@newUrl',
-                  value: { tag: 'say', value: { message: 'Sign Up Successful' }}
+                  value: { tag: 'landing', value: null }
                 });
                 return state;
               case 'invalid':

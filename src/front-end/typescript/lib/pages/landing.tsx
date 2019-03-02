@@ -1,35 +1,21 @@
 import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/lib/framework';
 import React from 'react';
-import { ADT } from 'shared/lib/types';
 
 export type Params = null;
 
 export interface State {
-  isOpen: boolean;
-  content: {
-    title: string;
-  };
-}
+  empty: true;
+};
 
-export type Msg = ComponentMsg<ADT<'toggleNav'>, Page>;
+export type Msg = ComponentMsg<null, Page>;
 
 export const init: Init<Params, State> = async () => {
-  return {
-    isOpen: false,
-    content: {
-      title: 'BCGov Concierge'
-    }
-  };
+  return { empty: true };
 };
 
 export const update: Update<State, Msg> = (state, msg) => {
-  switch (msg.tag) {
-    case 'toggleNav':
-      return [state.set('isOpen', !state.get('isOpen'))];
-    default:
-      return [state];
-  }
+  return [state];
 };
 
 export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {

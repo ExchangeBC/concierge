@@ -3,7 +3,6 @@ import { AuthLevel, RouteAuthDefinition, Router } from 'front-end/lib/framework'
 import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
-import { get } from 'lodash';
 
 const isSignedOut: RouteAuthDefinition = {
   level: AuthLevel.SignedOut,
@@ -23,10 +22,6 @@ const router: Router<Page> = {
     {
       path: '/',
       pageId: 'landing'
-    },
-    {
-      path: '/loading',
-      pageId: 'loading'
     },
     {
       path: '/sign-in',
@@ -82,12 +77,12 @@ const router: Router<Page> = {
       pageId: 'requestForInformationList'
     },
     {
-      path: '/say/:message',
-      pageId: 'say'
+      path: '/notice/change-password',
+      pageId: 'noticeChangePassword'
     },
     {
       path: '*',
-      pageId: 'notFound'
+      pageId: 'noticeNotFound'
     }
   ],
 
@@ -96,11 +91,6 @@ const router: Router<Page> = {
       case 'landing':
         return {
           tag: 'landing',
-          value: null
-        };
-      case 'loading':
-        return {
-          tag: 'loading',
           value: null
         };
       case 'signIn':
@@ -148,19 +138,21 @@ const router: Router<Page> = {
           tag: 'requestForInformationList',
           value: null
         };
-      case 'say':
+      case 'noticeChangePassword':
         return {
-          tag: 'say',
-          value: {
-            message: get(params, 'message', '')
-          }
+          tag: 'noticeChangePassword',
+          value: null
         };
+      case 'noticeNotFound':
+        return {
+          tag: 'noticeNotFound',
+          value: null
+        };
+      // TODO remove default
       default:
         return {
-          tag: 'say',
-          value: {
-            message: 'Not Found'
-          }
+          tag: 'noticeNotFound',
+          value: null
         };
     }
   },
@@ -169,8 +161,6 @@ const router: Router<Page> = {
     switch (page.tag) {
       case 'landing':
         return '/';
-      case 'loading':
-        return '/loading';
       case 'signIn':
         return '/sign-in';
       case 'signUpBuyer':
@@ -189,8 +179,10 @@ const router: Router<Page> = {
         return '/users';
       case 'requestForInformationList':
         return '/request-for-information';
-      case 'say':
-        return `/say/${page.value.message}`;
+      case 'noticeChangePassword':
+        return '/notice/change-password';
+      case 'noticeNotFound':
+        return '/not-found';
     }
   }
 

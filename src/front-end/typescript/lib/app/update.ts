@@ -3,8 +3,8 @@ import { AuthLevel, immutable, redirect, Update, updateAppChild } from 'front-en
 import { deleteSession, getSession, Session } from 'front-end/lib/http/api';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
-import * as PageLoading from 'front-end/lib/pages/loading';
-import * as PageSay from 'front-end/lib/pages/say';
+import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
+import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
 import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
@@ -22,7 +22,7 @@ const update: Update<State, Msg> = (state, msg) => {
         state,
         async dispatch => {
           // Clear the current active page's state.
-          const currentPageTag = state.getIn(['activePage', 'tag']);
+          const outgoingPage = state.activePage;
           const setSession = (validated: ValidOrInvalid<Session, null>) => {
             state = state.set('session', validated.tag === 'valid' ? validated.value : undefined);
           };
@@ -61,15 +61,12 @@ const update: Update<State, Msg> = (state, msg) => {
             case 'landing':
               state = state.setIn(['pages', 'landing'], immutable(await PageLanding.init(null)));
               break;
-            case 'loading':
-              state = state.setIn(['pages', 'loading'], immutable(await PageLoading.init(null)));
-              break;
             case 'signIn':
               state = state.setIn(['pages', 'signIn'], immutable(await PageSignIn.init(null)));
               break;
             case 'signUpBuyer':
               let signUpBuyerParams = {};
-              if (currentPageTag === 'signUpVendor' && state.pages.signUpVendor) {
+              if (outgoingPage.tag === 'signUpVendor' && state.pages.signUpVendor) {
                 signUpBuyerParams = {
                   accountInformation: state.pages.signUpVendor.accountInformation.set('userType', UserType.Buyer)
                 };
@@ -78,7 +75,7 @@ const update: Update<State, Msg> = (state, msg) => {
               break;
             case 'signUpVendor':
               let signUpVendorParams = {};
-              if (currentPageTag === 'signUpBuyer' && state.pages.signUpBuyer) {
+              if (outgoingPage.tag === 'signUpBuyer' && state.pages.signUpBuyer) {
                 signUpVendorParams = {
                   accountInformation: state.pages.signUpBuyer.accountInformation.set('userType', UserType.Vendor)
                 };
@@ -96,14 +93,24 @@ const update: Update<State, Msg> = (state, msg) => {
                 userId: get(state.session, ['user', 'id'], '')
               })));
               break;
-            case 'say':
-              state = state.setIn(['pages', 'say'], immutable(await PageSay.init(msg.value.page.value)));
+            case 'noticeChangePassword':
+              state = state.setIn(['pages', 'noticeChangePassword'], immutable(await PageNoticeChangePassword.init(null)));
+              break;
+            case 'noticeNotFound':
+              state = state.setIn(['pages', 'noticeNotFound'], immutable(await PageNoticeNotFound.init(null)));
               break;
             default:
-              break;
+              // Reset outgoing page, essentially do nothing.
+              // TODO clean up this logic.
+              return state.set('activePage', outgoingPage);
           }
           // Unset the previous page's state.
-          return state.setIn(['pages', currentPageTag], undefined);
+          // Ensure we don't unintentionally overwrite the active page's state.
+          if (outgoingPage.tag !== msg.value.page.tag) {
+            return state.setIn(['pages', outgoingPage.tag], undefined);
+          } else {
+            return state;
+          }
         }
       ];
 
@@ -116,15 +123,6 @@ const update: Update<State, Msg> = (state, msg) => {
         mapChildMsg: value => ({ tag: 'pageLanding', value }),
         childStatePath: ['pages', 'landing'],
         childUpdate: PageLanding.update,
-        childMsg: msg.value
-      });
-
-    case 'pageLoading':
-      return updateAppChild({
-        state,
-        mapChildMsg: value => ({ tag: 'pageLoading', value }),
-        childStatePath: ['pages', 'loading'],
-        childUpdate: PageLoading.update,
         childMsg: msg.value
       });
 
@@ -182,12 +180,21 @@ const update: Update<State, Msg> = (state, msg) => {
         childMsg: msg.value
       });
 
-    case 'pageSay':
+    case 'pageNoticeChangePassword':
       return updateAppChild({
         state,
-        mapChildMsg: value => ({ tag: 'pageSay', value }),
-        childStatePath: ['pages', 'say'],
-        childUpdate: PageSay.update,
+        mapChildMsg: value => ({ tag: 'pageNoticeChangePassword', value }),
+        childStatePath: ['pages', 'noticeChangePassword'],
+        childUpdate: PageNoticeChangePassword.update,
+        childMsg: msg.value
+      });
+
+    case 'pageNoticeNotFound':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageNoticeNotFound', value }),
+        childStatePath: ['pages', 'noticeNotFound'],
+        childUpdate: PageNoticeNotFound.update,
         childMsg: msg.value
       });
 
