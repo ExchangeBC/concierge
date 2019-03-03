@@ -37,8 +37,8 @@ export function isCurrentSession(id: string): boolean {
 
 // Users.
 
-export function createUser(session: Session): boolean {
-  return !isLoggedIn(session) || isProgramStaff(session);
+export function createUser(session: Session, userType: UserType): boolean {
+  return (!isLoggedIn(session) && userType !== UserType.ProgramStaff) || (isProgramStaff(session) && userType === UserType.ProgramStaff);
 }
 
 export function createProgramStaffUser(session: Session): boolean {

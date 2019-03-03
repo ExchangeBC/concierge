@@ -60,7 +60,9 @@ const router: Router<State, Page, UserType> = {
     {
       path: '/sign-up/program-staff',
       pageId: 'signUpProgramStaff',
-      auth: isProgramStaff
+      // TODO revert before deploying
+      // auth: isProgramStaff
+      auth: isSignedOut
     },
     {
       path: '/sign-out',

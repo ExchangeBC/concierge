@@ -5,10 +5,11 @@ import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, mapRequestBody } from 'back-end/lib/server';
 import { validateEmail, validatePassword } from 'back-end/lib/validators';
-import { isBoolean, isObject } from 'lodash';
+import { get, isBoolean, isObject } from 'lodash';
+import * as mongoose from 'mongoose';
 import { getBoolean, getString, identityAsync } from 'shared/lib';
 import { CreateValidationErrors, PublicUser, UpdateValidationErrors } from 'shared/lib/resources/user';
-import { allValid, getInvalidValue, invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
+import { allValid, getInvalidValue, invalid, valid, validateUserType, ValidOrInvalid } from 'shared/lib/validators';
 import { validateProfile } from 'shared/lib/validators/profile';
 
 type CreateRequestBody = ValidOrInvalid<UserSchema.Data, CreateValidationErrors>;
@@ -27,7 +28,7 @@ type UpdateResponseBody = PublicUser | UpdateValidationErrors;
 
 export type DeleteResponseBody = null;
 
-async function validateCreateRequestBody(Model: UserSchema.Model, email: string, password: string, acceptedTerms: boolean, profile: object): Promise<CreateRequestBody> {
+async function validateCreateRequestBody(Model: UserSchema.Model, email: string, password: string, acceptedTerms: boolean, profile: object, createdBy?: mongoose.Types.ObjectId): Promise<CreateRequestBody> {
   const validatedEmail = await validateEmail(Model, email);
   const validatedPassword = await validatePassword(password);
   const validatedProfile = validateProfile(profile);
@@ -39,6 +40,7 @@ async function validateCreateRequestBody(Model: UserSchema.Model, email: string,
       active: true,
       acceptedTermsAt: acceptedTerms ? now : undefined,
       profile: validatedProfile.value,
+      createdBy,
       createdAt: now,
       updatedAt: now
     } as UserSchema.Data);
@@ -132,17 +134,19 @@ const resource: Resource = {
     const SessionModel = Models.Session as SessionSchema.Model;
     return {
       async transformRequest(request) {
-        if (!permissions.createUser(request.session)) {
+        const body = request.body;
+        const profile = isObject(body.profile) ? body.profile : {};
+        const validatedUserType = validateUserType(getString(profile, 'type'));
+        if (validatedUserType.tag === 'invalid' || !permissions.createUser(request.session, validatedUserType.value)) {
           return mapRequestBody(request, invalid({
             permissions: [permissions.ERROR_MESSAGE]
           }));
         }
-        const body = request.body;
         const email = getString(body, 'email');
         const password = getString(body, 'password');
         const acceptedTerms = getBoolean(body, 'acceptedTerms');
-        const profile = isObject(body.profile) ? body.profile : {};
-        const validatedBody = await validateCreateRequestBody(UserModel, email, password, acceptedTerms, profile);
+        const createdBy = get(request.session.user, 'id');
+        const validatedBody = await validateCreateRequestBody(UserModel, email, password, acceptedTerms, profile, createdBy);
         return mapRequestBody(request, validatedBody);
       },
       async respond(request) {
@@ -248,6 +252,7 @@ const resource: Resource = {
         if (!permissions.deleteUser(request.session, user._id.toString(), user.profile.type)) {
           return basicResponse(401, request.session, null);
         }
+        user.deactivatedBy = get(request.session.user, 'id');
         user.active = false;
         await user.save();
         const session = await SessionSchema.signOut(SessionModel, request.session);

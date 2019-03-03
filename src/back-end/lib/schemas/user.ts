@@ -15,6 +15,9 @@ export interface Data {
   // Deleting a user account marks it as inactive (`active = false`).
   active: boolean;
   profile: Profile;
+  // Only define createdBy if the user was created by a different user.
+  createdBy?: mongoose.Types.ObjectId;
+  deactivatedBy?: mongoose.Types.ObjectId;
 }
 
 export function makePublicUser(user: Data): PublicUser {
@@ -50,7 +53,18 @@ export const schema: mongoose.Schema = new mongoose.Schema({
     required: true,
     default: true
   },
-  profile: mongoose.Schema.Types.Mixed
+  profile: {
+    type: mongoose.Schema.Types.Mixed,
+    required: true
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  deactivatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }
 });
 
 export async function authenticate(user: InstanceType<Model>, password: string): Promise<boolean> {
