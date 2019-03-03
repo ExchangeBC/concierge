@@ -1,5 +1,5 @@
 import { getString, getStringArray } from 'shared/lib';
-import { BuyerProfile } from 'shared/lib/types';
+import { BuyerProfile, UserType } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, optional, valid, validateCategories, validateCity, validateCountry, validateFirstName, validateGenericString, validateIndustrySectors, validateLastName, validatePhoneCountryCode, validatePhoneNumber, validatePhoneType, validatePositionTitle, validatePostalCode, validateProvince, validateStreetAddress, Validation, ValidOrInvalid } from './';
 
 export interface BuyerProfileValidationErrors {
@@ -46,7 +46,7 @@ export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfi
   const validatedAreasOfInterest = optional(v => validateCategories(v, 'Area of Interest'), getStringArray(profile, 'areasOfInterest'));
   if (allValid([validatedFirstName, validatedLastName, validatedPositionTitle, validatedPublicSectorEntity, validatedBranch, validatedContactStreetAddress, validatedContactCity, validatedContactProvince, validatedContactPostalCode, validatedContactCountry, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedAreasOfInterest])) {
     return valid({
-      type: 'buyer' as 'buyer',
+      type: UserType.Buyer as UserType.Buyer,
       firstName: validatedFirstName.value as string,
       lastName: validatedLastName.value as string,
       positionTitle: validatedPositionTitle.value as string,

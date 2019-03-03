@@ -1,7 +1,7 @@
 import { Page } from 'front-end/lib/app/types';
 import * as SelectMulti from 'front-end/lib/components/input/select-multi';
+import { ProfileComponent, ProfileInitParams } from 'front-end/lib/components/profiles/types';
 import { ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
-import { ProfileComponent } from 'front-end/lib/pages/sign-up/types';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
@@ -37,9 +37,13 @@ export interface State {
   areasOfExpertise: Immutable<SelectMulti.State>;
 }
 
+export function getName(state: Immutable<State>): string | null {
+  return state.businessName.value || null;
+}
+
 export function getValues(state: Immutable<State>): VendorProfile {
   return {
-    type: 'vendor' as 'vendor',
+    type: UserType.Vendor as UserType.Vendor,
     businessName: state.businessName.value,
     businessType: parseBusinessType(state.businessType.value) || undefined,
     businessNumber: state.businessNumber.value || undefined,
@@ -130,15 +134,16 @@ export type InnerMsg
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
-export type Params = null;
+export type Params = ProfileInitParams<VendorProfile>;
 
-export const init: Init<Params, State> = async () => {
-  return {
+export const init: Init<Params, State> = async ({ profile, disabled }) => {
+  const state = {
     validationErrors: {},
     businessName: ShortText.init({
       id: 'vendor-profile-business-name',
       type: 'text',
       required: true,
+      disabled,
       label: 'Name',
       placeholder: 'Name'
     }),
@@ -146,6 +151,7 @@ export const init: Init<Params, State> = async () => {
       id: 'vendor-profile-business-type',
       value: '',
       required: false,
+      disabled,
       label: 'Business Type',
       unselectedLabel: 'Select Type',
       options: [
@@ -159,6 +165,7 @@ export const init: Init<Params, State> = async () => {
       id: 'vendor-profile-business-number',
       type: 'text',
       required: false,
+      disabled,
       label: 'Business Number',
       placeholder: 'Business Number'
     }),
@@ -166,6 +173,7 @@ export const init: Init<Params, State> = async () => {
       id: 'vendor-profile-business-street-address',
       type: 'text',
       required: false,
+      disabled,
       label: 'Street Address',
       placeholder: 'Street Address'
     }),
@@ -173,6 +181,7 @@ export const init: Init<Params, State> = async () => {
       id: 'vendor-profile-business-city',
       type: 'text',
       required: false,
+      disabled,
       label: 'City',
       placeholder: 'City'
     }),
@@ -180,6 +189,7 @@ export const init: Init<Params, State> = async () => {
       id: 'vendor-profile-business-province',
       type: 'text',
       required: false,
+      disabled,
       label: 'Province',
       placeholder: 'Province'
     }),
@@ -187,6 +197,7 @@ export const init: Init<Params, State> = async () => {
       id: 'vendor-profile-business-postal-code',
       type: 'text',
       required: false,
+      disabled,
       label: 'Postal/Zip Code',
       placeholder: 'Postal/Zip Code'
     }),
@@ -194,6 +205,7 @@ export const init: Init<Params, State> = async () => {
       id: 'vendor-profile-business-country',
       type: 'text',
       required: false,
+      disabled,
       label: 'Country',
       placeholder: 'Country'
     }),
@@ -201,6 +213,7 @@ export const init: Init<Params, State> = async () => {
       id: 'vendor-profile-contact-name',
       type: 'text',
       required: false,
+      disabled,
       label: 'Name',
       placeholder: 'Name'
     }),
@@ -208,6 +221,7 @@ export const init: Init<Params, State> = async () => {
       id: 'vendor-profile-contact-position-title',
       type: 'text',
       required: false,
+      disabled,
       label: 'Position Title',
       placeholder: 'Position Title'
     }),
@@ -215,6 +229,7 @@ export const init: Init<Params, State> = async () => {
       id: 'vendor-profile-contact-email',
       type: 'email',
       required: false,
+      disabled,
       label: 'Email Address',
       placeholder: 'Email Address'
     }),
@@ -222,6 +237,7 @@ export const init: Init<Params, State> = async () => {
       id: 'vendor-profile-contact-phone-number',
       type: 'text',
       required: false,
+      disabled,
       label: 'Phone Number',
       placeholder: 'e.g. 888-888-8888'
     }),
@@ -229,6 +245,7 @@ export const init: Init<Params, State> = async () => {
       id: 'vendor-profile-contact-phone-country-code',
       type: 'text',
       required: false,
+      disabled,
       label: 'Country Code',
       placeholder: 'e.g. 1'
     }),
@@ -236,6 +253,7 @@ export const init: Init<Params, State> = async () => {
       id: 'vendor-profile-contact-phone-type',
       value: '',
       required: false,
+      disabled,
       label: 'Phone Type',
       unselectedLabel: 'Select Type',
       options: [
@@ -250,6 +268,7 @@ export const init: Init<Params, State> = async () => {
         idNamespace: 'vendor-industry-sectors',
         label: 'Industry Sector(s)',
         labelClassName: 'h3 mb-3',
+        disabled,
         fields: []
       }
     })),
@@ -260,10 +279,16 @@ export const init: Init<Params, State> = async () => {
         idNamespace: 'vendor-areas-of-expertise',
         label: 'Area(s) of Expertise',
         labelClassName: 'h3 mb-3',
+        disabled,
         fields: []
       }
     }))
   };
+  if (!profile) {
+    return state;
+  } else {
+    return setValues(immutable(state), profile).toJS();
+  }
 };
 
 export const update: Update<State, Msg> = (state, msg) => {
@@ -476,11 +501,13 @@ export const view: ComponentView<State, Msg> = props => {
   );
 };
 
-export const component: ProfileComponent<State, InnerMsg> = {
+export const component: ProfileComponent<State, InnerMsg, VendorProfile> = {
   init,
   update,
   view,
+  getName,
   getValues,
+  setValues,
   setErrors,
   isValid,
   userType: UserType.Vendor

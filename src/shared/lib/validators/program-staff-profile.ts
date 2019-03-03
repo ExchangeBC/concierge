@@ -1,5 +1,5 @@
 import { getString } from 'shared/lib';
-import { ProgramStaffProfile } from 'shared/lib/types';
+import { ProgramStaffProfile, UserType } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, optional, valid, validateCity, validateCountry, validateFirstName, validateLastName, validatePhoneCountryCode, validatePhoneNumber, validatePhoneType, validatePositionTitle, validatePostalCode, validateProvince, validateStreetAddress, ValidOrInvalid } from './';
 
 export interface ProgramStaffProfileValidationErrors {
@@ -30,7 +30,7 @@ export function validateProgramStaffProfile(profile: object): ValidOrInvalid<Pro
   const validatedContactPhoneType = optional(validatePhoneType, getString(profile, 'contactPhoneType'));
   if (allValid([validatedFirstName, validatedLastName, validatedPositionTitle, validatedContactStreetAddress, validatedContactCity, validatedContactProvince, validatedContactPostalCode, validatedContactCountry, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType])) {
     return valid({
-      type: 'program_staff' as 'program_staff',
+      type: UserType.ProgramStaff as UserType.ProgramStaff,
       firstName: validatedFirstName.value as string,
       lastName: validatedLastName.value as string,
       positionTitle: validatedPositionTitle.value as string,

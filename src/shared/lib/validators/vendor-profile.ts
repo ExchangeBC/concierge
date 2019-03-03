@@ -1,5 +1,5 @@
 import { getString, getStringArray } from 'shared/lib';
-import { BusinessType, parseBusinessType, VendorProfile } from 'shared/lib/types';
+import { BusinessType, parseBusinessType, UserType, VendorProfile } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, optional, valid, validateBusinessName, validateCategories, validateCity, validateContactName, validateCountry, validateEmail, validateGenericString, validateIndustrySectors, validatePhoneCountryCode, validatePhoneNumber, validatePhoneType, validatePositionTitle, validatePostalCode, validateProvince, validateStreetAddress, Validation, ValidOrInvalid } from './';
 
 export interface VendorProfileValidationErrors {
@@ -53,7 +53,7 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
   const validatedAreasOfExpertise = optional(v => validateCategories(v, 'Area of Expertise'), getStringArray(profile, 'areasOfExpertise'));
   if (allValid([validatedBusinessName, validatedBusinessType, validatedBusinessNumber, validatedBusinessStreetAddress, validatedBusinessCity, validatedBusinessProvince, validatedBusinessPostalCode, validatedBusinessCountry, validatedContactName, validatedContactPositionTitle, validatedContactEmail, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedAreasOfExpertise])) {
     return valid({
-      type: 'vendor' as 'vendor',
+      type: UserType.Vendor as UserType.Vendor,
       businessName: validatedBusinessName.value as string,
       businessType: getValidValue(validatedBusinessType, undefined),
       businessNumber: getValidValue(validatedBusinessNumber, undefined),

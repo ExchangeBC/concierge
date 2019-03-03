@@ -19,7 +19,7 @@ export interface Props extends Pick<FormField.Props<State, HTMLSelectElement, un
 
 type ChildProps = FormField.ChildProps<State, HTMLSelectElement, undefined>;
 
-type InitParams = Pick<State, 'id' | 'value' | 'required' | 'label' | 'help' | 'options' | 'unselectedLabel'>;
+type InitParams = Pick<State, 'id' | 'value' | 'required' | 'disabled' | 'label' | 'help' | 'options' | 'unselectedLabel'>;
 
 export function init(params: InitParams): State {
   let options = params.options;
@@ -31,6 +31,7 @@ export function init(params: InitParams): State {
     value: params.value,
     errors: [],
     required: params.required,
+    disabled: params.disabled || false,
     label: params.label,
     options,
     unselectedLabel: params.unselectedLabel
@@ -53,6 +54,7 @@ const Child: View<ChildProps> = props => {
       name={state.id}
       id={state.id}
       value={state.value}
+      disabled={state.disabled}
       className={className}
       onChange={onChange}>
       {children}

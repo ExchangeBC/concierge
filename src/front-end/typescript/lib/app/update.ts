@@ -8,6 +8,7 @@ import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-pas
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
+import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
@@ -104,6 +105,9 @@ const update: Update<State, Msg> = (state, msg) => {
               break;
             case 'forgotPassword':
               state = state.setIn(['pages', 'forgotPassword'], immutable(await PageForgotPassword.init(null)));
+              break;
+            case 'profile':
+              state = state.setIn(['pages', 'profile'], immutable(await PageProfile.init(msg.value.page.value)));
               break;
             case 'termsAndConditions':
               state = state.setIn(['pages', 'termsAndConditions'], immutable(await PageTermsAndConditions.init(msg.value.page.value)));
@@ -216,6 +220,15 @@ const update: Update<State, Msg> = (state, msg) => {
         mapChildMsg: value => ({ tag: 'pageForgotPassword', value }),
         childStatePath: ['pages', 'forgotPassword'],
         childUpdate: PageForgotPassword.update,
+        childMsg: msg.value
+      });
+
+    case 'pageProfile':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageProfile', value }),
+        childStatePath: ['pages', 'profile'],
+        childUpdate: PageProfile.update,
         childMsg: msg.value
       });
 

@@ -9,6 +9,7 @@ import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-pas
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
+import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
@@ -111,6 +112,14 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.forgotPassword}
           mapPageMsg={value => ({ tag: 'pageForgotPassword', value })}
           View={PageForgotPassword.view} />
+      );
+    case 'profile':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.profile}
+          mapPageMsg={value => ({ tag: 'pageProfile', value })}
+          View={PageProfile.view} />
       );
     case 'termsAndConditions':
       return (

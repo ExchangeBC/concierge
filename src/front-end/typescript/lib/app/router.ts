@@ -87,8 +87,8 @@ const router: Router<State, Page, UserType> = {
       auth: isSignedOut
     },
     {
-      path: '/settings',
-      pageId: 'settings',
+      path: '/profile/:userId',
+      pageId: 'profile',
       auth: isSignedIn
     },
     {
@@ -189,10 +189,13 @@ const router: Router<State, Page, UserType> = {
           tag: 'forgotPassword',
           value: null
         };
-      case 'settings':
+      case 'profile':
         return {
-          tag: 'settings',
-          value: null
+          tag: 'profile',
+          value: {
+            profileUserId: getString(params, 'userId'),
+            viewerUser: state.getIn(['session', 'user'])
+          }
         };
       case 'termsAndConditions':
         return {
@@ -260,8 +263,8 @@ const router: Router<State, Page, UserType> = {
         return `/reset-password/${page.value.forgotPasswordToken}/${page.value.userId}`;
       case 'forgotPassword':
         return '/forgot-password';
-      case 'settings':
-        return '/settings';
+      case 'profile':
+        return `/profile/${page.value.profileUserId}`;
       case 'termsAndConditions':
         return '/terms-and-conditions';
       case 'userList':

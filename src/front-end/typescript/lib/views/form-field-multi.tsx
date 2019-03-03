@@ -17,6 +17,7 @@ export function emptyField(): Field {
 
 export interface State {
   idNamespace: string;
+  disabled?: boolean;
   label?: string;
   labelClassName?: string;
   fields: Field[];
@@ -52,6 +53,7 @@ export interface ChildProps<ChildElement> {
   id: string;
   className: string;
   state: Field;
+  disabled: boolean;
   onChange: FormEventHandler<ChildElement>;
 }
 
@@ -65,8 +67,8 @@ export interface Props<ChildElement> {
 }
 
 const ConditionHelpToggle: View<Props<any>> = ({ state, toggleHelp }) => {
-  const { help } = state;
-  if (help && toggleHelp) {
+  const { help, disabled } = state;
+  if (help && toggleHelp && !disabled) {
     return (
       <a onClick={() => toggleHelp()}>
         {help.show ? 'Hide' : 'Show'} Help Text
@@ -91,8 +93,20 @@ const ConditionalLabel: View<Props<any>> = (props) => {
   }
 };
 
-const ConditionalHelp: View<State> = ({ help }) => {
-  if (help && help.show) {
+const ConditionalAddButton: View<Props<any>> = ({ state, onAdd }) => {
+  if (!state.disabled) {
+    return (
+      <Button color='secondary' size='sm' className='ml-2' onClick={() => onAdd()}>
+        Add
+      </Button>
+    );
+  } else {
+    return null;
+  }
+}
+
+const ConditionalHelp: View<State> = ({ help, disabled }) => {
+  if (help && help.show && !disabled) {
     return (
       <Alert color='info'>
         {help.text}
@@ -126,7 +140,7 @@ function Children<ChildElement>({ Child, state, onChange, onRemove }: Props<Chil
     return (
       <FormGroup key={`form-field-multi-child-${i}`}>
         <InputGroup>
-          <Child id={id} className={className} state={field} onChange={onChange(i)} />
+          <Child id={id} className={className} state={field} onChange={onChange(i)} disabled={state.disabled || false} />
           <InputGroupAddon addonType='append'>
             <Button color='danger' onClick={() => onRemove(i)}>
               Remove
@@ -143,15 +157,13 @@ function Children<ChildElement>({ Child, state, onChange, onRemove }: Props<Chil
 };
 
 export function view<ChildElement>(props: Props<ChildElement>) {
-  const { state, onAdd } = props;
+  const { state } = props;
   const labelClassName = state.labelClassName || '';
   return (
     <FormGroup className={`form-field-${state.idNamespace}`}>
       <div className={`d-flex justify-content-between align-items-center ${labelClassName}`}>
         <ConditionalLabel {...props} />
-        <Button color='secondary' size='sm' className='ml-2' onClick={() => onAdd()}>
-          Add
-        </Button>
+        <ConditionalAddButton {...props} />
       </div>
       <ConditionalHelp {...state} />
       <Children {...props} />

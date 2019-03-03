@@ -2,7 +2,6 @@ import { Page } from 'front-end/lib/app/types';
 import { View } from 'front-end/lib/framework';
 import { Session } from 'front-end/lib/http/api';
 import Link from 'front-end/lib/views/link';
-import { get } from 'lodash';
 import React from 'react';
 import { Collapse, Container, Nav, Navbar, NavbarBrand, NavbarToggler, NavItem } from 'reactstrap'
 import { UserType } from 'shared/lib/types';
@@ -15,12 +14,21 @@ interface Props {
 }
 
 const ContextualLinks: View<Props> = ({ activePage, session, toggleIsOpen }) => {
-  const isSettingsPage = activePage.tag === 'settings';
+  const isProfilePage = activePage.tag === 'profile';
   const isUserListPage = activePage.tag === 'userList';
   const isRequestForInformationListPage = activePage.tag === 'requestForInformationList';
   const activeClass = (active: boolean) => active ? 'font-weight-bold text-light' : 'text-light';
   const onClick = () => toggleIsOpen(false);
-  switch (get(session, ['user', 'type'])) {
+  if (!session || !session.user) {
+    return (<div></div>);
+  }
+  const myProfilePage: Page = {
+    tag: 'profile',
+    value: {
+      profileUserId: session.user.id
+    }
+  };
+  switch (session.user.type) {
     case UserType.Buyer:
       return (
         <Nav navbar>
@@ -28,7 +36,7 @@ const ContextualLinks: View<Props> = ({ activePage, session, toggleIsOpen }) => 
             <Link nav href='/requests-for-information' text='RFIs' buttonClassName={activeClass(isRequestForInformationListPage)} onClick={onClick} />
           </NavItem>
           <NavItem>
-            <Link nav href='/settings' text='Settings' buttonClassName={activeClass(isSettingsPage)} onClick={onClick} />
+            <Link nav page={myProfilePage} text='My Profile' buttonClassName={activeClass(isProfilePage)} onClick={onClick} />
           </NavItem>
         </Nav>
       );
@@ -39,7 +47,7 @@ const ContextualLinks: View<Props> = ({ activePage, session, toggleIsOpen }) => 
             <Link nav href='/requests-for-information' text='RFIs' buttonClassName={activeClass(isRequestForInformationListPage)} onClick={onClick} />
           </NavItem>
           <NavItem>
-            <Link nav href='/settings' text='Settings' buttonClassName={activeClass(isSettingsPage)} onClick={onClick} />
+            <Link nav page={myProfilePage} text='My Profile' buttonClassName={activeClass(isProfilePage)} onClick={onClick} />
           </NavItem>
         </Nav>
       );
@@ -53,7 +61,7 @@ const ContextualLinks: View<Props> = ({ activePage, session, toggleIsOpen }) => 
             <Link nav href='/users' text='Users' buttonClassName={activeClass(isUserListPage)} onClick={onClick} />
           </NavItem>
           <NavItem>
-            <Link nav href='/settings' text='Settings' buttonClassName={activeClass(isSettingsPage)} onClick={onClick} />
+            <Link nav page={myProfilePage} text='My Profile' buttonClassName={activeClass(isProfilePage)} onClick={onClick} />
           </NavItem>
         </Nav>
       );

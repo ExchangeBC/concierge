@@ -1,4 +1,4 @@
-import * as BuyerProfile from 'front-end/lib/pages/sign-up/components/buyer-profile';
+import * as BuyerProfile from 'front-end/lib/components/profiles/buyer-profile';
 import * as SignUp from 'front-end/lib/pages/sign-up/components/sign-up';
 
 export const component = SignUp.component(BuyerProfile.component);

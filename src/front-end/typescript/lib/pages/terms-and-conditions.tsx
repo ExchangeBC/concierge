@@ -61,6 +61,15 @@ export const update: Update<State, Msg> = (state, msg) => {
           state = stopLoading(state);
           switch (result.tag) {
             case 'valid':
+              dispatch({
+                tag: '@newUrl',
+                value: {
+                  tag: 'profile',
+                  value: {
+                    profileUserId: state.userId
+                  }
+                }
+              });
               return state.set('acceptedTermsAt', result.value.acceptedTermsAt);
             case 'invalid':
               return state.set('errors', result.value.acceptedTerms || []);

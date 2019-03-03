@@ -20,7 +20,7 @@ export interface Props extends Pick<FormField.Props<State, HTMLInputElement, Ext
   onEnter?: OnEnter;
 }
 
-interface Params extends Pick<State, 'id' | 'required' | 'type' | 'label' | 'placeholder' | 'help'> {
+interface Params extends Pick<State, 'id' | 'required' | 'disabled' | 'type' | 'label' | 'placeholder' | 'help'> {
   value?: string;
 }
 
@@ -30,6 +30,7 @@ export function init(params: Params): State {
     value: params.value || '',
     errors: [],
     required: params.required,
+    disabled: params.disabled || false,
     type: params.type,
     label: params.label,
     placeholder: params.placeholder
@@ -58,6 +59,7 @@ const Child: View<FormField.ChildProps<State, HTMLInputElement, ExtraProps>> = p
       id={state.id}
       value={state.value || ''}
       placeholder={state.placeholder || ''}
+      disabled={state.disabled}
       className={className}
       onChange={onChange}
       onKeyPress={onKeyPress} />

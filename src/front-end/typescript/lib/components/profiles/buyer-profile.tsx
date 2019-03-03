@@ -1,7 +1,7 @@
 import { Page } from 'front-end/lib/app/types';
 import * as SelectMulti from 'front-end/lib/components/input/select-multi';
+import { ProfileComponent, ProfileInitParams } from 'front-end/lib/components/profiles/types';
 import { ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
-import { ProfileComponent } from 'front-end/lib/pages/sign-up/types';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
@@ -36,9 +36,21 @@ export interface State {
   areasOfInterest: Immutable<SelectMulti.State>;
 }
 
+export function getName(state: Immutable<State>): string | null {
+  const firstName = state.firstName.value;
+  const lastName = state.lastName.value;
+  if (firstName && lastName) {
+    return `${firstName} ${lastName}`;
+  } else if (firstName) {
+    return firstName;
+  } else {
+    return null;
+  }
+}
+
 export function getValues(state: Immutable<State>): BuyerProfile {
   return {
-    type: 'buyer' as 'buyer',
+    type: UserType.Buyer as UserType.Buyer,
     firstName: state.firstName.value,
     lastName: state.lastName.value,
     positionTitle: state.positionTitle.value,
@@ -125,15 +137,16 @@ export type InnerMsg
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
-export type Params = null;
+export type Params = ProfileInitParams<BuyerProfile>;
 
-export const init: Init<Params, State> = async () => {
-  return {
+export const init: Init<Params, State> = async ({ profile, disabled }) => {
+  const state = {
     validationErrors: {},
     firstName: ShortText.init({
       id: 'buyer-profile-first-name',
       type: 'text',
       required: true,
+      disabled,
       label: 'First Name',
       placeholder: 'First Name'
     }),
@@ -141,6 +154,7 @@ export const init: Init<Params, State> = async () => {
       id: 'buyer-profile-last-name',
       type: 'text',
       required: true,
+      disabled,
       label: 'Last Name',
       placeholder: 'Last Name'
     }),
@@ -148,6 +162,7 @@ export const init: Init<Params, State> = async () => {
       id: 'buyer-profile-position-title',
       type: 'text',
       required: true,
+      disabled,
       label: 'Position Title',
       placeholder: 'Position Title'
     }),
@@ -155,6 +170,7 @@ export const init: Init<Params, State> = async () => {
       id: 'buyer-profile-public-sector-entity',
       type: 'text',
       required: true,
+      disabled,
       label: 'Public Sector Entity',
       placeholder: 'Public Sector Entity'
     }),
@@ -162,6 +178,7 @@ export const init: Init<Params, State> = async () => {
       id: 'buyer-profile-branch',
       type: 'text',
       required: false,
+      disabled,
       label: 'Branch',
       placeholder: 'Branch'
     }),
@@ -169,6 +186,7 @@ export const init: Init<Params, State> = async () => {
       id: 'buyer-profile-contact-street-address',
       type: 'text',
       required: false,
+      disabled,
       label: 'Street Address',
       placeholder: 'Street Address'
     }),
@@ -176,6 +194,7 @@ export const init: Init<Params, State> = async () => {
       id: 'buyer-profile-contact-city',
       type: 'email',
       required: false,
+      disabled,
       label: 'City',
       placeholder: 'City'
     }),
@@ -183,6 +202,7 @@ export const init: Init<Params, State> = async () => {
       id: 'buyer-profile-contact-province',
       type: 'email',
       required: false,
+      disabled,
       label: 'Province',
       placeholder: 'Province'
     }),
@@ -190,6 +210,7 @@ export const init: Init<Params, State> = async () => {
       id: 'buyer-profile-contact-postal-code',
       type: 'text',
       required: false,
+      disabled,
       label: 'Postal/Zip Code',
       placeholder: 'Postal/Zip Code'
     }),
@@ -197,6 +218,7 @@ export const init: Init<Params, State> = async () => {
       id: 'buyer-profile-contact-country',
       type: 'text',
       required: false,
+      disabled,
       label: 'Country',
       placeholder: 'Country'
     }),
@@ -204,6 +226,7 @@ export const init: Init<Params, State> = async () => {
       id: 'buyer-profile-contact-phone-number',
       type: 'text',
       required: false,
+      disabled,
       label: 'Phone Number',
       placeholder: 'e.g. 888-888-8888'
     }),
@@ -211,6 +234,7 @@ export const init: Init<Params, State> = async () => {
       id: 'buyer-profile-contact-phone-country-code',
       type: 'text',
       required: false,
+      disabled,
       label: 'Country Code',
       placeholder: 'e.g. 1'
     }),
@@ -218,6 +242,7 @@ export const init: Init<Params, State> = async () => {
       id: 'buyer-profile-contact-phone-type',
       value: '',
       required: false,
+      disabled,
       label: 'Phone Type',
       unselectedLabel: 'Select Type',
       options: [
@@ -232,6 +257,7 @@ export const init: Init<Params, State> = async () => {
         idNamespace: 'buyer-industry-sectors',
         label: 'Industry Sector(s)',
         labelClassName: 'h3 mb-3',
+        disabled,
         fields: []
       }
     })),
@@ -242,10 +268,16 @@ export const init: Init<Params, State> = async () => {
         idNamespace: 'buyer-areas-of-interest',
         label: 'Area(s) of Interest',
         labelClassName: 'h3 mb-3',
+        disabled,
         fields: []
       }
     }))
   };
+  if (!profile) {
+    return state;
+  } else {
+    return setValues(immutable(state), profile).toJS();
+  }
 };
 
 export const update: Update<State, Msg> = (state, msg) => {
@@ -448,11 +480,13 @@ export const view: ComponentView<State, Msg> = props => {
   );
 };
 
-export const component: ProfileComponent<State, InnerMsg> = {
+export const component: ProfileComponent<State, InnerMsg, BuyerProfile> = {
   init,
   update,
   view,
+  getName,
   getValues,
+  setValues,
   setErrors,
   isValid,
   userType: UserType.Buyer

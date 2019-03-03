@@ -1,15 +1,15 @@
 import { Page } from 'front-end/lib/app/types';
+import { ProfileComponent } from 'front-end/lib/components/profiles/types';
 import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as AccountInformation from 'front-end/lib/pages/sign-up/components/account-information';
-import { ProfileComponent } from 'front-end/lib/pages/sign-up/types';
 import FixedBar from 'front-end/lib/views/fixed-bar';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { isArray } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
-import { ADT } from 'shared/lib/types';
+import { ADT, Profile as ProfileType } from 'shared/lib/types';
 
 export interface State<ProfileState> {
   loading: number;
@@ -28,14 +28,14 @@ export interface Params {
   accountInformation?: Immutable<AccountInformation.State>;
 }
 
-function init<PS, PM>(Profile: ProfileComponent<PS, PM>): Init<Params, State<PS>> {
+function init<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): Init<Params, State<PS>> {
   return async ({ accountInformation }) => {
     return {
       loading: 0,
       accountInformation: accountInformation || immutable(await AccountInformation.init({
         userType: Profile.userType
       })),
-      profile: immutable(await Profile.init(null))
+      profile: immutable(await Profile.init({}))
     };
   }
 };
@@ -48,7 +48,7 @@ function stopLoading<PS>(state: Immutable<State<PS>>): Immutable<State<PS>> {
   return state.set('loading', Math.max(state.loading - 1, 0));
 }
 
-export function update<PS, PM>(Profile: ProfileComponent<PS, PM>): Update<State<PS>, Msg<PM>> {
+export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Update<State<PS>, Msg<PM>> {
   return (state, msg) => {
     switch (msg.tag) {
       case 'accountInformation':
@@ -106,17 +106,17 @@ export function update<PS, PM>(Profile: ProfileComponent<PS, PM>): Update<State<
   };
 };
 
-function isInvalid<PS, PM>(state: State<PS>, Profile: ProfileComponent<PS, PM>): boolean {
+function isInvalid<PS, PM, P>(state: State<PS>, Profile: ProfileComponent<PS, PM, P>): boolean {
   return !AccountInformation.isValid(state.accountInformation) || !Profile.isValid(state.profile);
 }
 
-function isValid<PS, PM>(state: State<PS>, Profile: ProfileComponent<PS, PM>): boolean {
+function isValid<PS, PM, P>(state: State<PS>, Profile: ProfileComponent<PS, PM, P>): boolean {
   const info = state.accountInformation;
   const providedRequiredFields = !!(info.email.value && info.password.value && info.confirmPassword.value);
   return providedRequiredFields && !isInvalid(state, Profile);
 }
 
-function view<PS, PM>(Profile: ProfileComponent<PS, PM>): ComponentView<State<PS>, Msg<PM>> {
+function view<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
   return props => {
     const { state, dispatch } = props;
     const dispatchAccountInformation: Dispatch<AccountInformation.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'accountInformation' as 'accountInformation', value }));
@@ -161,7 +161,7 @@ function view<PS, PM>(Profile: ProfileComponent<PS, PM>): ComponentView<State<PS
   };
 };
 
-export function component<PS, PM>(Profile: ProfileComponent<PS, PM>): Component<Params, State<PS>, Msg<PM>> {
+export function component<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Component<Params, State<PS>, Msg<PM>> {
   return {
     init: init(Profile),
     update: update(Profile),

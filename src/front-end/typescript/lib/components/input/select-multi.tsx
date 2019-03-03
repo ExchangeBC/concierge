@@ -82,7 +82,7 @@ export const update: Update<State, Msg> = (state, msg) => {
 
 function makeChild(state: State): View<FormFieldMulti.ChildProps<HTMLSelectElement>> {
   return props => {
-    const { id, className, state: field, onChange } = props;
+    const { id, className, state: field, onChange, disabled = false } = props;
     const children = state.options.map((o, i) => {
       return (<option key={`select-multi-option-${o.value}-${i}`} value={o.value}>{o.label}</option>);
     });
@@ -91,6 +91,7 @@ function makeChild(state: State): View<FormFieldMulti.ChildProps<HTMLSelectEleme
         id={id}
         name={id}
         value={field.value}
+        disabled={disabled}
         className={className}
         onChange={onChange}>
         {children}
