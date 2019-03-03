@@ -8,7 +8,6 @@ export interface State {
   id: string;
   required: boolean;
   errors: string[];
-  disabled?: boolean;
   label?: string;
   help?: {
     text: string;

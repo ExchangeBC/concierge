@@ -18,6 +18,7 @@ import { BuyerProfileValidationErrors, validateBuyerProfile } from 'shared/lib/v
 export type ValidationErrors = BuyerProfileValidationErrors;
 
 export interface State {
+  disabled: boolean;
   validationErrors: ValidationErrors;
   firstName: ShortText.State;
   lastName: ShortText.State;
@@ -139,14 +140,14 @@ export type Msg = ComponentMsg<InnerMsg, Page>;
 
 export type Params = ProfileInitParams<BuyerProfile>;
 
-export const init: Init<Params, State> = async ({ profile, disabled }) => {
+export const init: Init<Params, State> = async ({ profile, disabled = false }) => {
   const state = {
+    disabled,
     validationErrors: {},
     firstName: ShortText.init({
       id: 'buyer-profile-first-name',
       type: 'text',
       required: true,
-      disabled,
       label: 'First Name',
       placeholder: 'First Name'
     }),
@@ -154,7 +155,6 @@ export const init: Init<Params, State> = async ({ profile, disabled }) => {
       id: 'buyer-profile-last-name',
       type: 'text',
       required: true,
-      disabled,
       label: 'Last Name',
       placeholder: 'Last Name'
     }),
@@ -162,7 +162,6 @@ export const init: Init<Params, State> = async ({ profile, disabled }) => {
       id: 'buyer-profile-position-title',
       type: 'text',
       required: true,
-      disabled,
       label: 'Position Title',
       placeholder: 'Position Title'
     }),
@@ -170,7 +169,6 @@ export const init: Init<Params, State> = async ({ profile, disabled }) => {
       id: 'buyer-profile-public-sector-entity',
       type: 'text',
       required: true,
-      disabled,
       label: 'Public Sector Entity',
       placeholder: 'Public Sector Entity'
     }),
@@ -178,7 +176,6 @@ export const init: Init<Params, State> = async ({ profile, disabled }) => {
       id: 'buyer-profile-branch',
       type: 'text',
       required: false,
-      disabled,
       label: 'Branch',
       placeholder: 'Branch'
     }),
@@ -186,7 +183,6 @@ export const init: Init<Params, State> = async ({ profile, disabled }) => {
       id: 'buyer-profile-contact-street-address',
       type: 'text',
       required: false,
-      disabled,
       label: 'Street Address',
       placeholder: 'Street Address'
     }),
@@ -194,7 +190,6 @@ export const init: Init<Params, State> = async ({ profile, disabled }) => {
       id: 'buyer-profile-contact-city',
       type: 'email',
       required: false,
-      disabled,
       label: 'City',
       placeholder: 'City'
     }),
@@ -202,7 +197,6 @@ export const init: Init<Params, State> = async ({ profile, disabled }) => {
       id: 'buyer-profile-contact-province',
       type: 'email',
       required: false,
-      disabled,
       label: 'Province',
       placeholder: 'Province'
     }),
@@ -210,7 +204,6 @@ export const init: Init<Params, State> = async ({ profile, disabled }) => {
       id: 'buyer-profile-contact-postal-code',
       type: 'text',
       required: false,
-      disabled,
       label: 'Postal/Zip Code',
       placeholder: 'Postal/Zip Code'
     }),
@@ -218,7 +211,6 @@ export const init: Init<Params, State> = async ({ profile, disabled }) => {
       id: 'buyer-profile-contact-country',
       type: 'text',
       required: false,
-      disabled,
       label: 'Country',
       placeholder: 'Country'
     }),
@@ -226,7 +218,6 @@ export const init: Init<Params, State> = async ({ profile, disabled }) => {
       id: 'buyer-profile-contact-phone-number',
       type: 'text',
       required: false,
-      disabled,
       label: 'Phone Number',
       placeholder: 'e.g. 888-888-8888'
     }),
@@ -234,7 +225,6 @@ export const init: Init<Params, State> = async ({ profile, disabled }) => {
       id: 'buyer-profile-contact-phone-country-code',
       type: 'text',
       required: false,
-      disabled,
       label: 'Country Code',
       placeholder: 'e.g. 1'
     }),
@@ -242,7 +232,6 @@ export const init: Init<Params, State> = async ({ profile, disabled }) => {
       id: 'buyer-profile-contact-phone-type',
       value: '',
       required: false,
-      disabled,
       label: 'Phone Type',
       unselectedLabel: 'Select Type',
       options: [
@@ -353,16 +342,18 @@ export const PersonalInformation: ComponentView<State, Msg> = ({ state, dispatch
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
     <div className='mt-3 mt-md-0'>
-      <FormSectionHeading text='Personal Information (Optional)' />
+      <FormSectionHeading text='Personal Information' />
       <Row>
         <Col xs='12' md='5'>
           <ShortText.view
             state={state.firstName}
+            disabled={state.disabled}
             onChange={onChangeShortText('firstName')} />
         </Col>
         <Col xs='12' md='5'>
           <ShortText.view
             state={state.lastName}
+            disabled={state.disabled}
             onChange={onChangeShortText('lastName')} />
         </Col>
       </Row>
@@ -370,6 +361,7 @@ export const PersonalInformation: ComponentView<State, Msg> = ({ state, dispatch
         <Col xs='12' md='7'>
           <ShortText.view
             state={state.positionTitle}
+            disabled={state.disabled}
             onChange={onChangeShortText('positionTitle')} />
         </Col>
       </Row>
@@ -377,11 +369,13 @@ export const PersonalInformation: ComponentView<State, Msg> = ({ state, dispatch
         <Col xs='12' md='7'>
           <ShortText.view
             state={state.publicSectorEntity}
+            disabled={state.disabled}
             onChange={onChangeShortText('publicSectorEntity')} />
         </Col>
         <Col xs='12' md='5'>
           <ShortText.view
             state={state.branch}
+            disabled={state.disabled}
             onChange={onChangeShortText('branch')} />
         </Col>
       </Row>
@@ -399,6 +393,7 @@ export const ContactInformation: ComponentView<State, Msg> = ({ state, dispatch 
         <Col xs='12'>
           <ShortText.view
             state={state.contactStreetAddress}
+            disabled={state.disabled}
             onChange={onChangeShortText('contactStreetAddress')} />
         </Col>
       </Row>
@@ -406,11 +401,13 @@ export const ContactInformation: ComponentView<State, Msg> = ({ state, dispatch 
         <Col xs='12' md='7'>
           <ShortText.view
             state={state.contactCity}
+            disabled={state.disabled}
             onChange={onChangeShortText('contactCity')} />
         </Col>
         <Col xs='12' md='5'>
           <ShortText.view
             state={state.contactProvince}
+            disabled={state.disabled}
             onChange={onChangeShortText('contactProvince')} />
         </Col>
       </Row>
@@ -418,11 +415,13 @@ export const ContactInformation: ComponentView<State, Msg> = ({ state, dispatch 
         <Col xs='12' md='4'>
           <ShortText.view
             state={state.contactPostalCode}
+            disabled={state.disabled}
             onChange={onChangeShortText('contactPostalCode')} />
         </Col>
         <Col xs='12' md='6'>
           <ShortText.view
             state={state.contactCountry}
+            disabled={state.disabled}
             onChange={onChangeShortText('contactCountry')} />
         </Col>
       </Row>
@@ -430,16 +429,19 @@ export const ContactInformation: ComponentView<State, Msg> = ({ state, dispatch 
         <Col xs='12' md='4'>
           <ShortText.view
             state={state.contactPhoneNumber}
+            disabled={state.disabled}
             onChange={onChangeShortText('contactPhoneNumber')} />
         </Col>
         <Col xs='12' md='4'>
           <ShortText.view
             state={state.contactPhoneCountryCode}
+            disabled={state.disabled}
             onChange={onChangeShortText('contactPhoneCountryCode')} />
         </Col>
         <Col xs='12' md='4'>
           <Select.view
             state={state.contactPhoneType}
+            disabled={state.disabled}
             onChange={onChangeSelect('contactPhoneType')} />
         </Col>
       </Row>

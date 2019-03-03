@@ -12,14 +12,19 @@ export interface State extends FormField.State {
   unselectedLabel?: string;
 }
 
+interface ExtraProps {
+  disabled: boolean;
+}
+
 export interface Props extends Pick<FormField.Props<State, HTMLSelectElement, undefined>, 'toggleHelp'> {
   state: State;
+  disabled?: boolean;
   onChange: FormEventHandler<HTMLSelectElement>;
 }
 
-type ChildProps = FormField.ChildProps<State, HTMLSelectElement, undefined>;
+type ChildProps = FormField.ChildProps<State, HTMLSelectElement, ExtraProps>;
 
-type InitParams = Pick<State, 'id' | 'value' | 'required' | 'disabled' | 'label' | 'help' | 'options' | 'unselectedLabel'>;
+type InitParams = Pick<State, 'id' | 'value' | 'required' | 'label' | 'help' | 'options' | 'unselectedLabel'>;
 
 export function init(params: InitParams): State {
   let options = params.options;
@@ -31,7 +36,6 @@ export function init(params: InitParams): State {
     value: params.value,
     errors: [],
     required: params.required,
-    disabled: params.disabled || false,
     label: params.label,
     options,
     unselectedLabel: params.unselectedLabel
@@ -45,7 +49,8 @@ export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (event: Synthetic
 }
 
 const Child: View<ChildProps> = props => {
-  const { state, onChange, className } = props;
+  const { state, onChange, className, extraProps } = props;
+  const disabled: boolean = !!(extraProps && extraProps.disabled) || false;
   const children = state.options.map((o, i) => {
     return (<option key={`select-option-${o.value}-${i}`} value={o.value}>{o.label}</option>);
   });
@@ -54,7 +59,7 @@ const Child: View<ChildProps> = props => {
       name={state.id}
       id={state.id}
       value={state.value}
-      disabled={state.disabled}
+      disabled={disabled}
       className={className}
       onChange={onChange}>
       {children}
@@ -62,8 +67,11 @@ const Child: View<ChildProps> = props => {
   );
 };
 
-export const view: View<Props> = ({ state, onChange, toggleHelp }) => {
+export const view: View<Props> = ({ state, onChange, toggleHelp, disabled }) => {
+  const extraProps: ExtraProps = {
+    disabled: disabled || false
+  };
   return (
-    <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} />
+    <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={extraProps}/>
   );
 };

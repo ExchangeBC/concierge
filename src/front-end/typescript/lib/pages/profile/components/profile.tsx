@@ -1,77 +1,78 @@
 import { Page } from 'front-end/lib/app/types';
-import { ProfileComponent, ProfileViewerMode } from 'front-end/lib/components/profiles/types';
-import { Component, ComponentMsg, ComponentView, immutable, Immutable, Init, newUrl, Update, updateComponentChild } from 'front-end/lib/framework';
+import { ProfileComponent, ViewerUser } from 'front-end/lib/components/profiles/types';
+import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, newUrl, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
+import { validateAndUpdateField } from 'front-end/lib/views/form-field';
 import * as ShortText from 'front-end/lib/views/input/short-text';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
-// import { isArray } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import { formatTermsAndConditionsAgreementDate } from 'shared/lib';
 import { PublicUser } from 'shared/lib/resources/user';
-import { ADT, UserType } from 'shared/lib/types';
+import { ADT, Profile as ProfileType, UserType } from 'shared/lib/types';
+import { validateEmail } from 'shared/lib/validators';
 
 export interface State<ProfileState> {
   deactivateLoading: number;
+  profileUser: PublicUser;
+  viewerUser?: ViewerUser;
   email: ShortText.State;
   profile: Immutable<ProfileState>;
-  mode: ProfileViewerMode;
-  viewerIsProgramStaff: boolean;
   showEmail: boolean;
   showChangePassword: boolean;
   showTermsAndConditions: boolean;
+  showReviewTermsAndConditionsLink: boolean;
   showDeactivateAccount: boolean;
   isProfileEditable: boolean;
   isEditingProfile: boolean;
   promptDeactivationConfirmation: boolean;
-  profileUser: PublicUser;
 }
 
 type InnerMsg<ProfileMsg>
-  = ADT<'changeEmail', string>
-  | ADT<'changeProfile', ComponentMsg<ProfileMsg, Page>>
+  = ADT<'onChangeEmail', string>
+  | ADT<'onChangeProfile', ComponentMsg<ProfileMsg, Page>>
   | ADT<'deactivateAccount'>
   | ADT<'cancelDeactivateAccount'>
   | ADT<'startEditingProfile'>
-  | ADT<'stopEditingProfile'>
+  | ADT<'cancelEditingProfile'>
   | ADT<'saveProfile'>;
 
 export type Msg<ProfileMsg> = ComponentMsg<InnerMsg<ProfileMsg>, Page>;
 
-export interface Params<Profile> {
+export interface Params {
   profileUser: PublicUser;
-  mode: ProfileViewerMode;
-  viewerIsProgramStaff: boolean;
-  profile: Profile;
+  viewerUser?: ViewerUser;
 }
 
-function init<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): Init<Params<P>, State<PS>> {
+function init<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Init<Params, State<PS>> {
   return async params => {
-    // TODO clean up by simply passing profile and viewer users to this init function.
-    const { profileUser, mode, viewerIsProgramStaff } = params;
+    const { profileUser, viewerUser } = params;
     const profileUserIsProgramStaff = profileUser.profile.type === UserType.ProgramStaff;
+    const viewerUserIsProgramStaff = !!viewerUser && viewerUser.type === UserType.ProgramStaff;
+    const viewerUserIsOwner = !!viewerUser && viewerUser.id === profileUser._id;
     return {
       deactivateLoading: 0,
+      profileUser,
+      viewerUser,
       email: ShortText.init({
         id: 'profile-email',
         required: true,
         type: 'email',
         label: 'Account Email Address',
-        placeholder: 'Account Email Address'
+        placeholder: 'Account Email Address',
+        value: profileUser.email
       }),
       profile: immutable(await Profile.init({
-        profile: params.profile,
+        profile: profileUser.profile as P,
         disabled: true
       })),
-      profileUser,
-      mode,
-      viewerIsProgramStaff,
-      showEmail: mode === 'owner' || viewerIsProgramStaff,
-      showChangePassword: mode === 'owner',
-      showTermsAndConditions: mode === 'owner' || viewerIsProgramStaff,
-      showDeactivateAccount: (mode === 'owner' && !profileUserIsProgramStaff) || (viewerIsProgramStaff && profileUserIsProgramStaff && mode !== 'owner'),
-      isProfileEditable: mode === 'owner',
+      showEmail: viewerUserIsOwner || viewerUserIsProgramStaff,
+      showChangePassword: viewerUserIsOwner,
+      showTermsAndConditions: viewerUserIsOwner || viewerUserIsProgramStaff,
+      showReviewTermsAndConditionsLink: viewerUserIsOwner,
+      showDeactivateAccount: (viewerUserIsOwner && !profileUserIsProgramStaff) || (viewerUserIsProgramStaff && profileUserIsProgramStaff && !viewerUserIsOwner),
+      isProfileEditable: viewerUserIsOwner,
       isEditingProfile: false,
       promptDeactivationConfirmation: false
     };
@@ -86,15 +87,15 @@ function stopDeactivateLoading<PS>(state: Immutable<State<PS>>): Immutable<State
   return state.set('deactivateLoading', Math.max(state.deactivateLoading - 1, 0));
 }
 
-export function update<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): Update<State<PS>, Msg<PM>> {
+export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Update<State<PS>, Msg<PM>> {
   return (state, msg) => {
     switch (msg.tag) {
-      case 'changeEmail':
-        return [state];
-      case 'changeProfile':
+      case 'onChangeEmail':
+        return [validateAndUpdateField(state, 'email', msg.value, validateEmail)];
+      case 'onChangeProfile':
         return updateComponentChild({
           state,
-          mapChildMsg: (value: PM) => ({ tag: 'changeProfile', value }),
+          mapChildMsg: (value: PM) => ({ tag: 'onChangeProfile', value }),
           childStatePath: ['profile'],
           childUpdate: Profile.update,
           childMsg: msg.value
@@ -125,9 +126,23 @@ export function update<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): Update<
       case 'cancelDeactivateAccount':
         return [state.set('promptDeactivationConfirmation', false)];
       case 'startEditingProfile':
+        state = state
+          .set('isEditingProfile', true)
+          .setIn(['profile', 'disabled'], false);
         return [state];
-      case 'stopEditingProfile':
-        return [state];
+      case 'cancelEditingProfile':
+        state = state.set('isEditingProfile', false)
+        return [
+          state,
+          async () => {
+            return state
+              .setIn(['email', 'value'], state.profileUser.email)
+              .set('profile', immutable(await Profile.init({
+                profile: state.profileUser.profile as P,
+                disabled: true
+              })));
+          }
+        ];
       case 'saveProfile':
         return [state];
       default:
@@ -136,22 +151,100 @@ export function update<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): Update<
   };
 };
 
-/*function conditionalEmail<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
+function conditionalEmail<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
   return props => {
-    return null;
-  };
-}*/
-
-function conditionalProfile<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
-  // const ConditionalEmail = conditionalEmail(Profile);
-  return ({ dispatch }) => {
-    // const dispatchProfile: Dispatch<ComponentMsg<PM, Page>> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'profile' as 'profile', value }));
-    // const saveProfile = () => dispatch({ tag: 'saveProfile', value: undefined });
-    return null;
+    const { state, dispatch } = props;
+    if (!state.showEmail) {
+      return null;
+    }
+    const onChangeEmail = ShortText.makeOnChange(dispatch, e => ({ tag: 'onChangeEmail' as 'onChangeEmail', value: e.currentTarget.value }));
+    const isDisabled = !state.isEditingProfile;
+    return (
+      <Row className='mb-md-3'>
+        <Col xs='12' md='5'>
+          <ShortText.view
+            state={state.email}
+            disabled={isDisabled}
+            onChange={onChangeEmail} />
+        </Col>
+      </Row>
+    );
   };
 }
 
-function conditionalChangePassword<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
+function conditionalTopProfileButtons<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
+  return props => {
+    const { state, dispatch } = props;
+    if (!state.isProfileEditable) {
+      return null;
+    }
+    const startEditingProfile = () => !state.isEditingProfile && dispatch({ tag: 'startEditingProfile', value: undefined });
+    const cancelEditingProfile = () => state.isEditingProfile && dispatch({ tag: 'cancelEditingProfile', value: undefined });
+    const saveProfile = () => state.isEditingProfile && dispatch({ tag: 'saveProfile', value: undefined });
+    if (!state.isEditingProfile) {
+      return (
+        <div className='d-flex pl-3'>
+          <Link buttonColor='secondary' buttonSize='sm' text='Edit Profile' onClick={startEditingProfile} />
+        </div>
+      );
+    } else {
+      return (
+        <div className='d-flex pl-3'>
+          <Link buttonColor='primary' buttonSize='sm' text='Save Changes' onClick={saveProfile} />
+          <Link textColor='secondary' buttonSize='sm' text='Cancel' onClick={cancelEditingProfile} />
+        </div>
+      );
+    }
+  };
+}
+
+function conditionalBottomProfileButtons<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
+  return props => {
+    const { state, dispatch } = props;
+    if (!state.isProfileEditable || !state.isEditingProfile) {
+      return null;
+    }
+    const cancelEditingProfile = () => state.isEditingProfile && dispatch({ tag: 'cancelEditingProfile', value: undefined });
+    const saveProfile = () => state.isEditingProfile && dispatch({ tag: 'saveProfile', value: undefined });
+    return (
+      <Row className='mt-4'>
+        <Col xs='12'>
+          <Link buttonColor='primary' text='Save Changes' onClick={saveProfile} />
+          <Link textColor='secondary' text='Cancel' onClick={cancelEditingProfile} />
+        </Col>
+      </Row>
+    );
+  };
+}
+
+function conditionalProfile<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
+  const ConditionalEmail = conditionalEmail(Profile);
+  const ConditionalTopProfileButtons = conditionalTopProfileButtons(Profile);
+  const ConditionalBottomProfileButtons = conditionalBottomProfileButtons(Profile);
+  return props => {
+    const { state, dispatch } = props;
+    const dispatchProfile: Dispatch<ComponentMsg<PM, Page>> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'onChangeProfile' as 'onChangeProfile', value }));
+    return (
+      <div className='pb-5'>
+        <Row className='mb-4'>
+          <Col xs='12' className='d-flex align-items-center'>
+            <h2 className='mb-0'>Profile</h2>
+            <ConditionalTopProfileButtons {...props} />
+          </Col>
+        </Row>
+        <Row>
+          <Col xs='12' md='9' lg='8' xl='7'>
+            <ConditionalEmail {...props} />
+            <Profile.view state={state.profile} dispatch={dispatchProfile} />
+            <ConditionalBottomProfileButtons {...props} />
+          </Col>
+        </Row>
+      </div>
+    );
+  };
+}
+
+function conditionalChangePassword<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
   return ({ state }) => {
     if (!state.showChangePassword) {
       return null;
@@ -160,12 +253,12 @@ function conditionalChangePassword<PS, PM, P>(Profile: ProfileComponent<PS, PM, 
       <div className='py-5 border-top'>
         <Row>
           <Col xs='12'>
-            <h3>Change Password</h3>
+            <h2>Change Password</h2>
           </Col>
         </Row>
-        <Row>
+        <Row className='mb-3'>
           <Col xs='12'>
-            <p>Click the button below to change your password.</p>
+            Click the button below to change your password.
           </Col>
         </Row>
         <Row>
@@ -178,13 +271,13 @@ function conditionalChangePassword<PS, PM, P>(Profile: ProfileComponent<PS, PM, 
   };
 }
 
-function conditionalTermsAndConditions<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
+function conditionalTermsAndConditions<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
   return ({ state }) => {
     if (!state.showTermsAndConditions) {
       return null;
     }
     let conditionalLink = null;
-    if (state.mode === 'owner') {
+    if (state.showReviewTermsAndConditionsLink) {
       conditionalLink = (
         <Row>
           <Col xs='12'>
@@ -201,12 +294,12 @@ function conditionalTermsAndConditions<PS, PM, P>(Profile: ProfileComponent<PS, 
       <div className='py-5 border-top'>
         <Row>
           <Col xs='12'>
-            <h3>Terms & Conditions</h3>
+            <h2>Terms & Conditions</h2>
           </Col>
         </Row>
-        <Row>
+        <Row className='mb-3'>
           <Col xs='12'>
-            <p>{formatTermsAndConditionsAgreementDate(state.profileUser.acceptedTermsAt)}</p>
+            {formatTermsAndConditionsAgreementDate(state.profileUser.acceptedTermsAt)}
           </Col>
         </Row>
         {conditionalLink}
@@ -215,7 +308,7 @@ function conditionalTermsAndConditions<PS, PM, P>(Profile: ProfileComponent<PS, 
   };
 }
 
-function conditionalDeactivateAccount<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
+function conditionalDeactivateAccount<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
   return ({ state, dispatch }) => {
     if (!state.showDeactivateAccount) {
       return null;
@@ -228,12 +321,12 @@ function conditionalDeactivateAccount<PS, PM, P>(Profile: ProfileComponent<PS, P
       <div className='pt-5 border-top'>
         <Row>
           <Col xs='12'>
-            <h3>Deactivate Account</h3>
+            <h2>Deactivate Account</h2>
           </Col>
         </Row>
-        <Row>
+        <Row className='mb-3'>
           <Col xs='12'>
-            <p>Deactivating your account means that you will no longer be able to access the Concierge.</p>
+            Deactivating your account means that you will no longer be able to access the Concierge.
           </Col>
         </Row>
         <Row>
@@ -249,7 +342,7 @@ function conditionalDeactivateAccount<PS, PM, P>(Profile: ProfileComponent<PS, P
   };
 }
 
-function view<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
+function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
   const ConditionalProfile = conditionalProfile(Profile);
   const ConditionalChangePassword = conditionalChangePassword(Profile);
   const ConditionalTermsAndConditions = conditionalTermsAndConditions(Profile);
@@ -273,7 +366,7 @@ function view<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): ComponentView<St
   };
 };
 
-export function component<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): Component<Params<P>, State<PS>, Msg<PM>> {
+export function component<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Component<Params, State<PS>, Msg<PM>> {
   return {
     init: init(Profile),
     update: update(Profile),

@@ -28,7 +28,7 @@ export interface Params {
   accountInformation?: Immutable<AccountInformation.State>;
 }
 
-function init<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): Init<Params, State<PS>> {
+function init<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Init<Params, State<PS>> {
   return async ({ accountInformation }) => {
     return {
       loading: 0,
@@ -106,17 +106,17 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
   };
 };
 
-function isInvalid<PS, PM, P>(state: State<PS>, Profile: ProfileComponent<PS, PM, P>): boolean {
+function isInvalid<PS, PM, P extends ProfileType>(state: State<PS>, Profile: ProfileComponent<PS, PM, P>): boolean {
   return !AccountInformation.isValid(state.accountInformation) || !Profile.isValid(state.profile);
 }
 
-function isValid<PS, PM, P>(state: State<PS>, Profile: ProfileComponent<PS, PM, P>): boolean {
+function isValid<PS, PM, P extends ProfileType>(state: State<PS>, Profile: ProfileComponent<PS, PM, P>): boolean {
   const info = state.accountInformation;
   const providedRequiredFields = !!(info.email.value && info.password.value && info.confirmPassword.value);
   return providedRequiredFields && !isInvalid(state, Profile);
 }
 
-function view<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
+function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
   return props => {
     const { state, dispatch } = props;
     const dispatchAccountInformation: Dispatch<AccountInformation.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'accountInformation' as 'accountInformation', value }));

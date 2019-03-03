@@ -1,5 +1,5 @@
 import { Page } from 'front-end/lib/app/types';
-import { ProfileViewerMode } from 'front-end/lib/components/profiles/types';
+import { ViewerUser } from 'front-end/lib/components/profiles/types';
 import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as BuyerProfile from 'front-end/lib/pages/profile/components/buyer';
@@ -11,11 +11,6 @@ import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, UserType } from 'shared/lib/types';
 
 const ERROR_MESSAGE = 'An error occurred.';
-
-interface ViewerUser {
-  id: string;
-  type: UserType;
-}
 
 export interface Params {
   profileUserId: string;
@@ -37,18 +32,13 @@ type InnerMsg
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
 async function userToState(profileUser: PublicUser, viewerUser?: ViewerUser): Promise<State> {
-  const userId = profileUser._id;
-  const mode: ProfileViewerMode = viewerUser && viewerUser.id === userId ? 'owner' : 'guest';
-  const viewerIsProgramStaff: boolean = !!viewerUser && viewerUser.type === UserType.ProgramStaff;
   switch (profileUser.profile.type) {
     case UserType.Buyer:
       return {
         errors: [],
         buyer: immutable(await BuyerProfile.init({
           profileUser,
-          mode,
-          viewerIsProgramStaff,
-          profile: profileUser.profile
+          viewerUser
         }))
       };
     case UserType.Vendor:
@@ -56,9 +46,7 @@ async function userToState(profileUser: PublicUser, viewerUser?: ViewerUser): Pr
         errors: [],
         vendor: immutable(await VendorProfile.init({
           profileUser,
-          mode,
-          viewerIsProgramStaff,
-          profile: profileUser.profile
+          viewerUser
         }))
       };
     case UserType.ProgramStaff:
@@ -66,9 +54,7 @@ async function userToState(profileUser: PublicUser, viewerUser?: ViewerUser): Pr
         errors: [],
         programStaff: immutable(await ProgramStaffProfile.init({
           profileUser,
-          mode,
-          viewerIsProgramStaff,
-          profile: profileUser.profile
+          viewerUser
         }))
       };*/
     default:

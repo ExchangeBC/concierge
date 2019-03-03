@@ -10,6 +10,7 @@ interface Props {
   page?: Page;
   text?: string;
   buttonColor?: string;
+  buttonSize?: 'sm' | 'md' | 'lg';
   textColor?: string;
   className?: string;
   buttonTag?: 'button' | 'a' | 'span';
@@ -23,6 +24,7 @@ interface Props {
 function Link(props: Props) {
   const {
     buttonColor = 'link',
+    buttonSize = 'md',
     textColor = 'primary',
     className = '',
     buttonTag = 'button',
@@ -45,6 +47,7 @@ function Link(props: Props) {
   };
   const buttonProps = {
     color: buttonColor,
+    size: buttonSize,
     tag: buttonTag,
     className: `${nav && buttonColor !== 'link' ? 'mb-2 mb-md-0 ' : ''}${!props.buttonColor && props.textColor ? `text-${textColor} ` : ''}${buttonClassName}`,
     disabled
