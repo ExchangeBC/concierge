@@ -8,7 +8,7 @@ import LoadingButton from 'front-end/lib/views/loading-button';
 import Markdown from 'front-end/lib/views/markdown';
 import React from 'react';
 import { Alert, Col, Row } from 'reactstrap';
-import { formatDate, formatTime } from 'shared/lib';
+import { formatTermsAndConditionsAgreementDate } from 'shared/lib';
 import { ADT } from 'shared/lib/types';
 
 export interface State {
@@ -107,7 +107,7 @@ const AcceptedAt: ComponentView<State, Msg> = props => {
     return (
       <FixedBar location='bottom'>
         <p className='text-align-right mb-0'>
-          You agreed to these Terms & Conditions on {formatDate(state.acceptedTermsAt)} at {formatTime(state.acceptedTermsAt, true)}.
+          {formatTermsAndConditionsAgreementDate(state.acceptedTermsAt)}
         </p>
       </FixedBar>
     );
@@ -120,7 +120,7 @@ const AcceptedAt: ComponentView<State, Msg> = props => {
         <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={acceptTerms} loading={isLoading} disabled={isDisabled}>
           I Agree
         </LoadingButton>
-        <Link href='/settings' text='Skip' textColor='secondary' />
+        <Link page={{ tag: 'profile', value: { profileUserId: state.userId } }} text='Skip' textColor='secondary' />
       </FixedBar>
     );
   }

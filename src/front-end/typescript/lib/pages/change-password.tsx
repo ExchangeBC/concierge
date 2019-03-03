@@ -156,7 +156,7 @@ export const view: ComponentView<State, Msg> = props => {
               <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={submit} loading={isLoading} disabled={isDisabled}>
                 Update Password
               </LoadingButton>
-              <Link href='/' text='Cancel' textColor='secondary' />
+              <Link page={{ tag: 'profile', value: { profileUserId: state.userId } }} text='Cancel' textColor='secondary' />
             </Col>
           </Row>
         </Col>

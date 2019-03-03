@@ -32,8 +32,7 @@ export function getFieldValues(state: State): string[] {
 }
 
 export function setFieldValues(state: Immutable<State>, values: string[]): Immutable<State> {
-  const fields = cloneDeep(state.fields);
-  values.forEach((value, i) => fields[i].value = value);
+  const fields = values.map(value => ({ value, errors: [] }));
   return state.set('fields', fields);
 }
 

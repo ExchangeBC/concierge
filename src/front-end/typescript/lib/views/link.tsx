@@ -33,7 +33,7 @@ function Link(props: Props) {
     children = [],
     onClick
   } = props;
-  const href = props.page ? AppRouter.pageToUrl(props.page) : (props.href || '');
+  const href = props.page ? AppRouter.pageToUrl(props.page) : (props.href || undefined);
   const aProps = {
     onClick: (e: MouseEvent<HTMLAnchorElement>) => {
       if (disabled) { e.preventDefault(); }

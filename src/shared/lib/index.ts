@@ -48,3 +48,11 @@ export function formatDate(date: Date, withTimeZone = false): string {
 export function formatTime(date: Date, withTimeZone = false): string {
   return rawFormatDate(date, 'LT', withTimeZone);
 }
+
+export function formatTermsAndConditionsAgreementDate(date?: Date): string {
+  if (date) {
+    return `You agreed to the Terms & Conditions on ${formatDate(date)} at ${formatTime(date, true)}.`
+  } else {
+    return 'You have not agreed to the Terms & Conditions.';
+  }
+}

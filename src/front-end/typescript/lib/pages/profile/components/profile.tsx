@@ -1,34 +1,38 @@
 import { Page } from 'front-end/lib/app/types';
 import { ProfileComponent, ProfileViewerMode } from 'front-end/lib/components/profiles/types';
-// import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
-import { Component, ComponentMsg, ComponentView, immutable, Immutable, Init, Update, updateComponentChild } from 'front-end/lib/framework';
-// import * as api from 'front-end/lib/http/api';
+import { Component, ComponentMsg, ComponentView, immutable, Immutable, Init, newUrl, Update, updateComponentChild } from 'front-end/lib/framework';
+import * as api from 'front-end/lib/http/api';
 import * as ShortText from 'front-end/lib/views/input/short-text';
-// import Link from 'front-end/lib/views/link';
-// import LoadingButton from 'front-end/lib/views/loading-button';
+import Link from 'front-end/lib/views/link';
+import LoadingButton from 'front-end/lib/views/loading-button';
 // import { isArray } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
+import { formatTermsAndConditionsAgreementDate } from 'shared/lib';
+import { PublicUser } from 'shared/lib/resources/user';
 import { ADT } from 'shared/lib/types';
 
 export interface State<ProfileState> {
-  loading: number;
+  deactivateLoading: number;
   email: ShortText.State;
   profile: Immutable<ProfileState>;
-  userId: string;
   mode: ProfileViewerMode;
+  viewerIsProgramStaff: boolean;
   showEmail: boolean;
   showChangePassword: boolean;
+  showTermsAndConditions: boolean;
   showDeactivateAccount: boolean;
   isProfileEditable: boolean;
   isEditingProfile: boolean;
   promptDeactivationConfirmation: boolean;
+  profileUser: PublicUser;
 }
 
 type InnerMsg<ProfileMsg>
   = ADT<'changeEmail', string>
   | ADT<'changeProfile', ComponentMsg<ProfileMsg, Page>>
   | ADT<'deactivateAccount'>
+  | ADT<'cancelDeactivateAccount'>
   | ADT<'startEditingProfile'>
   | ADT<'stopEditingProfile'>
   | ADT<'saveProfile'>;
@@ -36,17 +40,17 @@ type InnerMsg<ProfileMsg>
 export type Msg<ProfileMsg> = ComponentMsg<InnerMsg<ProfileMsg>, Page>;
 
 export interface Params<Profile> {
-  userId: string;
+  profileUser: PublicUser;
   mode: ProfileViewerMode;
-  showEmail: boolean;
+  viewerIsProgramStaff: boolean;
   profile: Profile;
 }
 
 function init<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): Init<Params<P>, State<PS>> {
   return async params => {
-    const { userId, mode, showEmail } = params;
+    const { profileUser, mode, viewerIsProgramStaff } = params;
     return {
-      loading: 0,
+      deactivateLoading: 0,
       email: ShortText.init({
         id: 'profile-email',
         required: true,
@@ -58,10 +62,12 @@ function init<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): Init<Params<P>, 
         profile: params.profile,
         disabled: true
       })),
-      userId,
+      profileUser,
       mode,
-      showEmail,
+      viewerIsProgramStaff,
+      showEmail: mode === 'owner' || viewerIsProgramStaff,
       showChangePassword: mode === 'owner',
+      showTermsAndConditions: mode === 'owner' || viewerIsProgramStaff,
       showDeactivateAccount: mode === 'owner',
       isProfileEditable: mode === 'owner',
       isEditingProfile: false,
@@ -70,13 +76,13 @@ function init<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): Init<Params<P>, 
   }
 };
 
-/*function startLoading<PS>(state: Immutable<State<PS>>): Immutable<State<PS>> {
-  return state.set('loading', state.loading + 1);
+function startDeactivateLoading<PS>(state: Immutable<State<PS>>): Immutable<State<PS>> {
+  return state.set('deactivateLoading', state.deactivateLoading + 1);
 }
 
-function stopLoading<PS>(state: Immutable<State<PS>>): Immutable<State<PS>> {
-  return state.set('loading', Math.max(state.loading - 1, 0));
-}*/
+function stopDeactivateLoading<PS>(state: Immutable<State<PS>>): Immutable<State<PS>> {
+  return state.set('deactivateLoading', Math.max(state.deactivateLoading - 1, 0));
+}
 
 export function update<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): Update<State<PS>, Msg<PM>> {
   return (state, msg) => {
@@ -92,7 +98,30 @@ export function update<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): Update<
           childMsg: msg.value
         });
       case 'deactivateAccount':
-        return [state];
+        if (!state.promptDeactivationConfirmation) {
+          return [state.set('promptDeactivationConfirmation', true)];
+        }
+        state = startDeactivateLoading(state)
+          .set('promptDeactivationConfirmation', false);
+        return [
+          state,
+          async dispatch => {
+            const result = await api.deleteUser(state.profileUser._id);
+            switch (result.tag) {
+              case 'valid':
+                dispatch(newUrl({
+                  tag: 'landing' as 'landing',
+                  value: null
+                }));
+                return stopDeactivateLoading(state);
+              case 'invalid':
+                // TODO show errors
+                return stopDeactivateLoading(state);
+            }
+          }
+        ];
+      case 'cancelDeactivateAccount':
+        return [state.set('promptDeactivationConfirmation', false)];
       case 'startEditingProfile':
         return [state];
       case 'stopEditingProfile':
@@ -121,32 +150,121 @@ function conditionalProfile<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): Co
 }
 
 function conditionalChangePassword<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
-  return props => {
-    return null;
+  return ({ state }) => {
+    if (!state.showChangePassword) {
+      return null;
+    }
+    return (
+      <div className='py-5 border-top'>
+        <Row>
+          <Col xs='12'>
+            <h3>Change Password</h3>
+          </Col>
+        </Row>
+        <Row>
+          <Col xs='12'>
+            <p>Click the button below to change your password.</p>
+          </Col>
+        </Row>
+        <Row>
+          <Col xs='12'>
+            <Link page={{ tag: 'changePassword', value: { userId: state.profileUser._id } }} buttonColor='secondary' text='Change Password' />
+          </Col>
+        </Row>
+      </div>
+    );
+  };
+}
+
+function conditionalTermsAndConditions<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
+  return ({ state }) => {
+    if (!state.showTermsAndConditions) {
+      return null;
+    }
+    let conditionalLink = null;
+    if (state.mode === 'owner') {
+      conditionalLink = (
+        <Row>
+          <Col xs='12'>
+            <Link
+              page={{ tag: 'termsAndConditions', value: { userId: state.profileUser._id } }}
+              textColor='secondary'
+              text="Review the Concierge's Terms & Conditions"
+              buttonClassName='p-0' />
+          </Col>
+        </Row>
+      );
+    }
+    return (
+      <div className='py-5 border-top'>
+        <Row>
+          <Col xs='12'>
+            <h3>Terms & Conditions</h3>
+          </Col>
+        </Row>
+        <Row>
+          <Col xs='12'>
+            <p>{formatTermsAndConditionsAgreementDate(state.profileUser.acceptedTermsAt)}</p>
+          </Col>
+        </Row>
+        {conditionalLink}
+      </div>
+    );
   };
 }
 
 function conditionalDeactivateAccount<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
-  return props => {
-    return null;
+  return ({ state, dispatch }) => {
+    if (!state.showDeactivateAccount) {
+      return null;
+    }
+    const showPrompt = state.promptDeactivationConfirmation;
+    const isLoading = state.deactivateLoading > 0;
+    const deactivateAccount = () => dispatch({ tag: 'deactivateAccount', value: undefined });
+    const cancelDeactivateAccount = () => dispatch({ tag: 'cancelDeactivateAccount', value: undefined });
+    return (
+      <div className='pt-5 border-top'>
+        <Row>
+          <Col xs='12'>
+            <h3>Deactivate Account</h3>
+          </Col>
+        </Row>
+        <Row>
+          <Col xs='12'>
+            <p>Deactivating your account means that you will no longer be able to access the Concierge.</p>
+          </Col>
+        </Row>
+        <Row>
+          <Col xs='12'>
+            <LoadingButton onClick={deactivateAccount} color={showPrompt ? 'danger' : 'secondary'} loading={isLoading} disabled={isLoading}>
+              {showPrompt ? 'Click Again to Confirm' : 'Deactivate Account'}
+            </LoadingButton>
+            {showPrompt ? (<Link onClick={cancelDeactivateAccount} text='Cancel' textColor='link' />) : null}
+          </Col>
+        </Row>
+      </div>
+    );
   };
 }
 
 function view<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
   const ConditionalProfile = conditionalProfile(Profile);
   const ConditionalChangePassword = conditionalChangePassword(Profile);
+  const ConditionalTermsAndConditions = conditionalTermsAndConditions(Profile);
   const ConditionalDeactivateAccount = conditionalDeactivateAccount(Profile);
   return props => {
     const { state } = props;
+    const name = Profile.getName(state.profile);
     return (
       <div>
-        <Row>
+        <Row className='mb-5'>
           <Col xs='12'>
-            <h1>{Profile.getName(state.profile)}'s Profile</h1>
+            <h1>{name ? `${name}'s Profile` : 'Profile'}</h1>
           </Col>
         </Row>
         <ConditionalProfile {...props} />
         <ConditionalChangePassword {...props} />
+        <ConditionalTermsAndConditions {...props} />
         <ConditionalDeactivateAccount {...props} />
       </div>
     );

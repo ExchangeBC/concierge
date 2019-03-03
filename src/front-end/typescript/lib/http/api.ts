@@ -85,6 +85,17 @@ export async function readOneUser(userId: string): Promise<ValidOrInvalid<UserRe
   }
 }
 
+export async function deleteUser(userId: string): Promise<ValidOrInvalid<null, null>> {
+  try {
+    await request(HttpMethod.Delete, `users/${userId}`);
+    return valid(null);
+  } catch (error) {
+    // tslint:disable:next-line no-console
+    console.error(error);
+    return invalid(null);
+  }
+}
+
 export interface Session {
   _id: string;
   createdAt: Date;

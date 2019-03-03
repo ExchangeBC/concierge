@@ -2,9 +2,9 @@ import { Page } from 'front-end/lib/app/types';
 import { ProfileViewerMode } from 'front-end/lib/components/profiles/types';
 import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
-import * as BuyerProfile from 'front-end/lib/pages/profile/buyer';
-import * as ProgramStaffProfile from 'front-end/lib/pages/profile/program-staff';
-import * as VendorProfile from 'front-end/lib/pages/profile/vendor';
+import * as BuyerProfile from 'front-end/lib/pages/profile/components/buyer';
+import * as ProgramStaffProfile from 'front-end/lib/pages/profile/components/program-staff';
+import * as VendorProfile from 'front-end/lib/pages/profile/components/vendor';
 import { default as React, ReactElement } from 'react';
 import { Alert, Col, Row } from 'reactstrap';
 import { PublicUser } from 'shared/lib/resources/user';
@@ -39,15 +39,15 @@ export type Msg = ComponentMsg<InnerMsg, Page>;
 async function userToState(profileUser: PublicUser, viewerUser?: ViewerUser): Promise<State> {
   const userId = profileUser._id;
   const mode: ProfileViewerMode = viewerUser && viewerUser.id === userId ? 'owner' : 'guest';
-  const showEmail: boolean = mode === 'owner' || (!!viewerUser && viewerUser.type === UserType.ProgramStaff);
+  const viewerIsProgramStaff: boolean = !!viewerUser && viewerUser.type === UserType.ProgramStaff;
   switch (profileUser.profile.type) {
     case UserType.Buyer:
       return {
         errors: [],
         buyer: immutable(await BuyerProfile.init({
-          userId,
+          profileUser,
           mode,
-          showEmail,
+          viewerIsProgramStaff,
           profile: profileUser.profile
         }))
       };
@@ -55,9 +55,9 @@ async function userToState(profileUser: PublicUser, viewerUser?: ViewerUser): Pr
       return {
         errors: [],
         vendor: immutable(await VendorProfile.init({
-          userId,
+          profileUser,
           mode,
-          showEmail,
+          viewerIsProgramStaff,
           profile: profileUser.profile
         }))
       };
@@ -65,9 +65,9 @@ async function userToState(profileUser: PublicUser, viewerUser?: ViewerUser): Pr
       /*return {
         errors: [],
         programStaff: immutable(await ProgramStaffProfile.init({
-          userId,
+          profileUser,
           mode,
-          showEmail,
+          viewerIsProgramStaff,
           profile: profileUser.profile
         }))
       };*/
