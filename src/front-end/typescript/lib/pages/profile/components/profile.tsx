@@ -11,7 +11,7 @@ import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import { formatTermsAndConditionsAgreementDate } from 'shared/lib';
 import { PublicUser } from 'shared/lib/resources/user';
-import { ADT, Profile as ProfileType, UserType } from 'shared/lib/types';
+import { ADT, Profile as ProfileType, UserType, userTypeToTitleCase } from 'shared/lib/types';
 import { validateEmail } from 'shared/lib/validators';
 
 export interface State<ProfileState> {
@@ -193,6 +193,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
             switch (result.tag) {
               case 'valid':
                 state = stopEditingProfile(state)
+                  .set('profileUser', result.value)
                   .set('email', resetEmailState(result.value))
                   .set('profile', await resetProfileState(Profile, result.value));
                 break;
@@ -431,12 +432,16 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
   const ConditionalDeactivateAccount = conditionalDeactivateAccount(Profile);
   return props => {
     const { state } = props;
-    const name = Profile.getName(state.profile);
+    const profileName = Profile.getName(state.profile);
+    const name: string | null = state.viewerUser && state.viewerUser.id === state.profileUser._id ? 'My' : profileName && `${profileName}'s`;
+    const userType = userTypeToTitleCase(state.profileUser.profile.type);
+    const headingSuffix = `${userType} Profile`;
+    const heading = name ? `${name} ${headingSuffix}` : headingSuffix;
     return (
       <div>
         <Row className='mb-5'>
           <Col xs='12'>
-            <h1>{name ? `${name}'s Profile` : 'Profile'}</h1>
+            <h1>{heading}</h1>
           </Col>
         </Row>
         <ConditionalProfile {...props} />
