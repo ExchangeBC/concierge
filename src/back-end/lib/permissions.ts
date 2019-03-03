@@ -24,7 +24,9 @@ export function isVendor(session: Session): boolean {
 }
 
 export function isOwnAccount(session: Session, id: string): boolean {
-  return !!session.user && session.user.id.toString() === id;
+  // Strange type issue that allows ObjectIds to be passed as the `id` parameter,
+  // so we ensure we are doing a string comparison here.
+  return !!session.user && session.user.id.toString() === id.toString();
 }
 
 export function isOwnSession(session: Session, id: string): boolean {
@@ -39,10 +41,6 @@ export function isCurrentSession(id: string): boolean {
 
 export function createUser(session: Session, userType: UserType): boolean {
   return (!isLoggedIn(session) && userType !== UserType.ProgramStaff) || (isProgramStaff(session) && userType === UserType.ProgramStaff);
-}
-
-export function createProgramStaffUser(session: Session): boolean {
-  return isProgramStaff(session);
 }
 
 export function readOneUser(session: Session, id: string): boolean {

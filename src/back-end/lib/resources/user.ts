@@ -158,8 +158,13 @@ const resource: Resource = {
             const body = request.body.value;
             const user = new UserModel(body);
             await user.save();
-            const validSession = await SessionSchema.signIn(SessionModel, UserModel, request.session, user._id);
-            return basicResponse(201, validSession, UserSchema.makePublicUser(user));
+            // Sign in the user if they are creating their own account.
+            // Otherwise, as is the case with Program Staff, leave them signed in.
+            let session = request.session;
+            if (!permissions.isLoggedIn(request.session)) {
+              session = await SessionSchema.signIn(SessionModel, UserModel, request.session, user._id);
+            }
+            return basicResponse(201, session, UserSchema.makePublicUser(user));
         }
       }
     };
@@ -255,7 +260,12 @@ const resource: Resource = {
         user.deactivatedBy = get(request.session.user, 'id');
         user.active = false;
         await user.save();
-        const session = await SessionSchema.signOut(SessionModel, request.session);
+        let session = request.session;
+        // Sign out the user if they are deactivating their own account.
+        // Otherwise, as is the case with Program Staff, leave them signed in.
+        if (permissions.isOwnAccount(request.session, user._id.toString())) {
+          session = await SessionSchema.signOut(SessionModel, request.session);
+        }
         return basicResponse(200, session, null);
       }
     };

@@ -3,17 +3,17 @@ import { ProgramStaffProfile, UserType } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, optional, valid, validateCity, validateCountry, validateFirstName, validateLastName, validatePhoneCountryCode, validatePhoneNumber, validatePhoneType, validatePositionTitle, validatePostalCode, validateProvince, validateStreetAddress, ValidOrInvalid } from './';
 
 export interface ProgramStaffProfileValidationErrors {
-  firstName: string[];
-  lastName: string[];
-  positionTitle: string[];
-  contactStreetAddress: string[];
-  contactCity: string[];
-  contactProvince: string[];
-  contactPostalCode: string[];
-  contactCountry: string[];
-  contactPhoneNumber: string[];
-  contactPhoneCountryCode: string[];
-  contactPhoneType: string[];
+  firstName?: string[];
+  lastName?: string[];
+  positionTitle?: string[];
+  contactStreetAddress?: string[];
+  contactCity?: string[];
+  contactProvince?: string[];
+  contactPostalCode?: string[];
+  contactCountry?: string[];
+  contactPhoneNumber?: string[];
+  contactPhoneCountryCode?: string[];
+  contactPhoneType?: string[];
 }
 
 export function validateProgramStaffProfile(profile: object): ValidOrInvalid<ProgramStaffProfile, ProgramStaffProfileValidationErrors> {

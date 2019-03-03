@@ -50,13 +50,13 @@ async function userToState(profileUser: PublicUser, viewerUser?: ViewerUser): Pr
         }))
       };
     case UserType.ProgramStaff:
-      /*return {
+      return {
         errors: [],
         programStaff: immutable(await ProgramStaffProfile.init({
           profileUser,
           viewerUser
         }))
-      };*/
+      };
     default:
       return {
         errors: [ERROR_MESSAGE]

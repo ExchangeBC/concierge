@@ -9,7 +9,7 @@ import LoadingButton from 'front-end/lib/views/loading-button';
 import { isArray } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
-import { ADT, Profile as ProfileType } from 'shared/lib/types';
+import { ADT, Profile as ProfileType, UserType } from 'shared/lib/types';
 
 export interface State<ProfileState> {
   loading: number;
@@ -82,13 +82,28 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
             const result = await api.createUser(user);
             switch (result.tag) {
               case 'valid':
-                dispatch({
-                  tag: '@newUrl',
-                  value: {
-                    tag: 'termsAndConditions',
-                    value: { userId: result.value._id }
-                  }
-                });
+                // Redirect Program Staff to the created user's profile.
+                if (result.value.profile.type === UserType.ProgramStaff) {
+                  dispatch({
+                    tag: '@newUrl',
+                    value: {
+                      tag: 'profile',
+                      value: {
+                        profileUserId: result.value._id
+                      }
+                    }
+                  });
+                } else {
+                  // All other users who are creating their own accounts,
+                  // should be prompted to accept the terms and conditions.
+                  dispatch({
+                    tag: '@newUrl',
+                    value: {
+                      tag: 'termsAndConditions',
+                      value: { userId: result.value._id }
+                    }
+                  });
+                }
                 return state;
               case 'invalid':
                 const profileErrors = result.value.profile;

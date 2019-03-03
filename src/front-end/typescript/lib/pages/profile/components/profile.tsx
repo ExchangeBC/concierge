@@ -79,7 +79,7 @@ function init<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
       profile: await resetProfileState(Profile, profileUser),
       showEmail: viewerUserIsOwner || viewerUserIsProgramStaff,
       showChangePassword: viewerUserIsOwner,
-      showTermsAndConditions: viewerUserIsOwner || viewerUserIsProgramStaff,
+      showTermsAndConditions: (viewerUserIsOwner || viewerUserIsProgramStaff) && !profileUserIsProgramStaff,
       showReviewTermsAndConditionsLink: viewerUserIsOwner,
       showDeactivateAccount: (viewerUserIsOwner && !profileUserIsProgramStaff) || (viewerUserIsProgramStaff && profileUserIsProgramStaff && !viewerUserIsOwner),
       isProfileEditable: viewerUserIsOwner,
@@ -116,8 +116,10 @@ function stopEditingProfile<PS>(state: Immutable<State<PS>>): Immutable<State<PS
 export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Update<State<PS>, Msg<PM>> {
   return (state, msg) => {
     switch (msg.tag) {
+
       case 'onChangeEmail':
         return [validateAndUpdateField(state, 'email', msg.value, validateEmail)];
+
       case 'onChangeProfile':
         return updateComponentChild({
           state,
@@ -126,6 +128,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
           childUpdate: Profile.update,
           childMsg: msg.value
         });
+
       case 'deactivateAccount':
         if (!state.promptDeactivationConfirmation) {
           return [state.set('promptDeactivationConfirmation', true)];
@@ -138,21 +141,34 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
             const result = await api.deleteUser(state.profileUser._id);
             switch (result.tag) {
               case 'valid':
-                dispatch(newUrl({
-                  tag: 'landing' as 'landing',
-                  value: null
-                }));
-                return stopDeactivateLoading(state);
+                // Redirect program staff back to the user list if they deactivate an account.
+                if (state.viewerUser && state.viewerUser.type === UserType.ProgramStaff) {
+                  dispatch(newUrl({
+                    tag: 'userList' as 'userList',
+                    value: null
+                  }));
+                } else {
+                  // Otherwise, redirect users to the landing page.
+                  dispatch(newUrl({
+                    tag: 'landing' as 'landing',
+                    value: null
+                  }));
+                }
+                return stopDeactivateLoading(state)
+                  .set('showDeactivateAccount', false);
               case 'invalid':
                 // TODO show errors
                 return stopDeactivateLoading(state);
             }
           }
         ];
+
       case 'cancelDeactivateAccount':
         return [state.set('promptDeactivationConfirmation', false)];
+
       case 'startEditingProfile':
         return [startEditingProfile(state)];
+
       case 'cancelEditingProfile':
         state = stopEditingProfile(state);
         return [
@@ -163,6 +179,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
               .set('profile', await resetProfileState(Profile, state.profileUser));
           }
         ];
+
       case 'saveProfile':
         state = startProfileLoading(state);
         return [
@@ -191,6 +208,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
             return state;
           }
         ];
+
       default:
         return [state];
     }

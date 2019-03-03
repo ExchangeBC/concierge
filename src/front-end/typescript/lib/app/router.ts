@@ -42,7 +42,7 @@ const router: Router<State, Page, UserType> = {
       auth: isSignedOut
     },
     {
-      // Alias the buyer sign-up page here.
+      // Alias the buyer sign-up page.
       path: '/sign-up',
       pageId: 'signUpBuyer',
       auth: isSignedOut
@@ -60,9 +60,7 @@ const router: Router<State, Page, UserType> = {
     {
       path: '/sign-up/program-staff',
       pageId: 'signUpProgramStaff',
-      // TODO revert before deploying
-      // auth: isProgramStaff
-      auth: isSignedOut
+      auth: isProgramStaff
     },
     {
       path: '/sign-out',
