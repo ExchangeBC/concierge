@@ -57,8 +57,8 @@ export function updateUser(session: Session, id: string): boolean {
   return isOwnAccount(session, id);
 }
 
-export function deleteUser(session: Session, id: string): boolean {
-  return isOwnAccount(session, id);
+export function deleteUser(session: Session, userId: string, userType: UserType): boolean {
+  return (isOwnAccount(session, userId) && !isProgramStaff(session)) || (isProgramStaff(session) && userType === UserType.ProgramStaff && !isOwnAccount(session, userId));
 }
 
 // Sessions.

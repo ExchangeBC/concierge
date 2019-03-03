@@ -241,18 +241,17 @@ const resource: Resource = {
     return {
       transformRequest: identityAsync,
       async respond(request) {
-        if (!permissions.deleteUser(request.session, request.params.id)) {
-          return basicResponse(401, request.session, null);
-        }
         const user = await UserModel.findOne({ _id: request.params.id, active: true });
         if (!user) {
           return basicResponse(404, request.session, null);
-        } else {
-          user.active = false;
-          await user.save();
-          const session = await SessionSchema.signOut(SessionModel, request.session);
-          return basicResponse(200, session, null);
         }
+        if (!permissions.deleteUser(request.session, user._id.toString(), user.profile.type)) {
+          return basicResponse(401, request.session, null);
+        }
+        user.active = false;
+        await user.save();
+        const session = await SessionSchema.signOut(SessionModel, request.session);
+        return basicResponse(200, session, null);
       }
     };
   }

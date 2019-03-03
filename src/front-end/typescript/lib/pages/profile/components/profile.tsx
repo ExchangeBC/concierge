@@ -10,7 +10,7 @@ import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import { formatTermsAndConditionsAgreementDate } from 'shared/lib';
 import { PublicUser } from 'shared/lib/resources/user';
-import { ADT } from 'shared/lib/types';
+import { ADT, UserType } from 'shared/lib/types';
 
 export interface State<ProfileState> {
   deactivateLoading: number;
@@ -48,7 +48,9 @@ export interface Params<Profile> {
 
 function init<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): Init<Params<P>, State<PS>> {
   return async params => {
+    // TODO clean up by simply passing profile and viewer users to this init function.
     const { profileUser, mode, viewerIsProgramStaff } = params;
+    const profileUserIsProgramStaff = profileUser.profile.type === UserType.ProgramStaff;
     return {
       deactivateLoading: 0,
       email: ShortText.init({
@@ -68,7 +70,7 @@ function init<PS, PM, P>(Profile: ProfileComponent<PS, PM, P>): Init<Params<P>, 
       showEmail: mode === 'owner' || viewerIsProgramStaff,
       showChangePassword: mode === 'owner',
       showTermsAndConditions: mode === 'owner' || viewerIsProgramStaff,
-      showDeactivateAccount: mode === 'owner',
+      showDeactivateAccount: (mode === 'owner' && !profileUserIsProgramStaff) || (viewerIsProgramStaff && profileUserIsProgramStaff && mode !== 'owner'),
       isProfileEditable: mode === 'owner',
       isEditingProfile: false,
       promptDeactivationConfirmation: false
@@ -239,7 +241,7 @@ function conditionalDeactivateAccount<PS, PM, P>(Profile: ProfileComponent<PS, P
             <LoadingButton onClick={deactivateAccount} color={showPrompt ? 'danger' : 'secondary'} loading={isLoading} disabled={isLoading}>
               {showPrompt ? 'Click Again to Confirm' : 'Deactivate Account'}
             </LoadingButton>
-            {showPrompt ? (<Link onClick={cancelDeactivateAccount} text='Cancel' textColor='link' />) : null}
+            {showPrompt ? (<Link onClick={cancelDeactivateAccount} text='Cancel' textColor='secondary' />) : null}
           </Col>
         </Row>
       </div>
