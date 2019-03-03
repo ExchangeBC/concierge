@@ -1,5 +1,5 @@
 import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, immutable, Immutable, Init, Update, View } from 'front-end/lib/framework';
+import { Component, ComponentMsg, ComponentViewProps, immutable, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import * as FormFieldMulti from 'front-end/lib/views/form-field-multi';
 import { Option } from 'front-end/lib/views/input/select';
 import { cloneDeep } from 'lodash';
@@ -100,7 +100,11 @@ function makeChild(state: State): View<FormFieldMulti.ChildProps<HTMLSelectEleme
   }
 };
 
-export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
+interface Props extends ComponentViewProps<State, Msg> {
+  disabled?: boolean;
+}
+
+export const view: View<Props> = ({ state, dispatch, disabled = false }) => {
   const onChange = (index: number): FormEventHandler<HTMLSelectElement> => event => {
     dispatch({
       tag: 'change',
@@ -110,13 +114,13 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
       }
     });
   };
-
   const onAdd = () => dispatch({ tag: 'add', value: undefined });
   const onRemove = (index: number) => dispatch({ tag: 'remove', value: index });
   return (
     <FormFieldMulti.view
       state={state.formFieldMulti}
       Child={makeChild(state)}
+      disabled={disabled}
       onChange={onChange}
       onAdd={onAdd}
       onRemove={onRemove} />

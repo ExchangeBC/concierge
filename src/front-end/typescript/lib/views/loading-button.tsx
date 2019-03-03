@@ -6,6 +6,7 @@ import { Button, Spinner } from 'reactstrap';
 export interface Props {
   children: Array<ReactElement<any>> | string;
   color: string;
+  size?: 'sm' | 'md' | 'lg';
   spinnerColor?: string;
   loading: boolean;
   disabled: boolean;
@@ -22,7 +23,7 @@ const Children: View<Props> = ({ loading, children, spinnerColor = 'light' }) =>
 
 const LoadingButton: View<Props> = props => {
   return (
-    <Button color={props.color} onClick={props.onClick || noop} disabled={props.disabled}>
+    <Button color={props.color} size={props.size || 'md'} onClick={props.onClick || noop} disabled={props.disabled}>
       <Children {...props} />
     </Button>
   );

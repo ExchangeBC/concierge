@@ -17,7 +17,6 @@ export function emptyField(): Field {
 
 export interface State {
   idNamespace: string;
-  disabled?: boolean;
   label?: string;
   labelClassName?: string;
   fields: Field[];
@@ -59,14 +58,15 @@ export interface ChildProps<ChildElement> {
 export interface Props<ChildElement> {
   state: State;
   Child: View<ChildProps<ChildElement>>;
+  disabled?: boolean;
   onChange(index: number): FormEventHandler<ChildElement>;
   onAdd(): void;
   onRemove(index: number): void;
   toggleHelp?(): void;
 }
 
-const ConditionHelpToggle: View<Props<any>> = ({ state, toggleHelp }) => {
-  const { help, disabled } = state;
+const ConditionHelpToggle: View<Props<any>> = ({ state, toggleHelp, disabled = false }) => {
+  const { help } = state;
   if (help && toggleHelp && !disabled) {
     return (
       <a onClick={() => toggleHelp()}>
@@ -92,8 +92,8 @@ const ConditionalLabel: View<Props<any>> = (props) => {
   }
 };
 
-const ConditionalAddButton: View<Props<any>> = ({ state, onAdd }) => {
-  if (!state.disabled) {
+const ConditionalAddButton: View<Props<any>> = ({ state, onAdd, disabled = false }) => {
+  if (!disabled) {
     return (
       <Button color='secondary' size='sm' className='ml-2' onClick={() => onAdd()}>
         Add
@@ -104,7 +104,8 @@ const ConditionalAddButton: View<Props<any>> = ({ state, onAdd }) => {
   }
 }
 
-const ConditionalHelp: View<State> = ({ help, disabled }) => {
+const ConditionalHelp: View<Props<any>> = ({ state, disabled = false }) => {
+  const { help } = state;
   if (help && help.show && !disabled) {
     return (
       <Alert color='info'>
@@ -131,7 +132,22 @@ const ConditionalFieldErrors: View<Field> = ({ errors }) => {
   }
 }
 
-function Children<ChildElement>({ Child, state, onChange, onRemove }: Props<ChildElement>) {
+function ConditionalRemoveButton<ChildElement>(props: Props<ChildElement> & { index: number }) {
+  if (props.disabled) {
+    return null;
+  } else {
+    return (
+      <InputGroupAddon addonType='append'>
+        <Button color='secondary' onClick={() => props.onRemove(props.index)}>
+          Remove
+        </Button>
+      </InputGroupAddon>
+    );
+  }
+}
+
+function Children<ChildElement>(props: Props<ChildElement>) {
+  const { Child, state, onChange, disabled = false } = props;
   const children = state.fields.map((field, i) => {
     const id = `${state.idNamespace}-${i}`;
     const invalid = !!field.errors.length;
@@ -139,12 +155,8 @@ function Children<ChildElement>({ Child, state, onChange, onRemove }: Props<Chil
     return (
       <FormGroup key={`form-field-multi-child-${i}`}>
         <InputGroup>
-          <Child id={id} className={className} state={field} onChange={onChange(i)} disabled={state.disabled || false} />
-          <InputGroupAddon addonType='append'>
-            <Button color='danger' onClick={() => onRemove(i)}>
-              Remove
-            </Button>
-          </InputGroupAddon>
+          <Child id={id} className={className} state={field} onChange={onChange(i)} disabled={disabled} />
+          <ConditionalRemoveButton index={i} {...props} />
         </InputGroup>
         <ConditionalFieldErrors {...field} />
       </FormGroup>
@@ -164,7 +176,7 @@ export function view<ChildElement>(props: Props<ChildElement>) {
         <ConditionalLabel {...props} />
         <ConditionalAddButton {...props} />
       </div>
-      <ConditionalHelp {...state} />
+      <ConditionalHelp {...props} />
       <Children {...props} />
     </FormGroup >
   );

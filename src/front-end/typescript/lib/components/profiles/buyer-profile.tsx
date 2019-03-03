@@ -1,7 +1,7 @@
 import { Page } from 'front-end/lib/app/types';
 import * as SelectMulti from 'front-end/lib/components/input/select-multi';
-import { ProfileComponent, ProfileInitParams } from 'front-end/lib/components/profiles/types';
-import { ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
+import { ProfileComponent, ProfileParams, ProfileView } from 'front-end/lib/components/profiles/types';
+import { ComponentMsg, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
@@ -18,7 +18,6 @@ import { BuyerProfileValidationErrors, validateBuyerProfile } from 'shared/lib/v
 export type ValidationErrors = BuyerProfileValidationErrors;
 
 export interface State {
-  disabled: boolean;
   validationErrors: ValidationErrors;
   firstName: ShortText.State;
   lastName: ShortText.State;
@@ -138,11 +137,10 @@ export type InnerMsg
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
-export type Params = ProfileInitParams<BuyerProfile>;
+export type Params = ProfileParams<BuyerProfile>;
 
-export const init: Init<Params, State> = async ({ profile, disabled = false }) => {
+export const init: Init<Params, State> = async ({ profile }) => {
   const state = {
-    disabled,
     validationErrors: {},
     firstName: ShortText.init({
       id: 'buyer-profile-first-name',
@@ -246,7 +244,6 @@ export const init: Init<Params, State> = async ({ profile, disabled = false }) =
         idNamespace: 'buyer-industry-sectors',
         label: 'Industry Sector(s)',
         labelClassName: 'h3 mb-3',
-        disabled,
         fields: []
       }
     })),
@@ -257,7 +254,6 @@ export const init: Init<Params, State> = async ({ profile, disabled = false }) =
         idNamespace: 'buyer-areas-of-interest',
         label: 'Area(s) of Interest',
         labelClassName: 'h3 mb-3',
-        disabled,
         fields: []
       }
     }))
@@ -338,7 +334,7 @@ function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<
   }
 }
 
-export const PersonalInformation: ComponentView<State, Msg> = ({ state, dispatch }) => {
+export const PersonalInformation: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
     <div className='mt-3 mt-md-0'>
@@ -347,13 +343,13 @@ export const PersonalInformation: ComponentView<State, Msg> = ({ state, dispatch
         <Col xs='12' md='5'>
           <ShortText.view
             state={state.firstName}
-            disabled={state.disabled}
+            disabled={disabled}
             onChange={onChangeShortText('firstName')} />
         </Col>
         <Col xs='12' md='5'>
           <ShortText.view
             state={state.lastName}
-            disabled={state.disabled}
+            disabled={disabled}
             onChange={onChangeShortText('lastName')} />
         </Col>
       </Row>
@@ -361,7 +357,7 @@ export const PersonalInformation: ComponentView<State, Msg> = ({ state, dispatch
         <Col xs='12' md='7'>
           <ShortText.view
             state={state.positionTitle}
-            disabled={state.disabled}
+            disabled={disabled}
             onChange={onChangeShortText('positionTitle')} />
         </Col>
       </Row>
@@ -369,13 +365,13 @@ export const PersonalInformation: ComponentView<State, Msg> = ({ state, dispatch
         <Col xs='12' md='7'>
           <ShortText.view
             state={state.publicSectorEntity}
-            disabled={state.disabled}
+            disabled={disabled}
             onChange={onChangeShortText('publicSectorEntity')} />
         </Col>
         <Col xs='12' md='5'>
           <ShortText.view
             state={state.branch}
-            disabled={state.disabled}
+            disabled={disabled}
             onChange={onChangeShortText('branch')} />
         </Col>
       </Row>
@@ -383,7 +379,7 @@ export const PersonalInformation: ComponentView<State, Msg> = ({ state, dispatch
   );
 };
 
-export const ContactInformation: ComponentView<State, Msg> = ({ state, dispatch }) => {
+export const ContactInformation: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
@@ -393,7 +389,7 @@ export const ContactInformation: ComponentView<State, Msg> = ({ state, dispatch 
         <Col xs='12'>
           <ShortText.view
             state={state.contactStreetAddress}
-            disabled={state.disabled}
+            disabled={disabled}
             onChange={onChangeShortText('contactStreetAddress')} />
         </Col>
       </Row>
@@ -401,13 +397,13 @@ export const ContactInformation: ComponentView<State, Msg> = ({ state, dispatch 
         <Col xs='12' md='7'>
           <ShortText.view
             state={state.contactCity}
-            disabled={state.disabled}
+            disabled={disabled}
             onChange={onChangeShortText('contactCity')} />
         </Col>
         <Col xs='12' md='5'>
           <ShortText.view
             state={state.contactProvince}
-            disabled={state.disabled}
+            disabled={disabled}
             onChange={onChangeShortText('contactProvince')} />
         </Col>
       </Row>
@@ -415,13 +411,13 @@ export const ContactInformation: ComponentView<State, Msg> = ({ state, dispatch 
         <Col xs='12' md='4'>
           <ShortText.view
             state={state.contactPostalCode}
-            disabled={state.disabled}
+            disabled={disabled}
             onChange={onChangeShortText('contactPostalCode')} />
         </Col>
         <Col xs='12' md='6'>
           <ShortText.view
             state={state.contactCountry}
-            disabled={state.disabled}
+            disabled={disabled}
             onChange={onChangeShortText('contactCountry')} />
         </Col>
       </Row>
@@ -429,19 +425,19 @@ export const ContactInformation: ComponentView<State, Msg> = ({ state, dispatch 
         <Col xs='12' md='4'>
           <ShortText.view
             state={state.contactPhoneNumber}
-            disabled={state.disabled}
+            disabled={disabled}
             onChange={onChangeShortText('contactPhoneNumber')} />
         </Col>
         <Col xs='12' md='4'>
           <ShortText.view
             state={state.contactPhoneCountryCode}
-            disabled={state.disabled}
+            disabled={disabled}
             onChange={onChangeShortText('contactPhoneCountryCode')} />
         </Col>
         <Col xs='12' md='4'>
           <Select.view
             state={state.contactPhoneType}
-            disabled={state.disabled}
+            disabled={disabled}
             onChange={onChangeSelect('contactPhoneType')} />
         </Col>
       </Row>
@@ -449,29 +445,29 @@ export const ContactInformation: ComponentView<State, Msg> = ({ state, dispatch 
   );
 };
 
-export const IndustrySectors: ComponentView<State, Msg> = ({ state, dispatch }) => {
+export const IndustrySectors: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
   const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'industrySectors' as 'industrySectors', value }));
   return (
     <Row className='mt-3'>
       <Col xs='12' lg='10' xl='8'>
-        <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} />
+        <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} disabled={disabled} />
       </Col>
     </Row>
   );
 };
 
-export const AreasOfInterest: ComponentView<State, Msg> = ({ state, dispatch }) => {
+export const AreasOfInterest: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
   const dispatchAreasOfInterest: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'areasOfInterest' as 'areasOfInterest', value }));
   return (
     <Row className='mt-3'>
       <Col xs='12' lg='10' xl='8'>
-        <SelectMulti.view state={state.areasOfInterest} dispatch={dispatchAreasOfInterest} />
+        <SelectMulti.view state={state.areasOfInterest} dispatch={dispatchAreasOfInterest} disabled={disabled} />
       </Col>
     </Row>
   );
 };
 
-export const view: ComponentView<State, Msg> = props => {
+export const view: ProfileView<State, InnerMsg> = props => {
   return (
     <div>
       <PersonalInformation {...props} />
