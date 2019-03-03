@@ -265,7 +265,7 @@ export const init: Init<Params, State> = async ({ profile, disabled = false }) =
   if (!profile) {
     return state;
   } else {
-    return setValues(immutable(state), profile).toJS();
+    return setValues(immutable(state), profile).toJSON();
   }
 };
 
