@@ -16,6 +16,7 @@ import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
+import * as PageUserList from 'front-end/lib/pages/user-list';
 import { get } from 'lodash';
 import { ValidOrInvalid } from 'shared/lib/validators';
 
@@ -108,6 +109,9 @@ const update: Update<State, Msg> = (state, msg) => {
               break;
             case 'profile':
               state = state.setIn(['pages', 'profile'], immutable(await PageProfile.init(msg.value.page.value)));
+              break;
+            case 'userList':
+              state = state.setIn(['pages', 'userList'], immutable(await PageUserList.init(msg.value.page.value)));
               break;
             case 'termsAndConditions':
               state = state.setIn(['pages', 'termsAndConditions'], immutable(await PageTermsAndConditions.init(msg.value.page.value)));
@@ -229,6 +233,15 @@ const update: Update<State, Msg> = (state, msg) => {
         mapChildMsg: value => ({ tag: 'pageProfile', value }),
         childStatePath: ['pages', 'profile'],
         childUpdate: PageProfile.update,
+        childMsg: msg.value
+      });
+
+    case 'pageUserList':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageUserList', value }),
+        childStatePath: ['pages', 'userList'],
+        childUpdate: PageUserList.update,
         childMsg: msg.value
       });
 

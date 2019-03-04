@@ -1,5 +1,6 @@
 import { prefixRequest } from 'front-end/lib/http';
 import shajs from 'sha.js';
+import { ReadManyResponse } from 'shared/lib/crud';
 import * as ForgotPasswordTokenResource from 'shared/lib/resources/forgot-password-token';
 import * as UserResource from 'shared/lib/resources/user';
 import { HttpMethod, Profile, UserType } from 'shared/lib/types';
@@ -66,6 +67,24 @@ export async function updateUser(user: UpdateUserRequestBody): Promise<ValidOrIn
     // tslint:disable:next-line no-console
     console.error(error);
     return invalid({});
+  }
+}
+
+export type ReadManyUserResponseBody = ReadManyResponse<UserResource.PublicUser>;
+
+export async function readManyUsers(): Promise<ValidOrInvalid<ReadManyUserResponseBody, null>> {
+  try {
+    const response = await request(HttpMethod.Get, `users`);
+    switch (response.status) {
+      case 200:
+        return valid(response.data as ReadManyUserResponseBody);
+      default:
+        return invalid(null);
+    }
+  } catch (error) {
+    // tslint:disable:next-line no-console
+    console.error(error);
+    return invalid(null);
   }
 }
 

@@ -25,7 +25,7 @@ const isBuyerOrVendor: RouteAuthDefinition<UserType> = {
 
 const isProgramStaff: RouteAuthDefinition<UserType> = {
   level: { tag: 'userType', value: [UserType.ProgramStaff] },
-  redirect: '/',
+  redirect: '/sign-in',
   signOut: false
 };
 

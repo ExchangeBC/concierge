@@ -36,18 +36,6 @@ export interface State {
   areasOfInterest: Immutable<SelectMulti.State>;
 }
 
-export function getName(state: Immutable<State>): string | null {
-  const firstName = state.firstName.value;
-  const lastName = state.lastName.value;
-  if (firstName && lastName) {
-    return `${firstName} ${lastName}`;
-  } else if (firstName) {
-    return firstName;
-  } else {
-    return null;
-  }
-}
-
 export function getValues(state: Immutable<State>): BuyerProfile {
   return {
     type: UserType.Buyer as UserType.Buyer,
@@ -482,7 +470,6 @@ export const component: ProfileComponent<State, InnerMsg, BuyerProfile> = {
   init,
   update,
   view,
-  getName,
   getValues,
   setValues,
   setErrors,

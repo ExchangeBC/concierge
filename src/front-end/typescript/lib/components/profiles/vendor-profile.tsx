@@ -37,10 +37,6 @@ export interface State {
   areasOfExpertise: Immutable<SelectMulti.State>;
 }
 
-export function getName(state: Immutable<State>): string | null {
-  return state.businessName.value || null;
-}
-
 export function getValues(state: Immutable<State>): VendorProfile {
   return {
     type: UserType.Vendor as UserType.Vendor,
@@ -503,7 +499,6 @@ export const component: ProfileComponent<State, InnerMsg, VendorProfile> = {
   init,
   update,
   view,
-  getName,
   getValues,
   setValues,
   setErrors,

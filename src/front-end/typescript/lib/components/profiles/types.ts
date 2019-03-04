@@ -21,7 +21,6 @@ export interface ProfileComponent<State, InnerMsg, Profile extends ProfileType> 
   update: Update<State, ProfileMsg<InnerMsg>>;
   view: ProfileView<State, InnerMsg>;
   userType: UserType;
-  getName(state: Immutable<State>): string | null;
   getValues(state: Immutable<State>): Profile;
   setValues(state: Immutable<State>, profile: Profile): Immutable<State>;
   setErrors(state: Immutable<State>, errors: ProfileValidationErrors): Immutable<State>;

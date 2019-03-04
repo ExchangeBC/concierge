@@ -29,18 +29,6 @@ export interface State {
   contactPhoneType: Select.State;
 }
 
-export function getName(state: Immutable<State>): string | null {
-  const firstName = state.firstName.value;
-  const lastName = state.lastName.value;
-  if (firstName && lastName) {
-    return `${firstName} ${lastName}`;
-  } else if (firstName) {
-    return firstName;
-  } else {
-    return null;
-  }
-}
-
 export function getValues(state: Immutable<State>): ProgramStaffProfile {
   return {
     type: UserType.ProgramStaff as UserType.ProgramStaff,
@@ -365,7 +353,6 @@ export const component: ProfileComponent<State, InnerMsg, ProgramStaffProfile> =
   init,
   update,
   view,
-  getName,
   getValues,
   setValues,
   setErrors,

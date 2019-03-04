@@ -11,7 +11,7 @@ import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import { formatTermsAndConditionsAgreementDate } from 'shared/lib';
 import { PublicUser } from 'shared/lib/resources/user';
-import { ADT, Profile as ProfileType, UserType, userTypeToTitleCase } from 'shared/lib/types';
+import { ADT, Profile as ProfileType, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
 import { validateEmail } from 'shared/lib/validators';
 
 export interface State<ProfileState> {
@@ -432,7 +432,7 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
   const ConditionalDeactivateAccount = conditionalDeactivateAccount(Profile);
   return props => {
     const { state } = props;
-    const profileName = Profile.getName(state.profile);
+    const profileName = profileToName(Profile.getValues(state.profile));
     const name: string | null = state.viewerUser && state.viewerUser.id === state.profileUser._id ? 'My' : profileName && `${profileName}'s`;
     const userType = userTypeToTitleCase(state.profileUser.profile.type);
     const headingSuffix = `${userType} Profile`;

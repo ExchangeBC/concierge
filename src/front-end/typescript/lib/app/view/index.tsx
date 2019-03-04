@@ -17,6 +17,7 @@ import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
+import * as PageUserList from 'front-end/lib/pages/user-list';
 import { default as React, ReactElement } from 'react';
 import { Col, Container, Row } from 'reactstrap';
 import { UserType } from 'shared/lib/types';
@@ -120,6 +121,14 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.profile}
           mapPageMsg={value => ({ tag: 'pageProfile', value })}
           View={PageProfile.view} />
+      );
+    case 'userList':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.userList}
+          mapPageMsg={value => ({ tag: 'pageUserList', value })}
+          View={PageUserList.view} />
       );
     case 'termsAndConditions':
       return (

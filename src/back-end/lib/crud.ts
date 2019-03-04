@@ -1,5 +1,6 @@
 import { composeTransformRequest, Handler, JsonResponseBody, mapJsonResponse, mapRespond, namespaceRoute, Route, Router } from 'back-end/lib/server';
 import { get } from 'lodash';
+import { ReadManyResponse } from 'shared/lib/crud';
 import { HttpMethod } from 'shared/lib/types';
 
 // This type allows a resource to indicate which Models it needs at the type level.
@@ -16,13 +17,6 @@ export interface ReadOneRequestParams {
 export interface ReadManyRequestQuery {
   offset: number;
   count: number;
-}
-
-export interface ReadManyResponse<Item> {
-  total: number;
-  offset: number;
-  count: number;
-  items: Item[];
 }
 
 export interface UpdateRequestParams {
