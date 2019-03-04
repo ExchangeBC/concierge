@@ -1,9 +1,11 @@
 import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
 import { readManyUsers } from 'front-end/lib/http/api';
+import Icon from 'front-end/lib/views/icon';
 import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
 import Link from 'front-end/lib/views/link';
+import { truncate } from 'lodash';
 import { default as React, ReactElement } from 'react';
 import { Col, Row, Table } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
@@ -95,6 +97,7 @@ export const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
 };
 
 export const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  const truncateString = (s: string) => truncate(s, { length: 50, separator: /\s\+/ });
   let children: ReactElement<any> | Array<ReactElement<any>> = (<tr><td>No users found.</td></tr>);
   if (state.visibleUsers.length) {
     children = state.visibleUsers.map((user, i) => {
@@ -103,11 +106,11 @@ export const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
               <td>{userTypeToTitleCase(user.profile.type)}</td>
               <td>
                 <a href={`/profile/${user._id}`}>
-                  {profileToName(user.profile)}
+                  {truncateString(profileToName(user.profile) || 'No Name Provided')}
                 </a>
               </td>
-              <td>{user.email}</td>
-              <td>{user.acceptedTermsAt ? 'Yes' : 'No'}</td>
+              <td>{truncateString(user.email)}</td>
+              <td className='text-center'>{user.acceptedTermsAt ? (<Icon name='check' color='body' />) : ''}</td>
           </tr>
       );
     });
@@ -118,10 +121,10 @@ export const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Table hover responsive className='text-nowrap mb-0'>
           <thead>
             <tr>
-              <th>Type</th>
+              <th style={{ width: '140px' }}>Type</th>
               <th>Name</th>
               <th>Email Address</th>
-              <th>Terms?</th>
+              <th className='text-center' style={{ width: '80px' }}>T&C</th>
             </tr>
           </thead>
           <tbody>

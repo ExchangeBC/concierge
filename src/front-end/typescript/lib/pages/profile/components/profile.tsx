@@ -401,7 +401,7 @@ function conditionalDeactivateAccount<PS, PM, P extends ProfileType>(Profile: Pr
     const deactivateAccount = () => dispatch({ tag: 'deactivateAccount', value: undefined });
     const cancelDeactivateAccount = () => dispatch({ tag: 'cancelDeactivateAccount', value: undefined });
     return (
-      <div className='pt-5 border-top'>
+      <div className='py-5 border-top'>
         <Row>
           <Col xs='12'>
             <h2>Deactivate Account</h2>

@@ -1,4 +1,5 @@
 import { Immutable, View } from 'front-end/lib/framework';
+import Icon from 'front-end/lib/views/icon';
 import { cloneDeep, reduce } from 'lodash';
 import { default as React, FormEventHandler } from 'react';
 import { Alert, Button, FormGroup, FormText, InputGroup, InputGroupAddon, Label } from 'reactstrap';
@@ -139,7 +140,7 @@ function ConditionalRemoveButton<ChildElement>(props: Props<ChildElement> & { in
     return (
       <InputGroupAddon addonType='append'>
         <Button color='secondary' onClick={() => props.onRemove(props.index)}>
-          Remove
+          <Icon name='trash' color='white' width={20} height={20} />
         </Button>
       </InputGroupAddon>
     );
