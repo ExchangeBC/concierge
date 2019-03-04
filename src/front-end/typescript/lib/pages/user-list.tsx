@@ -12,6 +12,8 @@ import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, parseUserType, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
 
+const FALLBACK_NAME = 'No Name Provided';
+
 export interface State {
   users: PublicUser[];
   visibleUsers: PublicUser[];
@@ -33,7 +35,16 @@ export const init: Init<Params, State> = async () => {
   const result = await readManyUsers();
   let users: PublicUser[] = [];
   if (result.tag === 'valid') {
-    users = result.value.items;
+    // Sort users by user type first, then name.
+    users = result.value.items.sort((a, b) => {
+      if (a.profile.type === b.profile.type) {
+        const aName = profileToName(a.profile) || FALLBACK_NAME;
+        const bName = profileToName(b.profile) || FALLBACK_NAME;
+        return aName.localeCompare(bName, 'en', { sensitivity: 'base' });
+      } else {
+        return a.profile.type.localeCompare(b.profile.type, 'en');
+      }
+    });
   }
   return {
     users,
@@ -154,7 +165,7 @@ export const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
               <td>{userTypeToTitleCase(user.profile.type)}</td>
               <td>
                 <a href={`/profile/${user._id}`}>
-                  {truncateString(profileToName(user.profile) || 'No Name Provided')}
+                  {truncateString(profileToName(user.profile) || FALLBACK_NAME)}
                 </a>
               </td>
               <td>{truncateString(user.email)}</td>

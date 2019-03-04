@@ -131,6 +131,27 @@ function isValid<PS, PM, P extends ProfileType>(state: State<PS>, Profile: Profi
   return providedRequiredFields && !isInvalid(state, Profile);
 }
 
+function Subtitle(props: { userType: UserType }) {
+  switch (props.userType) {
+    case UserType.Buyer:
+    case UserType.Vendor:
+      return (
+        <p>
+          Create an account to gain access to all features of the Concierge. Already have an account?{' '}
+          <a href='/sign-in'>
+            Sign in here.
+          </a>
+        </p>
+      );
+    case UserType.ProgramStaff:
+      return (
+        <p>
+          Create another Program Staff account to manage the Concierge.
+        </p>
+      );
+  }
+}
+
 function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
   return props => {
     const { state, dispatch } = props;
@@ -148,12 +169,7 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
         </Row>
         <Row>
           <Col xs='12' md='8'>
-            <p>
-              Create an account to gain access to all features of the Concierge. Already have an account?{' '}
-              <a href='/sign-in'>
-                Sign in here.
-              </a>
-            </p>
+            <Subtitle userType={Profile.userType} />
           </Col>
         </Row>
         <Row className='mt-3'>
