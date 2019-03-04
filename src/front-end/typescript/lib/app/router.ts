@@ -88,19 +88,39 @@ const router: Router<State, Page, UserType> = {
       auth: isSignedOut
     },
     {
-      path: '/profile/:userId',
-      pageId: 'profile',
-      auth: isSignedIn
-    },
-    {
       path: '/terms-and-conditions',
       pageId: 'termsAndConditions',
       auth: isBuyerOrVendor
     },
     {
+      path: '/profile/:userId',
+      pageId: 'profile',
+      auth: isSignedIn
+    },
+    {
       path: '/users',
       pageId: 'userList',
       auth: isProgramStaff
+    },
+    {
+      path: '/about',
+      pageId: 'about'
+    },
+    {
+      path: '/accessibility',
+      pageId: 'accessibility'
+    },
+    {
+      path: '/copyright',
+      pageId: 'copyright'
+    },
+    {
+      path: '/disclaimer',
+      pageId: 'disclaimer'
+    },
+    {
+      path: '/privacy',
+      pageId: 'privacy'
     },
     {
       path: '/requests-for-information',
@@ -192,19 +212,19 @@ const router: Router<State, Page, UserType> = {
           tag: 'forgotPassword',
           value: null
         };
+      case 'termsAndConditions':
+        return {
+          tag: 'termsAndConditions',
+          value: {
+            userId: get(state.session, ['user', 'id'], '')
+          }
+        };
       case 'profile':
         return {
           tag: 'profile',
           value: {
             profileUserId: getString(params, 'userId'),
             viewerUser: state.getIn(['session', 'user'])
-          }
-        };
-      case 'termsAndConditions':
-        return {
-          tag: 'termsAndConditions',
-          value: {
-            userId: get(state.session, ['user', 'id'], '')
           }
         };
       case 'userList':
@@ -215,6 +235,31 @@ const router: Router<State, Page, UserType> = {
       case 'requestForInformationList':
         return {
           tag: 'requestForInformationList',
+          value: null
+        };
+      case 'about':
+        return {
+          tag: 'about',
+          value: null
+        };
+      case 'accessibility':
+        return {
+          tag: 'accessibility',
+          value: null
+        };
+      case 'copyright':
+        return {
+          tag: 'copyright',
+          value: null
+        };
+      case 'disclaimer':
+        return {
+          tag: 'disclaimer',
+          value: null
+        };
+      case 'privacy':
+        return {
+          tag: 'privacy',
           value: null
         };
       case 'noticeChangePassword':
@@ -266,14 +311,24 @@ const router: Router<State, Page, UserType> = {
         return `/reset-password/${page.value.forgotPasswordToken}/${page.value.userId}`;
       case 'forgotPassword':
         return '/forgot-password';
-      case 'profile':
-        return `/profile/${page.value.profileUserId}`;
       case 'termsAndConditions':
         return '/terms-and-conditions';
+      case 'profile':
+        return `/profile/${page.value.profileUserId}`;
       case 'userList':
         return '/users';
       case 'requestForInformationList':
         return '/requests-for-information';
+      case 'about':
+        return '/about';
+      case 'accessibility':
+        return '/accessibility';
+      case 'copyright':
+        return '/copyright';
+      case 'disclaimer':
+        return '/disclaimer';
+      case 'privacy':
+        return '/privacy';
       case 'noticeChangePassword':
         return '/notice/change-password';
       case 'noticeResetPassword':

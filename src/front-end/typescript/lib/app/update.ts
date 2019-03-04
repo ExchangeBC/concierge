@@ -4,6 +4,11 @@ import { deleteSession, getSession, Session } from 'front-end/lib/http/api';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
+import * as PageAbout from 'front-end/lib/pages/markdown/about';
+import * as PageAccessibility from 'front-end/lib/pages/markdown/accessibility';
+import * as PageCopyright from 'front-end/lib/pages/markdown/copyright';
+import * as PageDisclaimer from 'front-end/lib/pages/markdown/disclaimer';
+import * as PagePrivacy from 'front-end/lib/pages/markdown/privacy';
 import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
@@ -118,6 +123,9 @@ const update: Update<State, Msg> = (state, msg) => {
             case 'forgotPassword':
               state = state.setIn(['pages', 'forgotPassword'], immutable(await PageForgotPassword.init(null)));
               break;
+            case 'termsAndConditions':
+              state = state.setIn(['pages', 'termsAndConditions'], immutable(await PageTermsAndConditions.init(msg.value.page.value)));
+              break;
             case 'profile':
               state = state.setIn(['pages', 'profile'], immutable(await PageProfile.init(msg.value.page.value)));
               break;
@@ -127,8 +135,20 @@ const update: Update<State, Msg> = (state, msg) => {
             case 'requestForInformationList':
               state = state.setIn(['pages', 'requestForInformationList'], immutable(await PageRequestForInformationList.init(msg.value.page.value)));
               break;
-            case 'termsAndConditions':
-              state = state.setIn(['pages', 'termsAndConditions'], immutable(await PageTermsAndConditions.init(msg.value.page.value)));
+            case 'about':
+              state = state.setIn(['pages', 'about'], immutable(await PageAbout.init(msg.value.page.value)));
+              break;
+            case 'accessibility':
+              state = state.setIn(['pages', 'accessibility'], immutable(await PageAccessibility.init(msg.value.page.value)));
+              break;
+            case 'copyright':
+              state = state.setIn(['pages', 'copyright'], immutable(await PageCopyright.init(msg.value.page.value)));
+              break;
+            case 'disclaimer':
+              state = state.setIn(['pages', 'disclaimer'], immutable(await PageDisclaimer.init(msg.value.page.value)));
+              break;
+            case 'privacy':
+              state = state.setIn(['pages', 'privacy'], immutable(await PagePrivacy.init(msg.value.page.value)));
               break;
             case 'noticeChangePassword':
               state = state.setIn(['pages', 'noticeChangePassword'], immutable(await PageNoticeChangePassword.init(null)));
@@ -257,6 +277,15 @@ const update: Update<State, Msg> = (state, msg) => {
         childMsg: msg.value
       });
 
+    case 'pageTermsAndConditions':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageTermsAndConditions', value }),
+        childStatePath: ['pages', 'termsAndConditions'],
+        childUpdate: PageTermsAndConditions.update,
+        childMsg: msg.value
+      });
+
     case 'pageProfile':
       return updateAppChild({
         state,
@@ -284,12 +313,48 @@ const update: Update<State, Msg> = (state, msg) => {
         childMsg: msg.value
       });
 
-    case 'pageTermsAndConditions':
+    case 'pageAbout':
       return updateAppChild({
         state,
-        mapChildMsg: value => ({ tag: 'pageTermsAndConditions', value }),
-        childStatePath: ['pages', 'termsAndConditions'],
-        childUpdate: PageTermsAndConditions.update,
+        mapChildMsg: value => ({ tag: 'pageAbout', value }),
+        childStatePath: ['pages', 'about'],
+        childUpdate: PageAbout.update,
+        childMsg: msg.value
+      });
+
+    case 'pageAccessibility':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageAccessibility', value }),
+        childStatePath: ['pages', 'accessibility'],
+        childUpdate: PageAccessibility.update,
+        childMsg: msg.value
+      });
+
+    case 'pageCopyright':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageCopyright', value }),
+        childStatePath: ['pages', 'copyright'],
+        childUpdate: PageCopyright.update,
+        childMsg: msg.value
+      });
+
+    case 'pageDisclaimer':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageDisclaimer', value }),
+        childStatePath: ['pages', 'disclaimer'],
+        childUpdate: PageDisclaimer.update,
+        childMsg: msg.value
+      });
+
+    case 'pagePrivacy':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pagePrivacy', value }),
+        childStatePath: ['pages', 'privacy'],
+        childUpdate: PagePrivacy.update,
         childMsg: msg.value
       });
 

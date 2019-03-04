@@ -3,6 +3,11 @@ import { Session } from 'front-end/lib/http/api';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
+import * as PageAbout from 'front-end/lib/pages/markdown/about';
+import * as PageAccessibility from 'front-end/lib/pages/markdown/accessibility';
+import * as PageCopyright from 'front-end/lib/pages/markdown/copyright';
+import * as PageDisclaimer from 'front-end/lib/pages/markdown/disclaimer';
+import * as PagePrivacy from 'front-end/lib/pages/markdown/privacy';
 import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
@@ -34,6 +39,11 @@ export type Page
   | ADT<'profile', PageProfile.Params>
   | ADT<'userList', PageUserList.Params>
   | ADT<'requestForInformationList', PageRequestForInformationList.Params>
+  | ADT<'about', PageAbout.Params>
+  | ADT<'accessibility', PageAccessibility.Params>
+  | ADT<'copyright', PageCopyright.Params>
+  | ADT<'disclaimer', PageDisclaimer.Params>
+  | ADT<'privacy', PagePrivacy.Params>
   | ADT<'noticeNotFound', PageNoticeNotFound.Params>
   | ADT<'noticeChangePassword', PageNoticeChangePassword.Params>
   | ADT<'noticeResetPassword', PageNoticeResetPassword.Params>
@@ -56,10 +66,15 @@ export interface State {
     changePassword?: Immutable<PageChangePassword.State>;
     resetPassword?: Immutable<PageResetPassword.State>;
     forgotPassword?: Immutable<PageForgotPassword.State>;
+    termsAndConditions?: Immutable<PageTermsAndConditions.State>;
     profile?: Immutable<PageProfile.State>;
     userList?: Immutable<PageUserList.State>;
     requestForInformationList?: Immutable<PageRequestForInformationList.State>;
-    termsAndConditions?: Immutable<PageTermsAndConditions.State>;
+    about?: Immutable<PageAbout.State>;
+    accessibility?: Immutable<PageAccessibility.State>;
+    copyright?: Immutable<PageCopyright.State>;
+    disclaimer?: Immutable<PageDisclaimer.State>;
+    privacy?: Immutable<PagePrivacy.State>;
     noticeNotFound?: Immutable<PageNoticeNotFound.State>;
     noticeChangePassword?: Immutable<PageNoticeChangePassword.State>;
     noticeResetPassword?: Immutable<PageNoticeResetPassword.State>;
@@ -83,6 +98,11 @@ type InnerMsg
   | ADT<'pageProfile', PageProfile.Msg>
   | ADT<'pageUserList', PageUserList.Msg>
   | ADT<'pageRequestForInformationList', PageRequestForInformationList.Msg>
+  | ADT<'pageAbout', PageAbout.Msg>
+  | ADT<'pageAccessibility', PageAccessibility.Msg>
+  | ADT<'pageCopyright', PageCopyright.Msg>
+  | ADT<'pageDisclaimer', PageDisclaimer.Msg>
+  | ADT<'pagePrivacy', PagePrivacy.Msg>
   | ADT<'pageNoticeNotFound', PageNoticeNotFound.Msg>
   | ADT<'pageNoticeChangePassword', PageNoticeChangePassword.Msg>
   | ADT<'pageNoticeResetPassword', PageNoticeResetPassword.Msg>

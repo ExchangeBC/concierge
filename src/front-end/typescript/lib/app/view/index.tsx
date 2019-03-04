@@ -5,6 +5,11 @@ import { AppMsg, ComponentMsg, ComponentView, Dispatch, Immutable, mapAppDispatc
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
+import * as PageAbout from 'front-end/lib/pages/markdown/about';
+import * as PageAccessibility from 'front-end/lib/pages/markdown/accessibility';
+import * as PageCopyright from 'front-end/lib/pages/markdown/copyright';
+import * as PageDisclaimer from 'front-end/lib/pages/markdown/disclaimer';
+import * as PagePrivacy from 'front-end/lib/pages/markdown/privacy';
 import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
@@ -125,6 +130,15 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           View={PageForgotPassword.view} />
       );
 
+    case 'termsAndConditions':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.termsAndConditions}
+          mapPageMsg={value => ({ tag: 'pageTermsAndConditions', value })}
+          View={PageTermsAndConditions.view} />
+      );
+
     case 'profile':
       return (
         <ViewPage
@@ -152,13 +166,49 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           View={PageRequestForInformationList.view} />
       );
 
-    case 'termsAndConditions':
+    case 'about':
       return (
         <ViewPage
           dispatch={dispatch}
-          pageState={state.pages.termsAndConditions}
-          mapPageMsg={value => ({ tag: 'pageTermsAndConditions', value })}
-          View={PageTermsAndConditions.view} />
+          pageState={state.pages.about}
+          mapPageMsg={value => ({ tag: 'pageAbout', value })}
+          View={PageAbout.view} />
+      );
+
+    case 'accessibility':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.accessibility}
+          mapPageMsg={value => ({ tag: 'pageAccessibility', value })}
+          View={PageAccessibility.view} />
+      );
+
+    case 'copyright':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.copyright}
+          mapPageMsg={value => ({ tag: 'pageCopyright', value })}
+          View={PageCopyright.view} />
+      );
+
+    case 'disclaimer':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.disclaimer}
+          mapPageMsg={value => ({ tag: 'pageDisclaimer', value })}
+          View={PageDisclaimer.view} />
+      );
+
+    case 'privacy':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.privacy}
+          mapPageMsg={value => ({ tag: 'pagePrivacy', value })}
+          View={PagePrivacy.view} />
       );
 
     case 'noticeNotFound':
