@@ -10,6 +10,7 @@ import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-pas
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
 import * as PageProfile from 'front-end/lib/pages/profile';
+import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information-list';
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
@@ -42,6 +43,7 @@ function ViewPage<PageState, PageMsg>(props: ViewPageProps<PageState, PageMsg>):
 
 const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
   switch (state.activePage.tag) {
+
     case 'landing':
       return (
         <ViewPage
@@ -50,6 +52,7 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageLanding', value })}
           View={PageLanding.view} />
       );
+
     case 'signIn':
       return (
         <ViewPage
@@ -58,6 +61,7 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageSignIn', value })}
           View={PageSignIn.view} />
       );
+
     case 'signUpBuyer':
       return (
         <ViewPage
@@ -66,6 +70,7 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageSignUpBuyer', value })}
           View={PageSignUpBuyer.view} />
       );
+
     case 'signUpVendor':
       return (
         <ViewPage
@@ -74,6 +79,7 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageSignUpVendor', value })}
           View={PageSignUpVendor.view} />
       );
+
     case 'signUpProgramStaff':
       return (
         <ViewPage
@@ -82,6 +88,7 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageSignUpProgramStaff', value })}
           View={PageSignUpProgramStaff.view} />
       );
+
     case 'signOut':
       return (
         <ViewPage
@@ -90,6 +97,7 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageSignOut', value })}
           View={PageSignOut.view} />
       );
+
     case 'changePassword':
       return (
         <ViewPage
@@ -98,6 +106,7 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageChangePassword', value })}
           View={PageChangePassword.view} />
       );
+
     case 'resetPassword':
       return (
         <ViewPage
@@ -106,6 +115,7 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageResetPassword', value })}
           View={PageResetPassword.view} />
       );
+
     case 'forgotPassword':
       return (
         <ViewPage
@@ -114,6 +124,7 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageForgotPassword', value })}
           View={PageForgotPassword.view} />
       );
+
     case 'profile':
       return (
         <ViewPage
@@ -122,6 +133,7 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageProfile', value })}
           View={PageProfile.view} />
       );
+
     case 'userList':
       return (
         <ViewPage
@@ -130,6 +142,16 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageUserList', value })}
           View={PageUserList.view} />
       );
+
+    case 'requestForInformationList':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.requestForInformationList}
+          mapPageMsg={value => ({ tag: 'pageRequestForInformationList', value })}
+          View={PageRequestForInformationList.view} />
+      );
+
     case 'termsAndConditions':
       return (
         <ViewPage
@@ -138,6 +160,7 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageTermsAndConditions', value })}
           View={PageTermsAndConditions.view} />
       );
+
     case 'noticeNotFound':
       return (
         <ViewPage
@@ -146,6 +169,7 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageNoticeNotFound', value })}
           View={PageNoticeNotFound.view} />
       );
+
     case 'noticeChangePassword':
       return (
         <ViewPage
@@ -154,6 +178,7 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageNoticeChangePassword', value })}
           View={PageNoticeChangePassword.view} />
       );
+
     case 'noticeResetPassword':
       return (
         <ViewPage
@@ -162,6 +187,7 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageNoticeResetPassword', value })}
           View={PageNoticeResetPassword.view} />
       );
+
     case 'noticeForgotPassword':
       return (
         <ViewPage
@@ -170,9 +196,6 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageNoticeForgotPassword', value })}
           View={PageNoticeForgotPassword.view} />
       );
-    // TODO remove
-    default:
-      return (<div>Undefined Page</div>);
   }
 }
 

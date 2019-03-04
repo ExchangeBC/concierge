@@ -8,6 +8,7 @@ import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-pas
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
 import * as PageProfile from 'front-end/lib/pages/profile';
+import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information-list';
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
@@ -32,7 +33,7 @@ export type Page
   | ADT<'termsAndConditions', PageTermsAndConditions.Params>
   | ADT<'profile', PageProfile.Params>
   | ADT<'userList', PageUserList.Params>
-  | ADT<'requestForInformationList', null>
+  | ADT<'requestForInformationList', PageRequestForInformationList.Params>
   | ADT<'noticeNotFound', PageNoticeNotFound.Params>
   | ADT<'noticeChangePassword', PageNoticeChangePassword.Params>
   | ADT<'noticeResetPassword', PageNoticeResetPassword.Params>
@@ -55,6 +56,7 @@ export interface State {
     forgotPassword?: Immutable<PageForgotPassword.State>;
     profile?: Immutable<PageProfile.State>;
     userList?: Immutable<PageUserList.State>;
+    requestForInformationList?: Immutable<PageRequestForInformationList.State>;
     termsAndConditions?: Immutable<PageTermsAndConditions.State>;
     noticeNotFound?: Immutable<PageNoticeNotFound.State>;
     noticeChangePassword?: Immutable<PageNoticeChangePassword.State>;
@@ -77,6 +79,7 @@ type InnerMsg
   | ADT<'pageTermsAndConditions', PageTermsAndConditions.Msg>
   | ADT<'pageProfile', PageProfile.Msg>
   | ADT<'pageUserList', PageUserList.Msg>
+  | ADT<'pageRequestForInformationList', PageRequestForInformationList.Msg>
   | ADT<'pageNoticeNotFound', PageNoticeNotFound.Msg>
   | ADT<'pageNoticeChangePassword', PageNoticeChangePassword.Msg>
   | ADT<'pageNoticeResetPassword', PageNoticeResetPassword.Msg>

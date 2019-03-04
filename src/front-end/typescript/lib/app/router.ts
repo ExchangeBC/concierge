@@ -270,7 +270,7 @@ const router: Router<State, Page, UserType> = {
       case 'userList':
         return '/users';
       case 'requestForInformationList':
-        return '/request-for-information';
+        return '/requests-for-information';
       case 'noticeChangePassword':
         return '/notice/change-password';
       case 'noticeResetPassword':

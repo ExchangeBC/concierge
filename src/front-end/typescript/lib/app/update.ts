@@ -9,6 +9,7 @@ import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-pas
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
 import * as PageProfile from 'front-end/lib/pages/profile';
+import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information-list';
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
@@ -113,6 +114,9 @@ const update: Update<State, Msg> = (state, msg) => {
             case 'userList':
               state = state.setIn(['pages', 'userList'], immutable(await PageUserList.init(msg.value.page.value)));
               break;
+            case 'requestForInformationList':
+              state = state.setIn(['pages', 'requestForInformationList'], immutable(await PageRequestForInformationList.init(msg.value.page.value)));
+              break;
             case 'termsAndConditions':
               state = state.setIn(['pages', 'termsAndConditions'], immutable(await PageTermsAndConditions.init(msg.value.page.value)));
               break;
@@ -128,10 +132,6 @@ const update: Update<State, Msg> = (state, msg) => {
             case 'noticeNotFound':
               state = state.setIn(['pages', 'noticeNotFound'], immutable(await PageNoticeNotFound.init(null)));
               break;
-            default:
-              // Reset outgoing page, essentially do nothing.
-              // TODO clean up this logic.
-              return state.set('activePage', outgoingPage);
           }
           // Unset the previous page's state.
           // Ensure we don't unintentionally overwrite the active page's state.
@@ -245,6 +245,15 @@ const update: Update<State, Msg> = (state, msg) => {
         childMsg: msg.value
       });
 
+    case 'pageRequestForInformationList':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageRequestForInformationList', value }),
+        childStatePath: ['pages', 'requestForInformationList'],
+        childUpdate: PageRequestForInformationList.update,
+        childMsg: msg.value
+      });
+
     case 'pageTermsAndConditions':
       return updateAppChild({
         state,
@@ -290,7 +299,6 @@ const update: Update<State, Msg> = (state, msg) => {
         childMsg: msg.value
       });
 
-    // TODO remove
     default:
       return [state];
   }
