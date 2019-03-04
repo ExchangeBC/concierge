@@ -88,7 +88,7 @@ export const view: ComponentView<State, Msg> = props => {
     <div>
       <Row>
         <Col xs='12'>
-          <h1>Forgot Your Password?</h1>
+          <h1>Forgotten Your Password?</h1>
         </Col>
       </Row>
       <Row className='mb-3'>
