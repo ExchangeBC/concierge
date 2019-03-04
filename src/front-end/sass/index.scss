@@ -17,6 +17,10 @@ $container-max-widths: (
 
 $enable-validation-icons: false;
 
+// Custom variables.
+
+$fixed-bar-height: 80px;
+
 // Import Bootstrap.
 
 @import 'node_modules/bootstrap/scss/bootstrap.scss';
@@ -36,29 +40,18 @@ $enable-validation-icons: false;
   }
 }
 
-// Custom styles.
-
-// Ensure the footer is visible on with a .fixed-bottom
-.page-signUp {
-  footer {
-    padding-bottom: 8rem !important;
-  }
+.fixed-bar {
+  height: $fixed-bar-height;
 }
 
-// DEPRECATED BCDevExchange Styles
-// Add in overrides/custom styling here
-// @import 'include/variables';
-// @import 'include/mixins';
-// @import 'include/base';
-// @import 'include/cards';
-// @import 'include/concierge';
-// @import 'include/labels';
-// @import 'include/nav';
-// @import 'include/navbar';
-// @import 'include/footer';
-// @import 'include/pages';
-// @import 'include/badges';
-// @import 'include/dropdowns';
-// @import 'include/profiles';
-// @import 'include/messages';
-// @import 'include/tables';
+// Custom styles.
+
+// Ensure the footer is visible on pages with a fixed-bar for buttons.
+.page-signUpBuyer,
+.page-signUpVendor,
+.page-signUpProgramStaff,
+.page-termsAndConditions {
+  footer {
+    padding-bottom: $fixed-bar-height;
+  }
+}

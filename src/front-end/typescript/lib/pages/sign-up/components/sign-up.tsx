@@ -9,7 +9,7 @@ import LoadingButton from 'front-end/lib/views/loading-button';
 import { isArray } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
-import { ADT, Profile as ProfileType, UserType } from 'shared/lib/types';
+import { ADT, Profile as ProfileType, UserType, userTypeToTitleCase } from 'shared/lib/types';
 
 export interface State<ProfileState> {
   loading: number;
@@ -143,13 +143,13 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
       <div>
         <Row>
           <Col xs='12'>
-            <h1>Create an Account</h1>
+            <h1>Create a {userTypeToTitleCase(Profile.userType)} Account</h1>
           </Col>
         </Row>
         <Row>
           <Col xs='12' md='8'>
             <p>
-              Create an account to gain access to all features of the Concierge Web Application. Already have an account?{' '}
+              Create an account to gain access to all features of the Concierge. Already have an account?{' '}
               <a href='/sign-in'>
                 Sign in here.
               </a>

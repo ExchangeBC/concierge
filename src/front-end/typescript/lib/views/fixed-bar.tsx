@@ -9,10 +9,10 @@ export interface Props {
 
 const FixedBar: View<Props> = ({ location, children }) => {
   return (
-    <div className={`view-fixed-bar fixed-${location} bg-light border-top`}>
+    <div className={`fixed-${location} bg-light border-top`}>
       <Container>
         <Row>
-          <Col xs='12' className='d-flex flex-md-row-reverse justify-content-xs-center justify-content-md-start align-items-center py-2' style={{ minHeight: '80px' }}>
+          <Col xs='12' className='fixed-bar d-flex flex-md-row-reverse justify-content-xs-center justify-content-md-start align-items-center py-2'>
             {children}
           </Col>
         </Row>

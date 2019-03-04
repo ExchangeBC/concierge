@@ -47,8 +47,9 @@ const ConditionalLabel: View<Props<any, any, any>> = (props) => {
   const { id, label, required } = props.state;
   if (label) {
     return (
-      <Label for={id}>
-        {`${label}${required ? '*' : ''}`}
+      <Label for={id} className={required ? 'font-weight-bold' : ''}>
+        {label}
+        <span className='text-info'>{required ? '*' : ''}</span>
         <ConditionHelpToggle {...props} />
       </Label>
     );

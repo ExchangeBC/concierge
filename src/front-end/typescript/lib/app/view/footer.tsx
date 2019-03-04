@@ -34,8 +34,8 @@ const SupportedBy: View<{}> = () => {
 
 const Footer: View<{}> = () => {
   return (
-    <footer className='w-100 py-5 bg-dark text-secondary'>
-      <Container>
+    <footer className='w-100 bg-dark text-secondary'>
+      <Container className='py-5'>
         <Links />
         <SupportedBy />
       </Container>

@@ -16,7 +16,7 @@ export type Msg = ComponentMsg<ADT<'noop'>, Page>;
 export const init: Init<null, State> = async () => {
   const session = await deleteSession();
   if (!get(session, 'user')) {
-    return { message: 'You have been successfully signed out. Thank you for using the Concierge Web Application.' };
+    return { message: 'You have been successfully signed out. Thank you for using the Concierge.' };
   } else {
     return { message: 'Signing out of the application failed.' };
   }
