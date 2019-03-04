@@ -10,7 +10,7 @@ import { default as React, ReactElement } from 'react';
 import { Col, Row, Table } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import { PublicUser } from 'shared/lib/resources/user';
-import { ADT, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
+import { ADT, parseUserType, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
 
 export interface State {
   users: PublicUser[];
@@ -67,30 +67,78 @@ export const init: Init<Params, State> = async () => {
   };
 };
 
-function validateAndUpdate(state: Immutable<State>, key?: string, value?: string): Immutable<State> {
+function userMatchesUserType(user: PublicUser, userType: UserType | null): boolean {
+  return !!userType && user.profile.type === userType;
+}
+
+function userMatchesCategory(user: PublicUser, category: string): boolean {
+  switch (user.profile.type) {
+    case UserType.Buyer:
+      return !!user.profile.areasOfInterest && user.profile.areasOfInterest.includes(category);
+    case UserType.Vendor:
+      return !!user.profile.areasOfExpertise && user.profile.areasOfExpertise.includes(category);
+    case UserType.ProgramStaff:
+      return false;
+  }
+}
+
+function userMatchesSearch(user: PublicUser, query: RegExp): boolean {
+  const name = profileToName(user.profile);
+  return !!name && !!name.match(query);
+}
+
+function updateAndQuery(state: Immutable<State>, key?: string, value?: string): Immutable<State> {
+  // Update state with the filter value.
   if (key && value !== undefined) {
     state = state.setIn([key, 'value'], value);
   }
-  return state;
+  // Query the list of available users based on all filters' state.
+  const userTypeQuery = state.userTypeFilter.value;
+  const categoryQuery = state.categoryFilter.value;
+  const rawSearchQuery = state.searchFilter.value;
+  const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split('').join('.*'), 'i') : null;
+  const users = state.users.filter(user => {
+    let match = true;
+    match = match && (!userTypeQuery || userMatchesUserType(user, parseUserType(userTypeQuery)));
+    match = match && (!categoryQuery || userMatchesCategory(user, categoryQuery));
+    match = match && (!searchQuery || userMatchesSearch(user, searchQuery));
+    return match;
+  });
+  return state.set('visibleUsers', users); ;
 }
 
 export const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
     case 'userTypeFilter':
-      return [validateAndUpdate(state, 'userTypeFilter', msg.value)];
+      return [updateAndQuery(state, 'userTypeFilter', msg.value)];
     case 'categoryFilter':
-      return [validateAndUpdate(state, 'categoryFilter', msg.value)];
+      return [updateAndQuery(state, 'categoryFilter', msg.value)];
     case 'searchFilter':
-      return [validateAndUpdate(state, 'searchFilter', msg.value)];
+      return [updateAndQuery(state, 'searchFilter', msg.value)];
     default:
       return [state];
   }
 };
 
 export const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
-    <Row>
-      <Col xs='12'>
+    <Row className='d-none d-md-flex align-items-end'>
+      <Col xs='12' md='3' lg='2'>
+        <Select.view
+          state={state.userTypeFilter}
+          onChange={onChangeSelect('userTypeFilter')} />
+      </Col>
+      <Col xs='12' md='4'>
+        <Select.view
+          state={state.categoryFilter}
+          onChange={onChangeSelect('categoryFilter')} />
+      </Col>
+      <Col xs='12' md='4' className='ml-md-auto'>
+        <ShortText.view
+          state={state.searchFilter}
+          onChange={onChangeShortText('searchFilter')} />
       </Col>
     </Row>
   );
@@ -118,12 +166,12 @@ export const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
     <Row>
       <Col xs='12'>
-        <Table hover responsive className='text-nowrap mb-0'>
+        <Table className='text-nowrap mb-0' hover={!!state.visibleUsers.length} responsive>
           <thead>
             <tr>
               <th style={{ width: '140px' }}>Type</th>
-              <th>Name</th>
-              <th>Email Address</th>
+              <th style={{ width: '300px' }}>Name</th>
+              <th style={{ width: '200px' }}>Email Address</th>
               <th className='text-center' style={{ width: '80px' }}>T&C</th>
             </tr>
           </thead>
