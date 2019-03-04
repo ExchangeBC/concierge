@@ -146,6 +146,22 @@ const update: Update<State, Msg> = (state, msg) => {
     case 'toggleIsNavOpen':
       return [state.set('isNavOpen', msg.value === undefined ? !state.isNavOpen : msg.value)];
 
+    // Delegate this message to the necessary pages.
+    case 'updateFixedBarBottom':
+      if (state.pages.signUpBuyer) {
+        state = state.setIn(['pages', 'signUpBuyer'], PageSignUpBuyer.update(state.pages.signUpBuyer, msg)[0]);
+      }
+      if (state.pages.signUpVendor) {
+        state = state.setIn(['pages', 'signUpVendor'], PageSignUpVendor.update(state.pages.signUpVendor, msg)[0]);
+      }
+      if (state.pages.signUpProgramStaff) {
+        state = state.setIn(['pages', 'signUpProgramStaff'], PageSignUpProgramStaff.update(state.pages.signUpProgramStaff, msg)[0]);
+      }
+      if (state.pages.termsAndConditions) {
+        state = state.setIn(['pages', 'termsAndConditions'], PageTermsAndConditions.update(state.pages.termsAndConditions, msg)[0]);
+      }
+      return [state];
+
     case 'pageLanding':
       return updateAppChild({
         state,

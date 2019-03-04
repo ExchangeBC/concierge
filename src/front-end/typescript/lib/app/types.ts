@@ -67,6 +67,7 @@ export interface State {
 
 type InnerMsg
   = ADT<'toggleIsNavOpen', boolean | undefined >
+  | ADT<'updateFixedBarBottom', number>
   | ADT<'pageLanding', PageLanding.Msg>
   | ADT<'pageSignIn', PageSignIn.Msg>
   | ADT<'pageSignUpBuyer', PageSignUpBuyer.Msg>

@@ -52,6 +52,6 @@ $fixed-bar-height: 80px;
 .page-signUpProgramStaff,
 .page-termsAndConditions {
   footer {
-    padding-bottom: $fixed-bar-height;
+    margin-top: $fixed-bar-height;
   }
 }

@@ -4,12 +4,13 @@ import { Col, Container, Row } from 'reactstrap';
 
 export interface Props {
   location: 'top' | 'bottom';
-  children: Array<ReactElement<any>> | ReactElement<any>
+  distance?: number;
+  children: Array<ReactElement<any>> | ReactElement<any>;
 }
 
-const FixedBar: View<Props> = ({ location, children }) => {
+const FixedBar: View<Props> = ({ location, distance = 0, children }) => {
   return (
-    <div className={`fixed-${location} bg-light border-top`}>
+    <div className={`fixed-${location} bg-light border-top`} style={{ [location]: distance }}>
       <Container>
         <Row>
           <Col xs='12' className='fixed-bar d-flex flex-md-row-reverse justify-content-xs-center justify-content-md-start align-items-center py-2'>

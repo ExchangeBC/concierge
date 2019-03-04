@@ -13,25 +13,31 @@ import { ADT } from 'shared/lib/types';
 
 export interface State {
   loading: number;
+  fixedBarBottom: number;
   errors: string[];
   markdownSource: string;
   userId: string;
   acceptedTermsAt?: Date;
 };
 
-export type Params = Pick<State, 'userId'>;
+export interface Params {
+  userId: string;
+  fixedBarBottom?: number;
+}
 
 type InnerMsg
-  = ADT<'acceptTerms'>;
+  = ADT<'acceptTerms'>
+  | ADT<'updateFixedBarBottom', number>;
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
-export const init: Init<Params, State> = async ({ userId }) => {
+export const init: Init<Params, State> = async ({ userId, fixedBarBottom = 0 }) => {
   const result = await api.readOneUser(userId);
   const acceptedTermsAt = result.tag === 'valid' ? result.value.acceptedTermsAt : undefined;
   const errors = result.tag === 'invalid' ? ['An error occurred while loading this page. Please refresh the page and try again.'] : []
   return {
     loading: 0,
+    fixedBarBottom,
     errors,
     markdownSource: await markdown.getDocument('terms_and_conditions'),
     userId,
@@ -76,6 +82,8 @@ export const update: Update<State, Msg> = (state, msg) => {
           }
         }
       ];
+    case 'updateFixedBarBottom':
+      return [state.set('fixedBarBottom', msg.value)];
     default:
       return [state];
   }
@@ -105,7 +113,7 @@ const AcceptedAt: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   if (state.acceptedTermsAt) {
     return (
-      <FixedBar location='bottom'>
+      <FixedBar location='bottom' distance={state.fixedBarBottom}>
         <p className='text-align-right mb-0'>
           {formatTermsAndConditionsAgreementDate(state.acceptedTermsAt)}
         </p>
@@ -116,7 +124,7 @@ const AcceptedAt: ComponentView<State, Msg> = props => {
     const isDisabled = isLoading || !isValid(state);
     const acceptTerms = () => !isDisabled && !state.acceptedTermsAt && dispatch({ tag: 'acceptTerms', value: undefined });
     return (
-      <FixedBar location='bottom'>
+      <FixedBar location='bottom' distance={state.fixedBarBottom}>
         <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={acceptTerms} loading={isLoading} disabled={isDisabled}>
           I Agree
         </LoadingButton>

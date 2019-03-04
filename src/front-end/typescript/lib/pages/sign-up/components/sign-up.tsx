@@ -13,6 +13,7 @@ import { ADT, Profile as ProfileType, UserType, userTypeToTitleCase } from 'shar
 
 export interface State<ProfileState> {
   loading: number;
+  fixedBarBottom: number;
   accountInformation: Immutable<AccountInformation.State>;
   profile: Immutable<ProfileState>;
 }
@@ -20,18 +21,21 @@ export interface State<ProfileState> {
 type InnerMsg<ProfileMsg>
   = ADT<'accountInformation', AccountInformation.Msg>
   | ADT<'profile', ComponentMsg<ProfileMsg, Page>>
-  | ADT<'createAccount'>;
+  | ADT<'createAccount'>
+  | ADT<'updateFixedBarBottom', number>;
 
 export type Msg<ProfileMsg> = ComponentMsg<InnerMsg<ProfileMsg>, Page>;
 
 export interface Params {
   accountInformation?: Immutable<AccountInformation.State>;
+  fixedBarBottom?: number;
 }
 
 function init<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Init<Params, State<PS>> {
-  return async ({ accountInformation }) => {
+  return async ({ accountInformation, fixedBarBottom = 0 }) => {
     return {
       loading: 0,
+      fixedBarBottom,
       accountInformation: accountInformation || immutable(await AccountInformation.init({
         userType: Profile.userType
       })),
@@ -115,6 +119,8 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
             }
           }
         ];
+      case 'updateFixedBarBottom':
+        return [state.set('fixedBarBottom', msg.value)];
       default:
         return [state];
     }
@@ -181,7 +187,7 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
             <Profile.view state={state.profile} dispatch={dispatchProfile} />
           </Col>
         </Row>
-        <FixedBar location='bottom'>
+        <FixedBar location='bottom' distance={state.fixedBarBottom}>
           <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={createAccount} loading={isLoading} disabled={isDisabled}>
             Create Account
           </LoadingButton>
