@@ -33,6 +33,14 @@ async function signOut(state: Immutable<State>, dispatch: Dispatch<Msg>, path: s
   return state;
 };
 
+function startTransition(state: Immutable<State>): Immutable<State> {
+  return state.set('inTransition', true);
+}
+
+function endTransition(state: Immutable<State>): Immutable<State> {
+  return state.set('inTransition', false);
+}
+
 const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
 
@@ -46,9 +54,11 @@ const update: Update<State, Msg> = (state, msg) => {
       ];
 
     case '@incomingPage':
+      state = startTransition(state);
       return [
         state,
         async dispatch => {
+          state = endTransition(state);
           const outgoingPage = state.activePage;
           const auth = msg.value.auth;
           switch (auth.level.tag) {
@@ -148,6 +158,10 @@ const update: Update<State, Msg> = (state, msg) => {
 
     // Delegate this message to the necessary pages.
     case 'updateFixedBarBottom':
+      if (msg.value === state.fixedBarBottom) {
+        return [state];
+      }
+      state = state.set('fixedBarBottom', msg.value);
       if (state.pages.signUpBuyer) {
         state = state.setIn(['pages', 'signUpBuyer'], PageSignUpBuyer.update(state.pages.signUpBuyer, msg)[0]);
       }

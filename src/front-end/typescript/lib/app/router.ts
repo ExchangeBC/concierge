@@ -1,6 +1,7 @@
 import { Page, State } from 'front-end/lib/app/types';
 import { RouteAuthDefinition, Router } from 'front-end/lib/framework';
-import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
+import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
+import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import { get } from 'lodash';
 import { getString } from 'shared/lib';
 import { UserType } from 'shared/lib/types';
@@ -138,22 +139,22 @@ const router: Router<State, Page, UserType> = {
           value: null
         };
       case 'signUpBuyer':
-        let signUpBuyerParams = {};
-        if (outgoingPage.tag === 'signUpVendor' && state.pages.signUpVendor) {
-          signUpBuyerParams = {
-            accountInformation: state.pages.signUpVendor.accountInformation.set('userType', UserType.Buyer)
-          };
+        const signUpBuyerParams: PageSignUpBuyer.Params = {
+          fixedBarBottom: state.fixedBarBottom
+        };
+        if (outgoingPage.tag === 'signUpBuyer' && state.pages.signUpBuyer) {
+          signUpBuyerParams.accountInformation = state.pages.signUpBuyer.accountInformation.set('userType', UserType.Buyer);
         }
         return {
           tag: 'signUpBuyer',
           value: signUpBuyerParams
         };
       case 'signUpVendor':
-        let signUpVendorParams = {};
+        const signUpVendorParams: PageSignUpVendor.Params = {
+          fixedBarBottom: state.fixedBarBottom
+        };
         if (outgoingPage.tag === 'signUpBuyer' && state.pages.signUpBuyer) {
-          signUpVendorParams = {
-            accountInformation: state.pages.signUpBuyer.accountInformation.set('userType', UserType.Vendor)
-          };
+          signUpVendorParams.accountInformation = state.pages.signUpBuyer.accountInformation.set('userType', UserType.Vendor);
         }
         return {
           tag: 'signUpVendor',
@@ -162,7 +163,9 @@ const router: Router<State, Page, UserType> = {
       case 'signUpProgramStaff':
         return {
           tag: 'signUpProgramStaff',
-          value: {} as PageSignUpProgramStaff.Params
+          value: {
+            fixedBarBottom: state.fixedBarBottom
+          }
         };
       case 'signOut':
         return {

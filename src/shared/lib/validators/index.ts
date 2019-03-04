@@ -1,5 +1,5 @@
 import { Set } from 'immutable';
-import { isEmpty } from 'lodash';
+import { isEmpty, uniq } from 'lodash';
 import moment from 'moment';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
@@ -108,7 +108,7 @@ export function validateStringInArray(value: string, availableValues: Set<string
   }
 }
 
-export function validateStringArray(values: string[], availableValues: Set<string>, name: string, indefiniteArticle = 'a', caseSensitive = false): ValidOrInvalid<string[], string[][]> {
+export function validateStringArray(values: string[], availableValues: Set<string>, name: string, indefiniteArticle = 'a', caseSensitive = false, unique = true): ValidOrInvalid<string[], string[][]> {
   let isValid = true;
   const validations = values.map(value => {
     const validation = validateStringInArray(value, availableValues, name, indefiniteArticle, caseSensitive);
@@ -116,7 +116,11 @@ export function validateStringArray(values: string[], availableValues: Set<strin
     return validation;
   });
   if (isValid) {
-    return valid(validations.map(validation => getValidValue(validation, '')));
+    let result = validations.map(validation => getValidValue(validation, ''));
+    if (unique) {
+      result = uniq(result);
+    }
+    return valid(result);
   } else {
     return invalid(validations.map(validation => getInvalidValue(validation, [])));
   }
@@ -227,7 +231,7 @@ export function validatePhoneType(phoneType: string): Validation<PhoneType> {
 }
 
 export function validateCategories(categories: string[], name = 'Category', indefiniteArticle = 'a'): ValidOrInvalid<string[], string[][]> {
-  return validateStringArray(categories, AVAILABLE_CATEGORIES, name, indefiniteArticle, true);
+  return validateStringArray(categories, AVAILABLE_CATEGORIES, name, indefiniteArticle, true, true);
 }
 
 export function validatePositionTitle(positionTitle: string): Validation<string> {
@@ -235,5 +239,5 @@ export function validatePositionTitle(positionTitle: string): Validation<string>
 }
 
 export function validateIndustrySectors(industrySectors: string[]): ValidOrInvalid<string[], string[][]> {
-  return validateStringArray(industrySectors, AVAILABLE_INDUSTRY_SECTORS, 'Industry Sector', 'an', true);
+  return validateStringArray(industrySectors, AVAILABLE_INDUSTRY_SECTORS, 'Industry Sector', 'an', true, true);
 }

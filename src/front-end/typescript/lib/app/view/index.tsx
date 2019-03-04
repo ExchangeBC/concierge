@@ -205,7 +205,7 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   } else {
     const toggleIsNavOpen = (value?: boolean) => dispatch({ tag: 'toggleIsNavOpen', value });
     return (
-      <div className={`page-${state.activePage.tag} d-flex flex-column`} style={{ minHeight: '100vh' }}>
+      <div className={`page-${state.activePage.tag} ${state.inTransition ? 'in-transition' : ''} d-flex flex-column`} style={{ minHeight: '100vh' }}>
         <Nav session={state.session} activePage={state.activePage} isOpen={state.isNavOpen} toggleIsOpen={toggleIsNavOpen} />
         <Container className='py-5 mb-auto'>
           <Row>

@@ -44,6 +44,13 @@ $fixed-bar-height: 80px;
   height: $fixed-bar-height;
 }
 
+.in-transition {
+
+  .transition-hide {
+    display: none;
+  }
+}
+
 // Custom styles.
 
 // Ensure the footer is visible on pages with a fixed-bar for buttons.
@@ -51,6 +58,7 @@ $fixed-bar-height: 80px;
 .page-signUpVendor,
 .page-signUpProgramStaff,
 .page-termsAndConditions {
+
   footer {
     margin-top: $fixed-bar-height;
   }

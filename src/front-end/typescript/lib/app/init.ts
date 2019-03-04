@@ -6,6 +6,8 @@ const init: Init<null, State> = async () => {
   return {
     ready: false,
     isNavOpen: false,
+    inTransition: false,
+    fixedBarBottom: 0,
     session: undefined,
     activePage: { tag: 'landing', value: null },
     pages: {

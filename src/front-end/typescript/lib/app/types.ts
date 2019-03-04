@@ -42,6 +42,8 @@ export type Page
 export interface State {
   ready: boolean;
   isNavOpen: boolean;
+  inTransition: boolean;
+  fixedBarBottom: number;
   session?: Session;
   activePage: Page;
   pages: {

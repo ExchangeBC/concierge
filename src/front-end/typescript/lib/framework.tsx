@@ -179,10 +179,18 @@ export type StateSubscribe<State, Msg> = (fn: StateSubscription<State, Msg>) => 
 
 export type StateUnsubscribe<State, Msg> = (fn: StateSubscription<State, Msg>) => boolean;
 
+export type MsgSubscription<Msg> = (msg: Msg) => void;
+
+export type MsgSubscribe<Msg> = (fn: MsgSubscription<Msg>) => boolean;
+
+export type MsgUnsubscribe<Msg> = (fn: MsgSubscription<Msg>) => boolean;
+
 export interface StateManager<State, Msg> {
   dispatch: Dispatch<Msg>;
-  subscribe: StateSubscribe<State, Msg>;
-  unsubscribe: StateUnsubscribe<State, Msg>;
+  stateSubscribe: StateSubscribe<State, Msg>;
+  stateUnsubscribe: StateUnsubscribe<State, Msg>;
+  msgSubscribe: MsgSubscribe<Msg>;
+  msgUnsubscribe: MsgUnsubscribe<Msg>;
   getState(): Immutable<State>;
 }
 
@@ -229,9 +237,12 @@ export async function start<State, Msg extends ADT<any, any>, Page, UserType>(ap
   // We do not need the RecordFactory, so we create the Record immediately.
   let state = Record(await app.init(null))({});
   // Set up subscription state.
-  const subscriptions: Array<StateSubscription<State, AppMsg<Msg, Page, UserType>>> = [];
-  const subscribe: StateSubscribe<State, AppMsg<Msg, Page, UserType>> = fn => (subscriptions.push(fn) && true) || false;
-  const unsubscribe: StateUnsubscribe<State, AppMsg<Msg, Page, UserType>> = fn => (remove(subscriptions, a => a === fn) && true) || false;
+  const stateSubscriptions: Array<StateSubscription<State, AppMsg<Msg, Page, UserType>>> = [];
+  const msgSubscriptions: Array<MsgSubscription<AppMsg<Msg, Page, UserType>>> = [];
+  const stateSubscribe: StateSubscribe<State, AppMsg<Msg, Page, UserType>> = fn => (stateSubscriptions.push(fn) && true) || false;
+  const stateUnsubscribe: StateUnsubscribe<State, AppMsg<Msg, Page, UserType>> = fn => (remove(stateSubscriptions, a => a === fn) && true) || false;
+  const msgSubscribe: MsgSubscribe<AppMsg<Msg, Page, UserType>> = fn => (msgSubscriptions.push(fn) && true) || false;
+  const msgUnsubscribe: MsgUnsubscribe<AppMsg<Msg, Page, UserType>> = fn => (remove(msgSubscriptions, a => a === fn) && true) || false;
   // Set up state accessor function.
   const getState = () => state;
   // Initialize state mutation promise chain.
@@ -239,8 +250,6 @@ export async function start<State, Msg extends ADT<any, any>, Page, UserType>(ap
   let promise = Promise.resolve();
   // Set up dispatch function to queue state mutations.
   const dispatch: Dispatch<AppMsg<Msg, Page, UserType>> = msg => {
-    // tslint:disable:next-line no-console
-    if (debug) { console.log('dispatch', msg); }
     promise = promise
       .then(() => {
         switch (msg.tag) {
@@ -260,7 +269,7 @@ export async function start<State, Msg extends ADT<any, any>, Page, UserType>(ap
         // Update state with its synchronous change.
         state = newState;
         if (promiseState) {
-          notify();
+          notifyStateSubscriptions();
           return promiseState(dispatch);
         } else {
           return newState;
@@ -269,7 +278,8 @@ export async function start<State, Msg extends ADT<any, any>, Page, UserType>(ap
       .then(newState => {
         // Update state with its asynchronous change.
         state = newState;
-        notify();
+        notifyMsgSubscriptions(msg);
+        notifyStateSubscriptions();
       });
     return promise;
   };
@@ -280,20 +290,28 @@ export async function start<State, Msg extends ADT<any, any>, Page, UserType>(ap
       element
     );
   }
-  subscribe(render);
-  // Set up function to notify subscriptions.
-  function notify(): void {
-    subscriptions.forEach(fn => fn(state, dispatch));
+  stateSubscribe(render);
+  // Set up function to notify msg subscriptions.
+  function notifyMsgSubscriptions(msg: AppMsg<Msg, Page, UserType>): void {
+    msgSubscriptions.forEach(fn => fn(msg));
+    // tslint:disable:next-line no-console
+    if (debug) { console.log('msg dispatched', msg); }
+  }
+  // Set up function to notify state subscriptions.
+  function notifyStateSubscriptions(): void {
+    stateSubscriptions.forEach(fn => fn(state, dispatch));
     // tslint:disable:next-line no-console
     if (debug) { console.log('state updated', state.toJSON()); }
   }
   // Trigger state initialization notification.
-  notify();
+  notifyStateSubscriptions();
   // Create the StateManager.
   const stateManager = {
     dispatch,
-    subscribe,
-    unsubscribe,
+    stateSubscribe,
+    stateUnsubscribe,
+    msgSubscribe,
+    msgUnsubscribe,
     getState
   };
   // Initialize the router.
