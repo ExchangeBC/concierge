@@ -6,6 +6,8 @@ import { get } from 'lodash';
 import { getString } from 'shared/lib';
 import { UserType } from 'shared/lib/types';
 
+const PAGE_TITLE_SUFFIX = 'BC Concierge';
+
 const isSignedOut: RouteAuthDefinition<UserType> = {
   level: { tag: 'signedOut', value: undefined },
   redirect: '/',
@@ -337,6 +339,59 @@ const router: Router<State, Page, UserType> = {
         return '/notice/forgot-password';
       case 'noticeNotFound':
         return '/not-found';
+    }
+  },
+
+  pageToMetadata(page) {
+    const makeMetadata = (title?: string) => ({
+      title: title ? `${title} — ${PAGE_TITLE_SUFFIX}` : PAGE_TITLE_SUFFIX
+    });
+    switch (page.tag) {
+      case 'landing':
+        return makeMetadata('Welcome');
+      case 'signIn':
+        return makeMetadata('Sign In');
+      case 'signUpBuyer':
+        return makeMetadata('Sign Up: Buyer');
+      case 'signUpVendor':
+        return makeMetadata('Sign Up: Vendor');
+      case 'signUpProgramStaff':
+        return makeMetadata('Create a Program Staff Account');
+      case 'signOut':
+        return makeMetadata('Signed Out');
+      case 'changePassword':
+        return makeMetadata('Change your Password');
+      case 'resetPassword':
+        return makeMetadata('Reset your Password');
+      case 'forgotPassword':
+        return makeMetadata('Forgotten your Password?');
+      case 'termsAndConditions':
+        return makeMetadata('Terms and Conditions');
+      case 'profile':
+        // TODO add user's name to the title
+        return makeMetadata('Profile');
+      case 'userList':
+        return makeMetadata('Users');
+      case 'requestForInformationList':
+        return makeMetadata('Requests for Information');
+      case 'about':
+        return makeMetadata('About');
+      case 'accessibility':
+        return makeMetadata('Accessibility');
+      case 'copyright':
+        return makeMetadata('Copyright');
+      case 'disclaimer':
+        return makeMetadata('Disclaimer');
+      case 'privacy':
+        return makeMetadata('Privacy');
+      case 'noticeChangePassword':
+        return makeMetadata('Password Change Successful');
+      case 'noticeResetPassword':
+        return makeMetadata('Password Reset Successful');
+      case 'noticeForgotPassword':
+        return makeMetadata('Check your Inbox');
+      case 'noticeNotFound':
+        return makeMetadata('Not Found');
     }
   }
 

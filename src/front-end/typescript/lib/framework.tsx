@@ -99,10 +99,15 @@ export interface RouteDefinition<UserType> {
   auth?: RouteAuthDefinition<UserType>;
 }
 
+export interface PageMetadata {
+  title: string;
+}
+
 export interface Router<State, Page, UserType> {
   routes: Array<RouteDefinition<UserType>>;
   locationToPage(pageId: string, params: object, state: Immutable<State>): Page;
   pageToUrl(page: Page): string;
+  pageToMetadata(page: Page): PageMetadata;
 }
 
 export interface IncomingPageMsgValue<Page, UserType> {
@@ -210,13 +215,16 @@ export function initializeRouter<State, Msg, Page, UserType>(router: Router<Stat
         tag: '@beforeIncomingPage',
         value: undefined
       }).then(() => {
-        stateManager.dispatch({
-          tag: '@incomingPage',
-          value: {
-            auth: authDefinition,
-            page: router.locationToPage(pageId, get(ctx, 'params', {}), stateManager.getState())
-          }
-        });
+        const parsedPage = router.locationToPage(pageId, get(ctx, 'params', {}), stateManager.getState());
+        stateManager
+          .dispatch({
+            tag: '@incomingPage',
+            value: {
+              auth: authDefinition,
+              page: parsedPage
+            }
+          })
+          .then(() => setPageMetadata(router.pageToMetadata(parsedPage)));
       });
     });
   });
@@ -230,6 +238,10 @@ export function runNewUrl(path: string): void {
 
 export function runReplaceUrl(path: string): void {
   page.redirect(path);
+}
+
+export function setPageMetadata(metadata: PageMetadata): void {
+  document.title = metadata.title;
 }
 
 export async function start<State, Msg extends ADT<any, any>, Page, UserType>(app: App<State, Msg, Page, UserType>, element: HTMLElement, debug: boolean): Promise<StateManager<State, AppMsg<Msg, Page, UserType>>> {
