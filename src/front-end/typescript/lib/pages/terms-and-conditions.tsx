@@ -64,7 +64,6 @@ export const update: Update<State, Msg> = (state, msg) => {
             _id: state.userId,
             acceptedTerms: true
           });
-          state = stopLoading(state);
           switch (result.tag) {
             case 'valid':
               dispatch({
@@ -76,9 +75,9 @@ export const update: Update<State, Msg> = (state, msg) => {
                   }
                 }
               });
-              return state.set('acceptedTermsAt', result.value.acceptedTermsAt);
+              return state;
             case 'invalid':
-              return state.set('errors', result.value.acceptedTerms || []);
+              return stopLoading(state).set('errors', result.value.acceptedTerms || []);
           }
         }
       ];

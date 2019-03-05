@@ -10,7 +10,7 @@ import { Alert, Col, Row } from 'reactstrap';
 import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, UserType } from 'shared/lib/types';
 
-const ERROR_MESSAGE = 'An error occurred.';
+const ERROR_MESSAGE = 'You do not have sufficient privileges to view this profile.';
 
 export interface Params {
   profileUserId: string;

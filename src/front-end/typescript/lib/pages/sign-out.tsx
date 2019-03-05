@@ -18,7 +18,7 @@ export type Params = null;
 export const init: Init<Params, State> = async () => {
   const session = await deleteSession();
   if (!get(session, 'user')) {
-    return { message: 'You have been successfully signed out. Thank you for using the Concierge.' };
+    return { message: 'You have successfully signed out. Thank you for using the Procurement Concierge Program.' };
   } else {
     return { message: 'Signing out of the application failed.' };
   }

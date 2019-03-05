@@ -8,13 +8,13 @@ import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
 import { Alert, Col, Row } from 'reactstrap';
-import { ADT } from 'shared/lib/types';
+import { ADT, UserType } from 'shared/lib/types';
 import { validateEmail, validatePassword } from 'shared/lib/validators';
 
 export interface State {
   loading: number;
   errors: string[];
-  redirectOnSuccess: Page;
+  redirectOnSuccess?: Page;
   email: ShortText.State;
   password: ShortText.State;
 }
@@ -31,7 +31,6 @@ export interface Params {
 };
 
 export const init: Init<Params, State> = async ({ redirectOnSuccess }) => {
-  redirectOnSuccess = redirectOnSuccess || router.fallbackPage;
   return {
     loading: 0,
     errors: [],
@@ -77,9 +76,18 @@ export const update: Update<State, Msg> = (state, msg) => {
           const result = await api.createSession(state.email.value, state.password.value);
           switch (result.tag) {
             case 'valid':
+              let fallbackRedirectOnSuccess: Page = router.fallbackPage;
+              if (result.value.user) {
+                // Redirect user to relevant page based on type.
+                const userId = result.value.user.id;
+                const userType = result.value.user.type;
+                fallbackRedirectOnSuccess = userType === UserType.ProgramStaff ? { tag: 'userList', value: null } : { tag: 'profile', value: { profileUserId: userId }};
+              }
+              // Give precendence to already-defined redirect page.
+              const redirectOnSuccess = state.redirectOnSuccess || fallbackRedirectOnSuccess;
               dispatch({
                 tag: '@newUrl',
-                value: state.redirectOnSuccess
+                value: redirectOnSuccess
               });
               return state;
             case 'invalid':
@@ -167,7 +175,7 @@ export const view: ComponentView<State, Msg> = props => {
               <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={submit} loading={isLoading} disabled={isDisabled}>
                 Sign In
               </LoadingButton>
-              <Link href='/' text='Cancel' textColor='secondary' />
+              <Link page={{ tag: 'landing', value: null }} text='Cancel' textColor='secondary' />
             </Col>
           </Row>
         </Col>
