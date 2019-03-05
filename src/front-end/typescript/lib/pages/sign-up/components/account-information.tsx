@@ -106,7 +106,7 @@ const UserTypeRadio: View<{ state: State, userType: UserType }> = ({ state, user
   const isChecked = state.userType === userType;
   const style = { cursor: 'pointer' };
   return (
-    <Link href={`/sign-up/${userType.toLowerCase().replace('_', '-')}`} className='custom-radio custom-control pl-2 pl-md-3' buttonClassName='p-0 d-flex align-items-center' textColor='body'>
+    <Link href={`/sign-up/${userType.toLowerCase().replace('_', '-')}`} className='custom-radio custom-control pl-2' buttonClassName='p-0 d-flex align-items-center' textColor='body'>
       <input
         id={id}
         type='radio'
@@ -127,9 +127,6 @@ const UserTypeToggle: View<{ state: State }> = ({ state }) => {
   } else {
     return (
       <FormGroup check inline className='mb-3'>
-        <Label className='mb-0'>
-          I am a*:
-        </Label>
         <UserTypeRadio state={state} userType={UserType.Buyer} />
         <UserTypeRadio state={state} userType={UserType.Vendor} />
       </FormGroup>
