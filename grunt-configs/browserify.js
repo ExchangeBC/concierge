@@ -6,6 +6,14 @@ const pathmodify = require("pathmodify");
 
 const makeConfig = debug => ({
   options: {
+    transform: [
+      [
+        "envify",
+        {
+          NODE_ENV: debug ? "development" : "production"
+        }
+      ]
+    ],
     plugin: [
       [
         "tsify",
