@@ -401,9 +401,9 @@ const router: Router<State, Page, UserType> = {
       case 'signIn':
         return makeMetadata('Sign In');
       case 'signUpBuyer':
-        return makeMetadata('Sign Up: Buyer');
+        return makeMetadata('Create a Public Sector Buyer Account');
       case 'signUpVendor':
-        return makeMetadata('Sign Up: Vendor');
+        return makeMetadata('Create a Vendor Account');
       case 'signUpProgramStaff':
         return makeMetadata('Create a Program Staff Account');
       case 'signOut':
