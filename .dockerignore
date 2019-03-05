@@ -2,12 +2,12 @@
 *.tmp
 *.pem
 *.map
+*.env
 .sass-cache/
 node_modules/
 tmp/
 build/
 
-*.env
 *.md
 .git/
 shell.nix

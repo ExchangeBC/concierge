@@ -2,6 +2,7 @@
 *.tmp
 *.pem
 *.map
+*.env
 .sass-cache/
 node_modules/
 tmp/

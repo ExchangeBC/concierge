@@ -19,6 +19,7 @@ export interface AdapterRunParams<SupportedResponseBody, Foo> {
   router: Router<SupportedResponseBody, Foo>;
   sessionIdToSession: SessionIdToSession<Foo>;
   sessionToSessionId: SessionToSessionId<Foo>;
+  host: string;
   port: number;
 }
 
@@ -30,7 +31,7 @@ export type ExpressAdapter<Session> = Adapter<expressLib.Application, ExpressRes
 
 export function express<Session>(): ExpressAdapter<Session> {
 
-  return ({ router, sessionIdToSession, sessionToSessionId, port }) => {
+  return ({ router, sessionIdToSession, sessionToSessionId, host, port }) => {
     function respond(response: Response<ExpressResponseBody, Session>, expressRes: expressLib.Response): void {
       expressRes
         .status(response.code)
@@ -131,7 +132,7 @@ export function express<Session>(): ExpressAdapter<Session> {
     });
 
     // Listen for incoming connections.
-    app.listen(port);
+    app.listen(port, host);
 
     return app;
   };

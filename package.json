@@ -54,6 +54,7 @@
     "moment": "^2.24.0",
     "mongoose": "^5.4.3",
     "morgan": "^1.9.1",
+    "nodemailer": "^5.1.1",
     "on-finished": "^2.3.0",
     "tsconfig-paths": "^3.8.0",
     "typescript": "^3.3.3"
