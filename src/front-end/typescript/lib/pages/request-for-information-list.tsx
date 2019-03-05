@@ -10,7 +10,7 @@ export type State = Notice.State;
 export const init: Init<Params, State> = async () => {
   return {
     title: 'Coming Soon',
-    body: 'Requests for Information will be available soon.',
+    body: 'Requests for Information and Discovery Day Session registration will be available soon.',
     button: {
       text: 'Return to the Home Page',
       page: {
