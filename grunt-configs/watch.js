@@ -8,7 +8,8 @@ module.exports = {
       `${gruntConfig.src.ts}/**`
     ],
     tasks: [
-      "browserify:development"
+      "browserify:development",
+      "compress"
     ]
   },
   sass: {
@@ -17,7 +18,8 @@ module.exports = {
     ],
     tasks: [
       "sass",
-      "postcss:prefix"
+      "postcss:prefix",
+      "compress"
     ]
   },
   static: {
@@ -26,7 +28,8 @@ module.exports = {
     ],
     tasks: [
       "common",
-      "browserify:development"
+      "browserify:development",
+      "compress"
     ]
   },
 };
