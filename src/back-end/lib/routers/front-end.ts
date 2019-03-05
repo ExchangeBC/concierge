@@ -1,11 +1,11 @@
 import { FRONT_END_BUILD_DIR } from 'back-end/config';
-import { FileResponseBody, makeFileResponseBody, nullConfigurableRequest, Route, Router } from 'back-end/lib/server';
+import { FileResponseBody, makeTextResponseBody, nullConfigurableRequest, Route, Router, TextResponseBody, tryMakeFileResponseBodyWithGzip } from 'back-end/lib/server';
 import { join } from 'path';
 import { HttpMethod } from 'shared/lib/types';
 
 const FALLBACK_FILE_PATH = join(FRONT_END_BUILD_DIR, 'index.html');
 
-const frontEndAssetRoute: Route<null, null, null, FileResponseBody, null, any> = {
+const frontEndAssetRoute: Route<null, null, null, FileResponseBody | TextResponseBody, null, any> = {
   method: HttpMethod.Get,
   path: '*',
   handler: {
@@ -14,16 +14,18 @@ const frontEndAssetRoute: Route<null, null, null, FileResponseBody, null, any> =
     },
     async respond(request) {
       const filePath = join(FRONT_END_BUILD_DIR, request.path);
+      let fileResponseBody = tryMakeFileResponseBodyWithGzip(filePath);
+      fileResponseBody = fileResponseBody || tryMakeFileResponseBodyWithGzip(FALLBACK_FILE_PATH);
       return {
         code: 200,
         headers: {},
         session: request.session,
-        body: makeFileResponseBody(filePath, FALLBACK_FILE_PATH)
+        body: fileResponseBody || makeTextResponseBody('File Not Found')
       };
     }
   }
 };
 
-const router: Router<FileResponseBody, any> = [ frontEndAssetRoute ];
+const router: Router<FileResponseBody | TextResponseBody, any> = [ frontEndAssetRoute ];
 
 export default router;

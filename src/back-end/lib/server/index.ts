@@ -109,47 +109,50 @@ export function mapJsonResponse<Session>(response: Response<any, Session>): Resp
 export interface File {
   buffer: Buffer;
   contentType: string;
+  contentEncoding?: string;
 }
 
-export type FileResponseBody = ADT<'file', File | null>;
+export type FileResponseBody = ADT<'file', File>;
 
-// TODO do we need fallback handling here?
-// TODO do something better than responding with a `null` file.
-export function makeFileResponseBody(path: string, fallbackPath?: string): FileResponseBody {
-  function nullFile(): FileResponseBody {
-    return { tag: 'file', value: null };
-  }
+function validFile(path: string): boolean {
+  return existsSync(path) && statSync(path).isFile();
+}
+
+function unsafeMakeFileResponseBody(path: string, contentType?: string, contentEncoding?: string): FileResponseBody {
+  return {
+    tag: 'file',
+    value: {
+      buffer: readFileSync(path),
+      contentType: contentType || lookup(path) || 'application/octet-stream',
+      contentEncoding
+    }
+  };
+}
+
+export function tryMakeFileResponseBody(path: string, contentType?: string, contentEncoding?: string): FileResponseBody | null {
   try {
-    function validFile(path: string): boolean {
-      return existsSync(path) && statSync(path).isFile();
-    }
-    function unsafeRead(path: string): FileResponseBody {
-      return {
-        tag: 'file',
-        value: {
-          buffer: readFileSync(path),
-          contentType: lookup(path) || 'application/octet-stream'
-        }
-      };
-    }
     if (validFile(path)) {
-      return unsafeRead(path);
-    } else if (fallbackPath && validFile(fallbackPath)) {
-      return unsafeRead(fallbackPath);
+      return unsafeMakeFileResponseBody(path, contentType, contentEncoding);
     } else {
-      return nullFile();
+      return null;
     }
   } catch (e) {
-    return nullFile();
+    return null;
   }
 }
 
-export function mapFileResponse<Session>(response: Response<string, Session>): Response<FileResponseBody, Session> {
+export function tryMakeFileResponseBodyWithGzip(filePath: string): FileResponseBody | null {
+  const compressedFilePath = filePath.replace(/(\.gz)*$/, '.gz');
+  const response = tryMakeFileResponseBody(compressedFilePath, lookup(filePath) || undefined, 'gzip');
+  return response || tryMakeFileResponseBody(filePath);
+}
+
+export function mapFileResponse<Session>(response: Response<string, Session>): Response<FileResponseBody | null, Session> {
   return {
     code: response.code,
     headers: response.headers,
     session: response.session,
-    body: makeFileResponseBody(response.body)
+    body: tryMakeFileResponseBody(response.body)
   };
 }
 

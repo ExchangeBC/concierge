@@ -41,14 +41,16 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask("development", [
     "common",
-    "browserify:development"
+    "browserify:development",
+    "compress"
   ]);
   grunt.registerTask("production", [
     "common",
     "postcss:min",
     "browserify:production",
     "uglify:production",
-    "htmlmin:production"
+    "htmlmin:production",
+    "compress"
   ]);
   grunt.registerTask("build", [ env ]);
 };

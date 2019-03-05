@@ -39,24 +39,28 @@ export function express<Session>(): ExpressAdapter<Session> {
       const setSessionId = (id: string) => expressRes.cookie(SESSION_COOKIE_NAME, id, { signed: true });
       const sessionId = sessionToSessionId(response.session)
       setSessionId(sessionId.toString());
-      // TODO change to switch statement for better type-checking
-      if (response.body.tag === 'json') {
-        expressRes.json(response.body.value);
-      } else if (response.body.tag === 'file') {
-        // TODO better null file handling.
-        expressRes
-          .set('Content-Type', response.body.value ? response.body.value.contentType : 'text/plain')
-          .send(response.body.value ? response.body.value.buffer.toString('utf8') : 'Not Found');
-      } else if (response.body.tag === 'text') {
-        expressRes
-          .set('Content-Type', 'text/plain')
-          .send(response.body.value);
-      } else if (response.body.tag === 'error') {
-        expressRes.json({
-          message: response.body.value.message,
-          stack: response.body.value.stack,
-          raw: response.body.value.toString()
-        });
+      switch (response.body.tag) {
+        case 'json':
+          expressRes.json(response.body.value);
+          break;
+        case 'file':
+          expressRes
+            .set('Content-Type', response.body.value.contentType)
+            .set('Content-Encoding', response.body.value.contentEncoding)
+            .send(response.body.value.buffer);
+          break;
+        case 'text':
+          expressRes
+            .set('Content-Type', 'text/plain')
+            .send(response.body.value);
+          break;
+        case 'error':
+          expressRes.json({
+            message: response.body.value.message,
+            stack: response.body.value.stack,
+            raw: response.body.value.toString()
+          });
+          break;
       }
     }
 

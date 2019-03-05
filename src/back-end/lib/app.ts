@@ -7,7 +7,7 @@ import FrontEndRouter from 'back-end/lib/routers/front-end';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { addHooksToRoute, FileResponseBody, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route, Router } from 'back-end/lib/server';
+import { addHooksToRoute, FileResponseBody, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route, Router, TextResponseBody } from 'back-end/lib/server';
 import { concat, flatten, flow, map } from 'lodash/fp';
 import * as mongoose from 'mongoose';
 import mongooseDefault from 'mongoose';
@@ -38,7 +38,7 @@ export function createModels(): AvailableModels {
   };
 };
 
-type SupportedResponseBodies = JsonResponseBody | FileResponseBody;
+type SupportedResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody;
 
 export function createRouter(Models: AvailableModels): Router<SupportedResponseBodies, Session> {
   const hooks = [
