@@ -5,7 +5,7 @@ import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import { get } from 'lodash';
 import { getString } from 'shared/lib';
-import { UserType } from 'shared/lib/types';
+import { UserType, userTypeToTitleCase } from 'shared/lib/types';
 
 const PAGE_TITLE_SUFFIX = 'Procurement Concierge Program';
 
@@ -401,11 +401,11 @@ const router: Router<State, Page, UserType> = {
       case 'signIn':
         return makeMetadata('Sign In');
       case 'signUpBuyer':
-        return makeMetadata('Create a Public Sector Buyer Account');
+        return makeMetadata(`Create a ${userTypeToTitleCase(UserType.Buyer)} Account`);
       case 'signUpVendor':
-        return makeMetadata('Create a Vendor Account');
+        return makeMetadata(`Create a ${userTypeToTitleCase(UserType.Vendor)} Account`);
       case 'signUpProgramStaff':
-        return makeMetadata('Create a Program Staff Account');
+        return makeMetadata(`Create a ${userTypeToTitleCase(UserType.ProgramStaff)} Account`);
       case 'signOut':
         return makeMetadata('Signed Out');
       case 'changePassword':
