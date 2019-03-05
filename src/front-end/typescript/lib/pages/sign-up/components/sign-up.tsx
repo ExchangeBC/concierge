@@ -166,6 +166,8 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
     const isLoading = state.loading > 0;
     const isDisabled = isLoading || !isValid(state, Profile);
     const createAccount = () => !isDisabled && dispatch({ tag: 'createAccount', value: undefined });
+    const isProgramStaff = Profile.userType === UserType.ProgramStaff;
+    const cancelPage: Page = isProgramStaff ? { tag: 'userList', value: null } : { tag: 'landing', value: null };
     return (
       <div>
         <Row>
@@ -191,7 +193,7 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
           <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={createAccount} loading={isLoading} disabled={isDisabled}>
             Create Account
           </LoadingButton>
-          <Link href='/' text='Cancel' textColor='secondary' disabled={isLoading} />
+          <Link page={cancelPage} text='Cancel' textColor='secondary' disabled={isLoading} />
         </FixedBar>
       </div>
     );
