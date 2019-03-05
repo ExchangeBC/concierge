@@ -18,7 +18,7 @@ export interface VendorProfileValidationErrors {
   contactPhoneCountryCode?: string[];
   contactPhoneType?: string[];
   industrySectors?: string[][];
-  areasOfExpertise?: string[][];
+  categories?: string[][];
 }
 
 export function validateBusinessType(userType: string): Validation<BusinessType> {
@@ -50,8 +50,8 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
   const validatedContactPhoneCountryCode = optional(validatePhoneCountryCode, getString(profile, 'contactPhoneCountryCode'));
   const validatedContactPhoneType = optional(validatePhoneType, getString(profile, 'contactPhoneType'));
   const validatedIndustrySectors = optional(validateIndustrySectors, getStringArray(profile, 'industrySectors'));
-  const validatedAreasOfExpertise = optional(v => validateCategories(v, 'Area of Expertise'), getStringArray(profile, 'areasOfExpertise'));
-  if (allValid([validatedBusinessName, validatedBusinessType, validatedBusinessNumber, validatedBusinessStreetAddress, validatedBusinessCity, validatedBusinessProvince, validatedBusinessPostalCode, validatedBusinessCountry, validatedContactName, validatedContactPositionTitle, validatedContactEmail, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedAreasOfExpertise])) {
+  const validatedCategories = optional(v => validateCategories(v, 'Area of Interest'), getStringArray(profile, 'categories'));
+  if (allValid([validatedBusinessName, validatedBusinessType, validatedBusinessNumber, validatedBusinessStreetAddress, validatedBusinessCity, validatedBusinessProvince, validatedBusinessPostalCode, validatedBusinessCountry, validatedContactName, validatedContactPositionTitle, validatedContactEmail, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedCategories])) {
     return valid({
       type: UserType.Vendor as UserType.Vendor,
       businessName: validatedBusinessName.value as string,
@@ -69,7 +69,7 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
       contactPhoneCountryCode: getValidValue(validatedContactPhoneCountryCode, undefined),
       contactPhoneType: getValidValue(validatedContactPhoneType, undefined),
       industrySectors: getValidValue(validatedIndustrySectors, undefined),
-      areasOfExpertise: getValidValue(validatedAreasOfExpertise, undefined)
+      categories: getValidValue(validatedCategories, undefined)
     });
   } else {
     return invalid({
@@ -88,7 +88,7 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
       contactPhoneCountryCode: getInvalidValue(validatedContactPhoneCountryCode, [] as string[]),
       contactPhoneType: getInvalidValue(validatedContactPhoneType, [] as string[]),
       industrySectors: getInvalidValue(validatedIndustrySectors, [] as string[][]),
-      areasOfExpertise: getInvalidValue(validatedAreasOfExpertise, [] as string[][])
+      categories: getInvalidValue(validatedCategories, [] as string[][])
     });
   }
 }

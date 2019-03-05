@@ -17,7 +17,7 @@ export interface BuyerProfileValidationErrors {
   contactPhoneCountryCode?: string[];
   contactPhoneType?: string[];
   industrySectors?: string[][];
-  areasOfInterest?: string[][];
+  categories?: string[][];
 }
 
 export function validatePublicSectorEntity(value: string): Validation<string> {
@@ -43,8 +43,8 @@ export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfi
   const validatedContactPhoneCountryCode = optional(validatePhoneCountryCode, getString(profile, 'contactPhoneCountryCode'));
   const validatedContactPhoneType = optional(validatePhoneType, getString(profile, 'contactPhoneType'));
   const validatedIndustrySectors = optional(validateIndustrySectors, getStringArray(profile, 'industrySectors'));
-  const validatedAreasOfInterest = optional(v => validateCategories(v, 'Area of Interest'), getStringArray(profile, 'areasOfInterest'));
-  if (allValid([validatedFirstName, validatedLastName, validatedPositionTitle, validatedPublicSectorEntity, validatedBranch, validatedContactStreetAddress, validatedContactCity, validatedContactProvince, validatedContactPostalCode, validatedContactCountry, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedAreasOfInterest])) {
+  const validatedCategories = optional(v => validateCategories(v, 'Area of Interest'), getStringArray(profile, 'categories'));
+  if (allValid([validatedFirstName, validatedLastName, validatedPositionTitle, validatedPublicSectorEntity, validatedBranch, validatedContactStreetAddress, validatedContactCity, validatedContactProvince, validatedContactPostalCode, validatedContactCountry, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedCategories])) {
     return valid({
       type: UserType.Buyer as UserType.Buyer,
       firstName: validatedFirstName.value as string,
@@ -61,7 +61,7 @@ export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfi
       contactPhoneCountryCode: getValidValue(validatedContactPhoneCountryCode, undefined),
       contactPhoneType: getValidValue(validatedContactPhoneType, undefined),
       industrySectors: getValidValue(validatedIndustrySectors, undefined),
-      areasOfInterest: getValidValue(validatedAreasOfInterest, undefined)
+      categories: getValidValue(validatedCategories, undefined)
     });
   } else {
     return invalid({
@@ -79,7 +79,7 @@ export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfi
       contactPhoneCountryCode: getInvalidValue(validatedContactPhoneCountryCode, [] as string[]),
       contactPhoneType: getInvalidValue(validatedContactPhoneType, [] as string[]),
       industrySectors: getInvalidValue(validatedIndustrySectors, [] as string[][]),
-      areasOfInterest: getInvalidValue(validatedAreasOfInterest, [] as string[][])
+      categories: getInvalidValue(validatedCategories, [] as string[][])
     });
   }
 }

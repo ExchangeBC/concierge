@@ -34,7 +34,7 @@ export interface State {
   contactPhoneCountryCode: ShortText.State;
   contactPhoneType: Select.State;
   industrySectors: Immutable<SelectMulti.State>;
-  areasOfExpertise: Immutable<SelectMulti.State>;
+  categories: Immutable<SelectMulti.State>;
 }
 
 export function getValues(state: Immutable<State>): VendorProfile {
@@ -55,7 +55,7 @@ export function getValues(state: Immutable<State>): VendorProfile {
     contactPhoneCountryCode: state.contactPhoneCountryCode.value || undefined,
     contactPhoneType: parsePhoneType(state.contactPhoneType.value) || undefined,
     industrySectors: SelectMulti.getValues(state.industrySectors),
-    areasOfExpertise: SelectMulti.getValues(state.areasOfExpertise)
+    categories: SelectMulti.getValues(state.categories)
   };
 }
 
@@ -76,7 +76,7 @@ export function setValues(state: Immutable<State>, profile: VendorProfile): Immu
     .setIn(['contactPhoneCountryCode', 'value'], profile.contactPhoneCountryCode || '')
     .setIn(['contactPhoneType', 'value'], profile.contactPhoneType || '')
     .set('industrySectors', SelectMulti.setValues(state.industrySectors, profile.industrySectors || []))
-    .set('areasOfExpertise', SelectMulti.setValues(state.areasOfExpertise, profile.areasOfExpertise || []));
+    .set('categories', SelectMulti.setValues(state.categories, profile.categories || []));
 }
 
 export function setErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
@@ -99,7 +99,7 @@ export function setErrors(state: Immutable<State>, errors: ValidationErrors): Im
     .setIn(['contactPhoneCountryCode', 'errors'], errors.contactPhoneCountryCode || [])
     .setIn(['contactPhoneType', 'errors'], errors.contactPhoneType || [])
     .set('industrySectors', SelectMulti.setErrors(state.industrySectors, errors.industrySectors || []))
-    .set('areasOfExpertise', SelectMulti.setErrors(state.areasOfExpertise, errors.areasOfExpertise || []));
+    .set('categories', SelectMulti.setErrors(state.categories, errors.categories || []));
 }
 
 export function isValid(state: Immutable<State>): boolean {
@@ -126,7 +126,7 @@ export type InnerMsg
   | ADT<'contactPhoneCountryCode', string>
   | ADT<'contactPhoneType', string>
   | ADT<'industrySectors', SelectMulti.Msg>
-  | ADT<'areasOfExpertise', SelectMulti.Msg>;
+  | ADT<'categories', SelectMulti.Msg>;
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
@@ -253,12 +253,12 @@ export const init: Init<Params, State> = async ({ profile }) => {
         fields: []
       }
     })),
-    areasOfExpertise: immutable(await SelectMulti.init({
+    categories: immutable(await SelectMulti.init({
       options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value })),
-      unselectedLabel: 'Select Area of Expertise',
+      unselectedLabel: 'Select an Area of Interest',
       formFieldMulti: {
-        idNamespace: 'vendor-areas-of-expertise',
-        label: 'Area(s) of Expertise',
+        idNamespace: 'vendor-categories',
+        label: 'Area(s) of Interest',
         labelClassName: 'h3 mb-3',
         fields: []
       }
@@ -310,11 +310,11 @@ export const update: Update<State, Msg> = (state, msg) => {
         childMsg: msg.value
       })[0];
       return [validateAndUpdate(state)];
-    case 'areasOfExpertise':
+    case 'categories':
       state = updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'areasOfExpertise', value }),
-        childStatePath: ['areasOfExpertise'],
+        mapChildMsg: value => ({ tag: 'categories', value }),
+        childStatePath: ['categories'],
         childUpdate: SelectMulti.update,
         childMsg: msg.value
       })[0];
@@ -473,12 +473,12 @@ export const IndustrySectors: ProfileView<State, InnerMsg> = ({ state, dispatch,
   );
 };
 
-export const AreasOfExpertise: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
-  const dispatchAreasOfExpertise: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'areasOfExpertise' as 'areasOfExpertise', value }));
+export const Categories: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
+  const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'categories' as 'categories', value }));
   return (
     <Row className='mt-3'>
       <Col xs='12' lg='10' xl='8'>
-        <SelectMulti.view state={state.areasOfExpertise} dispatch={dispatchAreasOfExpertise} disabled={disabled} />
+        <SelectMulti.view state={state.categories} dispatch={dispatchCategories} disabled={disabled} />
       </Col>
     </Row>
   );
@@ -490,7 +490,7 @@ export const view: ProfileView<State, InnerMsg> = props => {
       <BusinessInformation {...props} />
       <ContactInformation {...props} />
       <IndustrySectors {...props} />
-      <AreasOfExpertise {...props} />
+      <Categories {...props} />
     </div>
   );
 };

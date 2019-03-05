@@ -100,7 +100,7 @@ export interface BuyerProfile {
   contactPhoneCountryCode?: string;
   contactPhoneType?: PhoneType;
   industrySectors?: string[];
-  areasOfInterest?: string[];
+  categories?: string[];
 }
 
 export interface ProgramStaffProfile {
@@ -135,7 +135,7 @@ export interface VendorProfile {
   contactPhoneCountryCode?: string;
   contactPhoneType?: PhoneType;
   industrySectors?: string[];
-  areasOfExpertise?: string[];
+  categories?: string[];
 }
 
 export type Profile = BuyerProfile | ProgramStaffProfile | VendorProfile;

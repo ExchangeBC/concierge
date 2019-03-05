@@ -85,9 +85,9 @@ function userMatchesUserType(user: PublicUser, userType: UserType | null): boole
 function userMatchesCategory(user: PublicUser, category: string): boolean {
   switch (user.profile.type) {
     case UserType.Buyer:
-      return !!user.profile.areasOfInterest && user.profile.areasOfInterest.includes(category);
+      return !!user.profile.categories && user.profile.categories.includes(category);
     case UserType.Vendor:
-      return !!user.profile.areasOfExpertise && user.profile.areasOfExpertise.includes(category);
+      return !!user.profile.categories && user.profile.categories.includes(category);
     case UserType.ProgramStaff:
       return false;
   }
