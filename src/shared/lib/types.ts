@@ -53,7 +53,7 @@ export function parseUserType(raw: string): UserType | null {
 export function userTypeToTitleCase(userType: UserType): string {
   switch (userType) {
     case UserType.Buyer:
-      return 'Buyer';
+      return 'Public Sector Buyer';
     case UserType.Vendor:
       return 'Vendor';
     case UserType.ProgramStaff:
@@ -83,7 +83,6 @@ export function parseBusinessType(raw: string): BusinessType | null {
   }
 }
 
-// TODO make profile fields required per feedback from liz.
 export interface BuyerProfile {
   type: UserType.Buyer;
   firstName: string;
