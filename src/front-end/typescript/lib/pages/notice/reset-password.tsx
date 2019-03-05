@@ -15,7 +15,7 @@ export const init: Init<Params, State> = async () => {
       text: 'Sign In',
       page: {
         tag: 'signIn',
-        value: null
+        value: {}
       }
     }
   };

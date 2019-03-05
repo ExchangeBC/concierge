@@ -13,7 +13,9 @@ export interface State {
 
 export type Msg = ComponentMsg<ADT<'noop'>, Page>;
 
-export const init: Init<null, State> = async () => {
+export type Params = null;
+
+export const init: Init<Params, State> = async () => {
   const session = await deleteSession();
   if (!get(session, 'user')) {
     return { message: 'You have been successfully signed out. Thank you for using the Concierge.' };
@@ -43,7 +45,7 @@ export const view: ComponentView<State, Msg> = ({ state }) => {
   );
 };
 
-export const component: Component<null, State, Msg> = {
+export const component: Component<Params, State, Msg> = {
   init,
   update,
   view

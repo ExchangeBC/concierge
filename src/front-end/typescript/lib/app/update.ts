@@ -1,5 +1,5 @@
-import { Msg, State } from 'front-end/lib/app/types';
-import { Dispatch, Immutable, immutable, redirect, Update, updateAppChild } from 'front-end/lib/framework';
+import { Msg, Page, State } from 'front-end/lib/app/types';
+import { Dispatch, Immutable, immutable, replaceUrl, Update, updateAppChild } from 'front-end/lib/framework';
 import { deleteSession, getSession, Session } from 'front-end/lib/http/api';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
@@ -30,11 +30,11 @@ function setSession(state: Immutable<State>, validated: ValidOrInvalid<Session, 
   return state.set('session', validated.tag === 'valid' ? validated.value : undefined);
 };
 
-async function signOut(state: Immutable<State>, dispatch: Dispatch<Msg>, path: string, signOut: boolean): Promise<Immutable<State>> {
+async function handleIncorrectAuthLevel(state: Immutable<State>, dispatch: Dispatch<Msg>, redirectPage: Page, signOut: boolean): Promise<Immutable<State>> {
   if (signOut) {
     state = setSession(state, await deleteSession());
   }
-  dispatch(redirect(path));
+  dispatch(replaceUrl(redirectPage));
   return state;
 };
 
@@ -66,24 +66,25 @@ const update: Update<State, Msg> = (state, msg) => {
           state = endTransition(state);
           const outgoingPage = state.activePage;
           const auth = msg.value.auth;
+          const redirectPage = auth.redirect(msg.value.page);
           switch (auth.level.tag) {
             case 'any':
               break;
             case 'signedIn':
               if (!get(state.session, 'user')) {
-                return signOut(state, dispatch, auth.redirect, auth.signOut);
+                return handleIncorrectAuthLevel(state, dispatch, redirectPage, auth.signOut);
               } else {
                 break;
               }
             case 'signedOut':
               if (get(state.session, 'user')) {
-                return signOut(state, dispatch, auth.redirect, auth.signOut);
+                return handleIncorrectAuthLevel(state, dispatch, redirectPage, auth.signOut);
               } else {
                 break;
               }
             case 'userType':
               if (!auth.level.value.includes(get(state.session, ['user', 'type']))) {
-                return signOut(state, dispatch, auth.redirect, auth.signOut);
+                return handleIncorrectAuthLevel(state, dispatch, redirectPage, auth.signOut);
               } else {
                 break;
               }
@@ -100,7 +101,7 @@ const update: Update<State, Msg> = (state, msg) => {
               state = state.setIn(['pages', 'landing'], immutable(await PageLanding.init(null)));
               break;
             case 'signIn':
-              state = state.setIn(['pages', 'signIn'], immutable(await PageSignIn.init(null)));
+              state = state.setIn(['pages', 'signIn'], immutable(await PageSignIn.init(msg.value.page.value)));
               break;
             case 'signUpBuyer':
               state = state.setIn(['pages', 'signUpBuyer'], immutable(await PageSignUpBuyer.init(msg.value.page.value)));

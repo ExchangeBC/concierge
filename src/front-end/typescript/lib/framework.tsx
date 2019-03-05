@@ -87,16 +87,16 @@ export type AuthLevel<UserType>
   | ADT<'signedOut'>
   | ADT<'userType', UserType[]>;
 
-export interface RouteAuthDefinition<UserType> {
+export interface RouteAuthDefinition<Page, UserType> {
   level: AuthLevel<UserType>;
-  redirect: string;
   signOut: boolean;
+  redirect(originalPage: Page): Page;
 }
 
-export interface RouteDefinition<UserType> {
+export interface RouteDefinition<Page, UserType> {
   path: string;
   pageId: string;
-  auth?: RouteAuthDefinition<UserType>;
+  auth?: RouteAuthDefinition<Page, UserType>;
 }
 
 export interface PageMetadata {
@@ -104,7 +104,8 @@ export interface PageMetadata {
 }
 
 export interface Router<State, Page, UserType> {
-  routes: Array<RouteDefinition<UserType>>;
+  fallbackPage: Page;
+  routes: Array<RouteDefinition<Page, UserType>>;
   locationToPage(pageId: string, params: object, state: Immutable<State>): Page;
   pageToUrl(page: Page): string;
   pageToMetadata(page: Page): PageMetadata;
@@ -112,7 +113,7 @@ export interface Router<State, Page, UserType> {
 
 export interface IncomingPageMsgValue<Page, UserType> {
   page: Page;
-  auth: RouteAuthDefinition<UserType>;
+  auth: RouteAuthDefinition<Page, UserType>;
 }
 
 export type BeforeIncomingPageMsg = ADT<'@beforeIncomingPage'>;
@@ -204,7 +205,7 @@ export function initializeRouter<State, Msg, Page, UserType>(router: Router<Stat
   router.routes.forEach(({ path, pageId, auth }) => {
     const authDefinition = defaults(auth, {
       level: { tag: 'any', value: undefined },
-      redirect: '/',
+      redirect: () => router.fallbackPage,
       signOut: false
     });
     page(path, ctx => {
@@ -216,7 +217,7 @@ export function initializeRouter<State, Msg, Page, UserType>(router: Router<Stat
         value: undefined
       }).then(() => {
         const parsedPage = router.locationToPage(pageId, get(ctx, 'params', {}), stateManager.getState());
-        stateManager
+        return stateManager
           .dispatch({
             tag: '@incomingPage',
             value: {

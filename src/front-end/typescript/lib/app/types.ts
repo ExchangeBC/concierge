@@ -27,14 +27,14 @@ import { ADT } from 'shared/lib/types';
 
 export type Page
   = ADT<'landing', PageLanding.Params>
-  | ADT<'signIn', null>
+  | ADT<'signIn', PageSignIn.Params>
   | ADT<'signUpBuyer', PageSignUpBuyer.Params>
   | ADT<'signUpVendor', PageSignUpVendor.Params>
   | ADT<'signUpProgramStaff', PageSignUpProgramStaff.Params>
-  | ADT<'signOut', null>
+  | ADT<'signOut', PageSignOut.Params>
   | ADT<'changePassword', PageChangePassword.Params>
   | ADT<'resetPassword', PageResetPassword.Params>
-  | ADT<'forgotPassword', null>
+  | ADT<'forgotPassword', PageForgotPassword.Params>
   | ADT<'termsAndConditions', PageTermsAndConditions.Params>
   | ADT<'profile', PageProfile.Params>
   | ADT<'userList', PageUserList.Params>

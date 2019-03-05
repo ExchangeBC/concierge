@@ -1,5 +1,6 @@
 import { Page, State } from 'front-end/lib/app/types';
 import { RouteAuthDefinition, Router } from 'front-end/lib/framework';
+import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import { get } from 'lodash';
@@ -8,31 +9,58 @@ import { UserType } from 'shared/lib/types';
 
 const PAGE_TITLE_SUFFIX = 'BC Concierge';
 
-const isSignedOut: RouteAuthDefinition<UserType> = {
+const isSignedOut: RouteAuthDefinition<Page, UserType> = {
   level: { tag: 'signedOut', value: undefined },
-  redirect: '/',
+  redirect: () => ({ tag: 'landing', value: null }),
   signOut: false
 };
 
-const isSignedIn: RouteAuthDefinition<UserType> = {
+const isSignedIn: RouteAuthDefinition<Page, UserType> = {
   level: { tag: 'signedIn', value: undefined },
-  redirect: '/sign-in',
+  redirect: page => {
+    return {
+      tag: 'signIn',
+      value: {
+        redirectOnSuccess: page
+      }
+    };
+  },
   signOut: false
 };
 
-const isBuyerOrVendor: RouteAuthDefinition<UserType> = {
+const isBuyerOrVendor: RouteAuthDefinition<Page, UserType> = {
   level: { tag: 'userType', value: [UserType.Buyer, UserType.Vendor] },
-  redirect: '/',
+  redirect: () => ({ tag: 'landing', value: null }),
   signOut: false
 };
 
-const isProgramStaff: RouteAuthDefinition<UserType> = {
+const isProgramStaff: RouteAuthDefinition<Page, UserType> = {
   level: { tag: 'userType', value: [UserType.ProgramStaff] },
-  redirect: '/sign-in',
+  redirect: page => {
+    return {
+      tag: 'signIn',
+      value: {
+        redirectOnSuccess: page
+      }
+    };
+  },
   signOut: false
 };
+
+function serialize<Params>(params: Params): string {
+  return btoa(JSON.stringify(params));
+}
+
+function deserialize<Params>(s: string): Params {
+  return JSON.parse(atob(s)) as Params;
+}
 
 const router: Router<State, Page, UserType> = {
+
+  fallbackPage: {
+    tag: 'landing',
+    value: null
+  },
 
   routes: [
     {
@@ -41,6 +69,11 @@ const router: Router<State, Page, UserType> = {
     },
     {
       path: '/sign-in',
+      pageId: 'signIn',
+      auth: isSignedOut
+    },
+    {
+      path: '/sign-in/:params',
       pageId: 'signIn',
       auth: isSignedOut
     },
@@ -70,7 +103,7 @@ const router: Router<State, Page, UserType> = {
       pageId: 'signOut',
       auth: {
         level: { tag: 'signedOut', value: undefined },
-        redirect: '/sign-out',
+        redirect: () => ({ tag: 'signOut', value: null }),
         // signOut must be true, or this will trigger an infinite loop.
         signOut: true
       }
@@ -156,9 +189,14 @@ const router: Router<State, Page, UserType> = {
           value: null
         };
       case 'signIn':
+        const signInSerializedParams = get(params, 'params');
+        let signInValue = {} as PageSignIn.Params;
+        if (signInSerializedParams) {
+          signInValue = deserialize(signInSerializedParams);
+        }
         return {
           tag: 'signIn',
-          value: null
+          value: signInValue
         };
       case 'signUpBuyer':
         const signUpBuyerParams: PageSignUpBuyer.Params = {
@@ -298,7 +336,7 @@ const router: Router<State, Page, UserType> = {
       case 'landing':
         return '/';
       case 'signIn':
-        return '/sign-in';
+        return `/sign-in/${serialize(page.value)}`;
       case 'signUpBuyer':
         return '/sign-up/buyer';
       case 'signUpVendor':

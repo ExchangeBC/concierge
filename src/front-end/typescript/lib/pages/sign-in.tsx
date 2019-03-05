@@ -1,3 +1,4 @@
+import router from 'front-end/lib/app/router';
 import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
@@ -13,6 +14,7 @@ import { validateEmail, validatePassword } from 'shared/lib/validators';
 export interface State {
   loading: number;
   errors: string[];
+  redirectOnSuccess: Page;
   email: ShortText.State;
   password: ShortText.State;
 }
@@ -24,12 +26,16 @@ type InnerMsg
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
-export type Params = null;
+export interface Params {
+  redirectOnSuccess?: Page;
+};
 
-export const init: Init<Params, State> = async () => {
+export const init: Init<Params, State> = async ({ redirectOnSuccess }) => {
+  redirectOnSuccess = redirectOnSuccess || router.fallbackPage;
   return {
     loading: 0,
     errors: [],
+    redirectOnSuccess,
     email: ShortText.init({
       id: 'sign-in-email',
       required: true,
@@ -73,7 +79,7 @@ export const update: Update<State, Msg> = (state, msg) => {
             case 'valid':
               dispatch({
                 tag: '@newUrl',
-                value: { tag: 'landing', value: null }
+                value: state.redirectOnSuccess
               });
               return state;
             case 'invalid':
