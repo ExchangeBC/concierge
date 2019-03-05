@@ -180,7 +180,7 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
             <Subtitle userType={Profile.userType} />
           </Col>
         </Row>
-        <Row className='mt-3'>
+        <Row className='mt-3 no-gutters'>
           <Col xs='12' md='4' xl='3'>
             <AccountInformation.view state={state.accountInformation} dispatch={dispatchAccountInformation} />
           </Col>
