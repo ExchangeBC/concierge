@@ -7,7 +7,7 @@ import { get } from 'lodash';
 import { getString } from 'shared/lib';
 import { UserType } from 'shared/lib/types';
 
-const PAGE_TITLE_SUFFIX = 'BC Concierge';
+const PAGE_TITLE_SUFFIX = 'Procurement Concierge Program';
 
 const isSignedOut: RouteAuthDefinition<Page, UserType> = {
   level: { tag: 'signedOut', value: undefined },
@@ -158,6 +158,10 @@ const router: Router<State, Page, UserType> = {
       pageId: 'privacy'
     },
     {
+      path: '/guide',
+      pageId: 'guide'
+    },
+    {
       path: '/requests-for-information',
       pageId: 'requestForInformationList',
       auth: isSignedIn
@@ -302,6 +306,11 @@ const router: Router<State, Page, UserType> = {
           tag: 'privacy',
           value: null
         };
+      case 'guide':
+        return {
+          tag: 'guide',
+          value: null
+        };
       case 'noticeChangePassword':
         return {
           tag: 'noticeChangePassword',
@@ -369,6 +378,8 @@ const router: Router<State, Page, UserType> = {
         return '/disclaimer';
       case 'privacy':
         return '/privacy';
+      case 'guide':
+        return '/guide';
       case 'noticeChangePassword':
         return '/notice/change-password';
       case 'noticeResetPassword':
@@ -422,6 +433,8 @@ const router: Router<State, Page, UserType> = {
         return makeMetadata('Disclaimer');
       case 'privacy':
         return makeMetadata('Privacy');
+      case 'guide':
+        return makeMetadata('How to Use the Procurement Concierge Program\'s Web Application');
       case 'noticeChangePassword':
         return makeMetadata('Password Change Successful');
       case 'noticeResetPassword':

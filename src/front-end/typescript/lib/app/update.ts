@@ -8,6 +8,7 @@ import * as PageAbout from 'front-end/lib/pages/markdown/about';
 import * as PageAccessibility from 'front-end/lib/pages/markdown/accessibility';
 import * as PageCopyright from 'front-end/lib/pages/markdown/copyright';
 import * as PageDisclaimer from 'front-end/lib/pages/markdown/disclaimer';
+import * as PageGuide from 'front-end/lib/pages/markdown/guide';
 import * as PagePrivacy from 'front-end/lib/pages/markdown/privacy';
 import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
@@ -150,6 +151,9 @@ const update: Update<State, Msg> = (state, msg) => {
               break;
             case 'privacy':
               state = state.setIn(['pages', 'privacy'], immutable(await PagePrivacy.init(msg.value.page.value)));
+              break;
+            case 'guide':
+              state = state.setIn(['pages', 'guide'], immutable(await PageGuide.init(msg.value.page.value)));
               break;
             case 'noticeChangePassword':
               state = state.setIn(['pages', 'noticeChangePassword'], immutable(await PageNoticeChangePassword.init(null)));
@@ -356,6 +360,15 @@ const update: Update<State, Msg> = (state, msg) => {
         mapChildMsg: value => ({ tag: 'pagePrivacy', value }),
         childStatePath: ['pages', 'privacy'],
         childUpdate: PagePrivacy.update,
+        childMsg: msg.value
+      });
+
+    case 'pageGuide':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageGuide', value }),
+        childStatePath: ['pages', 'guide'],
+        childUpdate: PageGuide.update,
         childMsg: msg.value
       });
 

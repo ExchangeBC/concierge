@@ -9,6 +9,7 @@ import * as PageAbout from 'front-end/lib/pages/markdown/about';
 import * as PageAccessibility from 'front-end/lib/pages/markdown/accessibility';
 import * as PageCopyright from 'front-end/lib/pages/markdown/copyright';
 import * as PageDisclaimer from 'front-end/lib/pages/markdown/disclaimer';
+import * as PageGuide from 'front-end/lib/pages/markdown/guide';
 import * as PagePrivacy from 'front-end/lib/pages/markdown/privacy';
 import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
@@ -209,6 +210,15 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.privacy}
           mapPageMsg={value => ({ tag: 'pagePrivacy', value })}
           View={PagePrivacy.view} />
+      );
+
+    case 'guide':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.guide}
+          mapPageMsg={value => ({ tag: 'pageGuide', value })}
+          View={PageGuide.view} />
       );
 
     case 'noticeNotFound':

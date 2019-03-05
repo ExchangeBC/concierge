@@ -7,6 +7,7 @@ import * as PageAbout from 'front-end/lib/pages/markdown/about';
 import * as PageAccessibility from 'front-end/lib/pages/markdown/accessibility';
 import * as PageCopyright from 'front-end/lib/pages/markdown/copyright';
 import * as PageDisclaimer from 'front-end/lib/pages/markdown/disclaimer';
+import * as PageGuide from 'front-end/lib/pages/markdown/guide';
 import * as PagePrivacy from 'front-end/lib/pages/markdown/privacy';
 import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
@@ -44,6 +45,7 @@ export type Page
   | ADT<'copyright', PageCopyright.Params>
   | ADT<'disclaimer', PageDisclaimer.Params>
   | ADT<'privacy', PagePrivacy.Params>
+  | ADT<'guide', PageGuide.Params>
   | ADT<'noticeNotFound', PageNoticeNotFound.Params>
   | ADT<'noticeChangePassword', PageNoticeChangePassword.Params>
   | ADT<'noticeResetPassword', PageNoticeResetPassword.Params>
@@ -75,6 +77,7 @@ export interface State {
     copyright?: Immutable<PageCopyright.State>;
     disclaimer?: Immutable<PageDisclaimer.State>;
     privacy?: Immutable<PagePrivacy.State>;
+    guide?: Immutable<PageGuide.State>;
     noticeNotFound?: Immutable<PageNoticeNotFound.State>;
     noticeChangePassword?: Immutable<PageNoticeChangePassword.State>;
     noticeResetPassword?: Immutable<PageNoticeResetPassword.State>;
@@ -103,6 +106,7 @@ type InnerMsg
   | ADT<'pageCopyright', PageCopyright.Msg>
   | ADT<'pageDisclaimer', PageDisclaimer.Msg>
   | ADT<'pagePrivacy', PagePrivacy.Msg>
+  | ADT<'pageGuide', PageGuide.Msg>
   | ADT<'pageNoticeNotFound', PageNoticeNotFound.Msg>
   | ADT<'pageNoticeChangePassword', PageNoticeChangePassword.Msg>
   | ADT<'pageNoticeResetPassword', PageNoticeResetPassword.Msg>
