@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { resolve } from 'path';
 import path from 'path';
+import url from 'url';
 
 // Load environment variables from a .env file.
 dotenv.config({
@@ -69,6 +70,8 @@ export const MAILER_CONFIG = ENV === 'development' ? developmentMailerConfigOpti
 
 export const MAILER_FROM = get('MAILER_FROM', 'Procurement Concierge Program <noreply@procurement.concierge.gov.bc.ca>');
 
+export const MAILER_ROOT_URL = get('MAILER_ROOT_URL', 'https://procurement.concierge.gov.bc.ca').replace(/\/*$/, '');
+
 function isPositiveInteger(n: number): boolean {
   return !isNaN(n) && !!n && n >= 0 && Math.abs(n % 1) === 0;
 }
@@ -106,7 +109,7 @@ export function getConfigErrors(): string[] {
   if (ENV === 'production' && (!productionMailerConfigOptions.host || !isPositiveInteger(productionMailerConfigOptions.port))) {
     errors = errors.concat([
       'MAILER_* variables must be properly specified for production.',
-      'MAILER_FROM, MAILER_HOST and MAILER_PORT (positive integer) must all be specified.'
+      'MAILER_HOST and MAILER_PORT (positive integer) must all be specified.'
     ]);
   }
 
@@ -115,6 +118,15 @@ export function getConfigErrors(): string[] {
       'MAILER_* variables must be properly specified for development.',
       'MAILER_GMAIL_USER and MAILER_GMAIL_PASS must both be specified.'
     ]);
+  }
+
+  if (!MAILER_FROM || !MAILER_FROM.match(/^[^<>@]+<[^@]+@[^@]+.[^@]+>$/)) {
+    errors.push('MAILER_FROM must be specified using the format: "Name <email@domain.tld>".');
+  }
+
+  const mailerRootUrl = url.parse(MAILER_ROOT_URL);
+  if (!MAILER_ROOT_URL || !mailerRootUrl.protocol || !mailerRootUrl.host) {
+    errors.push('MAILER_ROOT_URL must be specified as a valid URL with a protocol and host.');
   }
 
   return errors;

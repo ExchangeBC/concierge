@@ -1,5 +1,6 @@
 import { AvailableModels } from 'back-end/lib/app';
 import * as crud from 'back-end/lib/crud';
+import * as notifications from 'back-end/lib/mailer/notifications';
 import * as permissions from 'back-end/lib/permissions';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
 import * as SessionSchema from 'back-end/lib/schemas/session';
@@ -53,7 +54,12 @@ export const resource: Resource = {
             userId
           });
           await forgotPasswordToken.save();
-          // TODO send email to user with link to reset password.
+          // Send notification email.
+          try {
+            await notifications.createForgotPasswordToken(request.body.email, forgotPasswordToken.token, userId);
+          } catch (error) {
+            request.logger.error('sending the createForgotPasswordToken notification email failed', error);
+          }
           return basicResponse(201, request.session, null);
         } else {
           return basicResponse(400, request.session, null);

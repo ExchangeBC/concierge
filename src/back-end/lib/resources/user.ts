@@ -1,5 +1,6 @@
 import { AvailableModels } from 'back-end/lib/app';
 import * as crud from 'back-end/lib/crud';
+import * as notifications from 'back-end/lib/mailer/notifications';
 import * as permissions from 'back-end/lib/permissions';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
@@ -158,6 +159,12 @@ const resource: Resource = {
             const body = request.body.value;
             const user = new UserModel(body);
             await user.save();
+            // Send notification email.
+            try {
+              await notifications.createUser(user.email);
+            } catch (error) {
+              request.logger.error('sending the createUser notification email failed', error);
+            }
             // Sign in the user if they are creating their own account.
             // Otherwise, as is the case with Program Staff, leave them signed in.
             let session = request.session;
@@ -260,6 +267,12 @@ const resource: Resource = {
         user.deactivatedBy = get(request.session.user, 'id');
         user.active = false;
         await user.save();
+        // Send notification email.
+        try {
+          await notifications.deleteUser(user.email);
+        } catch (error) {
+          request.logger.error('sending the deleteUser notification email failed', error);
+        }
         let session = request.session;
         // Sign out the user if they are deactivating their own account.
         // Otherwise, as is the case with Program Staff, leave them signed in.
