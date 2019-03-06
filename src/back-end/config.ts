@@ -30,9 +30,9 @@ function getMongoUrl(): string | null {
 
 export const ENV = get('NODE_ENV', 'production');
 
-export const HOST = get('HOST', '127.0.0.1');
+export const SERVER_HOST = get('SERVER_HOST', '127.0.0.1');
 
-export const PORT = parseInt(get('PORT', '3000'), 10);
+export const SERVER_PORT = parseInt(get('SERVER_PORT', '3000'), 10);
 
 export const MONGO_URL = getMongoUrl();
 
@@ -65,13 +65,12 @@ const developmentMailerConfigOptions = {
   }
 };
 
-export const MAILER_CONFIG = {
-  from: get('MAILER_FROM', 'Procurement Concierge Program <noreply@procurement.concierge.gov.bc.ca>'),
-  options: ENV === 'development' ? developmentMailerConfigOptions : productionMailerConfigOptions
-};
+export const MAILER_CONFIG = ENV === 'development' ? developmentMailerConfigOptions : productionMailerConfigOptions;
+
+export const MAILER_FROM = get('MAILER_FROM', 'Procurement Concierge Program <noreply@procurement.concierge.gov.bc.ca>');
 
 function isPositiveInteger(n: number): boolean {
-  return !isNaN(n) && !!n && n >= 0 && Math.abs(PORT % 1) === 0;
+  return !isNaN(n) && !!n && n >= 0 && Math.abs(n % 1) === 0;
 }
 
 export function getConfigErrors(): string[] {
@@ -81,12 +80,12 @@ export function getConfigErrors(): string[] {
     errors.push('NODE_ENV must be either "development" or "production"');
   }
 
-  if (!HOST.match(/^\d+\.\d+\.\d+\.\d+/)) {
-    errors.push('HOST must be a valid IP address.');
+  if (!SERVER_HOST.match(/^\d+\.\d+\.\d+\.\d+/)) {
+    errors.push('SERVER_HOST must be a valid IP address.');
   }
 
-  if (!isPositiveInteger(PORT)) {
-    errors.push('PORT must be a positive integer.');
+  if (!isPositiveInteger(SERVER_PORT)) {
+    errors.push('SERVER_PORT must be a positive integer.');
   }
 
   if (!MONGO_URL) {
@@ -104,14 +103,14 @@ export function getConfigErrors(): string[] {
     errors.push('COOKIE_SECRET must be specified.');
   }
 
-  if (ENV === 'production' && (!MAILER_CONFIG.from || !productionMailerConfigOptions.host || !isPositiveInteger(productionMailerConfigOptions.port))) {
+  if (ENV === 'production' && (!productionMailerConfigOptions.host || !isPositiveInteger(productionMailerConfigOptions.port))) {
     errors = errors.concat([
       'MAILER_* variables must be properly specified for production.',
       'MAILER_FROM, MAILER_HOST and MAILER_PORT (positive integer) must all be specified.'
     ]);
   }
 
-  if (ENV === 'development' && (!MAILER_CONFIG.from || !developmentMailerConfigOptions.auth.user || !developmentMailerConfigOptions.auth.pass)) {
+  if (ENV === 'development' && (!developmentMailerConfigOptions.auth.user || !developmentMailerConfigOptions.auth.pass)) {
     errors = errors.concat([
       'MAILER_* variables must be properly specified for development.',
       'MAILER_GMAIL_USER and MAILER_GMAIL_PASS must both be specified.'

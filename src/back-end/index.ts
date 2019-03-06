@@ -1,4 +1,4 @@
-import { getConfigErrors, HOST, MONGO_URL, PORT } from 'back-end/config';
+import { getConfigErrors, MONGO_URL, SERVER_HOST, SERVER_PORT } from 'back-end/config';
 import * as app from 'back-end/lib/app';
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
@@ -27,10 +27,10 @@ async function start() {
     router,
     sessionIdToSession: SessionSchema.sessionIdToSession(SessionModel),
     sessionToSessionId: SessionSchema.sessionToSessionId(SessionModel),
-    host: HOST,
-    port: PORT
+    host: SERVER_HOST,
+    port: SERVER_PORT
   });
-  logger.info('server started', { host: HOST, port: String(PORT) });
+  logger.info('server started', { host: SERVER_HOST, port: String(SERVER_PORT) });
 }
 
 start()
