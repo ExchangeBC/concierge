@@ -1,7 +1,12 @@
-import { config } from 'dotenv';
+import dotenv from 'dotenv';
 import { resolve } from 'path';
+import path from 'path';
 
-config();
+// Load environment variables from a .env file.
+dotenv.config({
+  debug: process.env.NODE_ENV === 'development',
+  path: path.resolve(__dirname, '../../.env')
+});
 
 function get(name: string , fallback: string): string {
   return process.env[name] || fallback;
@@ -66,7 +71,7 @@ export const MAILER_CONFIG = {
 };
 
 function isPositiveInteger(n: number): boolean {
-  return !!n && !isNaN(n) && n >= 0 && Math.abs(PORT % 1) > 0;
+  return !isNaN(n) && !!n && n >= 0 && Math.abs(PORT % 1) === 0;
 }
 
 export function getConfigErrors(): string[] {
