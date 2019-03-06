@@ -103,7 +103,7 @@ const Navigation: View<Props> = props => {
     <Navbar expand='md' dark color='dark'>
       <Container>
         <NavbarBrand href='/'>
-          <img src='https://bcdevexchange.org/modules/core/client/img/logo/new-logo-white.svg' style={{ height: '45px' }}/>
+          <img src='/images/logo.svg' style={{ height: '45px' }}/>
         </NavbarBrand>
         <NavbarToggler className='ml-auto' onClick={() => props.toggleIsOpen()} />
         <Collapse isOpen={props.isOpen} navbar>
