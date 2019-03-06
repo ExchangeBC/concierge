@@ -26,7 +26,6 @@ import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
 import * as PageUserList from 'front-end/lib/pages/user-list';
 import { default as React, ReactElement } from 'react';
-import { Col, Container, Row } from 'reactstrap';
 import { UserType } from 'shared/lib/types';
 
 interface ViewPageProps<PageState, PageMsg> {
@@ -267,13 +266,7 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
     return (
       <div className={`page-${state.activePage.tag} ${state.inTransition ? 'in-transition' : ''} d-flex flex-column`} style={{ minHeight: '100vh' }}>
         <Nav session={state.session} activePage={state.activePage} isOpen={state.isNavOpen} toggleIsOpen={toggleIsNavOpen} />
-        <Container className='py-5 mb-auto'>
-          <Row>
-            <Col xs='12'>
-              <ViewActivePage state={state} dispatch={dispatch} />
-            </Col>
-          </Row>
-        </Container>
+        <ViewActivePage state={state} dispatch={dispatch} />
         <Footer />
       </div>
     );

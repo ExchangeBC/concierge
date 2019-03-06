@@ -1,3 +1,9 @@
+// Global styles.
+
+* {
+  box-sizing: border-box;
+}
+
 // Custom Bootstrap overrides.
 
 $grid-breakpoints: (
@@ -48,18 +54,5 @@ $fixed-bar-height: 80px;
 
   .transition-hide {
     display: none;
-  }
-}
-
-// Custom styles.
-
-// Ensure the footer is visible on pages with a fixed-bar for buttons.
-.page-signUpBuyer,
-.page-signUpVendor,
-.page-signUpProgramStaff,
-.page-termsAndConditions {
-
-  footer {
-    margin-top: $fixed-bar-height;
   }
 }

@@ -10,14 +10,7 @@ export type State = Notice.State;
 export const init: Init<Params, State> = async () => {
   return {
     title: 'Password Changed',
-    body: 'Your password has been successfully changed.',
-    button: {
-      text: 'Return to the Home Page',
-      page: {
-        tag: 'landing',
-        value: null
-      }
-    }
+    body: 'Your password has been successfully changed.'
   };
 };
 

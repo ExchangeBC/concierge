@@ -3,12 +3,13 @@ import { ProfileComponent } from 'front-end/lib/components/profiles/types';
 import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as AccountInformation from 'front-end/lib/pages/sign-up/components/account-information';
-import FixedBar from 'front-end/lib/views/fixed-bar';
+import * as FixedBar from 'front-end/lib/views/fixed-bar';
+import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { isArray } from 'lodash';
 import { default as React } from 'react';
-import { Col, Row } from 'reactstrap';
+import { Col, Container, Row } from 'reactstrap';
 import { ADT, Profile as ProfileType, UserType, userTypeToTitleCase } from 'shared/lib/types';
 
 export interface State<ProfileState> {
@@ -168,34 +169,37 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
     const createAccount = () => !isDisabled && dispatch({ tag: 'createAccount', value: undefined });
     const isProgramStaff = Profile.userType === UserType.ProgramStaff;
     const cancelPage: Page = isProgramStaff ? { tag: 'userList', value: null } : { tag: 'landing', value: null };
+    const bottomBarIsFixed = state.fixedBarBottom === 0;
     return (
-      <div>
-        <Row>
-          <Col xs='12'>
-            <h1>Create a {userTypeToTitleCase(Profile.userType)} Account</h1>
-          </Col>
-        </Row>
-        <Row>
-          <Col xs='12' md='8'>
-            <Subtitle userType={Profile.userType} />
-          </Col>
-        </Row>
-        <Row className='mt-3 no-gutters'>
-          <Col xs='12' md='4' xl='3'>
-            <AccountInformation.view state={state.accountInformation} dispatch={dispatchAccountInformation} />
-          </Col>
-          <Col md='1' className='vertical-line'></Col>
-          <Col xs='12' md='7' xl='8'>
-            <Profile.view state={state.profile} dispatch={dispatchProfile} />
-          </Col>
-        </Row>
-        <FixedBar location='bottom' distance={state.fixedBarBottom}>
+      <PageContainer.View bottomBarIsFixed={bottomBarIsFixed} fullWidth>
+        <Container>
+          <Row>
+            <Col xs='12'>
+              <h1>Create a {userTypeToTitleCase(Profile.userType)} Account</h1>
+            </Col>
+          </Row>
+          <Row>
+            <Col xs='12' md='8'>
+              <Subtitle userType={Profile.userType} />
+            </Col>
+          </Row>
+          <Row className='mt-3 no-gutters'>
+            <Col xs='12' md='4' xl='3'>
+              <AccountInformation.view state={state.accountInformation} dispatch={dispatchAccountInformation} />
+            </Col>
+            <Col md='1' className='vertical-line'></Col>
+            <Col xs='12' md='7' xl='8'>
+              <Profile.view state={state.profile} dispatch={dispatchProfile} />
+            </Col>
+          </Row>
+        </Container>
+        <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
           <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={createAccount} loading={isLoading} disabled={isDisabled}>
             Create Account
           </LoadingButton>
           <Link page={cancelPage} text='Cancel' textColor='secondary' disabled={isLoading} />
-        </FixedBar>
-      </div>
+        </FixedBar.View>
+      </PageContainer.View>
     );
   };
 };

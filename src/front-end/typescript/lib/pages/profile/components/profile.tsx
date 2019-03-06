@@ -4,6 +4,7 @@ import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable,
 import * as api from 'front-end/lib/http/api';
 import { validateAndUpdateField } from 'front-end/lib/views/form-field';
 import * as ShortText from 'front-end/lib/views/input/short-text';
+import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { isArray } from 'lodash';
@@ -438,7 +439,7 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
     const headingSuffix = `${userType} Profile`;
     const heading = name ? `${name} ${headingSuffix}` : headingSuffix;
     return (
-      <div>
+      <PageContainer.View>
         <Row className='mb-5'>
           <Col xs='12'>
             <h1>{heading}</h1>
@@ -448,7 +449,7 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
         <ConditionalChangePassword {...props} />
         <ConditionalTermsAndConditions {...props} />
         <ConditionalDeactivateAccount {...props} />
-      </div>
+      </PageContainer.View>
     );
   };
 };

@@ -1,5 +1,6 @@
 import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/lib/framework';
+import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import React from 'react';
 
 export type Params = null;
@@ -20,7 +21,7 @@ export const update: Update<State, Msg> = (state, msg) => {
 
 export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
-    <div></div>
+    <PageContainer.View>Landing</PageContainer.View>
   );
 };
 

@@ -3,6 +3,7 @@ import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 
 import * as api from 'front-end/lib/http/api';
 import { validateAndUpdateField } from 'front-end/lib/views/form-field';
 import * as ShortText from 'front-end/lib/views/input/short-text';
+import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
@@ -85,7 +86,7 @@ export const view: ComponentView<State, Msg> = props => {
   const isDisabled = isLoading || !isValid(state);
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
-    <div>
+    <PageContainer.View>
       <Row>
         <Col xs='12'>
           <h1>Forgotten Your Password?</h1>
@@ -118,7 +119,7 @@ export const view: ComponentView<State, Msg> = props => {
           </Row>
         </Col>
       </Row>
-    </div>
+    </PageContainer.View>
   );
 };
 

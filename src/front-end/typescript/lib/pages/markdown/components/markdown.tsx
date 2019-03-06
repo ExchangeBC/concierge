@@ -1,6 +1,7 @@
 import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/lib/framework';
 import * as markdown from 'front-end/lib/http/markdown';
+import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Markdown from 'front-end/lib/views/markdown';
 import React from 'react';
 import { Col, Row } from 'reactstrap';
@@ -28,7 +29,7 @@ export const update: Update<State, Msg> = (state, msg) => {
 export const view: ComponentView<State, Msg> = props => {
   const { state } = props;
   return (
-    <div>
+    <PageContainer.View>
       <Row className='mb-3'>
         <Col xs='12'>
           <h1>{state.title}</h1>
@@ -39,7 +40,7 @@ export const view: ComponentView<State, Msg> = props => {
           <Markdown source={state.markdownSource} />
         </Col>
       </Row>
-    </div>
+    </PageContainer.View>
   );
 };
 

@@ -2,12 +2,13 @@ import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as markdown from 'front-end/lib/http/markdown';
-import FixedBar from 'front-end/lib/views/fixed-bar';
+import * as FixedBar from 'front-end/lib/views/fixed-bar';
+import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import Markdown from 'front-end/lib/views/markdown';
 import React from 'react';
-import { Alert, Col, Row } from 'reactstrap';
+import { Alert, Col, Container, Row } from 'reactstrap';
 import { formatTermsAndConditionsAgreementDate } from 'shared/lib';
 import { ADT } from 'shared/lib/types';
 
@@ -110,25 +111,26 @@ const ConditionalErrors: ComponentView<State, Msg> = ({ state }) => {
 
 const AcceptedAt: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
+  const fixedBarLocation = state.fixedBarBottom === 0 ? 'bottom' : undefined;
   if (state.acceptedTermsAt) {
     return (
-      <FixedBar location='bottom' distance={state.fixedBarBottom}>
+      <FixedBar.View location={fixedBarLocation}>
         <p className='text-align-right mb-0'>
           {formatTermsAndConditionsAgreementDate(state.acceptedTermsAt)}
         </p>
-      </FixedBar>
+      </FixedBar.View>
     );
   } else {
     const isLoading = state.loading > 0;
     const isDisabled = isLoading || !isValid(state);
     const acceptTerms = () => !isDisabled && !state.acceptedTermsAt && dispatch({ tag: 'acceptTerms', value: undefined });
     return (
-      <FixedBar location='bottom' distance={state.fixedBarBottom}>
+      <FixedBar.View location={fixedBarLocation}>
         <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={acceptTerms} loading={isLoading} disabled={isDisabled}>
           I Agree
         </LoadingButton>
         <Link page={{ tag: 'profile', value: { profileUserId: state.userId } }} text='Skip' textColor='secondary' />
-      </FixedBar>
+      </FixedBar.View>
     );
   }
 };
@@ -136,20 +138,22 @@ const AcceptedAt: ComponentView<State, Msg> = props => {
 export const view: ComponentView<State, Msg> = props => {
   const { state } = props;
   return (
-    <div>
-      <Row className='mb-3'>
-        <Col xs='12'>
-          <h1>Concierge Terms & Conditions</h1>
-        </Col>
-      </Row>
-      <ConditionalErrors {...props} />
-      <Row className='mb-5'>
-        <Col xs='12'>
-          <Markdown source={state.markdownSource} />
-        </Col>
-      </Row>
+    <PageContainer.View bottomBarIsFixed={state.fixedBarBottom === 0} fullWidth>
+      <Container>
+        <Row className='mb-3'>
+          <Col xs='12'>
+            <h1>Concierge Terms & Conditions</h1>
+          </Col>
+        </Row>
+        <ConditionalErrors {...props} />
+        <Row className='mb-5'>
+          <Col xs='12'>
+            <Markdown source={state.markdownSource} />
+          </Col>
+        </Row>
+      </Container>
       <AcceptedAt {...props} />
-    </div>
+    </PageContainer.View>
   );
 };
 

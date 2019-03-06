@@ -1,6 +1,7 @@
 import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/lib/framework';
 import { deleteSession } from 'front-end/lib/http/api';
+import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import { get } from 'lodash';
 import React from 'react';
@@ -30,7 +31,7 @@ export const update: Update<State, Msg> = (state, msg) => {
 
 export const view: ComponentView<State, Msg> = ({ state }) => {
   return (
-    <div>
+    <PageContainer.View>
       <Row className='mb-3 pb-3'>
         <Col xs='12'>
           {state.message}
@@ -41,7 +42,7 @@ export const view: ComponentView<State, Msg> = ({ state }) => {
           <Link href='/' text='Return to the Home Page.' buttonColor='secondary' />
         </Col>
       </Row>
-    </div>
+    </PageContainer.View>
   );
 };
 

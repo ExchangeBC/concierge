@@ -4,6 +4,7 @@ import { readManyUsers } from 'front-end/lib/http/api';
 import Icon from 'front-end/lib/views/icon';
 import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
+import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import { truncate } from 'lodash';
 import { default as React, ReactElement } from 'react';
@@ -136,7 +137,7 @@ export const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
     <Row className='d-none d-md-flex align-items-end'>
-      <Col xs='12' md='3' lg='2'>
+      <Col xs='12' md='3' xl='2'>
         <Select.view
           state={state.userTypeFilter}
           onChange={onChangeSelect('userTypeFilter')} />
@@ -197,7 +198,7 @@ export const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 export const view: ComponentView<State, Msg> = props => {
   return (
-    <div>
+    <PageContainer.View>
       <Row className='mb-5 mb-md-2 justify-content-md-between'>
         <Col xs='12' md='auto'>
           <h1 className='mb-3 mb-md-0'>Concierge Users</h1>
@@ -215,7 +216,7 @@ export const view: ComponentView<State, Msg> = props => {
       </Row>
       <Filters {...props} />
       <Results {...props} />
-    </div>
+    </PageContainer.View>
   );
 };
 
