@@ -147,7 +147,7 @@ const Features: ComponentView<State, Msg> = ({ state, dispatch }) => {
               Discovery Days
             </h4>
             <p className='text-center'>
-              The Program's staff will organise Discovery Day Sessions related to posted Requests For Information ("RFIs") to enable Vendors and Public Sector Buyers to meet and discuss them.
+              The Program's staff will organise Discovery Day Sessions related to posted Requests for Information ("RFIs") to allow Vendors and Public Sector Buyers to meet and discuss them.
             </p>
           </Col>
         </Row>
