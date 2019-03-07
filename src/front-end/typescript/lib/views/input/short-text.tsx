@@ -11,7 +11,7 @@ export interface State extends FormField.State {
 type OnEnter = () => void;
 
 interface ExtraProps {
-  onKeyPress: KeyboardEventHandler<HTMLInputElement>;
+  onKeyUp: KeyboardEventHandler<HTMLInputElement>;
   disabled: boolean;
 }
 
@@ -44,7 +44,7 @@ export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (event: ChangeEve
   };
 }
 
-function makeOnKeyPress(onEnter?: OnEnter): KeyboardEventHandler<HTMLInputElement> {
+function makeOnKeyUp(onEnter?: OnEnter): KeyboardEventHandler<HTMLInputElement> {
   return event => {
     if (event.key === 'Enter' && onEnter) { onEnter(); }
   };
@@ -72,7 +72,7 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
 
   public render() {
     const { state, onChange, className, extraProps } = this.props;
-    const onKeyPress = (extraProps && extraProps.onKeyPress) || noop;
+    const onKeyUp = (extraProps && extraProps.onKeyUp) || noop;
     const disabled: boolean = !!(extraProps && extraProps.disabled) || false;
     // Override the input type to text for emails to support selectionStart selection state.
     const inputType = state.type === 'email' ? 'text' : state.type;
@@ -86,7 +86,7 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
         disabled={disabled}
         className={className}
         onChange={this.onChange.bind(this, onChange)}
-        onKeyPress={onKeyPress}
+        onKeyUp={onKeyUp}
         ref={ref => { this.ref = ref; }} />
     );
   }
@@ -112,7 +112,7 @@ const Child: View<FormField.ChildProps<State, HTMLInputElement, ExtraProps>> = p
 
 export const view: View<Props> = ({ state, onChange, onEnter, toggleHelp, disabled = false }) => {
   const extraProps: ExtraProps = {
-    onKeyPress: makeOnKeyPress(onEnter),
+    onKeyUp: makeOnKeyUp(onEnter),
     disabled
   };
   return (

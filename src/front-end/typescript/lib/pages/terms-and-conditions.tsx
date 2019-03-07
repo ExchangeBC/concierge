@@ -3,6 +3,7 @@ import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 
 import * as api from 'front-end/lib/http/api';
 import * as markdown from 'front-end/lib/http/markdown';
 import * as FixedBar from 'front-end/lib/views/fixed-bar';
+import Icon from 'front-end/lib/views/icon';
 import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
@@ -112,12 +113,17 @@ const ConditionalErrors: ComponentView<State, Msg> = ({ state }) => {
 const AcceptedAt: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   const fixedBarLocation = state.fixedBarBottom === 0 ? 'bottom' : undefined;
+  const profilePage: Page = { tag: 'profile', value: { profileUserId: state.userId } };
   if (state.acceptedTermsAt) {
     return (
       <FixedBar.View location={fixedBarLocation}>
         <p className='text-align-right mb-0'>
           {formatTermsAndConditionsAgreementDate(state.acceptedTermsAt)}
         </p>
+        <Link page={profilePage} text='Skip' className='mr-auto d-none d-md-block' buttonClassName='p-0 d-flex align-items-center' textColor='secondary'>
+          <Icon name='chevron-left' color='secondary' className='mr-1' />
+          My Profile
+        </Link>
       </FixedBar.View>
     );
   } else {
@@ -129,7 +135,7 @@ const AcceptedAt: ComponentView<State, Msg> = props => {
         <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={acceptTerms} loading={isLoading} disabled={isDisabled}>
           I Agree
         </LoadingButton>
-        <Link page={{ tag: 'profile', value: { profileUserId: state.userId } }} text='Skip' textColor='secondary' />
+        <Link page={profilePage} text='Skip' textColor='secondary' />
       </FixedBar.View>
     );
   }

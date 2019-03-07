@@ -170,7 +170,7 @@ export const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
                 </a>
               </td>
               <td>{truncateString(user.email)}</td>
-              <td className='text-center'>{user.acceptedTermsAt ? (<Icon name='check' color='body' />) : ''}</td>
+              <td className='text-center'>{user.acceptedTermsAt ? (<Icon name='check' color='body' width={1.5} height={1.5} />) : ''}</td>
           </tr>
       );
     });

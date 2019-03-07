@@ -121,17 +121,17 @@ const Features: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <Container>
         <Row className='justify-content-center'>
           <Col xs='12' md='4' className='pb-5 pb-md-0 px-4 d-flex flex-column justify-content-start align-items-center'>
-            <Icon name='matchmaking' color='secondary' width={72} height={60} />
+            <Icon name='matchmaking' color='secondary' width={4.5} height={4} />
             <small className='text-uppercase text-center font-weight-bold text-secondary mt-3 mb-2 w-100'>Coming Soon</small>
             <h4 className='text-center mb-3 font-weight-bold w-100'>
-              Match-Making
+              Matchmaking
             </h4>
             <p className='text-center'>
               The Program's staff will connect Public Sector Buyers and Vendors based on their profiles and areas of interest to facilitate pre-market engagement.
             </p>
           </Col>
           <Col xs='12' md='4' className='pb-5 pb-md-0 px-4 d-flex flex-column justify-content-start align-items-center'>
-            <Icon name='rfi' color='secondary' width={60} height={60} />
+            <Icon name='rfi' color='secondary' width={4} height={4} />
             <small className='text-uppercase text-center font-weight-bold text-secondary mt-3 mb-2 w-100'>Coming Soon</small>
             <h4 className='text-center mb-3 font-weight-bold w-100'>
               Requests for Information
@@ -141,7 +141,7 @@ const Features: ComponentView<State, Msg> = ({ state, dispatch }) => {
             </p>
           </Col>
           <Col xs='12' md='4' className='px-4 d-flex flex-column justify-content-start align-items-center'>
-            <Icon name='discovery-day' color='secondary' width={50} height={60} />
+            <Icon name='discovery-day' color='secondary' width={3} height={4} />
             <small className='text-uppercase text-center font-weight-bold text-secondary mt-3 mb-2 w-100'>Coming Soon</small>
             <h4 className='text-center mb-3 font-weight-bold w-100'>
               Discovery Days

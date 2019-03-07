@@ -206,8 +206,9 @@ const router: Router<State, Page, UserType> = {
         const signUpBuyerParams: PageSignUpBuyer.Params = {
           fixedBarBottom: state.fixedBarBottom
         };
-        if (outgoingPage.tag === 'signUpBuyer' && state.pages.signUpBuyer) {
-          signUpBuyerParams.accountInformation = state.pages.signUpBuyer.accountInformation.set('userType', UserType.Buyer);
+        // Persist the email, password, confirmPassword fields when switching sign-up forms.
+        if (outgoingPage.tag === 'signUpVendor' && state.pages.signUpVendor) {
+          signUpBuyerParams.accountInformation = state.pages.signUpVendor.accountInformation.set('userType', UserType.Buyer);
         }
         return {
           tag: 'signUpBuyer',
@@ -217,6 +218,7 @@ const router: Router<State, Page, UserType> = {
         const signUpVendorParams: PageSignUpVendor.Params = {
           fixedBarBottom: state.fixedBarBottom
         };
+        // Persist the email, password, confirmPassword fields when switching sign-up forms.
         if (outgoingPage.tag === 'signUpBuyer' && state.pages.signUpBuyer) {
           signUpVendorParams.accountInformation = state.pages.signUpBuyer.accountInformation.set('userType', UserType.Vendor);
         }

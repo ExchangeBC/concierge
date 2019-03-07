@@ -17,7 +17,7 @@ interface Props {
   buttonClassName?: string;
   disabled?: boolean;
   nav?: boolean;
-  children?: Array<ReactElement<any>> | string;
+  children?: Array<ReactElement<any> | string> | ReactElement<any> | string;
   onClick?(): void;
 }
 
@@ -32,7 +32,7 @@ function Link(props: Props) {
     text = '',
     disabled = false,
     nav = false,
-    children = [],
+    children,
     onClick
   } = props;
   const href = props.page ? AppRouter.pageToUrl(props.page) : (props.href || undefined);
@@ -55,7 +55,7 @@ function Link(props: Props) {
   return (
     <a {...aProps}>
       <Button {...buttonProps}>
-        {children.length ? children : text}
+        {children || text}
       </Button>
     </a>
   );

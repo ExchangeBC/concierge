@@ -140,7 +140,7 @@ function ConditionalRemoveButton<ChildElement>(props: Props<ChildElement> & { in
     return (
       <InputGroupAddon addonType='append'>
         <Button color='secondary' onClick={() => props.onRemove(props.index)}>
-          <Icon name='trash' color='white' width={20} height={20} />
+          <Icon name='trash' color='white' width={1.25} height={1.25} />
         </Button>
       </InputGroupAddon>
     );

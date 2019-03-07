@@ -126,10 +126,16 @@ const UserTypeToggle: View<{ state: State }> = ({ state }) => {
     return null;
   } else {
     return (
-      <FormGroup check inline className='mb-3'>
-        <UserTypeRadio state={state} userType={UserType.Buyer} />
-        <UserTypeRadio state={state} userType={UserType.Vendor} />
-      </FormGroup>
+      <div>
+        <Label className='font-weight-bold d-block'>
+          I am a...
+          <span className='text-info'>*</span>
+        </Label>
+        <FormGroup check inline className='mb-3'>
+          <UserTypeRadio state={state} userType={UserType.Buyer} />
+          <UserTypeRadio state={state} userType={UserType.Vendor} />
+        </FormGroup>
+      </div>
     );
   }
 }

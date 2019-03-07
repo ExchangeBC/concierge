@@ -142,8 +142,8 @@ export const view: ComponentView<State, Msg> = props => {
       <Row className='mb-3'>
         <Col xs='12' md='8'>
           <p>
-            Welcome back to the Concierge. If you don't already have an account{' '}
-            <Link href='/sign-up' text='sign up here' textColor='primary' buttonClassName='p-0' />.
+            Welcome back to the Concierge. If you don't already have an account,{' '}
+            <a href='/sign-up' className='text-primary'>sign up here</a>.
           </p>
         </Col>
       </Row>

@@ -3,7 +3,8 @@ import { BootstrapColor } from 'front-end/lib/types';
 import { default as React, ReactElement } from 'react';
 
 export type AvailableIcons
-  = 'calendar'
+  = 'chevron-left'
+  | 'calendar'
   | 'check'
   | 'help-circle'
   | 'trash'
@@ -16,6 +17,7 @@ interface Props {
   color: BootstrapColor;
   width?: number;
   height?: number;
+  className?: string;
 }
 
 interface SvgProps extends Props {
@@ -23,9 +25,9 @@ interface SvgProps extends Props {
 }
 
 const Feather: View<SvgProps> = props => {
-  const { color, width = 24, height = 24, children } = props;
+  const { color, width = 1.25, height = 1.25, className = '', children } = props;
   return (
-    <svg xmlns='http://www.w3.org/2000/svg' style={{ width, height }} viewBox='0 0 24 24' fill='none' stroke='currentColor' className={`icon text-${color}`} strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+    <svg xmlns='http://www.w3.org/2000/svg' style={{ width: `${width}rem`, height: `${height}rem` }} viewBox='0 0 24 24' fill='none' stroke='currentColor' className={`icon text-${color} ${className}`} strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
       {children}
     </svg>
   );
@@ -36,9 +38,9 @@ interface FontAwesomeProps extends SvgProps {
 }
 
 const FontAwesome: View<FontAwesomeProps> = props => {
-  const { color, width = 24, height = 24, viewBox, children } = props;
+  const { color, width = 1.25, height = 1.25, viewBox, className = '', children } = props;
   return (
-    <svg xmlns='http://www.w3.org/2000/svg' style={{ width, height }} viewBox={viewBox} fill='currentColor' stroke='none' className={`icon text-${color}`}>
+    <svg xmlns='http://www.w3.org/2000/svg' style={{ width: `${width}rem`, height: `${height}rem` }} viewBox={viewBox} fill='currentColor' stroke='none' className={`icon text-${color} ${className}`}>
       {children}
     </svg>
   );
@@ -47,6 +49,8 @@ const FontAwesome: View<FontAwesomeProps> = props => {
 const Icon: View<Props> = props => {
   const { name } = props;
   switch (name) {
+    case 'chevron-left':
+      return (<Feather {...props}><polyline points='15 18 9 12 15 6'></polyline></Feather>);
     case 'calendar':
       return (<Feather {...props}><g><rect x='3' y='4' width='18' height='18' rx='2' ry='2'></rect><line x1='16' y1='2' x2='16' y2='6'></line><line x1='8' y1='2' x2='8' y2='6'></line><line x1='3' y1='10' x2='21' y2='10'></line></g></Feather>);
     case 'check':
