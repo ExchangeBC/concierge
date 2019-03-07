@@ -146,8 +146,8 @@ export const init: Init<Params, State> = async ({ profile }) => {
       id: 'program-staff-profile-contact-province',
       type: 'email',
       required: false,
-      label: 'Province',
-      placeholder: 'Province'
+      label: 'Province/State',
+      placeholder: 'Province/State'
     }),
     contactPostalCode: ShortText.init({
       id: 'program-staff-profile-contact-postal-code',

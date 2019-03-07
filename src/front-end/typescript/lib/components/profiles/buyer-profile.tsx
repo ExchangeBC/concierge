@@ -183,8 +183,8 @@ export const init: Init<Params, State> = async ({ profile }) => {
       id: 'buyer-profile-contact-province',
       type: 'email',
       required: false,
-      label: 'Province',
-      placeholder: 'Province'
+      label: 'Province/State',
+      placeholder: 'Province/State'
     }),
     contactPostalCode: ShortText.init({
       id: 'buyer-profile-contact-postal-code',

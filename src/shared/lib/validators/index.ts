@@ -202,7 +202,7 @@ export function validateCity(city: string): Validation<string> {
 }
 
 export function validateProvince(province: string): Validation<string> {
-  return validateGenericString(province, 'Province');
+  return validateGenericString(province, 'Province/State');
 }
 
 export function validatePostalCode(postalCode: string): Validation<string> {

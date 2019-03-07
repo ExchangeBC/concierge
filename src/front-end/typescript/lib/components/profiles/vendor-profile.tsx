@@ -180,8 +180,8 @@ export const init: Init<Params, State> = async ({ profile }) => {
       id: 'vendor-profile-business-province',
       type: 'text',
       required: false,
-      label: 'Province',
-      placeholder: 'Province'
+      label: 'Province/State',
+      placeholder: 'Province/State'
     }),
     businessPostalCode: ShortText.init({
       id: 'vendor-profile-business-postal-code',
