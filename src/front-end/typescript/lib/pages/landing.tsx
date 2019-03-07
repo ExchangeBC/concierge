@@ -25,11 +25,11 @@ export const update: Update<State, Msg> = (state, msg) => {
 
 const Hero: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
-    <div className='bg-dark py-6'>
+    <div className='bg-light py-6'>
       <Container style={{ minHeight: '35vh' }} className='d-flex flex-column justify-content-center'>
         <Row>
           <Col xs='12' md={{ size: 8, offset: 1 }} lg='7' >
-            <h1 className='text-uppercase text-light font-weight-bold mb-4'>
+            <h1 className='text-uppercase font-weight-bold mb-4'>
               <span className='text-info'>Transforming</span> how government interacts with <span className='text-info'>the marketplace</span>.
             </h1>
           </Col>

@@ -2,7 +2,7 @@ import * as framework from 'front-end/lib/framework';
 import { default as React, ReactElement } from 'react';
 import { Col, Container, Row } from 'reactstrap';
 
-export const HEIGHT = 80;
+export const HEIGHT = 71;
 
 export interface Props {
   location?: 'top' | 'bottom';

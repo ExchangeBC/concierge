@@ -42,14 +42,17 @@ $spacers: (
 );
 
 $theme-colors: (
-  "dark-border": #495057 //AKA $gray-700
+  primary: #0c99d6,
+  info: #0f4c8b,
+  warn: #fcb817,
+  danger: #f16924
 );
 
 $enable-validation-icons: false;
 
 // Custom variables.
 
-$fixed-bar-height: 80px;
+$fixed-bar-height: 71px;
 
 // Import Bootstrap.
 

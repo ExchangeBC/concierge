@@ -18,7 +18,7 @@ const ContextualLinks: View<Props> = ({ activePage, session, toggleIsOpen }) => 
   const isMyProfilePage = activePage.tag === 'profile' && activePage.value.profileUserId === get(session, ['user', 'id']);
   const isUserListPage = activePage.tag === 'userList';
   const isRequestForInformationListPage = activePage.tag === 'requestForInformationList';
-  const activeClass = (active: boolean) => active ? 'font-weight-bold text-white' : 'text-light';
+  const activeClass = (active: boolean) => active ? 'font-weight-bold text-body' : 'text-dark';
   const onClick = () => toggleIsOpen(false);
   if (!session || !session.user) {
     return (<div></div>);
@@ -77,10 +77,10 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
     return (
       <Nav navbar className='ml-md-auto'>
         <NavItem className='d-none d-md-block'>
-          <Link nav href='' text={session.user.email} textColor='light' onClick={onClick} disabled />
+          <Link nav href='' text={session.user.email} textColor='dark' onClick={onClick} disabled />
         </NavItem>
         <NavItem>
-          <Link nav href='/sign-out' text='Sign Out' textColor='light' onClick={onClick} />
+          <Link nav href='/sign-out' text='Sign Out' textColor='dark' onClick={onClick} />
         </NavItem>
       </Nav>
     );
@@ -88,10 +88,10 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
     return (
       <Nav navbar className='ml-md-auto'>
         <NavItem>
-          <Link nav href='/sign-in' text='Sign In' textColor='light' onClick={onClick} />
+          <Link nav href='/sign-in' text='Sign In' textColor='dark' onClick={onClick} />
         </NavItem>
         <NavItem>
-          <Link nav href='/sign-up/buyer' text='Sign Up' buttonColor='info' onClick={onClick} />
+          <Link nav href='/sign-up/buyer' text='Sign Up' buttonColor='info' onClick={onClick} className='pr-0' />
         </NavItem>
       </Nav>
     );
@@ -100,10 +100,10 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
 
 const Navigation: View<Props> = props => {
   return (
-    <Navbar expand='md' dark color='dark' className='border-bottom border-dark-border'>
-      <Container>
+    <Navbar expand='md' light color='light' className='border-bottom'>
+      <Container className='px-3'>
         <NavbarBrand href='/'>
-          <img src='/images/logo.svg' style={{ height: '45px' }}/>
+          <img src='/images/logo.svg' style={{ height: '2.25rem' }}/>
         </NavbarBrand>
         <NavbarToggler className='ml-auto' onClick={() => props.toggleIsOpen()} />
         <Collapse isOpen={props.isOpen} navbar>
