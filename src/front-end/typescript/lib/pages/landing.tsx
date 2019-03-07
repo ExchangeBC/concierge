@@ -26,16 +26,16 @@ export const update: Update<State, Msg> = (state, msg) => {
 const Hero: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
     <div className='bg-dark py-6'>
-      <Container>
+      <Container style={{ minHeight: '35vh' }} className='d-flex flex-column justify-content-center'>
         <Row>
-          <Col xs='12' md='8' xl='6'>
+          <Col xs='12' md={{ size: 8, offset: 1 }} lg='7' >
             <h1 className='text-uppercase text-light font-weight-bold mb-4'>
               <span className='text-info'>Transforming</span> how government interacts with <span className='text-info'>the marketplace</span>.
             </h1>
           </Col>
         </Row>
         <Row>
-          <Col>
+          <Col md={{ size: 'auto', offset: 1 }}>
             <Link page={{ tag: 'signUpBuyer', value: {} }} buttonSize='lg' buttonColor='primary' text='Get Started' />
           </Col>
         </Row>
@@ -48,9 +48,9 @@ const LeadingText: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
     <div className='py-6'>
       <Container>
-        <Row>
-          <Col xs='12'>
-            <h4>
+        <Row className='justify-content-center'>
+          <Col xs='12' md='10'>
+            <h4 className='font-weight-normal'>
               The Province of British Columbia's Procurement Concierge Program helps Public Sector Buyers and Vendors make meaningful connections.
             </h4>
           </Col>
@@ -65,10 +65,10 @@ const UserPersonas: ComponentView<State, Msg> = ({ state, dispatch }) => {
     <div className='bg-light pb-sm-6 pb-md-0'>
       <Container>
         <Row className='justify-content-center'>
-          <Col xs='12' md='4' xl='3' className='pt-6 pb-md-6 px-4'>
-            <h5 className='mb-3 font-weight-bold'>
+          <Col xs='12' md='4' className='pt-6 pb-md-6 px-4'>
+            <h4 className='mb-3 font-weight-bold'>
               {userTypeToTitleCase(UserType.Buyer)}s
-            </h5>
+            </h4>
             <ul className='pl-3 mb-0'>
               <li>
                 Work with the Program's staff during the pre-market engagement process.
@@ -81,10 +81,11 @@ const UserPersonas: ComponentView<State, Msg> = ({ state, dispatch }) => {
               </li>
             </ul>
           </Col>
-          <Col xs='12' md='4' xl='3' className='py-6 px-4'>
-            <h5 className='mb-3 font-weight-bold'>
+          <Col md='1' className='d-none d-md-block'></Col>
+          <Col xs='12' md='4' className='py-6 px-4'>
+            <h4 className='mb-3 font-weight-bold'>
               {userTypeToTitleCase(UserType.Vendor)}s
-            </h5>
+            </h4>
             <ul className='pl-3 mb-0'>
               <li>
                 Find opportunities to connect with Public Sector Buyers during the pre-market engagement process.
@@ -105,9 +106,9 @@ const UserPersonas: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 // TODO use this code for the guide call-to-action.
 /*<Col xs='12' md='4' className='bg-dark py-6 px-4 text-light mt-md-m3 mb-md-3'>
-  <h5 className='mb-3'>
+  <h4 className='mb-3'>
     Want to learn more about the Program?
-  </h5>
+  </h4>
   <p>
     Learn how to use the Program's Web Application.
   </p>
@@ -119,33 +120,33 @@ const Features: ComponentView<State, Msg> = ({ state, dispatch }) => {
     <div className='py-6'>
       <Container>
         <Row className='justify-content-center'>
-          <Col xs='12' md='4' xl='3' className='pb-5 pb-md-0 px-4 d-flex flex-column justify-content-start align-items-center'>
-            <Icon name='message' color='secondary' width={72} height={72} />
-            <small className='text-uppercase font-weight-bold text-secondary mt-3 mb-2'>Coming Soon</small>
-            <h5 className='text-center mb-3 font-weight-bold'>
+          <Col xs='12' md='4' className='pb-5 pb-md-0 px-4 d-flex flex-column justify-content-start align-items-center'>
+            <Icon name='matchmaking' color='secondary' width={72} height={60} />
+            <small className='text-uppercase text-center font-weight-bold text-secondary mt-3 mb-2 w-100'>Coming Soon</small>
+            <h4 className='text-center mb-3 font-weight-bold w-100'>
               Match-Making
-            </h5>
-            <p>
+            </h4>
+            <p className='text-center'>
               The Program's staff will connect Public Sector Buyers and Vendors based on their profiles and areas of interest to facilitate pre-market engagement.
             </p>
           </Col>
-          <Col xs='12' md='4' xl='3' className='pb-5 pb-md-0 px-4 d-flex flex-column justify-content-start align-items-center'>
-            <Icon name='file' color='secondary' width={72} height={72} />
-            <small className='text-uppercase font-weight-bold text-secondary mt-3 mb-2'>Coming Soon</small>
-            <h5 className='text-center mb-3 font-weight-bold'>
+          <Col xs='12' md='4' className='pb-5 pb-md-0 px-4 d-flex flex-column justify-content-start align-items-center'>
+            <Icon name='rfi' color='secondary' width={60} height={60} />
+            <small className='text-uppercase text-center font-weight-bold text-secondary mt-3 mb-2 w-100'>Coming Soon</small>
+            <h4 className='text-center mb-3 font-weight-bold w-100'>
               Requests for Information
-            </h5>
-            <p>
+            </h4>
+            <p className='text-center'>
               Public Sector Buyers can work with the Program's staff to publish Requests for Information ("RFIs") directly to this website. Vendors can respond to them using an easy-to-use online form.
             </p>
           </Col>
-          <Col xs='12' md='4' xl='3' className='px-4 d-flex flex-column justify-content-start align-items-center'>
-            <Icon name='calendar' color='secondary' width={72} height={72} />
-            <small className='text-uppercase font-weight-bold text-secondary mt-3 mb-2'>Coming Soon</small>
-            <h5 className='text-center mb-3 font-weight-bold'>
+          <Col xs='12' md='4' className='px-4 d-flex flex-column justify-content-start align-items-center'>
+            <Icon name='discovery-day' color='secondary' width={50} height={60} />
+            <small className='text-uppercase text-center font-weight-bold text-secondary mt-3 mb-2 w-100'>Coming Soon</small>
+            <h4 className='text-center mb-3 font-weight-bold w-100'>
               Discovery Days
-            </h5>
-            <p>
+            </h4>
+            <p className='text-center'>
               Public Sector Buyers can organise Discovery Day Sessions related to their Requests For Information ("RFIs"). Vendors can attend these sessions to meet Public Sector Buyers and discuss these RFIs.
             </p>
           </Col>
@@ -160,13 +161,13 @@ const CallToAction: ComponentView<State, Msg> = ({ state, dispatch }) => {
     <div className='py-6 bg-light'>
       <Container>
         <Row>
-          <Col xs='12' md='9'>
-            <h4>
+          <Col xs='12' md={{ size: 8, offset: 1 }} lg='9'>
+            <h4 className='pr-md-3'>
               Create your account today to explore all of the benefits that the Procurement Concierge Program has to offer.
             </h4>
           </Col>
-          <Col xs='12' md='3' className='d-flex justify-content-md-end mt-3 mt-md-0'>
-            <Link page={{ tag: 'signUpBuyer', value: {} }} text='Get Started' buttonColor='primary' className='d-flex align-items-center' />
+          <Col xs='12' md='3' lg='2' className='d-flex justify-content-md-end mt-3 mt-md-0'>
+            <Link page={{ tag: 'signUpBuyer', value: {} }} text='Get Started' buttonColor='primary' buttonSize='lg' className='d-flex align-items-center' />
           </Col>
         </Row>
       </Container>

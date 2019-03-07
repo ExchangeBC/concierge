@@ -437,7 +437,7 @@ export const IndustrySectors: ProfileView<State, InnerMsg> = ({ state, dispatch,
   const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'industrySectors' as 'industrySectors', value }));
   return (
     <Row className='mt-3'>
-      <Col xs='12' lg='10' xl='8'>
+      <Col xs='12' lg='10'>
         <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} disabled={disabled} />
       </Col>
     </Row>
@@ -448,7 +448,7 @@ export const Categories: ProfileView<State, InnerMsg> = ({ state, dispatch, disa
   const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'categories' as 'categories', value }));
   return (
     <Row className='mt-3'>
-      <Col xs='12' lg='10' xl='8'>
+      <Col xs='12' lg='10'>
         <SelectMulti.view state={state.categories} dispatch={dispatchCategories} disabled={disabled} />
       </Col>
     </Row>

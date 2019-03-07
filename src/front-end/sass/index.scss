@@ -23,7 +23,7 @@ $container-max-widths: (
   sm: 530px,
   md: 860px,
   lg: 1060px,
-  xl: 1360px
+  xl: 1060px // Maximum container width fixed at lg size.
 );
 
 $spacer: 1rem;

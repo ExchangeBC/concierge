@@ -137,7 +137,7 @@ export const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
     <Row className='d-none d-md-flex align-items-end'>
-      <Col xs='12' md='3' xl='2'>
+      <Col xs='12' md='3'>
         <Select.view
           state={state.userTypeFilter}
           onChange={onChangeSelect('userTypeFilter')} />

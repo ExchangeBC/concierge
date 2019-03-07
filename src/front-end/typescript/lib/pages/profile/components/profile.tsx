@@ -317,7 +317,7 @@ function conditionalProfile<PS, PM, P extends ProfileType>(Profile: ProfileCompo
           </Col>
         </Row>
         <Row>
-          <Col xs='12' md='9' lg='8' xl='7'>
+          <Col xs='12' md='9' lg='8'>
             <ConditionalEmail {...props} />
             <Profile.view state={state.profile} dispatch={dispatchProfile} disabled={isDisabled} />
             <ConditionalBottomProfileButtons {...props} />

@@ -184,11 +184,11 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
             </Col>
           </Row>
           <Row className='mt-3 no-gutters'>
-            <Col xs='12' md='4' xl='3'>
+            <Col xs='12' md='4'>
               <AccountInformation.view state={state.accountInformation} dispatch={dispatchAccountInformation} />
             </Col>
             <Col md='1' className='vertical-line'></Col>
-            <Col xs='12' md='7' xl='8'>
+            <Col xs='12' md='7'>
               <Profile.view state={state.profile} dispatch={dispatchProfile} />
             </Col>
           </Row>
