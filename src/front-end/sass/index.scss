@@ -87,7 +87,12 @@ $fixed-bar-height: 71px;
 // Custom page overrides.
 
 .page-termsAndConditions {
+
   ul {
-    list-style-type: none; 
+
+    &,
+    li {
+      list-style-type: none; 
+    }
   }
 }
