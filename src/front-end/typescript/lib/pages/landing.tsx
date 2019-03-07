@@ -51,7 +51,7 @@ const LeadingText: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Row className='justify-content-center'>
           <Col xs='12' md='10'>
             <h4 className='font-weight-normal'>
-              The Province of British Columbia's Procurement Concierge Program helps Public Sector Buyers and Vendors make meaningful connections.
+              BC's Procurement Concierge Program helps Public Sector Buyers and Vendors make meaningful connections.
             </h4>
           </Col>
         </Row>
@@ -94,7 +94,7 @@ const UserPersonas: ComponentView<State, Msg> = ({ state, dispatch }) => {
                 Share your innovative solutions with Public Sector Buyers.
               </li>
               <li>
-                Resond to Requests for Information and participate in Discovery Day Sessions (coming soon).
+                Respond to Requests for Information and participate in Discovery Day Sessions (coming soon).
               </li>
             </ul>
           </Col>
@@ -137,7 +137,7 @@ const Features: ComponentView<State, Msg> = ({ state, dispatch }) => {
               Requests for Information
             </h4>
             <p className='text-center'>
-              Public Sector Buyers can work with the Program's staff to publish Requests for Information ("RFIs") directly to this website. Vendors can respond to them using an easy-to-use online form.
+              Requests for Information ("RFIs") will be posted directly to this website. Public Sector Buyers will work with the Program's staff to develop RFIs, and Vendors will respond using an easy-to-use online form.
             </p>
           </Col>
           <Col xs='12' md='4' className='px-4 d-flex flex-column justify-content-start align-items-center'>
@@ -147,7 +147,7 @@ const Features: ComponentView<State, Msg> = ({ state, dispatch }) => {
               Discovery Days
             </h4>
             <p className='text-center'>
-              Public Sector Buyers can organise Discovery Day Sessions related to their Requests For Information ("RFIs"). Vendors can attend these sessions to meet Public Sector Buyers and discuss these RFIs.
+              The Program's staff will organise Discovery Day Sessions related to posted Requests For Information ("RFIs") to enable Vendors and Public Sector Buyers to meet and discuss them.
             </p>
           </Col>
         </Row>
@@ -161,7 +161,7 @@ const CallToAction: ComponentView<State, Msg> = ({ state, dispatch }) => {
     <div className='py-6 bg-light'>
       <Container>
         <Row>
-          <Col xs='12' md={{ size: 8, offset: 1 }} lg='9'>
+          <Col xs='12' md={{ size: 7, offset: 1 }} lg='8'>
             <h4 className='pr-md-3'>
               Create your account today to explore all of the benefits that the Procurement Concierge Program has to offer.
             </h4>

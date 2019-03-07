@@ -83,3 +83,11 @@ $fixed-bar-height: 71px;
     display: none;
   }
 }
+
+// Custom page overrides.
+
+.page-termsAndConditions {
+  ul {
+    list-style-type: none; 
+  }
+}
