@@ -1,5 +1,6 @@
 import { View } from 'front-end/lib/framework';
-import Link from 'front-end/lib/views/link';
+// TODO uncomment
+// import Link from 'front-end/lib/views/link';
 import React from 'react';
 import { Col, Container, Row } from 'reactstrap'
 
@@ -7,7 +8,8 @@ export interface State {
   title: string;
 }
 
-const Links: View<{}> = () => {
+// TODO uncomment
+/*const Links: View<{}> = () => {
   return (
     <Row className='mb-3'>
       <Col xs='12' className='d-flex flex-column flex-md-row justify-content-center align-items-center'>
@@ -19,7 +21,7 @@ const Links: View<{}> = () => {
       </Col>
     </Row>
   );
-};
+};*/
 
 const SupportedBy: View<{}> = () => {
   return (
@@ -32,10 +34,10 @@ const SupportedBy: View<{}> = () => {
 };
 
 const Footer: View<{}> = () => {
+  // TODO add <Links /> back in once docs are ready.
   return (
     <footer className='w-100 bg-dark text-secondary'>
       <Container className='py-5'>
-        <Links />
         <SupportedBy />
       </Container>
     </footer>

@@ -439,7 +439,7 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
     const headingSuffix = `${userType} Profile`;
     const heading = name ? `${name} ${headingSuffix}` : headingSuffix;
     return (
-      <PageContainer.View>
+      <PageContainer.View paddingY>
         <Row className='mb-5'>
           <Col xs='12'>
             <h1>{heading}</h1>

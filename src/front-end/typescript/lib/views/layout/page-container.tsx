@@ -6,18 +6,18 @@ import { Container } from 'reactstrap';
 export interface Props {
   children: Array<ReactElement<any>> | ReactElement<any> | string;
   className?: string;
-  bottomBarIsFixed?: boolean;
   fullWidth?: boolean;
+  paddingY?: boolean;
+  paddingTop?: boolean;
+  paddingBottom?: boolean;
+  marginFixedBar?: boolean;
 }
 
 export const View: framework.View<Props> = props => {
-  const { bottomBarIsFixed, fullWidth = false } = props;
-  // bottomBarIsFixed === undefined -> No bottom bar at all.
-  // bottomBarIsFixed === true -> Bottom bar exists and is fixed to the bottom.
-  // bottomBarIsFixed === false -> Bottom bar exists and is NOT fixed to the bottom.
-  const className = `p${bottomBarIsFixed === false ? 't' : 'y'}-5 mb-${bottomBarIsFixed ? '5' : 'auto'} ${props.className || ''}`;
+  const { paddingY = false, paddingTop = false, paddingBottom = false, marginFixedBar = false, fullWidth = false } = props;
+  const className = `${paddingY || paddingTop ? 'pt-5' : ''} ${paddingY || paddingBottom ? 'pb-5' : ''} ${props.className || ''}`;
   const style = {
-    paddingBottom: bottomBarIsFixed ? FixedBar.HEIGHT : undefined
+    marginBottom: marginFixedBar ? `${FixedBar.HEIGHT}px` : 'auto'
   };
   if (fullWidth) {
     return (

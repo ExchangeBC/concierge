@@ -198,7 +198,7 @@ export const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 export const view: ComponentView<State, Msg> = props => {
   return (
-    <PageContainer.View>
+    <PageContainer.View paddingY>
       <Row className='mb-5 mb-md-2 justify-content-md-between'>
         <Col xs='12' md='auto'>
           <h1 className='mb-3 mb-md-0'>Concierge Users</h1>

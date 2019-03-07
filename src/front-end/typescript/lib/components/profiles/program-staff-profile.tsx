@@ -8,7 +8,7 @@ import { reduce } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import { ADT, UserType } from 'shared/lib/types';
-import { parsePhoneType, PhoneType, ProgramStaffProfile } from 'shared/lib/types';
+import { parsePhoneType, PhoneType, ProgramStaffProfile, userTypeToTitleCase } from 'shared/lib/types';
 import { ValidOrInvalid } from 'shared/lib/validators';
 import { ProgramStaffProfileValidationErrors, validateProgramStaffProfile } from 'shared/lib/validators/program-staff-profile';
 
@@ -243,11 +243,11 @@ function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<
   }
 }
 
-export const PersonalInformation: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
+export const ProgramStaffInformation: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
     <div className='mt-3 mt-md-0'>
-      <FormSectionHeading text='Personal Information' />
+      <FormSectionHeading text={`${userTypeToTitleCase(UserType.ProgramStaff)} Information`} />
       <Row>
         <Col xs='12' md='5'>
           <ShortText.view
@@ -343,7 +343,7 @@ export const ContactInformation: ProfileView<State, InnerMsg> = ({ state, dispat
 export const view: ProfileView<State, InnerMsg> = props => {
   return (
     <div>
-      <PersonalInformation {...props} />
+      <ProgramStaffInformation {...props} />
       <ContactInformation {...props} />
     </div>
   );

@@ -171,8 +171,8 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
     const cancelPage: Page = isProgramStaff ? { tag: 'userList', value: null } : { tag: 'landing', value: null };
     const bottomBarIsFixed = state.fixedBarBottom === 0;
     return (
-      <PageContainer.View bottomBarIsFixed={bottomBarIsFixed} fullWidth>
-        <Container>
+      <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>
+        <Container className='mb-5'>
           <Row>
             <Col xs='12'>
               <h1>Create a {userTypeToTitleCase(Profile.userType)} Account</h1>

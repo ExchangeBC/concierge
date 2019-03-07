@@ -120,7 +120,7 @@ export const view: ComponentView<State, Msg> = props => {
   const isDisabled = isLoading || !isValid(state);
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
-    <PageContainer.View>
+    <PageContainer.View paddingY>
       <Row className='mb-3'>
         <Col xs='12'>
           <h1>Change Password</h1>

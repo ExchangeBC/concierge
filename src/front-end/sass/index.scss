@@ -4,6 +4,11 @@
   box-sizing: border-box;
 }
 
+body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 // Custom Bootstrap overrides.
 
 $grid-breakpoints: (
@@ -12,14 +17,33 @@ $grid-breakpoints: (
   md: 900px,
   lg: 1100px,
   xl: 1400px 
-) !default;
+);
 
 $container-max-widths: (
   sm: 530px,
   md: 860px,
   lg: 1060px,
   xl: 1360px
-) !default;
+);
+
+$spacer: 1rem;
+
+$spacers: (
+	m0: 0,
+	m1: ($spacer * -0.25),
+	m2: ($spacer * -0.5),
+	m3: $spacer * -1,
+	m4: ($spacer * -1.5),
+	m5: ($spacer * -3),
+	m6: ($spacer * -4),
+	m7: ($spacer * -5),
+	6: ($spacer * 4),
+	7: ($spacer * 5)
+);
+
+$theme-colors: (
+  "dark-border": #495057 //AKA $gray-700
+);
 
 $enable-validation-icons: false;
 

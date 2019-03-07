@@ -12,10 +12,10 @@ export interface Props {
 
 export const View: framework.View<Props> = ({ location, className = '', children }: Props) => {
   return (
-    <div className={`${location ? `fixed-${location}` : ''} mt-5 bg-light border-top transition-hide ${className}`}>
-      <Container>
-        <Row>
-          <Col xs='12' className='fixed-bar d-flex flex-md-row-reverse justify-content-xs-center justify-content-md-start align-items-center py-2'>
+    <div className={`${location ? `fixed-${location}` : ''} bg-light border-top transition-hide fixed-bar ${className}`}>
+      <Container className='h-100'>
+        <Row className='h-100'>
+          <Col xs='12' className='d-flex flex-md-row-reverse justify-content-xs-center justify-content-md-start align-items-center py-2'>
             {children}
           </Col>
         </Row>

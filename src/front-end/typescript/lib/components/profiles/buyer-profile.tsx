@@ -11,7 +11,7 @@ import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
 import { ADT, UserType } from 'shared/lib/types';
-import { BuyerProfile, parsePhoneType, PhoneType } from 'shared/lib/types';
+import { BuyerProfile, parsePhoneType, PhoneType, userTypeToTitleCase } from 'shared/lib/types';
 import { ValidOrInvalid } from 'shared/lib/validators';
 import { BuyerProfileValidationErrors, validateBuyerProfile } from 'shared/lib/validators/buyer-profile';
 
@@ -322,11 +322,11 @@ function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<
   }
 }
 
-export const PersonalInformation: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
+export const BuyerInformation: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
     <div className='mt-3 mt-md-0'>
-      <FormSectionHeading text='Personal Information' />
+      <FormSectionHeading text={`${userTypeToTitleCase(UserType.Buyer)} Information`} />
       <Row>
         <Col xs='12' md='5'>
           <ShortText.view
@@ -458,7 +458,7 @@ export const Categories: ProfileView<State, InnerMsg> = ({ state, dispatch, disa
 export const view: ProfileView<State, InnerMsg> = props => {
   return (
     <div>
-      <PersonalInformation {...props} />
+      <BuyerInformation {...props} />
       <ContactInformation {...props} />
       <IndustrySectors {...props} />
       <Categories {...props} />

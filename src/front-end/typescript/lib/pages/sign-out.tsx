@@ -31,7 +31,7 @@ export const update: Update<State, Msg> = (state, msg) => {
 
 export const view: ComponentView<State, Msg> = ({ state }) => {
   return (
-    <PageContainer.View>
+    <PageContainer.View paddingY>
       <Row className='mb-3 pb-3'>
         <Col xs='12'>
           {state.message}

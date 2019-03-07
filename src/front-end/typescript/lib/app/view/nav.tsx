@@ -91,7 +91,7 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
           <Link nav href='/sign-in' text='Sign In' textColor='light' onClick={onClick} />
         </NavItem>
         <NavItem>
-          <Link nav href='/sign-up/buyer' text='Sign Up' buttonColor='primary' onClick={onClick} />
+          <Link nav href='/sign-up/buyer' text='Sign Up' buttonColor='info' onClick={onClick} />
         </NavItem>
       </Nav>
     );
@@ -100,7 +100,7 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
 
 const Navigation: View<Props> = props => {
   return (
-    <Navbar expand='md' dark color='dark'>
+    <Navbar expand='md' dark color='dark' className='border-bottom border-dark-border'>
       <Container>
         <NavbarBrand href='/'>
           <img src='/images/logo.svg' style={{ height: '45px' }}/>
