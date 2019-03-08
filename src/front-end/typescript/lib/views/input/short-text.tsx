@@ -67,6 +67,7 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
   private selectionStart: number | null;
   private selectionEnd: number | null;
   private onChangeDebounced: OnChangeDebounced | null;
+  private value: string;
 
   constructor(props: FormField.ChildProps<State, HTMLInputElement, ExtraProps>) {
     super(props);
@@ -74,6 +75,7 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
     this.selectionStart = null;
     this.selectionEnd = null;
     this.onChangeDebounced = null;
+    this.value = '';
   }
 
   public render() {
@@ -101,6 +103,8 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
         }
       }, 500);
     }
+    // Update the component's store of the value.
+    this.value = state.value;
     return (
       <input
         type={inputType}
@@ -114,6 +118,10 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
         onKeyUp={onKeyUp}
         ref={ref => { this.ref = ref; }} />
     );
+  }
+
+  public shouldComponentUpdate(nextProps: FormField.ChildProps<State, HTMLInputElement, ExtraProps>) {
+    return this.value !== nextProps.state.value;
   }
 
   public componentDidUpdate() {
