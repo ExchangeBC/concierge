@@ -240,7 +240,8 @@ function validateValues(state: Immutable<State>): Immutable<State> {
 function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<ProgramStaffProfile, ValidationErrors>): Immutable<State> {
   switch (validation.tag) {
     case 'valid':
-      state = setValues(state, validation.value);
+      // We don't set values here because it may be causing mobile browsers to be janky.
+      // state = setValues(state, validation.value);
       return setErrors(state, {});
     case 'invalid':
       return setErrors(state, validation.value);
