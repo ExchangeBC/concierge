@@ -1,6 +1,6 @@
 import app from 'front-end/lib/app/index';
 import { start } from 'front-end/lib/framework';
-import { throttle } from 'lodash';
+import { debounce, throttle } from 'lodash';
 
 const element = document.getElementById('main') || document.body;
 const debug = true;
@@ -20,27 +20,21 @@ start(app, element, debug)
       });
     }
 
-    const throttledDispatchFixedBarBottom = throttle(dispatchFixedBarBottom, 100);
-
-    const delayedDispatchFixedBarBottom = (delay = 100) => {
-      setTimeout(() => throttledDispatchFixedBarBottom(), delay);
-    };
+    const debouncedDispatchFixedBarBottom = debounce(dispatchFixedBarBottom, 200);
 
     window.addEventListener('scroll', event => {
-      dispatchFixedBarBottom();
+      debouncedDispatchFixedBarBottom();
     })
 
     window.addEventListener('resize', event => {
-      dispatchFixedBarBottom();
+      debouncedDispatchFixedBarBottom();
     })
 
     stateManager.msgSubscribe(msg => {
       switch (msg.tag) {
         case '@incomingPage':
-          delayedDispatchFixedBarBottom();
-          break;
         case 'toggleIsNavOpen':
-          delayedDispatchFixedBarBottom(300);
+          debouncedDispatchFixedBarBottom();
           break;
         case 'pageSignUpBuyer':
         case 'pageSignUpVendor':
@@ -48,7 +42,7 @@ start(app, element, debug)
         case 'pageTermsAndConditions':
           // Ensure this subscription is not mutually recursive.
           if (msg.value.tag !== 'updateFixedBarBottom') {
-            delayedDispatchFixedBarBottom();
+            debouncedDispatchFixedBarBottom();
           }
           break;
         default:
@@ -57,5 +51,5 @@ start(app, element, debug)
     });
 
     // Dispatch initial events.
-    delayedDispatchFixedBarBottom();
+    debouncedDispatchFixedBarBottom();
   });
