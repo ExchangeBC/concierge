@@ -68,6 +68,8 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
   private selectionEnd: number | null;
   private onChangeDebounced: OnChangeDebounced | null;
   private value: string;
+  private className: string;
+  private disabled: boolean;
 
   constructor(props: FormField.ChildProps<State, HTMLInputElement, ExtraProps>) {
     super(props);
@@ -76,6 +78,8 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
     this.selectionEnd = null;
     this.onChangeDebounced = null;
     this.value = '';
+    this.className = '';
+    this.disabled = false;
   }
 
   public render() {
@@ -103,8 +107,10 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
         }
       }, 500);
     }
-    // Update the component's store of the value.
+    // Update the component's store of the state.
     this.value = state.value;
+    this.className = className;
+    this.disabled = disabled;
     return (
       <input
         type={inputType}
@@ -121,7 +127,7 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
   }
 
   public shouldComponentUpdate(nextProps: FormField.ChildProps<State, HTMLInputElement, ExtraProps>) {
-    return this.value !== nextProps.state.value;
+    return this.value !== nextProps.state.value || this.className !== nextProps.className || (!!nextProps.extraProps && this.disabled !== nextProps.extraProps.disabled);
   }
 
   public componentDidUpdate() {
