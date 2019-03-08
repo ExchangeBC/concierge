@@ -1,7 +1,7 @@
 import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import { validateConfirmPassword } from 'front-end/lib/validators';
-import { validateAndUpdateField } from 'front-end/lib/views/form-field';
+import { updateField, validateField } from 'front-end/lib/views/form-field';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as ShortText from 'front-end/lib/views/input/short-text';
 import Link from 'front-end/lib/views/link';
@@ -50,7 +50,10 @@ export function isValid(state: Immutable<State>): boolean {
 type InnerMsg
   = ADT<'onChangeEmail', string>
   | ADT<'onChangePassword', string>
-  | ADT<'onChangeConfirmPassword', string>;
+  | ADT<'onChangeConfirmPassword', string>
+  | ADT<'validateEmail'>
+  | ADT<'validatePassword'>
+  | ADT<'validateConfirmPassword'>;
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
@@ -91,11 +94,17 @@ export const init: Init<Params, State> = async ({ userType }) => {
 export const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
     case 'onChangeEmail':
-      return [validateAndUpdateField(state, 'email', msg.value, validateEmail)];
+      return [updateField(state, 'email', msg.value)];
     case 'onChangePassword':
-      return [validateAndUpdateField(state, 'password', msg.value, validatePassword)];
+      return [updateField(state, 'password', msg.value)];
     case 'onChangeConfirmPassword':
-      return [validateAndUpdateField(state, 'confirmPassword', msg.value, v => validateConfirmPassword(state.password.value, v))];
+      return [updateField(state, 'confirmPassword', msg.value)];
+    case 'validateEmail':
+      return [validateField(state, 'email', validateEmail)];
+    case 'validatePassword':
+      return [validateField(state, 'password', validatePassword)];
+    case 'validateConfirmPassword':
+      return [validateField(state, 'confirmPassword', v => validateConfirmPassword(state.password.value, v))];
     default:
       return [state];
   }
@@ -154,6 +163,7 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Col xs='12'>
           <ShortText.view
             state={state.email}
+            onChangeDebounced={() => dispatch({ tag: 'validateEmail', value: undefined })}
             onChange={onChange('onChangeEmail')} />
         </Col>
       </Row>
@@ -161,6 +171,7 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Col xs='12'>
           <ShortText.view
             state={state.password}
+            onChangeDebounced={() => dispatch({ tag: 'validatePassword', value: undefined })}
             onChange={onChange('onChangePassword')} />
         </Col>
       </Row>
@@ -168,6 +179,7 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Col xs='12'>
           <ShortText.view
             state={state.confirmPassword}
+            onChangeDebounced={() => dispatch({ tag: 'validateConfirmPassword', value: undefined })}
             onChange={onChange('onChangeConfirmPassword')} />
         </Col>
       </Row>

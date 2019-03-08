@@ -1,7 +1,7 @@
 import { Immutable, View } from 'front-end/lib/framework';
 import { default as React, FormEventHandler } from 'react';
 import { Alert, FormGroup, FormText, Label } from 'reactstrap';
-import { getInvalidValue, Validation } from 'shared/lib/validators';
+import { getInvalidValue, getValidValue, Validation } from 'shared/lib/validators';
 
 export interface State {
   value: string;
@@ -103,5 +103,17 @@ export function validateAndUpdateField<State>(state: Immutable<State>, key: stri
   const validation = validate(value);
   return state
     .setIn([key, 'value'], value)
+    .setIn([key, 'errors'], getInvalidValue(validation, []));
+}
+
+export function updateField<State>(state: Immutable<State>, key: string, value: string): Immutable<State> {
+  return state.setIn([key, 'value'], value);
+}
+
+export function validateField<State>(state: Immutable<State>, key: string, validate: (value: string) => Validation<string>): Immutable<State> {
+  const value = state.getIn([key, 'value']) || '';
+  const validation = validate(value);
+  return state
+    .setIn([key, 'value'], getValidValue(validation, value))
     .setIn([key, 'errors'], getInvalidValue(validation, []));
 }

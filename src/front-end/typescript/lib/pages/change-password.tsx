@@ -2,7 +2,7 @@ import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { validateConfirmPassword } from 'front-end/lib/validators';
-import { validateAndUpdateField } from 'front-end/lib/views/form-field';
+import { updateField, validateField } from 'front-end/lib/views/form-field';
 import * as ShortText from 'front-end/lib/views/input/short-text';
 import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
@@ -21,9 +21,12 @@ export interface State {
 }
 
 type InnerMsg
-  = ADT<'currentPassword', string>
-  | ADT<'newPassword', string>
-  | ADT<'confirmNewPassword', string>
+  = ADT<'onChangeCurrentPassword', string>
+  | ADT<'onChangeNewPassword', string>
+  | ADT<'onChangeConfirmNewPassword', string>
+  | ADT<'validateCurrentPassword'>
+  | ADT<'validateNewPassword'>
+  | ADT<'validateConfirmNewPassword'>
   | ADT<'submit'>;
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
@@ -70,12 +73,18 @@ function stopLoading(state: Immutable<State>): Immutable<State> {
 
 export const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
-    case 'currentPassword':
-      return [validateAndUpdateField(state, 'currentPassword', msg.value, validatePassword)];
-    case 'newPassword':
-      return [validateAndUpdateField(state, 'newPassword', msg.value, validatePassword)];
-    case 'confirmNewPassword':
-      return [validateAndUpdateField(state, 'confirmNewPassword', msg.value, v => validateConfirmPassword(state.newPassword.value, v))];
+    case 'onChangeCurrentPassword':
+      return [updateField(state, 'currentPassword', msg.value)];
+    case 'onChangeNewPassword':
+      return [updateField(state, 'newPassword', msg.value)];
+    case 'onChangeConfirmNewPassword':
+      return [updateField(state, 'confirmNewPassword', msg.value)];
+    case 'validateCurrentPassword':
+      return [validateField(state, 'currentPassword', validatePassword)];
+    case 'validateNewPassword':
+      return [validateField(state, 'newPassword', validatePassword)];
+    case 'validateConfirmNewPassword':
+      return [validateField(state, 'confirmNewPassword', v => validateConfirmPassword(state.newPassword.value, v))];
     case 'submit':
       state = startLoading(state);
       return [
@@ -95,7 +104,7 @@ export const update: Update<State, Msg> = (state, msg) => {
               return state;
             case 'invalid':
               return stopLoading(state)
-                .setIn(['currentPassword', 'errors'], result.value.currentPassword || []);
+                .setIn(['onChangeCurrentPassword', 'errors'], result.value.currentPassword || []);
           }
         }
       ];
@@ -132,7 +141,8 @@ export const view: ComponentView<State, Msg> = props => {
             <Col xs='12'>
               <ShortText.view
                 state={state.currentPassword}
-                onChange={onChange('currentPassword')}
+                onChange={onChange('onChangeCurrentPassword')}
+                onChangeDebounced={() => dispatch({ tag: 'validateCurrentPassword', value: undefined })}
                 onEnter={submit} />
             </Col>
           </Row>
@@ -140,7 +150,8 @@ export const view: ComponentView<State, Msg> = props => {
             <Col xs='12'>
               <ShortText.view
                 state={state.newPassword}
-                onChange={onChange('newPassword')}
+                onChange={onChange('onChangeNewPassword')}
+                onChangeDebounced={() => dispatch({ tag: 'validateNewPassword', value: undefined })}
                 onEnter={submit} />
             </Col>
           </Row>
@@ -148,7 +159,8 @@ export const view: ComponentView<State, Msg> = props => {
             <Col xs='12'>
               <ShortText.view
                 state={state.confirmNewPassword}
-                onChange={onChange('confirmNewPassword')}
+                onChange={onChange('onChangeConfirmNewPassword')}
+                onChangeDebounced={() => dispatch({ tag: 'validateConfirmNewPassword', value: undefined })}
                 onEnter={submit} />
             </Col>
           </Row>

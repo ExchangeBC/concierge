@@ -2,8 +2,9 @@ import app from 'front-end/lib/app/index';
 import { start } from 'front-end/lib/framework';
 import { throttle } from 'lodash';
 
-// Set the 3rd, boolean argument to true for debug mode.
-start(app, document.getElementById('main') || document.body, true)
+const element = document.getElementById('main') || document.body;
+const debug = true;
+start(app, element, debug)
   .then(stateManager => {
     // Throttle DOM queries.
     const querySelector = throttle((selector: string) => document.querySelector(selector), 500);

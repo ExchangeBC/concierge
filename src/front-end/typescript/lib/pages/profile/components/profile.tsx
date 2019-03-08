@@ -2,7 +2,7 @@ import { Page } from 'front-end/lib/app/types';
 import { ProfileComponent, ViewerUser } from 'front-end/lib/components/profiles/types';
 import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, newUrl, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
-import { validateAndUpdateField } from 'front-end/lib/views/form-field';
+import { updateField, validateField } from 'front-end/lib/views/form-field';
 import * as ShortText from 'front-end/lib/views/input/short-text';
 import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
@@ -35,6 +35,7 @@ export interface State<ProfileState> {
 type InnerMsg<ProfileMsg>
   = ADT<'onChangeEmail', string>
   | ADT<'onChangeProfile', ComponentMsg<ProfileMsg, Page>>
+  | ADT<'validateEmail'>
   | ADT<'deactivateAccount'>
   | ADT<'cancelDeactivateAccount'>
   | ADT<'startEditingProfile'>
@@ -119,7 +120,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
     switch (msg.tag) {
 
       case 'onChangeEmail':
-        return [validateAndUpdateField(state, 'email', msg.value, validateEmail)];
+        return [updateField(state, 'email', msg.value)];
 
       case 'onChangeProfile':
         return updateComponentChild({
@@ -129,6 +130,9 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
           childUpdate: Profile.update,
           childMsg: msg.value
         });
+
+      case 'validateEmail':
+        return [validateField(state, 'email', validateEmail)];
 
       case 'deactivateAccount':
         if (!state.promptDeactivationConfirmation) {
@@ -240,6 +244,7 @@ function conditionalEmail<PS, PM, P extends ProfileType>(Profile: ProfileCompone
           <ShortText.view
             state={state.email}
             disabled={isDisabled}
+            onChangeDebounced={() => dispatch({ tag: 'validateEmail', value: undefined })}
             onChange={onChangeEmail} />
         </Col>
       </Row>

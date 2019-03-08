@@ -1,7 +1,7 @@
 import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
-import { validateAndUpdateField } from 'front-end/lib/views/form-field';
+import { updateField, validateField } from 'front-end/lib/views/form-field';
 import * as ShortText from 'front-end/lib/views/input/short-text';
 import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
@@ -17,7 +17,8 @@ export interface State {
 }
 
 type InnerMsg
-  = ADT<'email', string>
+  = ADT<'onChangeEmail', string>
+  | ADT<'validateEmail'>
   | ADT<'submit'>;
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
@@ -47,8 +48,10 @@ function stopLoading(state: Immutable<State>): Immutable<State> {
 
 export const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
-    case 'email':
-      return [validateAndUpdateField(state, 'email', msg.value, validateEmail)];
+    case 'onChangeEmail':
+      return [updateField(state, 'email', msg.value)];
+    case 'validateEmail':
+      return [validateField(state, 'email', validateEmail)];
     case 'submit':
       state = startLoading(state);
       return [
@@ -105,7 +108,8 @@ export const view: ComponentView<State, Msg> = props => {
             <Col xs='12'>
               <ShortText.view
                 state={state.email}
-                onChange={onChange('email')}
+                onChange={onChange('onChangeEmail')}
+                onChangeDebounced={() => dispatch({ tag: 'validateEmail', value: undefined })}
                 onEnter={submit} />
             </Col>
           </Row>

@@ -126,7 +126,8 @@ export type InnerMsg
   | ADT<'contactPhoneCountryCode', string>
   | ADT<'contactPhoneType', string>
   | ADT<'industrySectors', SelectMulti.Msg>
-  | ADT<'categories', SelectMulti.Msg>;
+  | ADT<'categories', SelectMulti.Msg>
+  | ADT<'validate'>;
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
@@ -274,33 +275,33 @@ export const init: Init<Params, State> = async ({ profile }) => {
 export const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
     case 'businessName':
-      return [validateAndUpdate(state, 'businessName', msg.value)];
+      return [updateValue(state, 'businessName', msg.value)];
     case 'businessType':
-      return [validateAndUpdate(state, 'businessType', msg.value)];
+      return [validateValues(updateValue(state, 'businessType', msg.value))];
     case 'businessNumber':
-      return [validateAndUpdate(state, 'businessNumber', msg.value)];
+      return [updateValue(state, 'businessNumber', msg.value)];
     case 'businessStreetAddress':
-      return [validateAndUpdate(state, 'businessStreetAddress', msg.value)];
+      return [updateValue(state, 'businessStreetAddress', msg.value)];
     case 'businessCity':
-      return [validateAndUpdate(state, 'businessCity', msg.value)];
+      return [updateValue(state, 'businessCity', msg.value)];
     case 'businessProvince':
-      return [validateAndUpdate(state, 'businessProvince', msg.value)];
+      return [updateValue(state, 'businessProvince', msg.value)];
     case 'businessPostalCode':
-      return [validateAndUpdate(state, 'businessPostalCode', msg.value)];
+      return [updateValue(state, 'businessPostalCode', msg.value)];
     case 'businessCountry':
-      return [validateAndUpdate(state, 'businessCountry', msg.value)];
+      return [updateValue(state, 'businessCountry', msg.value)];
     case 'contactName':
-      return [validateAndUpdate(state, 'contactName', msg.value)];
+      return [updateValue(state, 'contactName', msg.value)];
     case 'contactPositionTitle':
-      return [validateAndUpdate(state, 'contactPositionTitle', msg.value)];
+      return [updateValue(state, 'contactPositionTitle', msg.value)];
     case 'contactEmail':
-      return [validateAndUpdate(state, 'contactEmail', msg.value)];
+      return [updateValue(state, 'contactEmail', msg.value)];
     case 'contactPhoneNumber':
-      return [validateAndUpdate(state, 'contactPhoneNumber', msg.value)];
+      return [updateValue(state, 'contactPhoneNumber', msg.value)];
     case 'contactPhoneCountryCode':
-      return [validateAndUpdate(state, 'contactPhoneCountryCode', msg.value)];
+      return [updateValue(state, 'contactPhoneCountryCode', msg.value)];
     case 'contactPhoneType':
-      return [validateAndUpdate(state, 'contactPhoneType', msg.value)];
+      return [validateValues(updateValue(state, 'contactPhoneType', msg.value))];
     case 'industrySectors':
       state = updateComponentChild({
         state,
@@ -309,7 +310,7 @@ export const update: Update<State, Msg> = (state, msg) => {
         childUpdate: SelectMulti.update,
         childMsg: msg.value
       })[0];
-      return [validateAndUpdate(state)];
+      return [validateValues(state)];
     case 'categories':
       state = updateComponentChild({
         state,
@@ -318,16 +319,19 @@ export const update: Update<State, Msg> = (state, msg) => {
         childUpdate: SelectMulti.update,
         childMsg: msg.value
       })[0];
-      return [validateAndUpdate(state)];
+      return [validateValues(state)];
+    case 'validate':
+      return [validateValues(state)];
     default:
       return [state];
   }
 };
 
-function validateAndUpdate(state: Immutable<State>, key?: string, value?: string): Immutable<State> {
-  if (key && value !== undefined) {
-    state = state.setIn([key, 'value'], value);
-  }
+function updateValue(state: Immutable<State>, key: string, value: string): Immutable<State> {
+  return state.setIn([key, 'value'], value);
+}
+
+function validateValues(state: Immutable<State>): Immutable<State> {
   const validation = validateVendorProfile(getValues(state));
   return persistValidations(state, validation);
 }
@@ -345,6 +349,7 @@ function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<
 export const BusinessInformation: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const validate = () => dispatch({ tag: 'validate', value: undefined });
   return (
     <div className='mt-3 mt-md-0'>
       <FormSectionHeading text='Business Information' />
@@ -353,6 +358,7 @@ export const BusinessInformation: ProfileView<State, InnerMsg> = ({ state, dispa
           <ShortText.view
             state={state.businessName}
             disabled={disabled}
+            onChangeDebounced={validate}
             onChange={onChangeShortText('businessName')} />
         </Col>
       </Row>
@@ -367,6 +373,7 @@ export const BusinessInformation: ProfileView<State, InnerMsg> = ({ state, dispa
           <ShortText.view
             state={state.businessNumber}
             disabled={disabled}
+            onChangeDebounced={validate}
             onChange={onChangeShortText('businessNumber')} />
         </Col>
       </Row>
@@ -375,6 +382,7 @@ export const BusinessInformation: ProfileView<State, InnerMsg> = ({ state, dispa
           <ShortText.view
             state={state.businessStreetAddress}
             disabled={disabled}
+            onChangeDebounced={validate}
             onChange={onChangeShortText('businessStreetAddress')} />
         </Col>
       </Row>
@@ -383,12 +391,14 @@ export const BusinessInformation: ProfileView<State, InnerMsg> = ({ state, dispa
           <ShortText.view
             state={state.businessCity}
             disabled={disabled}
+            onChangeDebounced={validate}
             onChange={onChangeShortText('businessCity')} />
         </Col>
         <Col xs='12' md='6'>
           <ShortText.view
             state={state.businessProvince}
             disabled={disabled}
+            onChangeDebounced={validate}
             onChange={onChangeShortText('businessProvince')} />
         </Col>
       </Row>
@@ -397,12 +407,14 @@ export const BusinessInformation: ProfileView<State, InnerMsg> = ({ state, dispa
           <ShortText.view
             state={state.businessPostalCode}
             disabled={disabled}
+            onChangeDebounced={validate}
             onChange={onChangeShortText('businessPostalCode')} />
         </Col>
         <Col xs='12' md='6'>
           <ShortText.view
             state={state.businessCountry}
             disabled={disabled}
+            onChangeDebounced={validate}
             onChange={onChangeShortText('businessCountry')} />
         </Col>
       </Row>
@@ -413,6 +425,7 @@ export const BusinessInformation: ProfileView<State, InnerMsg> = ({ state, dispa
 export const ContactInformation: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const validate = () => dispatch({ tag: 'validate', value: undefined });
   return (
     <div className='mt-3'>
       <FormSectionHeading text='Contact Information (Optional)' />
@@ -421,12 +434,14 @@ export const ContactInformation: ProfileView<State, InnerMsg> = ({ state, dispat
           <ShortText.view
             state={state.contactName}
             disabled={disabled}
+            onChangeDebounced={validate}
             onChange={onChangeShortText('contactName')} />
         </Col>
         <Col xs='12' md='6'>
           <ShortText.view
             state={state.contactPositionTitle}
             disabled={disabled}
+            onChangeDebounced={validate}
             onChange={onChangeShortText('contactPositionTitle')} />
         </Col>
       </Row>
@@ -435,6 +450,7 @@ export const ContactInformation: ProfileView<State, InnerMsg> = ({ state, dispat
           <ShortText.view
             state={state.contactEmail}
             disabled={disabled}
+            onChangeDebounced={validate}
             onChange={onChangeShortText('contactEmail')} />
         </Col>
       </Row>
@@ -443,12 +459,14 @@ export const ContactInformation: ProfileView<State, InnerMsg> = ({ state, dispat
           <ShortText.view
             state={state.contactPhoneNumber}
             disabled={disabled}
+            onChangeDebounced={validate}
             onChange={onChangeShortText('contactPhoneNumber')} />
         </Col>
         <Col xs='12' md='4'>
           <ShortText.view
             state={state.contactPhoneCountryCode}
             disabled={disabled}
+            onChangeDebounced={validate}
             onChange={onChangeShortText('contactPhoneCountryCode')} />
         </Col>
         <Col xs='12' md='4'>

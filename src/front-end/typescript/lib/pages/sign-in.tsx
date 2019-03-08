@@ -2,7 +2,7 @@ import router from 'front-end/lib/app/router';
 import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
-import { validateAndUpdateField } from 'front-end/lib/views/form-field';
+import { updateField, validateField } from 'front-end/lib/views/form-field';
 import * as ShortText from 'front-end/lib/views/input/short-text';
 import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
@@ -23,6 +23,8 @@ export interface State {
 type InnerMsg
   = ADT<'onChangeEmail', string>
   | ADT<'onChangePassword', string>
+  | ADT<'validateEmail'>
+  | ADT<'validatePassword'>
   | ADT<'submit'>;
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
@@ -66,9 +68,13 @@ export const update: Update<State, Msg> = (state, msg) => {
   state = state.set('errors', []);
   switch (msg.tag) {
     case 'onChangeEmail':
-      return [validateAndUpdateField(state, 'email', msg.value, validateEmail)];
+      return [updateField(state, 'email', msg.value)];
     case 'onChangePassword':
-      return [validateAndUpdateField(state, 'password', msg.value, validatePassword)];
+      return [updateField(state, 'password', msg.value)];
+    case 'validateEmail':
+      return [validateField(state, 'email', validateEmail)];
+    case 'validatePassword':
+      return [validateField(state, 'password', validatePassword)];
     case 'submit':
       state = startLoading(state);
       return [
@@ -155,6 +161,7 @@ export const view: ComponentView<State, Msg> = props => {
               <ShortText.view
                 state={state.email}
                 onChange={onChange('onChangeEmail')}
+                onChangeDebounced={() => dispatch({ tag: 'validateEmail', value: undefined })}
                 onEnter={submit} />
             </Col>
           </Row>
@@ -163,6 +170,7 @@ export const view: ComponentView<State, Msg> = props => {
               <ShortText.view
                 state={state.password}
                 onChange={onChange('onChangePassword')}
+                onChangeDebounced={() => dispatch({ tag: 'validatePassword', value: undefined })}
                 onEnter={submit} />
             </Col>
           </Row>

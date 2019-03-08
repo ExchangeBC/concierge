@@ -1,6 +1,6 @@
 import { Dispatch, View } from 'front-end/lib/framework';
 import * as FormField from 'front-end/lib/views/form-field';
-import { noop } from 'lodash';
+import { debounce } from 'lodash';
 import { ChangeEvent, ChangeEventHandler, default as React, KeyboardEventHandler } from 'react';
 
 export interface State extends FormField.State {
@@ -10,15 +10,19 @@ export interface State extends FormField.State {
 
 type OnEnter = () => void;
 
+type OnChangeDebounced = () => void;
+
 interface ExtraProps {
   onKeyUp: KeyboardEventHandler<HTMLInputElement>;
   disabled: boolean;
+  onChangeDebounced?: OnChangeDebounced;
 }
 
 export interface Props extends Pick<FormField.Props<State, HTMLInputElement, ExtraProps>, 'toggleHelp'> {
   state: State;
   disabled?: boolean;
   onChange: ChangeEventHandler<HTMLInputElement>;
+  onChangeDebounced?: OnChangeDebounced;
   onEnter?: OnEnter;
 }
 
@@ -62,20 +66,41 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
   private ref: HTMLInputElement | null;
   private selectionStart: number | null;
   private selectionEnd: number | null;
+  private onChangeDebounced: OnChangeDebounced | null;
 
   constructor(props: FormField.ChildProps<State, HTMLInputElement, ExtraProps>) {
     super(props);
     this.ref = null;
     this.selectionStart = null;
     this.selectionEnd = null;
+    this.onChangeDebounced = null;
   }
 
   public render() {
     const { state, onChange, className, extraProps } = this.props;
-    const onKeyUp = (extraProps && extraProps.onKeyUp) || noop;
+    const onKeyUp = (extraProps && extraProps.onKeyUp) || undefined;
     const disabled: boolean = !!(extraProps && extraProps.disabled) || false;
     // Override the input type to text for emails to support selectionStart selection state.
     const inputType = state.type === 'email' ? 'text' : state.type;
+    // Manage this.onChangeDebounced.
+    // This is pretty gross, but the only (simple) way to support real-time validation
+    // and live user feedback of user input. We assume that onChangeDebounced never
+    // *semantically* changes after it has been passed as a prop for the first time.
+    // This allows us to ensure calls to this.onChangeDebounced are properly debounced.
+    // Effectively, you can't change the functionality of the prop `onChangeDebounced`.
+    if (!this.onChangeDebounced && extraProps && extraProps.onChangeDebounced) {
+      this.onChangeDebounced = debounce(() => {
+        // Update the component's cursor selection state.
+        if (this.ref) {
+          this.selectionStart = this.ref.selectionStart;
+          this.selectionEnd = this.ref.selectionEnd;
+        }
+        // Run the debounced change handler.
+        if (extraProps.onChangeDebounced) {
+          extraProps.onChangeDebounced();
+        }
+      }, 500);
+    }
     return (
       <input
         type={inputType}
@@ -97,10 +122,11 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
     }
   }
 
-  private onChange(onChangeChild: ChangeEventHandler<HTMLInputElement>, event: ChangeEvent<HTMLInputElement>) {
+  private onChange(onChange: ChangeEventHandler<HTMLInputElement>, event: ChangeEvent<HTMLInputElement>) {
     this.selectionStart = event.target.selectionStart;
     this.selectionEnd = event.target.selectionEnd;
-    onChangeChild(event);
+    onChange(event);
+    if (this.onChangeDebounced) { this.onChangeDebounced(); }
   }
 }
 
@@ -110,9 +136,10 @@ const Child: View<FormField.ChildProps<State, HTMLInputElement, ExtraProps>> = p
   );
 };
 
-export const view: View<Props> = ({ state, onChange, onEnter, toggleHelp, disabled = false }) => {
+export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter, toggleHelp, disabled = false }) => {
   const extraProps: ExtraProps = {
     onKeyUp: makeOnKeyUp(onEnter),
+    onChangeDebounced,
     disabled
   };
   return (
