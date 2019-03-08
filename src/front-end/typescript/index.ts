@@ -3,7 +3,7 @@ import { start } from 'front-end/lib/framework';
 import { debounce, throttle } from 'lodash';
 
 const element = document.getElementById('main') || document.body;
-const debug = true;
+const debug = false;
 start(app, element, debug)
   .then(stateManager => {
     // Throttle DOM queries.
