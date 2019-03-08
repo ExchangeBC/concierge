@@ -21,6 +21,7 @@ start(app, element, debug)
     }
 
     const debouncedDispatchFixedBarBottom = debounce(dispatchFixedBarBottom, 200);
+    const debouncedDispatchFixedBarBottomSlow = debounce(dispatchFixedBarBottom, 1000);
 
     window.addEventListener('scroll', event => {
       debouncedDispatchFixedBarBottom();
@@ -42,7 +43,7 @@ start(app, element, debug)
         case 'pageTermsAndConditions':
           // Ensure this subscription is not mutually recursive.
           if (msg.value.tag !== 'updateFixedBarBottom') {
-            debouncedDispatchFixedBarBottom();
+            debouncedDispatchFixedBarBottomSlow();
           }
           break;
         default:
