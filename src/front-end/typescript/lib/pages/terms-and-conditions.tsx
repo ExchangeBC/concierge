@@ -133,7 +133,7 @@ const AcceptedAt: ComponentView<State, Msg> = props => {
     return (
       <FixedBar.View location={fixedBarLocation}>
         <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={acceptTerms} loading={isLoading} disabled={isDisabled}>
-          I Agree
+          I Accept
         </LoadingButton>
         <Link page={profilePage} text='Skip' textColor='secondary' />
       </FixedBar.View>

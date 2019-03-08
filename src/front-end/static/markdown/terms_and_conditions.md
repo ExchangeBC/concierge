@@ -2,7 +2,7 @@ By accessing the Procurement Concierge Program through the Concierge Web App, yo
 
 ## 1. Definitions
 
-- **a)** “Procurement Concierge Program” means the program developed and managed by the Province of BC, a description of which can be found here for Vendors and here for Public Sector Buyers;
+- **a)** “Procurement Concierge Program” means the program developed and managed by the Province of BC, a description of which can be found [here](https://www2.gov.bc.ca/gov/content/employment-business/business/business-government/respond-to-opportunities/contract-opportunities/procurement-concierge-program) for Vendors and [here](https://www2.gov.bc.ca/gov/content/governments/services-for-government/bc-bid-resources/support-services/innovative-procurement-initiatives/procurement-concierge-program) for Public Sector Buyers;
 
 - **b)** “Concierge Web App” means the application to which these terms and conditions apply;
 
@@ -10,7 +10,7 @@ By accessing the Procurement Concierge Program through the Concierge Web App, yo
 
 - **d)** “Province” means Her Majesty the Queen in Right of the Province of British Columbia;
 
-- **e)** “Public-sector Buyer” means a person representing a “government organization”, “local public body” or a “participating jurisdiction”, as defined in the Procurement Services Act, where that entity has an interest in potentially buying goods or services;
+- **e)** “Public-sector Buyer” means a person representing a “government organization”, “local public body” or a “participating jurisdiction”, as defined in the *Procurement Services Act*, where that entity has an interest in potentially buying goods or services;
 
 - **f)** “Registered Buyer” means a Public-sector Buyer who has a user profile in the Procurement Concierge Program;
 
@@ -36,7 +36,7 @@ By accessing the Procurement Concierge Program through the Concierge Web App, yo
 
   - **b)** through the Concierge Web App, Registered Buyers will be able to view and search the profiles of other Registered Buyers;
 
-  - **c)** the profiles of Registered Buyers or other Registered Vendors will not be visible to Registered Vendors;
+  - **c)** the profiles of Registered Buyers or other Registered Vendors will not be visible to Registered Vendors; and
 
   - **d)** the Procurement Concierge Program may use Registered User profiles for reporting purposes, including tracking metrics on how Registered Buyers and Registered Vendors use the Procurement Concierge Program in order to determine its success.
 
@@ -64,7 +64,7 @@ By accessing the Procurement Concierge Program through the Concierge Web App, yo
 
   - **b)** incorporate any ideas, concepts, approaches, or strategies shared in that response into any planning, design, procurement, or contractual activities related to any aspect of any project without any obligation, liability, or consideration on the part of the Registered Buyer. 
 
-- **3.7.** Registered Vendors are advised not to: i) disclose any information that is proprietary in nature or that is the intellectual property of the Registered Vendor; ii) disclose pricing information unless the RFI specifically requests that information for budgeting purposes; or iii) information about the qualifications or experience of their firm or individuals in their firm. However, if you submit a response to an RFI, you agree to grant to the Registered Buyers a non-exclusive, royalty free, limited license to use and reproduce any part of your response, for the purposes of procurement planning or any subsequent procurement process.
+- **3.7.** Registered Vendors are advised not to: i) disclose any information that is proprietary in nature or that is the intellectual property of the Registered Vendor; ii) disclose pricing information unless the RFI specifically requests that information for budgeting purposes; or iii) provide information about the qualifications or experience of their firm or individuals in their firm. However, if you submit a response to an RFI, you agree to grant to the Registered Buyers a non-exclusive, royalty free, limited license to use and reproduce any part of your response, for the purposes of procurement planning or any subsequent procurement process.
 
 - **3.8.** The Procurement Concierge Program and Registered Buyers will not be responsible for any costs incurred by any Registered Vendor in responding to any RFI. 
 
