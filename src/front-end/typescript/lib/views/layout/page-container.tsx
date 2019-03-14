@@ -15,9 +15,9 @@ export interface Props {
 
 export const View: framework.View<Props> = props => {
   const { paddingY = false, paddingTop = false, paddingBottom = false, marginFixedBar = false, fullWidth = false } = props;
-  const className = `${paddingY || paddingTop ? 'pt-5' : ''} ${paddingY || paddingBottom ? 'pb-5' : ''} ${props.className || ''}`;
+  const className = `${paddingY || paddingTop ? 'pt-5' : ''} ${paddingY || paddingBottom ? 'pb-5' : ''} ${props.className || ''} d-flex flex-column flex-grow-1`;
   const style = {
-    marginBottom: marginFixedBar ? `${FixedBar.HEIGHT}px` : 'auto'
+    marginBottom: marginFixedBar ? `${FixedBar.HEIGHT}px` : undefined
   };
   if (fullWidth) {
     return (
@@ -28,7 +28,7 @@ export const View: framework.View<Props> = props => {
   } else {
     return (
       <div className={className} style={style}>
-        <Container>
+        <Container className='flex-grow-1'>
           {props.children}
         </Container>
       </div>

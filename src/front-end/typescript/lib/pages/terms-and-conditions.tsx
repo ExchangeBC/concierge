@@ -145,8 +145,8 @@ export const view: ComponentView<State, Msg> = props => {
   const { state } = props;
   const bottomBarIsFixed = state.fixedBarBottom === 0;
   return (
-      <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>
-      <Container className='mb-5'>
+    <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>
+      <Container className='mb-5 flex-grow-1'>
         <Row className='mb-3'>
           <Col xs='12'>
             <h1>Concierge Terms & Conditions</h1>

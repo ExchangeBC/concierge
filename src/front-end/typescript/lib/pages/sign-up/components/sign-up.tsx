@@ -172,7 +172,7 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
     const bottomBarIsFixed = state.fixedBarBottom === 0;
     return (
       <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>
-        <Container className='mb-5'>
+        <Container className='mb-5 flex-grow-1'>
           <Row>
             <Col xs='12'>
               <h1>Create a {userTypeToTitleCase(Profile.userType)} Account</h1>

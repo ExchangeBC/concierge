@@ -39,12 +39,16 @@ module.exports = function (grunt) {
     "sass",
     "postcss:prefix"
   ]);
-  grunt.registerTask("development", [
+  grunt.registerTask("development-build", [
     "common",
     "browserify:development",
     "compress"
   ]);
-  grunt.registerTask("production", [
+  grunt.registerTask("development-watch", [
+    "development-build",
+    "watch"
+  ]);
+  grunt.registerTask("production-build", [
     "common",
     "postcss:min",
     "browserify:production",
@@ -52,5 +56,6 @@ module.exports = function (grunt) {
     "htmlmin:production",
     "compress"
   ]);
-  grunt.registerTask("build", [ env ]);
+  grunt.registerTask("build", [ `${env}-build` ]);
+  grunt.registerTask("default", [ "development-watch" ]);
 };

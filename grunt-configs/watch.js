@@ -3,12 +3,11 @@ module.exports = {
     interrupt: true,
     debounceDelay: 250
   },
-  ts: {
+  js: {
     files: [
-      `${gruntConfig.src.ts}/**`
+      gruntConfig.out.js
     ],
     tasks: [
-      "browserify:development",
       "compress"
     ]
   },

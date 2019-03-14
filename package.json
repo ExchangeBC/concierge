@@ -13,7 +13,7 @@
     "front-end:typecheck": "npx tsc --project src/front-end/typescript && echo Typecheck Successful\n",
     "front-end:test": "node tests/front-end/index.js",
     "front-end:build": "npx grunt build",
-    "front-end:watch": "npx grunt watch"
+    "front-end:watch": "npx grunt"
   },
   "repository": {
     "type": "git",
