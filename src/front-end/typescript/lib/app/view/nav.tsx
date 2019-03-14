@@ -101,7 +101,7 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
 const Navigation: View<Props> = props => {
   return (
     <Navbar expand='md' light color='light' className='border-bottom'>
-      <Container className='px-3'>
+      <Container className='px-sm-3'>
         <NavbarBrand href='/'>
           <img src='/images/logo.svg' style={{ height: '2.25rem' }}/>
         </NavbarBrand>
