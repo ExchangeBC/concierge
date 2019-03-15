@@ -72,6 +72,9 @@ export function mapRequestBody<P, Q, BodyA, BodyB, Session>(request: Request<P, 
   };
 }
 
+// TODO
+export type JsonRequestBody = null;
+
 export interface Response<Body, Session> {
   code: number;
   headers: OutgoingHttpHeaders;

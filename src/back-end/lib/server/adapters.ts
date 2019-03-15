@@ -1,7 +1,7 @@
 import { COOKIE_SECRET } from 'back-end/config';
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
-import { ErrorResponseBody, FileResponseBody, JsonResponseBody, makeErrorResponseBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
+import { ErrorResponseBody, FileResponseBody, JsonRequestBody, JsonResponseBody, makeErrorResponseBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import expressLib from 'express';
@@ -15,24 +15,26 @@ const SESSION_COOKIE_NAME = 'sid';
 
 export type InitialRequest<Session> = Request<object, object, any, Session>;
 
-export interface AdapterRunParams<SupportedResponseBody, Foo> {
-  router: Router<SupportedResponseBody, Foo>;
+export interface AdapterRunParams<SupportedResponseBodies, Foo> {
+  router: Router<SupportedResponseBodies, Foo>;
   sessionIdToSession: SessionIdToSession<Foo>;
   sessionToSessionId: SessionToSessionId<Foo>;
   host: string;
   port: number;
 }
 
-export type Adapter<App, SupportedResponseBody, Session> = (params: AdapterRunParams<SupportedResponseBody, Session>) => App;
+export type Adapter<App, SupportedResponseBodies, Session> = (params: AdapterRunParams<SupportedResponseBodies, Session>) => App;
 
-export type ExpressResponseBody = JsonResponseBody | FileResponseBody | TextResponseBody | ErrorResponseBody;
+export type ExpressRequestBodies = JsonRequestBody;
 
-export type ExpressAdapter<Session> = Adapter<expressLib.Application, ExpressResponseBody, Session>;
+export type ExpressResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody | ErrorResponseBody;
+
+export type ExpressAdapter<Session> = Adapter<expressLib.Application, ExpressResponseBodies, Session>;
 
 export function express<Session>(): ExpressAdapter<Session> {
 
   return ({ router, sessionIdToSession, sessionToSessionId, host, port }) => {
-    function respond(response: Response<ExpressResponseBody, Session>, expressRes: expressLib.Response): void {
+    function respond(response: Response<ExpressResponseBodies, Session>, expressRes: expressLib.Response): void {
       expressRes
         .status(response.code)
         .set(response.headers);
@@ -65,7 +67,7 @@ export function express<Session>(): ExpressAdapter<Session> {
       }
     }
 
-    function makeExpressRequestHandler(route: Route<any, any, any, ExpressResponseBody, any, Session>): expressLib.RequestHandler {
+    function makeExpressRequestHandler(route: Route<any, any, any, ExpressResponseBodies, any, Session>): expressLib.RequestHandler {
       function asyncHandler(fn: (request: expressLib.Request, expressRes: expressLib.Response, next: expressLib.NextFunction) => Promise<void>): expressLib.RequestHandler {
         return (expressReq, expressRes, next) => {
           fn(expressReq, expressRes, next)
