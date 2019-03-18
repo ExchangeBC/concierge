@@ -6,6 +6,7 @@ import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http';
 import { assign } from 'lodash';
 import { lookup } from 'mime-types';
 import mongoose from 'mongoose';
+import * as multiparty from 'multiparty';
 import { ADT, HttpMethod } from 'shared/lib/types';
 
 export function parseHttpMethod(raw: string): HttpMethod | null {
@@ -72,8 +73,37 @@ export function mapRequestBody<P, Q, BodyA, BodyB, Session>(request: Request<P, 
   };
 }
 
-// TODO
-export type JsonRequestBody = null;
+export type TextRequestBody = ADT<'text', string>;
+
+export function makeTextRequestBody(value: string): TextRequestBody {
+  return {
+    tag: 'text',
+    value
+  };
+}
+
+export type JsonRequestBody = ADT<'json', any>;
+
+export function makeJsonRequestBody(value: any): JsonRequestBody {
+  return {
+    tag: 'json',
+    value
+  };
+}
+
+export interface MultipartValue {
+  fields: { [k: string]: string };
+  files: { [k: string]: multiparty.File };
+}
+
+export type MultipartRequestBody = ADT<'multipart', MultipartValue>;
+
+export function makeMultipartRequestBody(value: MultipartValue): MultipartRequestBody {
+  return {
+    tag: 'multipart',
+    value
+  };
+}
 
 export interface Response<Body, Session> {
   code: number;
@@ -88,6 +118,24 @@ export function basicResponse<Body, Session>(code: number, session: Session, bod
     body,
     session,
     headers: {}
+  };
+}
+
+export type TextResponseBody = ADT<'text', string>;
+
+export function makeTextResponseBody(value: string): TextResponseBody {
+  return {
+    tag: 'text',
+    value
+  };
+}
+
+export function mapTextResponse<Session>(response: Response<string, Session>): Response<TextResponseBody, Session> {
+  return {
+    code: response.code,
+    headers: response.headers,
+    session: response.session,
+    body: makeTextResponseBody(response.body)
   };
 }
 
@@ -109,13 +157,13 @@ export function mapJsonResponse<Session>(response: Response<any, Session>): Resp
   };
 }
 
-export interface File {
+export interface ResponseFile {
   buffer: Buffer;
   contentType: string;
   contentEncoding?: string;
 }
 
-export type FileResponseBody = ADT<'file', File>;
+export type FileResponseBody = ADT<'file', ResponseFile>;
 
 function validFile(path: string): boolean {
   return existsSync(path) && statSync(path).isFile();
@@ -156,24 +204,6 @@ export function mapFileResponse<Session>(response: Response<string, Session>): R
     headers: response.headers,
     session: response.session,
     body: tryMakeFileResponseBody(response.body)
-  };
-}
-
-export type TextResponseBody = ADT<'text', string>;
-
-export function makeTextResponseBody(value: string): TextResponseBody {
-  return {
-    tag: 'text',
-    value
-  };
-}
-
-export function mapTextResponse<Session>(response: Response<string, Session>): Response<TextResponseBody, Session> {
-  return {
-    code: response.code,
-    headers: response.headers,
-    session: response.session,
-    body: makeTextResponseBody(response.body)
   };
 }
 
@@ -283,31 +313,31 @@ export function combineHooks<Session>(hooks: Array<RouteHook<any, any, any, any,
   };
 }
 
-export interface Route<RP, RQ, ReqB, ResB, HS, Session> {
+export interface Route<IncomingReqBody, TransformedReqParams, TransformedReqQuery, TransformedReqBody, ResBody, HookState, Session> {
   method: HttpMethod;
   path: string;
-  handler: Handler<object, object, any, RP, RQ, ReqB, ResB, Session>;
-  hook?: RouteHook<RP, RQ, ReqB, ResB, HS, Session>;
+  handler: Handler<object, object, IncomingReqBody, TransformedReqParams, TransformedReqQuery, TransformedReqBody, ResBody, Session>;
+  hook?: RouteHook<TransformedReqParams, TransformedReqQuery, TransformedReqBody, ResBody, HookState, Session>;
 }
 
-export function namespaceRoute(prefix: string, route: Route<any, any, any, any, any, any>) {
+export function namespaceRoute(prefix: string, route: Route<any, any, any, any, any, any, any>) {
   const path = `${prefix.replace(/\/*$/, '')}/${route.path.replace(/^\/*/, '')}`;
   return assign(route, { path });
 }
 
-export function addHooksToRoute<Session>(hooks: Array<RouteHook<any, any, any, any, any, Session>>, route: Route<any, any, any, any, any, Session>): Route<any, any, any, any, any, Session> {
+export function addHooksToRoute<Session>(hooks: Array<RouteHook<any, any, any, any, any, Session>>, route: Route<any, any, any, any, any, any, Session>): Route<any, any, any, any, any, any, Session> {
   const newHook = combineHooks(hooks);
   route.hook = route.hook ? combineHooks([newHook, route.hook]) : newHook;
   return route;
 }
 
-export const notFoundJsonRoute: Route<any, any, any, JsonResponseBody, any, any> = {
+export const notFoundJsonRoute: Route<any, any, any, any, JsonResponseBody, any, any> = {
   method: HttpMethod.Any,
   path: '*',
   handler: notFoundJsonHandler
 }
 
-export type Router<ResB, Session> = Array<Route<any, any, any, ResB, any, Session>>;
+export type Router<ReqB, ResB, Session> = Array<Route<ReqB, any, any, any, ResB, any, Session>>;
 
 export type AuthenticationState<Value, Session> = ADT<'authenticated', { session: Session, body: Value }> | ADT<'unauthenticated', { body: Value }>;
 

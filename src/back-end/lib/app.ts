@@ -7,7 +7,7 @@ import FrontEndRouter from 'back-end/lib/routers/front-end';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { addHooksToRoute, FileResponseBody, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route, Router, TextResponseBody } from 'back-end/lib/server';
+import { addHooksToRoute, FileResponseBody, JsonRequestBody, JsonResponseBody, MultipartRequestBody, namespaceRoute, notFoundJsonRoute, Route, Router, TextResponseBody } from 'back-end/lib/server';
 import { concat, flatten, flow, map } from 'lodash/fp';
 import * as mongoose from 'mongoose';
 import mongooseDefault from 'mongoose';
@@ -38,9 +38,11 @@ export function createModels(): AvailableModels {
   };
 };
 
+type SupportedRequestBodies = JsonRequestBody | MultipartRequestBody;
+
 type SupportedResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody;
 
-export function createRouter(Models: AvailableModels): Router<SupportedResponseBodies, Session> {
+export function createRouter(Models: AvailableModels): Router<SupportedRequestBodies, SupportedResponseBodies, Session> {
   const hooks = [
     loggerHook
   ];
@@ -65,7 +67,7 @@ export function createRouter(Models: AvailableModels): Router<SupportedResponseB
     // Respond with a standard 404 JSON response if API route is not handled.
     flippedConcat(notFoundJsonRoute),
     // Namespace all CRUD routes with '/api'.
-    map((route: Route<any, any, any, JsonResponseBody, any, Session>) => namespaceRoute('/api', route))
+    map((route: Route<SupportedRequestBodies, any, any, any, JsonResponseBody, any, Session>) => namespaceRoute('/api', route))
   ])(resources);
 
   // Return all routes.
@@ -75,6 +77,6 @@ export function createRouter(Models: AvailableModels): Router<SupportedResponseB
     // Front-end router.
     flippedConcat(FrontEndRouter),
     // Add global hooks to all routes.
-    map((route: Route<any, any, any, any, any, Session>) => addHooksToRoute(hooks, route))
+    map((route: Route<SupportedRequestBodies, any, any, any, SupportedResponseBodies, any, Session>) => addHooksToRoute(hooks, route))
   ])([]);
 }
