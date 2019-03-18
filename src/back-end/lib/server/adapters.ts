@@ -15,10 +15,10 @@ const SESSION_COOKIE_NAME = 'sid';
 
 export type InitialRequest<Session> = Request<object, object, any, Session>;
 
-export interface AdapterRunParams<SupportedResponseBodies, Foo> {
-  router: Router<SupportedResponseBodies, Foo>;
-  sessionIdToSession: SessionIdToSession<Foo>;
-  sessionToSessionId: SessionToSessionId<Foo>;
+export interface AdapterRunParams<SupportedResponseBodies, Session> {
+  router: Router<SupportedResponseBodies, Session>;
+  sessionIdToSession: SessionIdToSession<Session>;
+  sessionToSessionId: SessionToSessionId<Session>;
   host: string;
   port: number;
 }
