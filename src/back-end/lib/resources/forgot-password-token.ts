@@ -1,4 +1,4 @@
-import { AvailableModels } from 'back-end/lib/app';
+import { AvailableModels, SupportedRequestBodies } from 'back-end/lib/app';
 import * as crud from 'back-end/lib/crud';
 import * as notifications from 'back-end/lib/mailer/notifications';
 import * as permissions from 'back-end/lib/permissions';
@@ -26,7 +26,7 @@ type UpdateResponseBody = null | UpdateValidationErrors;
 
 type RequiredModels = 'ForgotPasswordToken' | 'Session' | 'User';
 
-export type Resource = crud.Resource<AvailableModels, RequiredModels, CreateRequestBody, CreateResponseBody, null, null, null, UpdateRequestBody, UpdateResponseBody, null, SessionSchema.AppSession>;
+export type Resource = crud.Resource<SupportedRequestBodies, AvailableModels, RequiredModels, CreateRequestBody, CreateResponseBody, null, null, null, UpdateRequestBody, UpdateResponseBody, null, SessionSchema.AppSession>;
 
 export const resource: Resource = {
 
@@ -40,7 +40,9 @@ export const resource: Resource = {
         if (!permissions.createForgotPasswordToken(request.session)) {
           return mapRequestBody(request, null);
         } else {
-          const email = getString(request.body, 'email');
+          // TODO bad request response if body is not json
+          const body = request.body.tag === 'json' ? request.body.value : {};
+          const email = getString(body, 'email');
           const user = await UserModel.findOne({ email, active: true }).exec();
           return mapRequestBody(request, user || null);
         }
@@ -84,14 +86,16 @@ export const resource: Resource = {
               forgotPasswordToken: ['Your link has expired, please try requesting a new one.']
             }));
           }
-          const userId = getString(request.body, 'userId');
+          // TODO bad request response if body is not json
+          const body = request.body.tag === 'json' ? request.body.value : {};
+          const userId = getString(body, 'userId');
           const validatedUserId = validateObjectIdString(userId);
           if (validatedUserId.tag === 'invalid') {
             return mapRequestBody(request, invalid({
               userId: validatedUserId.value
             }));
           }
-          const password = getString(request.body, 'password');
+          const password = getString(body, 'password');
           const validatedPassword = await validatePassword(password);
           if (validatedPassword.tag === 'invalid') {
             return mapRequestBody(request, invalid({

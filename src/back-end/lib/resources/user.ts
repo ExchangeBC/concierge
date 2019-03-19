@@ -1,4 +1,4 @@
-import { AvailableModels } from 'back-end/lib/app';
+import { AvailableModels, SupportedRequestBodies } from 'back-end/lib/app';
 import * as crud from 'back-end/lib/crud';
 import * as notifications from 'back-end/lib/mailer/notifications';
 import * as permissions from 'back-end/lib/permissions';
@@ -124,7 +124,7 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, id: string, em
 
 type RequiredModels = 'User' | 'Session';
 
-export type Resource = crud.Resource<AvailableModels, RequiredModels, CreateRequestBody, CreateResponseBody, ReadOneResponseBody, ReadManyResponseBodyItem, ReadManyErrorResponseBody, UpdateRequestBody, UpdateResponseBody, DeleteResponseBody, SessionSchema.AppSession>;
+export type Resource = crud.Resource<SupportedRequestBodies, AvailableModels, RequiredModels, CreateRequestBody, CreateResponseBody, ReadOneResponseBody, ReadManyResponseBodyItem, ReadManyErrorResponseBody, UpdateRequestBody, UpdateResponseBody, DeleteResponseBody, SessionSchema.AppSession>;
 
 const resource: Resource = {
 
@@ -135,7 +135,8 @@ const resource: Resource = {
     const SessionModel = Models.Session as SessionSchema.Model;
     return {
       async transformRequest(request) {
-        const body = request.body;
+        // TODO bad request response if body is not json
+        const body = request.body.tag === 'json' ? request.body.value : {};
         const profile = isObject(body.profile) ? body.profile : {};
         const validatedUserType = validateUserType(getString(profile, 'type'));
         if (validatedUserType.tag === 'invalid' || !permissions.createUser(request.session, validatedUserType.value)) {
@@ -228,7 +229,8 @@ const resource: Resource = {
             permissions: [permissions.ERROR_MESSAGE]
           }));
         }
-        const body = request.body;
+        // TODO bad request response if body is not json
+        const body = request.body.tag === 'json' ? request.body.value : {};
         const email = getString(body, 'email') || undefined;
         const profile = isObject(body.profile) ? body.profile : undefined;
         const acceptedTerms = isBoolean(body.acceptedTerms) ? body.acceptedTerms : undefined;

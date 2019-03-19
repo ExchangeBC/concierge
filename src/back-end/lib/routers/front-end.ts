@@ -5,7 +5,7 @@ import { HttpMethod } from 'shared/lib/types';
 
 const FALLBACK_FILE_PATH = join(FRONT_END_BUILD_DIR, 'index.html');
 
-const frontEndAssetRoute: Route<null, null, null, FileResponseBody | TextResponseBody, null, any> = {
+const frontEndAssetRoute: Route<any, null, null, null, FileResponseBody | TextResponseBody, null, any> = {
   method: HttpMethod.Get,
   path: '*',
   handler: {
@@ -26,6 +26,6 @@ const frontEndAssetRoute: Route<null, null, null, FileResponseBody | TextRespons
   }
 };
 
-const router: Router<FileResponseBody | TextResponseBody, any> = [ frontEndAssetRoute ];
+const router: Router<any, FileResponseBody | TextResponseBody, any> = [ frontEndAssetRoute ];
 
 export default router;

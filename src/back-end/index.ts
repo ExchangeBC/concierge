@@ -1,4 +1,4 @@
-import { getConfigErrors, MONGO_URL, SERVER_HOST, SERVER_PORT } from 'back-end/config';
+import { getConfigErrors, MAX_MULTIPART_FILES_SIZE, MONGO_URL, SERVER_HOST, SERVER_PORT } from 'back-end/config';
 import * as app from 'back-end/lib/app';
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
@@ -28,7 +28,8 @@ async function start() {
     sessionIdToSession: SessionSchema.sessionIdToSession(SessionModel),
     sessionToSessionId: SessionSchema.sessionToSessionId(SessionModel),
     host: SERVER_HOST,
-    port: SERVER_PORT
+    port: SERVER_PORT,
+    maxMultipartFilesSize: MAX_MULTIPART_FILES_SIZE
   });
   logger.info('server started', { host: SERVER_HOST, port: String(SERVER_PORT) });
 }

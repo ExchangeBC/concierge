@@ -82,6 +82,15 @@ export function makeTextRequestBody(value: string): TextRequestBody {
   };
 }
 
+export type NullRequestBody = ADT<null>;
+
+export function makeNullRequestBody(): NullRequestBody {
+  return {
+    tag: null,
+    value: undefined
+  };
+}
+
 export type JsonRequestBody = ADT<'json', any>;
 
 export function makeJsonRequestBody(value: any): JsonRequestBody {

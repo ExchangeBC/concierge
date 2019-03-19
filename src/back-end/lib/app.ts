@@ -7,7 +7,7 @@ import FrontEndRouter from 'back-end/lib/routers/front-end';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { addHooksToRoute, FileResponseBody, JsonRequestBody, JsonResponseBody, MultipartRequestBody, namespaceRoute, notFoundJsonRoute, Route, Router, TextResponseBody } from 'back-end/lib/server';
+import { addHooksToRoute, FileResponseBody, JsonRequestBody, JsonResponseBody, MultipartRequestBody, namespaceRoute, notFoundJsonRoute, NullRequestBody, Route, Router, TextResponseBody } from 'back-end/lib/server';
 import { concat, flatten, flow, map } from 'lodash/fp';
 import * as mongoose from 'mongoose';
 import mongooseDefault from 'mongoose';
@@ -38,9 +38,9 @@ export function createModels(): AvailableModels {
   };
 };
 
-type SupportedRequestBodies = JsonRequestBody | MultipartRequestBody;
+export type SupportedRequestBodies = JsonRequestBody | MultipartRequestBody | NullRequestBody;
 
-type SupportedResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody;
+export type SupportedResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody;
 
 export function createRouter(Models: AvailableModels): Router<SupportedRequestBodies, SupportedResponseBodies, Session> {
   const hooks = [
@@ -48,7 +48,7 @@ export function createRouter(Models: AvailableModels): Router<SupportedRequestBo
   ];
 
   // Add new resources to this array.
-  const resources: Array<crud.Resource<AvailableModels, any, any, any, any, any, any, any, any, any, Session>> = [
+  const resources: Array<crud.Resource<SupportedRequestBodies, AvailableModels, any, any, any, any, any, any, any, any, any, Session>> = [
     UserResource,
     SessionResource,
     ForgotPasswordTokenResource
@@ -59,7 +59,7 @@ export function createRouter(Models: AvailableModels): Router<SupportedRequestBo
   const flippedConcat = flipCurried(concat);
   const crudRoutes = flow([
     // Create routers from resources.
-    map((resource: crud.Resource<AvailableModels, any, any, any, any, any, any, any, any, any, Session>) => {
+    map((resource: crud.Resource<SupportedRequestBodies, AvailableModels, any, any, any, any, any, any, any, any, any, Session>) => {
       return crud.makeRouter(resource)(Models);
     }),
     // Make a flat list of routes.

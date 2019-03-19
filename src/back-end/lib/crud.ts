@@ -29,26 +29,26 @@ export interface DeleteRequestParams {
 
 export type CrudAction<AvailableModels, RequiredModels extends keyof AvailableModels, RPA, RQA, ReqBA, RPB, RQB, ReqBB, ResB, Session> = (Models: Models<AvailableModels, RequiredModels>) => Handler<RPA, RQA, ReqBA, RPB, RQB, ReqBB, ResB, Session>;
 
-export type Create<AvailableModels, RequiredModels extends keyof AvailableModels, RequestBody, ResponseBody, Session> = CrudAction<AvailableModels, RequiredModels, null, null, any, null, null, RequestBody, ResponseBody, Session>;
+export type Create<SupportedRequestBodies, AvailableModels, RequiredModels extends keyof AvailableModels, RequestBody, ResponseBody, Session> = CrudAction<AvailableModels, RequiredModels, null, null, SupportedRequestBodies, null, null, RequestBody, ResponseBody, Session>;
 
 export type ReadOne<AvailableModels, RequiredModels extends keyof AvailableModels, ResponseBody, Session> = CrudAction<AvailableModels, RequiredModels, ReadOneRequestParams, null, null, ReadOneRequestParams, null, null, ResponseBody, Session>;
 
 export type ReadMany<AvailableModels, RequiredModels extends keyof AvailableModels, RequestBodyItem, ErrorResponseBody, Session> = CrudAction<AvailableModels, RequiredModels, null, ReadManyRequestQuery, null, null, ReadManyRequestQuery, null, ReadManyResponse<RequestBodyItem> | ErrorResponseBody, Session>;
 
-export type Update<AvailableModels, RequiredModels extends keyof AvailableModels, RequestBody, ResponseBody, Session> = CrudAction<AvailableModels, RequiredModels, UpdateRequestParams, null, any, UpdateRequestParams, null, RequestBody, ResponseBody, Session>;
+export type Update<SupportedRequestBodies, AvailableModels, RequiredModels extends keyof AvailableModels, RequestBody, ResponseBody, Session> = CrudAction<AvailableModels, RequiredModels, UpdateRequestParams, null, SupportedRequestBodies, UpdateRequestParams, null, RequestBody, ResponseBody, Session>;
 
 export type Delete<AvailableModels, RequiredModels extends keyof AvailableModels, ResponseBody, Session> = CrudAction<AvailableModels, RequiredModels, DeleteRequestParams, null, null, DeleteRequestParams, null, null, ResponseBody, Session>;
 
-export interface Resource<AvailableModels, RequiredModels extends keyof AvailableModels, CReqB, CResB, ROResB, RMResBI, RMEResB, UReqB, UResB, DResB, Session> {
+export interface Resource<SupportedRequestBodies, AvailableModels, RequiredModels extends keyof AvailableModels, CReqB, CResB, ROResB, RMResBI, RMEResB, UReqB, UResB, DResB, Session> {
   routeNamespace: string;
-  create?: Create<AvailableModels, RequiredModels, CReqB, CResB, Session>;
+  create?: Create<SupportedRequestBodies, AvailableModels, RequiredModels, CReqB, CResB, Session>;
   readOne?: ReadOne<AvailableModels, RequiredModels, ROResB, Session>;
   readMany?: ReadMany<AvailableModels, RequiredModels, RMResBI, RMEResB, Session>;
-  update?: Update<AvailableModels, RequiredModels, UReqB, UResB, Session>;
+  update?: Update<SupportedRequestBodies, AvailableModels, RequiredModels, UReqB, UResB, Session>;
   delete?: Delete<AvailableModels, RequiredModels, DResB, Session>;
 }
 
-export function makeCreateRoute<AvailableModels, RequiredModels extends keyof AvailableModels, ReqB, ResB, Session>(Models: Models<AvailableModels, RequiredModels>, create: Create<AvailableModels, RequiredModels, ReqB, ResB, Session>): Route<null, null, ReqB, JsonResponseBody, null, Session> {
+export function makeCreateRoute<SupportedRequestBodies, AvailableModels, RequiredModels extends keyof AvailableModels, ReqB, ResB, Session>(Models: Models<AvailableModels, RequiredModels>, create: Create<SupportedRequestBodies, AvailableModels, RequiredModels, ReqB, ResB, Session>): Route<SupportedRequestBodies, null, null, ReqB, JsonResponseBody, null, Session> {
   const handler = create(Models);
   return {
     method: HttpMethod.Post,
@@ -67,7 +67,7 @@ export function makeCreateRoute<AvailableModels, RequiredModels extends keyof Av
   };
 }
 
-export function makeReadOneRoute<AvailableModels, RequiredModels extends keyof AvailableModels, ResB, Session>(Models: Models<AvailableModels, RequiredModels>, readOne: ReadOne<AvailableModels, RequiredModels, ResB, Session>): Route<ReadOneRequestParams, null, null, JsonResponseBody, null, Session> {
+export function makeReadOneRoute<SupportedRequestBodies, AvailableModels, RequiredModels extends keyof AvailableModels, ResB, Session>(Models: Models<AvailableModels, RequiredModels>, readOne: ReadOne<AvailableModels, RequiredModels, ResB, Session>): Route<SupportedRequestBodies, ReadOneRequestParams, null, null, JsonResponseBody, null, Session> {
   const handler = readOne(Models);
   return {
     method: HttpMethod.Get,
@@ -88,7 +88,7 @@ export function makeReadOneRoute<AvailableModels, RequiredModels extends keyof A
   };
 }
 
-export function makeReadManyRoute<AvailableModels, RequiredModels extends keyof AvailableModels, ResBI, ERB, Session>(Models: Models<AvailableModels, RequiredModels>, readMany: ReadMany<AvailableModels, RequiredModels, ResBI, ERB, Session>): Route<null, ReadManyRequestQuery, null, JsonResponseBody, null, Session> {
+export function makeReadManyRoute<SupportedRequestBodies, AvailableModels, RequiredModels extends keyof AvailableModels, ResBI, ERB, Session>(Models: Models<AvailableModels, RequiredModels>, readMany: ReadMany<AvailableModels, RequiredModels, ResBI, ERB, Session>): Route<SupportedRequestBodies, null, ReadManyRequestQuery, null, JsonResponseBody, null, Session> {
   const handler = readMany(Models);
   return {
     method: HttpMethod.Get,
@@ -110,7 +110,7 @@ export function makeReadManyRoute<AvailableModels, RequiredModels extends keyof 
   };
 }
 
-export function makeUpdateRoute<AvailableModels, RequiredModels extends keyof AvailableModels, ReqB, ResB, Session>(Models: Models<AvailableModels, RequiredModels>, update: Update<AvailableModels, RequiredModels, ReqB, ResB, Session>): Route<UpdateRequestParams, null, ReqB, JsonResponseBody, null, Session> {
+export function makeUpdateRoute<SupportedRequestBodies, AvailableModels, RequiredModels extends keyof AvailableModels, ReqB, ResB, Session>(Models: Models<AvailableModels, RequiredModels>, update: Update<SupportedRequestBodies, AvailableModels, RequiredModels, ReqB, ResB, Session>): Route<SupportedRequestBodies, UpdateRequestParams, null, ReqB, JsonResponseBody, null, Session> {
   const handler = update(Models);
   return {
     method: HttpMethod.Put,
@@ -131,7 +131,7 @@ export function makeUpdateRoute<AvailableModels, RequiredModels extends keyof Av
   };
 }
 
-export function makeDeleteRoute<AvailableModels, RequiredModels extends keyof AvailableModels, ResB, Session>(Models: Models<AvailableModels, RequiredModels>, deleteFn: Delete<AvailableModels, RequiredModels, ResB, Session>): Route<DeleteRequestParams, null, null, JsonResponseBody, null, Session> {
+export function makeDeleteRoute<SupportedRequestBodies, AvailableModels, RequiredModels extends keyof AvailableModels, ResB, Session>(Models: Models<AvailableModels, RequiredModels>, deleteFn: Delete<AvailableModels, RequiredModels, ResB, Session>): Route<SupportedRequestBodies, DeleteRequestParams, null, null, JsonResponseBody, null, Session> {
   const handler = deleteFn(Models);
   return {
     method: HttpMethod.Delete,
@@ -152,7 +152,7 @@ export function makeDeleteRoute<AvailableModels, RequiredModels extends keyof Av
   };
 }
 
-export function makeRouter<AvailableModels, RequiredModels extends keyof AvailableModels, CReqB, CResB, ROResB, RMResBI, RMEResB, UReqB, UResB, DResB, Session>(resource: Resource<AvailableModels, RequiredModels, CReqB, CResB, ROResB, RMResBI, RMEResB, UReqB, UResB, DResB, Session>): (models: Models<AvailableModels, RequiredModels>) => Router<JsonResponseBody, Session> {
+export function makeRouter<SupportedRequestBodies, AvailableModels, RequiredModels extends keyof AvailableModels, CReqB, CResB, ROResB, RMResBI, RMEResB, UReqB, UResB, DResB, Session>(resource: Resource<SupportedRequestBodies, AvailableModels, RequiredModels, CReqB, CResB, ROResB, RMResBI, RMEResB, UReqB, UResB, DResB, Session>): (models: Models<AvailableModels, RequiredModels>) => Router<SupportedRequestBodies, JsonResponseBody, Session> {
   return Models => {
     // We do not destructure `delete` because it conflicts with a TypeScript keyword.
     const { create, readOne, readMany, update } = resource;

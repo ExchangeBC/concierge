@@ -1,19 +1,21 @@
 import { COOKIE_SECRET } from 'back-end/config';
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
-import { ErrorResponseBody, FileResponseBody, JsonRequestBody, JsonResponseBody, makeErrorResponseBody, MultipartRequestBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
+import { ErrorResponseBody, FileResponseBody, JsonRequestBody, JsonResponseBody, makeErrorResponseBody, makeJsonRequestBody, makeMultipartRequestBody, makeNullRequestBody, MultipartRequestBody, NullRequestBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import expressLib from 'express';
-import { assign } from 'lodash';
+import { IncomingHttpHeaders } from 'http';
+import { assign, castArray } from 'lodash';
 import mongoose from 'mongoose';
+import multiparty from 'multiparty';
 import { HttpMethod } from 'shared/lib/types';
 
 // tslint:disable no-console
 
 const SESSION_COOKIE_NAME = 'sid';
 
-export type InitialRequest<Session> = Request<object, object, any, Session>;
+export type InitialRequest<Body, Session> = Request<object, object, Body, Session>;
 
 export interface AdapterRunParams<SupportedRequestBodies, SupportedResponseBodies, Session> {
   router: Router<SupportedRequestBodies, SupportedResponseBodies, Session>;
@@ -21,19 +23,41 @@ export interface AdapterRunParams<SupportedRequestBodies, SupportedResponseBodie
   sessionToSessionId: SessionToSessionId<Session>;
   host: string;
   port: number;
+  maxMultipartFilesSize: number
 }
 
 export type Adapter<App, SupportedRequestBodies, SupportedResponseBodies, Session> = (params: AdapterRunParams<SupportedRequestBodies, SupportedResponseBodies, Session>) => App;
 
-export type ExpressRequestBodies = JsonRequestBody | MultipartRequestBody;
+export type ExpressRequestBodies = JsonRequestBody | MultipartRequestBody | NullRequestBody;
 
 export type ExpressResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody | ErrorResponseBody;
 
 export type ExpressAdapter<Session> = Adapter<expressLib.Application, ExpressRequestBodies, ExpressResponseBodies, Session>;
 
+function incomingHeaderMatches(headers: IncomingHttpHeaders, header: string, value: string): boolean {
+  header = castArray(headers[header] || '').join(' ');
+  return !!header.match(value);
+}
+
+function parseMultipartRequest(maxFilesSize: number, expressReq: expressLib.Request): Promise<MultipartRequestBody> {
+  return new Promise((resolve, reject) => {
+    const form = new multiparty.Form({
+      autoFiles: true,
+      maxFilesSize
+    });
+    form.parse(expressReq, (err, fields, files) => {
+      if (err) {
+        return reject(err);
+      } else {
+        return resolve(makeMultipartRequestBody({ fields, files }));
+      }
+    });
+  });
+}
+
 export function express<Session>(): ExpressAdapter<Session> {
 
-  return ({ router, sessionIdToSession, sessionToSessionId, host, port }) => {
+  return ({ router, sessionIdToSession, sessionToSessionId, host, port, maxMultipartFilesSize }) => {
     function respond(response: Response<ExpressResponseBodies, Session>, expressRes: expressLib.Response): void {
       expressRes
         .status(response.code)
@@ -83,23 +107,33 @@ export function express<Session>(): ExpressAdapter<Session> {
       }
       return asyncHandler(async (expressReq, expressRes, next) => {
         // Handle the request if it has the correct HTTP method.
-        const method = parseHttpMethod(expressReq.method);
-        if (method !== HttpMethod.Any && method !== route.method) { next(); return; }
+        // Default to `Any` to make following logic simpler.
+        const method = parseHttpMethod(expressReq.method) || HttpMethod.Any;
+        if (method !== route.method) { next(); return; }
         // Create the session.
         const sessionId = parseSessionId(expressReq.signedCookies[SESSION_COOKIE_NAME]);
         const session = await sessionIdToSession(sessionId);
+        // Set up the request body.
+        const headers = expressReq.headers;
+        let body: ExpressRequestBodies = makeNullRequestBody();
+        if (method !== HttpMethod.Get && incomingHeaderMatches(headers, 'content-type', 'application/json')) {
+          body = makeJsonRequestBody(expressReq.body);
+        } else if (method !== HttpMethod.Get && incomingHeaderMatches(headers, 'content-type', 'multipart')) {
+          // TODO handle file size error.
+          body = await parseMultipartRequest(maxMultipartFilesSize, expressReq);
+        }
         // Create the initial request.
         const requestId = new mongoose.Types.ObjectId();
-        let request: InitialRequest<Session> = {
+        let request: InitialRequest<ExpressRequestBodies, Session> = {
           id: requestId,
           path: expressReq.path,
           method,
-          headers: expressReq.headers,
+          headers,
           session,
           logger: makeDomainLogger(consoleAdapter, `request:${requestId}`),
           params: expressReq.params,
           query: expressReq.query,
-          body: expressReq.body
+          body
         };
         // Transform the request according to the route handler.
         const transformRequest = route.handler.transformRequest;

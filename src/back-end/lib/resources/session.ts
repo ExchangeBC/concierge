@@ -1,4 +1,4 @@
-import { AvailableModels } from 'back-end/lib/app';
+import { AvailableModels, SupportedRequestBodies } from 'back-end/lib/app';
 import * as crud from 'back-end/lib/crud';
 import * as permissions from 'back-end/lib/permissions';
 import * as SessionSchema from 'back-end/lib/schemas/session';
@@ -16,7 +16,7 @@ type DeleteResponseBody = SessionSchema.AppSession | null;
 
 type RequiredModels = 'Session' | 'User';
 
-export type Resource = crud.Resource<AvailableModels, RequiredModels, CreateRequestBody, CreateResponseBody, ReadOneResponseBody, null, null, null, null, DeleteResponseBody, SessionSchema.AppSession>;
+export type Resource = crud.Resource<SupportedRequestBodies, AvailableModels, RequiredModels, CreateRequestBody, CreateResponseBody, ReadOneResponseBody, null, null, null, null, DeleteResponseBody, SessionSchema.AppSession>;
 
 export const resource: Resource = {
 
@@ -31,12 +31,14 @@ export const resource: Resource = {
         if (!permissions.createSession(request.session)) {
           return mapRequestBody(request, null);
         } else {
-          const email = getString(request.body, 'email');
-          const password = getString(request.body, 'password');
+          // TODO bad request response if body is not json
+          const body = request.body.tag === 'json' ? request.body.value : {};
+          const email = getString(body, 'email');
+          const password = getString(body, 'password');
           const user = await UserModel.findOne({ email, active: true }).exec();
           const authenticated = user ? await UserSchema.authenticate(user, password) : false;
-          const body = authenticated ? user : null;
-          return mapRequestBody(request, body);
+          const finalBody = authenticated ? user : null;
+          return mapRequestBody(request, finalBody);
         }
       },
       async respond(request) {
