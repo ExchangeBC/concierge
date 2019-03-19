@@ -78,3 +78,13 @@ export function deleteSession(session: Session, id: string): boolean {
 export function createForgotPasswordToken(session: Session): boolean {
   return !isLoggedIn(session);
 }
+
+// Files.
+
+export function createFile(session: Session): boolean {
+  return isLoggedIn(session) && isProgramStaff(session);
+}
+
+export function readOneFile(): boolean {
+  return true;
+}

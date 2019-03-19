@@ -1,12 +1,14 @@
 import dotenv from 'dotenv';
 import { resolve } from 'path';
-import path from 'path';
 import url from 'url';
+
+// export the root directory of the repository.
+export const REPOSITORY_ROOT_DIR = resolve(__dirname, '../../');
 
 // Load environment variables from a .env file.
 dotenv.config({
   debug: process.env.NODE_ENV === 'development',
-  path: path.resolve(__dirname, '../../.env')
+  path: resolve(REPOSITORY_ROOT_DIR, '.env')
 });
 
 function get(name: string , fallback: string): string {
@@ -42,6 +44,9 @@ export const TOKEN_SECRET = get('TOKEN_SECRET', '');
 export const COOKIE_SECRET = get('COOKIE_SECRET', '');
 
 export const FRONT_END_BUILD_DIR = resolve(__dirname, '../../build/front-end');
+
+const fileStorageDir = get('FILE_STORAGE_DIR', '');
+export const FILE_STORAGE_DIR = fileStorageDir && resolve(REPOSITORY_ROOT_DIR, fileStorageDir);
 
 // Default is 10MB.
 export const MAX_MULTIPART_FILES_SIZE = parseInt(get('MAX_MULTIPART_FILES_SIZE', '10485760'), 10);
@@ -107,6 +112,10 @@ export function getConfigErrors(): string[] {
 
   if (!COOKIE_SECRET) {
     errors.push('COOKIE_SECRET must be specified.');
+  }
+
+  if (!FILE_STORAGE_DIR) {
+    errors.push('FILE_STORAGE_DIR must be specified.');
   }
 
   if (!isPositiveInteger(MAX_MULTIPART_FILES_SIZE)) {

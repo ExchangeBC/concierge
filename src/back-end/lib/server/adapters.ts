@@ -135,6 +135,7 @@ export function express<Session>(): ExpressAdapter<Session> {
           query: expressReq.query,
           body
         };
+        request.logger.debug('req body', request.body);
         // Transform the request according to the route handler.
         const transformRequest = route.handler.transformRequest;
         if (transformRequest) {
