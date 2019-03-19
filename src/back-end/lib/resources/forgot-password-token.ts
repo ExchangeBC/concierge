@@ -3,9 +3,9 @@ import * as crud from 'back-end/lib/crud';
 import * as notifications from 'back-end/lib/mailer/notifications';
 import * as permissions from 'back-end/lib/permissions';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
-import * as SessionSchema from 'back-end/lib/schemas/session';
+import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { basicResponse, mapRequestBody } from 'back-end/lib/server';
+import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
 import { validateObjectIdString, validatePassword } from 'back-end/lib/validators';
 import { getString } from 'shared/lib';
 import { UpdateValidationErrors } from 'shared/lib/resources/forgot-password-token';
@@ -13,7 +13,7 @@ import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
 type CreateRequestBody = InstanceType<UserSchema.Model> | null;
 
-type CreateResponseBody = null;
+type CreateResponseBody = JsonResponseBody<null>;
 
 interface ValidUpdateRequestBody {
   user: InstanceType<UserSchema.Model>;
@@ -22,11 +22,11 @@ interface ValidUpdateRequestBody {
 
 type UpdateRequestBody = ValidOrInvalid<ValidUpdateRequestBody, UpdateValidationErrors>;
 
-type UpdateResponseBody = null | UpdateValidationErrors;
+type UpdateResponseBody = JsonResponseBody<null | UpdateValidationErrors>;
 
 type RequiredModels = 'ForgotPasswordToken' | 'Session' | 'User';
 
-export type Resource = crud.Resource<SupportedRequestBodies, AvailableModels, RequiredModels, CreateRequestBody, CreateResponseBody, null, null, null, UpdateRequestBody, UpdateResponseBody, null, SessionSchema.AppSession>;
+export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, UpdateRequestBody, AppSession>;
 
 export const resource: Resource = {
 
@@ -47,7 +47,7 @@ export const resource: Resource = {
           return mapRequestBody(request, user || null);
         }
       },
-      async respond(request) {
+      async respond(request): Promise<Response<CreateResponseBody, AppSession>> {
         if (request.body) {
           const userId = request.body._id;
           const forgotPasswordToken = new ForgotPasswordTokenModel({
@@ -62,9 +62,9 @@ export const resource: Resource = {
           } catch (error) {
             request.logger.error('sending the createForgotPasswordToken notification email failed', error);
           }
-          return basicResponse(201, request.session, null);
+          return basicResponse(201, request.session, makeJsonResponseBody(null));
         } else {
-          return basicResponse(400, request.session, null);
+          return basicResponse(400, request.session, makeJsonResponseBody(null));
         }
       }
     };
@@ -121,16 +121,16 @@ export const resource: Resource = {
           }));
         }
       },
-      async respond(request) {
+      async respond(request): Promise<Response<UpdateResponseBody, AppSession>> {
         switch (request.body.tag) {
           case 'invalid':
             const invalidCode = request.body.value.permissions ? 401 : 400;
-            return basicResponse(invalidCode, request.session, request.body.value);
+            return basicResponse(invalidCode, request.session, makeJsonResponseBody(request.body.value));
           case 'valid':
             const { user, forgotPasswordToken } = request.body.value;
             await user.save();
             await ForgotPasswordTokenSchema.deleteToken(ForgotPasswordTokenModel, forgotPasswordToken.token);
-            return basicResponse(200, request.session, null);
+            return basicResponse(200, request.session, makeJsonResponseBody(null));
         }
       }
     };

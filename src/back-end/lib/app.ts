@@ -10,7 +10,7 @@ import * as FileSchema from 'back-end/lib/schemas/file';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { addHooksToRoute, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, namespaceRoute, notFoundJsonRoute, NullRequestBody, Route, Router, TextResponseBody } from 'back-end/lib/server';
+import { addHooksToRoute, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route, Router, TextResponseBody } from 'back-end/lib/server';
 import { concat, flatten, flow, map } from 'lodash/fp';
 import * as mongoose from 'mongoose';
 import mongooseDefault from 'mongoose';
@@ -45,7 +45,7 @@ export function createModels(): AvailableModels {
   };
 };
 
-export type SupportedRequestBodies = JsonRequestBody | FileRequestBody | NullRequestBody;
+export type SupportedRequestBodies = JsonRequestBody | FileRequestBody;
 
 export type SupportedResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody;
 
@@ -55,7 +55,7 @@ export function createRouter(Models: AvailableModels): Router<SupportedRequestBo
   ];
 
   // Add new resources to this array.
-  const resources: Array<crud.Resource<SupportedRequestBodies, AvailableModels, any, any, any, any, any, any, any, any, any, Session>> = [
+  const resources: Array<crud.Resource<SupportedRequestBodies, SupportedRequestBodies, AvailableModels, any, any, any, Session>> = [
     UserResource,
     SessionResource,
     ForgotPasswordTokenResource,
@@ -67,7 +67,7 @@ export function createRouter(Models: AvailableModels): Router<SupportedRequestBo
   const flippedConcat = flipCurried(concat);
   const crudRoutes = flow([
     // Create routers from resources.
-    map((resource: crud.Resource<SupportedRequestBodies, AvailableModels, any, any, any, any, any, any, any, any, any, Session>) => {
+    map((resource: crud.Resource<SupportedRequestBodies, SupportedResponseBodies, AvailableModels, any, any, any, Session>) => {
       return crud.makeRouter(resource)(Models);
     }),
     // Make a flat list of routes.
@@ -75,7 +75,7 @@ export function createRouter(Models: AvailableModels): Router<SupportedRequestBo
     // Respond with a standard 404 JSON response if API route is not handled.
     flippedConcat(notFoundJsonRoute),
     // Namespace all CRUD routes with '/api'.
-    map((route: Route<SupportedRequestBodies, any, any, any, JsonResponseBody, any, Session>) => namespaceRoute('/api', route))
+    map((route: Route<SupportedRequestBodies, any, any, any, SupportedResponseBodies, any, Session>) => namespaceRoute('/api', route))
   ])(resources);
 
   // Return all routes.

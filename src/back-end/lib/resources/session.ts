@@ -3,20 +3,20 @@ import * as crud from 'back-end/lib/crud';
 import * as permissions from 'back-end/lib/permissions';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { basicResponse, mapRequestBody } from 'back-end/lib/server';
+import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
 import { getString, identityAsync } from 'shared/lib';
 
 type CreateRequestBody = InstanceType<UserSchema.Model> | null;
 
-type CreateResponseBody = SessionSchema.AppSession | string[];
+type CreateResponseBody = JsonResponseBody<SessionSchema.AppSession | string[]>;
 
-type ReadOneResponseBody = SessionSchema.AppSession | null;
+type ReadOneResponseBody = JsonResponseBody<SessionSchema.AppSession | null>;
 
-type DeleteResponseBody = SessionSchema.AppSession | null;
+type DeleteResponseBody = JsonResponseBody<SessionSchema.AppSession | null>;
 
 type RequiredModels = 'Session' | 'User';
 
-export type Resource = crud.Resource<SupportedRequestBodies, AvailableModels, RequiredModels, CreateRequestBody, CreateResponseBody, ReadOneResponseBody, null, null, null, null, DeleteResponseBody, SessionSchema.AppSession>;
+export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, SessionSchema.AppSession>;
 
 export const resource: Resource = {
 
@@ -41,12 +41,12 @@ export const resource: Resource = {
           return mapRequestBody(request, finalBody);
         }
       },
-      async respond(request) {
+      async respond(request): Promise<Response<CreateResponseBody, SessionSchema.AppSession>> {
         if (request.body) {
           const session = await SessionSchema.signIn(SessionModel, UserModel, request.session, request.body._id);
-          return basicResponse(201, session, session);
+          return basicResponse(201, session, makeJsonResponseBody(session));
         } else {
-          return basicResponse(401, request.session, ['Your email and password combination do not match.']);
+          return basicResponse(401, request.session, makeJsonResponseBody(['Your email and password combination do not match.']));
         }
       }
     };
@@ -55,11 +55,11 @@ export const resource: Resource = {
   readOne() {
     return {
       transformRequest: identityAsync,
-      async respond(request) {
+      async respond(request): Promise<Response<ReadOneResponseBody, SessionSchema.AppSession>> {
         if (!permissions.readOneSession(request.session, request.params.id)) {
-          return basicResponse(401, request.session, null);
+          return basicResponse(401, request.session, makeJsonResponseBody(null));
         } else {
-          return basicResponse(200, request.session, request.session);
+          return basicResponse(200, request.session, makeJsonResponseBody(request.session));
         }
       }
     };
@@ -70,12 +70,12 @@ export const resource: Resource = {
     const SessionModel = Models.Session as SessionSchema.Model;
     return {
       transformRequest: identityAsync,
-      async respond(request) {
+      async respond(request): Promise<Response<DeleteResponseBody, SessionSchema.AppSession>> {
         if (!permissions.deleteSession(request.session, request.params.id)) {
-          return basicResponse(401, request.session, null);
+          return basicResponse(401, request.session, makeJsonResponseBody(null));
         } else {
           const newSession = await SessionSchema.signOut(SessionModel, request.session);
-          return basicResponse(200, newSession, newSession);
+          return basicResponse(200, newSession, makeJsonResponseBody(newSession));
         }
       }
     }

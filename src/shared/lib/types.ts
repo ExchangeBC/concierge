@@ -5,6 +5,13 @@ export interface ADT<Tag, Value = undefined> {
 
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
+export interface PaginatedList<Item> {
+  total: number;
+  offset: number;
+  count: number;
+  items: Item[];
+}
+
 export enum HttpMethod {
   Any = '*',
   Get = 'GET',

@@ -3,31 +3,31 @@ import * as crud from 'back-end/lib/crud';
 import * as notifications from 'back-end/lib/mailer/notifications';
 import * as permissions from 'back-end/lib/permissions';
 import * as SessionSchema from 'back-end/lib/schemas/session';
+import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { basicResponse, mapRequestBody } from 'back-end/lib/server';
+import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
 import { validateEmail, validatePassword } from 'back-end/lib/validators';
 import { get, isBoolean, isObject } from 'lodash';
 import * as mongoose from 'mongoose';
 import { getBoolean, getString, identityAsync } from 'shared/lib';
 import { CreateValidationErrors, PublicUser, UpdateValidationErrors } from 'shared/lib/resources/user';
+import { PaginatedList } from 'shared/lib/types';
 import { allValid, getInvalidValue, invalid, valid, validateUserType, ValidOrInvalid } from 'shared/lib/validators';
 import { validateProfile } from 'shared/lib/validators/profile';
 
 type CreateRequestBody = ValidOrInvalid<UserSchema.Data, CreateValidationErrors>;
 
-export type CreateResponseBody = PublicUser | CreateValidationErrors;
+type CreateResponseBody = JsonResponseBody<PublicUser | CreateValidationErrors>;
 
-export type ReadOneResponseBody = PublicUser | null;
+type ReadOneResponseBody = JsonResponseBody<PublicUser | null>;
 
-export type ReadManyResponseBodyItem = PublicUser;
-
-export type ReadManyErrorResponseBody = null;
+type ReadManyResponseBody = JsonResponseBody<PaginatedList<PublicUser> | null>;
 
 type UpdateRequestBody = ValidOrInvalid<InstanceType<UserSchema.Model>, UpdateValidationErrors>;
 
-type UpdateResponseBody = PublicUser | UpdateValidationErrors;
+type UpdateResponseBody = JsonResponseBody<PublicUser | UpdateValidationErrors>;
 
-export type DeleteResponseBody = null;
+type DeleteResponseBody = JsonResponseBody<null>;
 
 async function validateCreateRequestBody(Model: UserSchema.Model, email: string, password: string, acceptedTerms: boolean, profile: object, createdBy?: mongoose.Types.ObjectId): Promise<CreateRequestBody> {
   const validatedEmail = await validateEmail(Model, email);
@@ -124,7 +124,7 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, id: string, em
 
 type RequiredModels = 'User' | 'Session';
 
-export type Resource = crud.Resource<SupportedRequestBodies, AvailableModels, RequiredModels, CreateRequestBody, CreateResponseBody, ReadOneResponseBody, ReadManyResponseBodyItem, ReadManyErrorResponseBody, UpdateRequestBody, UpdateResponseBody, DeleteResponseBody, SessionSchema.AppSession>;
+export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, UpdateRequestBody, AppSession>;
 
 const resource: Resource = {
 
@@ -151,11 +151,11 @@ const resource: Resource = {
         const validatedBody = await validateCreateRequestBody(UserModel, email, password, acceptedTerms, profile, createdBy);
         return mapRequestBody(request, validatedBody);
       },
-      async respond(request) {
+      async respond(request): Promise<Response<CreateResponseBody, AppSession>> {
         switch (request.body.tag) {
           case 'invalid':
             const invalidCode = request.body.value.permissions ? 401 : 400;
-            return basicResponse(invalidCode, request.session, request.body.value);
+            return basicResponse(invalidCode, request.session, makeJsonResponseBody(request.body.value));
           case 'valid':
             const body = request.body.value;
             const user = new UserModel(body);
@@ -172,7 +172,7 @@ const resource: Resource = {
             if (!permissions.isLoggedIn(request.session)) {
               session = await SessionSchema.signIn(SessionModel, UserModel, request.session, user._id);
             }
-            return basicResponse(201, session, UserSchema.makePublicUser(user));
+            return basicResponse(201, session, makeJsonResponseBody(UserSchema.makePublicUser(user)));
         }
       }
     };
@@ -182,15 +182,15 @@ const resource: Resource = {
     const UserModel = Models.User as UserSchema.Model;
     return {
       transformRequest: identityAsync,
-      async respond(request) {
+      async respond(request): Promise<Response<ReadOneResponseBody, AppSession>> {
         if (!permissions.readOneUser(request.session, request.params.id)) {
-          return basicResponse(401, request.session, null);
+          return basicResponse(401, request.session, makeJsonResponseBody(null));
         }
         const user = await UserModel.findOne({ _id: request.params.id, active: true });
         if (!user) {
-          return basicResponse(404, request.session, null);
+          return basicResponse(404, request.session, makeJsonResponseBody(null));
         } else {
-          return basicResponse(200, request.session, UserSchema.makePublicUser(user));
+          return basicResponse(200, request.session, makeJsonResponseBody(UserSchema.makePublicUser(user)));
         }
       }
     };
@@ -201,20 +201,20 @@ const resource: Resource = {
     const UserModel = Models.User as UserSchema.Model;
     return {
       transformRequest: identityAsync,
-      async respond(request) {
+      async respond(request): Promise<Response<ReadManyResponseBody, AppSession>> {
         if (!permissions.readManyUsers(request.session)) {
-          return basicResponse(401, request.session, null);
+          return basicResponse(401, request.session, makeJsonResponseBody(null));
         }
         const users = await UserModel
           .find({ active: true })
           .sort({ email: 1 })
           .exec();
-        return basicResponse(200, request.session, {
+        return basicResponse(200, request.session, makeJsonResponseBody({
           total: users.length,
           offset: 0,
           count: users.length,
           items: users.map(user => UserSchema.makePublicUser(user))
-        });
+        }));
       }
     };
   },
@@ -239,15 +239,15 @@ const resource: Resource = {
         const validatedBody = await validateUpdateRequestBody(UserModel, id, email, profile, acceptedTerms, newPassword, currentPassword);
         return mapRequestBody(request, validatedBody);
       },
-      async respond(request) {
+      async respond(request): Promise<Response<UpdateResponseBody, AppSession>> {
         switch (request.body.tag) {
           case 'invalid':
             const invalidCode = request.body.value.permissions ? 401 : 400;
-            return basicResponse(invalidCode, request.session, request.body.value);
+            return basicResponse(invalidCode, request.session, makeJsonResponseBody(request.body.value));
           case 'valid':
             const user = request.body.value;
             await user.save();
-            return basicResponse(200, request.session, UserSchema.makePublicUser(user));
+            return basicResponse(200, request.session, makeJsonResponseBody(UserSchema.makePublicUser(user)));
         }
       }
     };
@@ -258,13 +258,13 @@ const resource: Resource = {
     const SessionModel = Models.Session as SessionSchema.Model;
     return {
       transformRequest: identityAsync,
-      async respond(request) {
+      async respond(request): Promise<Response<DeleteResponseBody, AppSession>> {
         const user = await UserModel.findOne({ _id: request.params.id, active: true });
         if (!user) {
-          return basicResponse(404, request.session, null);
+          return basicResponse(404, request.session, makeJsonResponseBody(null));
         }
         if (!permissions.deleteUser(request.session, user._id.toString(), user.profile.type)) {
-          return basicResponse(401, request.session, null);
+          return basicResponse(401, request.session, makeJsonResponseBody(null));
         }
         user.deactivatedBy = get(request.session.user, 'id');
         user.active = false;
@@ -281,7 +281,7 @@ const resource: Resource = {
         if (permissions.isOwnAccount(request.session, user._id.toString())) {
           session = await SessionSchema.signOut(SessionModel, request.session);
         }
-        return basicResponse(200, session, null);
+        return basicResponse(200, session, makeJsonResponseBody(null));
       }
     };
   }
