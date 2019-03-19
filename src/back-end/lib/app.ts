@@ -5,6 +5,7 @@ import ForgotPasswordTokenResource from 'back-end/lib/resources/forgot-password-
 import SessionResource from 'back-end/lib/resources/session';
 import UserResource from 'back-end/lib/resources/user';
 import FrontEndRouter from 'back-end/lib/routers/front-end';
+import * as DiscoveryDayResponseSchema from 'back-end/lib/schemas/discovery-day-response';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
 import * as SessionSchema from 'back-end/lib/schemas/session';
@@ -30,6 +31,7 @@ export interface AvailableModels {
   User: UserSchema.Model;
   ForgotPasswordToken: ForgotPasswordTokenSchema.Model;
   File: FileSchema.Model;
+  DiscoveryDayResponse: DiscoveryDayResponseSchema.Model;
 }
 
 export function createModels(): AvailableModels {
@@ -38,7 +40,8 @@ export function createModels(): AvailableModels {
     Session: mongoose.model('Session', SessionSchema.schema),
     User: mongoose.model('User', UserSchema.schema),
     ForgotPasswordToken: mongoose.model('ForgotPasswordToken', ForgotPasswordTokenSchema.schema),
-    File: mongoose.model('File', FileSchema.schema)
+    File: mongoose.model('File', FileSchema.schema),
+    DiscoveryDayResponse: mongoose.model('DiscoveryDayResponse', DiscoveryDayResponseSchema.schema)
   };
 };
 
