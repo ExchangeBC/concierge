@@ -1,5 +1,6 @@
 import * as crud from 'back-end/lib/crud';
 import loggerHook from 'back-end/lib/hooks/logger';
+import DiscoveryDayResponseResource from 'back-end/lib/resources/discovery-day-response';
 import FileResource from 'back-end/lib/resources/file';
 import ForgotPasswordTokenResource from 'back-end/lib/resources/forgot-password-token';
 import SessionResource from 'back-end/lib/resources/session';
@@ -59,7 +60,8 @@ export function createRouter(Models: AvailableModels): Router<SupportedRequestBo
     UserResource,
     SessionResource,
     ForgotPasswordTokenResource,
-    FileResource
+    FileResource,
+    DiscoveryDayResponseResource
   ];
 
   // Define CRUD routes.

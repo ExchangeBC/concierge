@@ -88,3 +88,9 @@ export function createFile(session: Session): boolean {
 export function readOneFile(): boolean {
   return true;
 }
+
+// Discovery Day Responses.
+
+export function createDiscoveryDayResponse(session: Session): boolean {
+  return isLoggedIn(session) && isVendor(session);
+}
