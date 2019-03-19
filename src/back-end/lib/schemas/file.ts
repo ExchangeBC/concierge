@@ -17,16 +17,18 @@ export type Model = mongoose.Model<Data & mongoose.Document>;
 export const schema: mongoose.Schema = new mongoose.Schema({
   createdAt: createdAtSchema,
   originalName: String,
+  storageName: String,
   hash: {
     type: String,
     unique: true
   }
 });
 
-export function hashFile(filePath: string): Promise<string> {
+export function hashFile(originalName: string, filePath: string): Promise<string> {
   return new Promise((resolve, reject) => {
     if (!existsSync(filePath)) { return reject(new Error('file does not exist')); }
     const hash = shajs('sha1');
+    hash.update(originalName);
     const stream = createReadStream(filePath);
     stream.on('data', data => hash.update(data));
     stream.on('end', () => resolve(hash.digest('base64')));

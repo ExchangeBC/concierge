@@ -1,14 +1,16 @@
-import { COOKIE_SECRET } from 'back-end/config';
+import { COOKIE_SECRET, TMP_DIR } from 'back-end/config';
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
-import { ErrorResponseBody, FileResponseBody, JsonRequestBody, JsonResponseBody, makeErrorResponseBody, makeJsonRequestBody, makeMultipartRequestBody, makeNullRequestBody, MultipartRequestBody, NullRequestBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
+import { ErrorResponseBody, FileRequestBody, FileResponseBody, FileUpload, JsonRequestBody, JsonResponseBody, makeErrorResponseBody, makeFileRequestBody, makeJsonRequestBody, makeNullRequestBody, NullRequestBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import expressLib from 'express';
+import { createWriteStream } from 'fs';
 import { IncomingHttpHeaders } from 'http';
 import { assign, castArray } from 'lodash';
 import mongoose from 'mongoose';
 import multiparty from 'multiparty';
+import * as path from 'path';
 import { HttpMethod } from 'shared/lib/types';
 
 // tslint:disable no-console
@@ -28,7 +30,7 @@ export interface AdapterRunParams<SupportedRequestBodies, SupportedResponseBodie
 
 export type Adapter<App, SupportedRequestBodies, SupportedResponseBodies, Session> = (params: AdapterRunParams<SupportedRequestBodies, SupportedResponseBodies, Session>) => App;
 
-export type ExpressRequestBodies = JsonRequestBody | MultipartRequestBody | NullRequestBody;
+export type ExpressRequestBodies = JsonRequestBody | FileRequestBody | NullRequestBody;
 
 export type ExpressResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody | ErrorResponseBody;
 
@@ -39,19 +41,40 @@ function incomingHeaderMatches(headers: IncomingHttpHeaders, header: string, val
   return !!header.match(value);
 }
 
-function parseMultipartRequest(maxFilesSize: number, expressReq: expressLib.Request): Promise<MultipartRequestBody> {
+function parseMultipartRequest(maxFilesSize: number, expressReq: expressLib.Request): Promise<FileRequestBody> {
   return new Promise((resolve, reject) => {
+    let file: FileUpload | undefined;
     const form = new multiparty.Form({
-      autoFiles: true,
       maxFilesSize
     });
-    form.parse(expressReq, (err, fields, files) => {
-      if (err) {
-        return reject(err);
+    // Listen for files and fields.
+    form.on('part', part => {
+      part.on('error', error => reject(error));
+      if (part.name === 'file' && part.filename && !file) {
+        // We only want to receive one file.
+        const tmpPath = path.join(TMP_DIR, new mongoose.Types.ObjectId().toString());
+        part.pipe(createWriteStream(tmpPath));
+        file = {
+          name: part.filename,
+          path: tmpPath
+        };
       } else {
-        return resolve(makeMultipartRequestBody({ fields, files }));
+        // Ignore all other files and fields.
+        part.resume();
       }
     });
+    // Handle errors.
+    form.on('error', error => reject(error));
+    // Resolve the promise once the request has finished parsing.
+    form.on('close', () => {
+      if (file) {
+        resolve(makeFileRequestBody(file));
+      } else {
+        reject(new Error('No file uploaded'));
+      }
+    });
+    // Parse the form.
+    form.parse(expressReq);
   });
 }
 

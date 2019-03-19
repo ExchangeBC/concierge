@@ -1,12 +1,9 @@
-// TODO how to handle receiving files via multipart request?
-
 import { DomainLogger } from 'back-end/lib/logger';
 import { existsSync, readFileSync, statSync } from 'fs';
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http';
 import { assign } from 'lodash';
 import { lookup } from 'mime-types';
 import mongoose from 'mongoose';
-import * as multiparty from 'multiparty';
 import { ADT, HttpMethod } from 'shared/lib/types';
 
 export function parseHttpMethod(raw: string): HttpMethod | null {
@@ -100,16 +97,16 @@ export function makeJsonRequestBody(value: any): JsonRequestBody {
   };
 }
 
-export interface MultipartValue {
-  fields: { [k: string]: string };
-  files: { [k: string]: multiparty.File };
+export interface FileUpload {
+  name: string;
+  path: string;
 }
 
-export type MultipartRequestBody = ADT<'multipart', MultipartValue>;
+export type FileRequestBody = ADT<'file', FileUpload>;
 
-export function makeMultipartRequestBody(value: MultipartValue): MultipartRequestBody {
+export function makeFileRequestBody(value: FileUpload): FileRequestBody {
   return {
-    tag: 'multipart',
+    tag: 'file',
     value
   };
 }

@@ -9,7 +9,7 @@ import * as FileSchema from 'back-end/lib/schemas/file';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { addHooksToRoute, FileResponseBody, JsonRequestBody, JsonResponseBody, MultipartRequestBody, namespaceRoute, notFoundJsonRoute, NullRequestBody, Route, Router, TextResponseBody } from 'back-end/lib/server';
+import { addHooksToRoute, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, namespaceRoute, notFoundJsonRoute, NullRequestBody, Route, Router, TextResponseBody } from 'back-end/lib/server';
 import { concat, flatten, flow, map } from 'lodash/fp';
 import * as mongoose from 'mongoose';
 import mongooseDefault from 'mongoose';
@@ -42,7 +42,7 @@ export function createModels(): AvailableModels {
   };
 };
 
-export type SupportedRequestBodies = JsonRequestBody | MultipartRequestBody | NullRequestBody;
+export type SupportedRequestBodies = JsonRequestBody | FileRequestBody | NullRequestBody;
 
 export type SupportedResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody;
 

@@ -82,7 +82,7 @@ export function createForgotPasswordToken(session: Session): boolean {
 // Files.
 
 export function createFile(session: Session): boolean {
-  return isLoggedIn(session) && isProgramStaff(session);
+  return isLoggedIn(session);
 }
 
 export function readOneFile(): boolean {

@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { tmpdir } from 'os';
 import { resolve } from 'path';
 import url from 'url';
 
@@ -44,6 +45,8 @@ export const TOKEN_SECRET = get('TOKEN_SECRET', '');
 export const COOKIE_SECRET = get('COOKIE_SECRET', '');
 
 export const FRONT_END_BUILD_DIR = resolve(__dirname, '../../build/front-end');
+
+export const TMP_DIR = tmpdir();
 
 const fileStorageDir = get('FILE_STORAGE_DIR', '');
 export const FILE_STORAGE_DIR = fileStorageDir && resolve(REPOSITORY_ROOT_DIR, fileStorageDir);
