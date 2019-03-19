@@ -79,15 +79,6 @@ export function makeTextRequestBody(value: string): TextRequestBody {
   };
 }
 
-export type NullRequestBody = ADT<null>;
-
-export function makeNullRequestBody(): NullRequestBody {
-  return {
-    tag: null,
-    value: undefined
-  };
-}
-
 export type JsonRequestBody = ADT<'json', any>;
 
 export function makeJsonRequestBody(value: any): JsonRequestBody {
@@ -145,16 +136,16 @@ export function mapTextResponse<Session>(response: Response<string, Session>): R
   };
 }
 
-export type JsonResponseBody = ADT<'json', any>;
+export type JsonResponseBody<Value = any> = ADT<'json', Value>;
 
-export function makeJsonResponseBody(value: any): JsonResponseBody {
+export function makeJsonResponseBody<Value = any>(value: Value): JsonResponseBody<Value> {
   return {
     tag: 'json',
     value
   };
 }
 
-export function mapJsonResponse<Session>(response: Response<any, Session>): Response<JsonResponseBody, Session> {
+export function mapJsonResponse<Session, Value = any>(response: Response<Value, Session>): Response<JsonResponseBody<Value>, Session> {
   return {
     code: response.code,
     headers: response.headers,

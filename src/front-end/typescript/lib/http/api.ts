@@ -1,9 +1,8 @@
 import { prefixRequest } from 'front-end/lib/http';
 import shajs from 'sha.js';
-import { ReadManyResponse } from 'shared/lib/crud';
 import * as ForgotPasswordTokenResource from 'shared/lib/resources/forgot-password-token';
 import * as UserResource from 'shared/lib/resources/user';
-import { HttpMethod, Profile, UserType } from 'shared/lib/types';
+import { HttpMethod, PaginatedList, Profile, UserType } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
 const request = prefixRequest('api');
@@ -70,7 +69,7 @@ export async function updateUser(user: UpdateUserRequestBody): Promise<ValidOrIn
   }
 }
 
-export type ReadManyUserResponseBody = ReadManyResponse<UserResource.PublicUser>;
+export type ReadManyUserResponseBody = PaginatedList<UserResource.PublicUser>;
 
 export async function readManyUsers(): Promise<ValidOrInvalid<ReadManyUserResponseBody, null>> {
   try {

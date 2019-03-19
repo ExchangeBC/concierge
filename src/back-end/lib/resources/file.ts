@@ -2,8 +2,8 @@ import { AvailableModels, SupportedRequestBodies } from 'back-end/lib/app';
 import * as crud from 'back-end/lib/crud';
 import * as permissions from 'back-end/lib/permissions';
 import * as FileSchema from 'back-end/lib/schemas/file';
-import * as SessionSchema from 'back-end/lib/schemas/session';
-import { basicResponse, mapRequestBody } from 'back-end/lib/server';
+import { AppSession } from 'back-end/lib/schemas/session';
+import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
 import { renameSync, unlinkSync } from 'fs';
 import { identityAsync } from 'shared/lib';
 import { ADT } from 'shared/lib/types';
@@ -14,13 +14,13 @@ type CreateRequestBody
   | ADT<401, string[]>
   | ADT<400, string[]>;
 
-type CreateResponseBody = FileSchema.Data | string[];
+type CreateResponseBody = JsonResponseBody<FileSchema.Data | string[]>;
 
-type ReadOneResponseBody = FileSchema.Data | string[];
+type ReadOneResponseBody = JsonResponseBody<FileSchema.Data | string[]>;
 
 type RequiredModels = 'File';
 
-export type Resource = crud.Resource<SupportedRequestBodies, AvailableModels, RequiredModels, CreateRequestBody, CreateResponseBody, ReadOneResponseBody, null, null, null, null, null, SessionSchema.AppSession>;
+export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, AppSession>;
 
 export const resource: Resource = {
 
@@ -67,8 +67,8 @@ export const resource: Resource = {
           });
         }
       },
-      async respond(request) {
-        return basicResponse(request.body.tag, request.session, request.body.value);
+      async respond(request): Promise<Response<CreateResponseBody, AppSession>> {
+        return basicResponse(request.body.tag, request.session, makeJsonResponseBody(request.body.value));
       }
     };
   },
@@ -77,15 +77,15 @@ export const resource: Resource = {
     const FileModel = Models.File;
     return {
       transformRequest: identityAsync,
-      async respond(request) {
+      async respond(request): Promise<Response<ReadOneResponseBody, AppSession>> {
         if (!permissions.readOneFile()) {
-          return basicResponse(401, request.session, [permissions.ERROR_MESSAGE]);
+          return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         } else {
           const file = await FileModel.findById(request.params.id);
           if (!file) {
-            return basicResponse(404, request.session, ['File not found']);
+            return basicResponse(404, request.session, makeJsonResponseBody(['File not found']));
           } else {
-            return basicResponse(200, request.session, file);
+            return basicResponse(200, request.session, makeJsonResponseBody(file));
           }
         }
       }

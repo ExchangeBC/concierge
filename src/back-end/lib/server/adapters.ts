@@ -1,7 +1,7 @@
 import { COOKIE_SECRET, TMP_DIR } from 'back-end/config';
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
-import { ErrorResponseBody, FileRequestBody, FileResponseBody, FileUpload, JsonRequestBody, JsonResponseBody, makeErrorResponseBody, makeFileRequestBody, makeJsonRequestBody, makeNullRequestBody, NullRequestBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
+import { ErrorResponseBody, FileRequestBody, FileResponseBody, FileUpload, JsonRequestBody, JsonResponseBody, makeErrorResponseBody, makeFileRequestBody, makeJsonRequestBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import expressLib from 'express';
@@ -30,7 +30,7 @@ export interface AdapterRunParams<SupportedRequestBodies, SupportedResponseBodie
 
 export type Adapter<App, SupportedRequestBodies, SupportedResponseBodies, Session> = (params: AdapterRunParams<SupportedRequestBodies, SupportedResponseBodies, Session>) => App;
 
-export type ExpressRequestBodies = JsonRequestBody | FileRequestBody | NullRequestBody;
+export type ExpressRequestBodies = JsonRequestBody | FileRequestBody;
 
 export type ExpressResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody | ErrorResponseBody;
 
@@ -48,8 +48,11 @@ function parseMultipartRequest(maxFilesSize: number, expressReq: expressLib.Requ
       maxFilesSize
     });
     // Listen for files and fields.
+    // We only want to receive one file, so we disregard all other files
+    // and fields.
     form.on('part', part => {
       part.on('error', error => reject(error));
+      // We expect the file's field to have the name `file`.
       if (part.name === 'file' && part.filename && !file) {
         // We only want to receive one file.
         const tmpPath = path.join(TMP_DIR, new mongoose.Types.ObjectId().toString());
@@ -138,7 +141,7 @@ export function express<Session>(): ExpressAdapter<Session> {
         const session = await sessionIdToSession(sessionId);
         // Set up the request body.
         const headers = expressReq.headers;
-        let body: ExpressRequestBodies = makeNullRequestBody();
+        let body: ExpressRequestBodies = makeJsonRequestBody(null);
         if (method !== HttpMethod.Get && incomingHeaderMatches(headers, 'content-type', 'application/json')) {
           body = makeJsonRequestBody(expressReq.body);
         } else if (method !== HttpMethod.Get && incomingHeaderMatches(headers, 'content-type', 'multipart')) {
