@@ -100,6 +100,7 @@ export function express<Session>(): ExpressAdapter<Session> {
           expressRes
             .set('Content-Type', response.body.value.contentType)
             .set('Content-Encoding', response.body.value.contentEncoding)
+            .set('Content-Disposition', response.body.value.contentDisposition)
             .send(response.body.value.buffer);
           break;
         case 'text':

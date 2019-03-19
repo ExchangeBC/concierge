@@ -158,6 +158,7 @@ export interface ResponseFile {
   buffer: Buffer;
   contentType: string;
   contentEncoding?: string;
+  contentDisposition?: string;
 }
 
 export type FileResponseBody = ADT<'file', ResponseFile>;
@@ -166,21 +167,22 @@ function validFile(path: string): boolean {
   return existsSync(path) && statSync(path).isFile();
 }
 
-function unsafeMakeFileResponseBody(path: string, contentType?: string, contentEncoding?: string): FileResponseBody {
+function unsafeMakeFileResponseBody(path: string, contentType?: string, contentEncoding?: string, contentDisposition?: string): FileResponseBody {
   return {
     tag: 'file',
     value: {
       buffer: readFileSync(path),
       contentType: contentType || lookup(path) || 'application/octet-stream',
-      contentEncoding
+      contentEncoding,
+      contentDisposition
     }
   };
 }
 
-export function tryMakeFileResponseBody(path: string, contentType?: string, contentEncoding?: string): FileResponseBody | null {
+export function tryMakeFileResponseBody(path: string, contentType?: string, contentEncoding?: string, contentDisposition?: string): FileResponseBody | null {
   try {
     if (validFile(path)) {
-      return unsafeMakeFileResponseBody(path, contentType, contentEncoding);
+      return unsafeMakeFileResponseBody(path, contentType, contentEncoding, contentDisposition);
     } else {
       return null;
     }

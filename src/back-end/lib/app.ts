@@ -1,6 +1,7 @@
 import * as crud from 'back-end/lib/crud';
 import loggerHook from 'back-end/lib/hooks/logger';
 import FileResource from 'back-end/lib/resources/file';
+import FileBlobResource from 'back-end/lib/resources/file-blob';
 import ForgotPasswordTokenResource from 'back-end/lib/resources/forgot-password-token';
 import SessionResource from 'back-end/lib/resources/session';
 import UserResource from 'back-end/lib/resources/user';
@@ -52,11 +53,12 @@ export function createRouter(Models: AvailableModels): Router<SupportedRequestBo
   ];
 
   // Add new resources to this array.
-  const resources: Array<crud.Resource<SupportedRequestBodies, SupportedRequestBodies, AvailableModels, any, any, any, Session>> = [
+  const resources: Array<crud.Resource<SupportedRequestBodies, SupportedResponseBodies, AvailableModels, any, any, any, Session>> = [
     UserResource,
     SessionResource,
     ForgotPasswordTokenResource,
-    FileResource
+    FileResource,
+    FileBlobResource
   ];
 
   // Define CRUD routes.

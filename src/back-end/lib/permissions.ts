@@ -88,3 +88,9 @@ export function createFile(session: Session): boolean {
 export function readOneFile(): boolean {
   return true;
 }
+
+// File blobs.
+
+export function readOneFileBlob(): boolean {
+  return true;
+}
