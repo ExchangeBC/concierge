@@ -7,8 +7,8 @@ import { Addendum, UserType } from 'shared/lib/types';
 
 export interface Version {
   createdAt: Date;
-  closingAt: Date;
   createdBy: mongoose.Types.ObjectId;
+  closingAt: Date;
   rfiNumber: string;
   title: string;
   description: string;

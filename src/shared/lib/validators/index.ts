@@ -3,11 +3,14 @@ import { isEmpty, uniq } from 'lodash';
 import moment from 'moment';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
+import { formatDateAndTime } from 'shared/lib';
 import { ADT, parsePhoneType, parseUserType, PhoneType, UserType } from 'shared/lib/types';
 
 export type ValidOrInvalid<Valid, Invalid> = ADT<'valid', Valid> | ADT<'invalid', Invalid>;
 
 export type Validation<Value> = ValidOrInvalid<Value, string[]>;
+
+export type ArrayValidation<Value> = ValidOrInvalid<Value, string[][]>;
 
 export function valid<Valid>(value: Valid): ValidOrInvalid<Valid, any> {
   return {
@@ -93,6 +96,24 @@ export function validateNumberString(value: string, name: string, min?: number, 
   return validateGenericString(value, name, min, max, 'numbers');
 }
 
+export function validateArray<A, B>(raw: A[], validate: (v: A) => Validation<B>): ArrayValidation<B[]> {
+  const validations = raw.map(v => validate(v));
+  if (allValid(validations)) {
+    return valid(validations.map(({ value }) => value as B));
+  } else {
+    return invalid(validations.map(validation => getInvalidValue(validation, [])));
+  }
+}
+
+export async function validateArrayAsync<A, B>(raw: A[], validate: (v: A) => Promise<Validation<B>>): Promise<ArrayValidation<B[]>> {
+  const validations = await Promise.all(raw.map(v => validate(v)));
+  if (allValid(validations)) {
+    return valid(validations.map(({ value }) => value as B));
+  } else {
+    return invalid(validations.map(validation => getInvalidValue(validation, [])));
+  }
+}
+
 export function validateStringInArray(value: string, availableValues: Set<string>, name: string, indefiniteArticle = 'a', caseSensitive = false): Validation<string> {
   if (!value) {
     return invalid([`Please select ${indefiniteArticle} ${name}`]);
@@ -108,30 +129,39 @@ export function validateStringInArray(value: string, availableValues: Set<string
   }
 }
 
-export function validateStringArray(values: string[], availableValues: Set<string>, name: string, indefiniteArticle = 'a', caseSensitive = false, unique = true): ValidOrInvalid<string[], string[][]> {
-  let isValid = true;
-  const validations = values.map(value => {
-    const validation = validateStringInArray(value, availableValues, name, indefiniteArticle, caseSensitive);
-    isValid = isValid && validation.tag === 'valid';
-    return validation;
+export function validateStringArray(values: string[], availableValues: Set<string>, name: string, indefiniteArticle = 'a', caseSensitive = false, unique = true): ArrayValidation<string[]> {
+  const result = validateArray(values, value => {
+    return validateStringInArray(value, availableValues, name, indefiniteArticle, caseSensitive);
   });
-  if (isValid) {
-    let result = validations.map(validation => getValidValue(validation, ''));
-    if (unique) {
-      result = uniq(result);
-    }
-    return valid(result);
-  } else {
-    return invalid(validations.map(validation => getInvalidValue(validation, [])));
+  switch (result.tag) {
+    case 'valid':
+      return valid(uniq(result.value as string[]));
+    case 'invalid':
+      return result;
   }
 }
 
-export function validateDate(date: string): Validation<Date> {
-  const parsed = moment(date);
-  if (parsed.isValid()) {
-    return valid(new Date(parsed.valueOf()));
+export function validateDate(raw: string, minDate?: Date, maxDate?: Date): Validation<Date> {
+  const parsed = moment(raw);
+  const isValid: boolean = parsed.isValid();
+  const epoch: number | null = isValid ? parsed.valueOf() : null;
+  const date: Date | null = (epoch && new Date(epoch)) || null;
+  const validMinDate = !minDate || (epoch && epoch >= minDate.getTime());
+  const validMaxDate = !maxDate || (epoch && epoch >= maxDate.getTime())
+  if (date && validMinDate && validMaxDate) {
+    return valid(date);
   } else {
-    return invalid([`${date} is an invalid date.`]);
+    const errors: string[] = [];
+    if (!validMinDate && minDate && date) {
+      errors.push(`${formatDateAndTime(date)} must be at or after ${formatDateAndTime(minDate)}`);
+    }
+    if (!validMaxDate && maxDate && date) {
+      errors.push(`${formatDateAndTime(date)} must be at or earlier than ${formatDateAndTime(maxDate)}`);
+    }
+    if (!errors.length) {
+      errors.push(`"${raw}" is an invalid date.`);
+    }
+    return invalid(errors);
   }
 }
 
@@ -230,7 +260,7 @@ export function validatePhoneType(phoneType: string): Validation<PhoneType> {
   }
 }
 
-export function validateCategories(categories: string[], name = 'Category', indefiniteArticle = 'a'): ValidOrInvalid<string[], string[][]> {
+export function validateCategories(categories: string[], name = 'Category', indefiniteArticle = 'a'): ArrayValidation<string[]> {
   return validateStringArray(categories, AVAILABLE_CATEGORIES, name, indefiniteArticle, true, true);
 }
 
@@ -238,6 +268,6 @@ export function validatePositionTitle(positionTitle: string): Validation<string>
   return validateGenericString(positionTitle, 'Position Title');
 }
 
-export function validateIndustrySectors(industrySectors: string[]): ValidOrInvalid<string[], string[][]> {
+export function validateIndustrySectors(industrySectors: string[]): ArrayValidation<string[]> {
   return validateStringArray(industrySectors, AVAILABLE_INDUSTRY_SECTORS, 'Industry Sector', 'an', true, true);
 }

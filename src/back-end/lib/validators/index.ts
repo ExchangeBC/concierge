@@ -1,7 +1,9 @@
+import * as FileSchema from 'back-end/lib/schemas/file';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import * as mongoose from 'mongoose';
 import mongooseDefault from 'mongoose';
-import { invalid, valid, validateEmail as validateEmailShared, validatePassword as validatePasswordShared, Validation } from 'shared/lib/validators';
+import { UserType } from 'shared/lib/types';
+import { ArrayValidation, invalid, valid, validateArrayAsync, validateEmail as validateEmailShared, validatePassword as validatePasswordShared, Validation } from 'shared/lib/validators';
 
 interface HasEmail {
   email: string;
@@ -38,5 +40,39 @@ export function validateObjectIdString(id: string): Validation<mongoose.Types.Ob
     return valid(mongooseDefault.Types.ObjectId(id));
   } else {
     return invalid([`${id} is not a valid ObjectId.`]);
+  }
+}
+
+export function validateFileIdArray(FileModel: FileSchema.Model, raw: string[]): Promise<ArrayValidation<mongoose.Types.ObjectId[]>> {
+  return validateArrayAsync(raw, async v => {
+    const validatedObjectId = validateObjectIdString(v);
+    switch (validatedObjectId.tag) {
+      case 'valid':
+        const file = await FileModel.findById(validatedObjectId.value);
+        if (file) {
+          return valid(file._id);
+        } else {
+          return invalid(['File does not exist']);
+        }
+      case 'invalid':
+        return validatedObjectId;
+    }
+  });
+}
+
+export async function validateUserId(UserModel: UserSchema.Model, raw: string, userType?: UserType): Promise<Validation<mongoose.Types.ObjectId>> {
+  const validatedObjectId = validateObjectIdString(raw);
+  switch (validatedObjectId.tag) {
+    case 'valid':
+      const user = await UserModel.findById(validatedObjectId.value);
+      if (!user) {
+        return invalid(['User does not exist']);
+      } else if (userType && user.profile.type !== userType) {
+        return invalid([`User is not a ${userType}.`]);
+      } else {
+        return valid(user._id);
+      }
+    case 'invalid':
+      return validatedObjectId;
   }
 }

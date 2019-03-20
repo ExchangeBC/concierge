@@ -29,3 +29,23 @@ export interface PublicRfi {
   latestVersion?: PublicVersion;
   discoveryDayResponses?: PublicDiscoveryDayResponse[]; // Only defined for Program Staff.
 }
+
+export interface CreateValidationErrors {
+  permissions?: string[];
+  contentType?: string[];
+  closingAt?: string[];
+  rfiNumber?: string[];
+  title?: string[];
+  description?: string[];
+  publicSectorEntity?: string[];
+  categories?: string[][];
+  discoveryDay?: string[];
+  addenda?: string[][];
+  attachments?: string[][];
+  buyerContact?: string[];
+  programStaffContact?: string[];
+}
+
+export interface UpdateValidationErrors extends CreateValidationErrors {
+  rfiId?: string[];
+}
