@@ -111,3 +111,21 @@ export function readOneFile(session: Session, fileAuthLevel: AuthLevel<UserType>
 export function readOneFileBlob(session: Session, fileAuthLevel: AuthLevel<UserType>): boolean {
   return isAuthorizedSession(session, fileAuthLevel);
 }
+
+// RFIs.
+
+export function createRfi(session: Session): boolean {
+  return isProgramStaff(session);
+}
+
+export function readOneRfi(): boolean {
+  return true;
+}
+
+export function readManyRfis(): boolean {
+  return true;
+}
+
+export function updateRfi(session: Session): boolean {
+  return isProgramStaff(session);
+}

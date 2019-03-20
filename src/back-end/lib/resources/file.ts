@@ -6,6 +6,7 @@ import { AppSession } from 'back-end/lib/schemas/session';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
 import { renameSync, unlinkSync } from 'fs';
 import { identityAsync } from 'shared/lib';
+import { PublicFile } from 'shared/lib/resources/file';
 import { ADT, AuthLevel, parseAuthLevel, parseUserType, UserType } from 'shared/lib/types';
 
 const DEFAULT_AUTH_LEVEL: AuthLevel<UserType> = {
@@ -14,14 +15,14 @@ const DEFAULT_AUTH_LEVEL: AuthLevel<UserType> = {
 };
 
 type CreateRequestBody
-  = ADT<201, FileSchema.Data> // File uploaded and stored.
-  | ADT<200, FileSchema.Data> // File already exists.
+  = ADT<201, PublicFile> // File uploaded and stored.
+  | ADT<200, PublicFile> // File already exists.
   | ADT<401, string[]>
   | ADT<400, string[]>;
 
-type CreateResponseBody = JsonResponseBody<FileSchema.Data | string[]>;
+type CreateResponseBody = JsonResponseBody<PublicFile | string[]>;
 
-type ReadOneResponseBody = JsonResponseBody<FileSchema.Data | string[]>;
+type ReadOneResponseBody = JsonResponseBody<PublicFile | string[]>;
 
 type RequiredModels = 'File';
 
@@ -47,7 +48,6 @@ export const resource: Resource = {
           });
         } else {
           const rawFile = request.body.value;
-          request.logger.debug('raw file', rawFile);
           const originalName = rawFile.name;
           let authLevel: AuthLevel<UserType> = DEFAULT_AUTH_LEVEL;
           if (request.session.user && request.session.user.type !== UserType.ProgramStaff) {
@@ -80,7 +80,7 @@ export const resource: Resource = {
             unlinkSync(rawFile.path);
             return mapRequestBody(request, {
               tag: 200 as 200,
-              value: existingFile
+              value: FileSchema.makePublicFile(existingFile)
             });
           }
           const file = new FileModel({
@@ -94,7 +94,7 @@ export const resource: Resource = {
           renameSync(rawFile.path, storageName);
           return mapRequestBody(request, {
             tag: 201 as 201,
-            value: file
+            value: FileSchema.makePublicFile(file)
           });
         }
       },
@@ -115,7 +115,8 @@ export const resource: Resource = {
         } else if (!permissions.readOneFile(request.session, file.authLevel)) {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         } else {
-          return basicResponse(200, request.session, makeJsonResponseBody(file));
+          const publicFile = FileSchema.makePublicFile(file);
+          return basicResponse(200, request.session, makeJsonResponseBody(publicFile));
         }
       }
     };

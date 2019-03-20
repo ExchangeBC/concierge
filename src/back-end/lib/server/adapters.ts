@@ -89,7 +89,6 @@ function parseMultipartRequest(maxFilesSize: number, expressReq: expressLib.Requ
     form.on('close', () => {
       if (file && authLevel) {
         const parsedAuthLevel = parseJsonSafely(authLevel);
-        console.log(authLevel);
         switch (parsedAuthLevel.tag) {
           case 'valid':
             file.authLevel = parsedAuthLevel.value as object;
@@ -126,11 +125,15 @@ export function express<Session>(): ExpressAdapter<Session> {
           expressRes.json(response.body.value);
           break;
         case 'file':
-          expressRes
-            .set('Content-Type', response.body.value.contentType)
-            .set('Content-Encoding', response.body.value.contentEncoding)
-            .set('Content-Disposition', response.body.value.contentDisposition)
-            .send(response.body.value.buffer);
+          const file = response.body.value;
+          expressRes.set('Content-Type', file.contentType)
+          if (file.contentEncoding) {
+            expressRes.set('Content-Encoding', file.contentEncoding)
+          }
+          if (file.contentDisposition) {
+            expressRes.set('Content-Disposition', file.contentDisposition)
+          }
+          expressRes.send(response.body.value.buffer);
           break;
         case 'text':
           expressRes
@@ -191,7 +194,7 @@ export function express<Session>(): ExpressAdapter<Session> {
           query: expressReq.query,
           body
         };
-        request.logger.debug('req body', request.body);
+        request.logger.debug('parsed request body', request.body);
         // Transform the request according to the route handler.
         const transformRequest = route.handler.transformRequest;
         if (transformRequest) {

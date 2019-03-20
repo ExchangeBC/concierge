@@ -32,6 +32,21 @@ export function makePublicUser(user: Data): PublicUser {
   };
 }
 
+/**
+ * Helper to find a user by its ID and
+ * marshall it into a `PublicUser`.
+ * If the user does not exist, throw and error.
+ */
+
+export async function findPublicUserByIdUnsafely(UserModel: Model, userId: mongoose.Types.ObjectId): Promise<PublicUser> {
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw new Error('User does not exist');
+  } else {
+    return makePublicUser(user);
+  }
+}
+
 export type Model = mongoose.Model<Data & mongoose.Document>;
 
 export const schema: mongoose.Schema = new mongoose.Schema({

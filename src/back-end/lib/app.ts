@@ -3,12 +3,13 @@ import loggerHook from 'back-end/lib/hooks/logger';
 import FileResource from 'back-end/lib/resources/file';
 import FileBlobResource from 'back-end/lib/resources/file-blob';
 import ForgotPasswordTokenResource from 'back-end/lib/resources/forgot-password-token';
+import RfiResource from 'back-end/lib/resources/rfi';
 import SessionResource from 'back-end/lib/resources/session';
 import UserResource from 'back-end/lib/resources/user';
 import FrontEndRouter from 'back-end/lib/routers/front-end';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
-import * as RfiVersionSchema from 'back-end/lib/schemas/rfi-version';
+import * as RfiSchema from 'back-end/lib/schemas/rfi';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { addHooksToRoute, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route, Router, TextResponseBody } from 'back-end/lib/server';
@@ -32,7 +33,7 @@ export interface AvailableModels {
   User: UserSchema.Model;
   ForgotPasswordToken: ForgotPasswordTokenSchema.Model;
   File: FileSchema.Model;
-  RfiVersion: RfiVersionSchema.Model;
+  Rfi: RfiSchema.Model;
 }
 
 export function createModels(): AvailableModels {
@@ -42,7 +43,7 @@ export function createModels(): AvailableModels {
     User: mongoose.model('User', UserSchema.schema),
     ForgotPasswordToken: mongoose.model('ForgotPasswordToken', ForgotPasswordTokenSchema.schema),
     File: mongoose.model('File', FileSchema.schema),
-    RfiVersion: mongoose.model('RfiVersion', RfiVersionSchema.schema)
+    Rfi: mongoose.model('Rfi', RfiSchema.schema)
   };
 };
 
@@ -61,7 +62,8 @@ export function createRouter(Models: AvailableModels): Router<SupportedRequestBo
     SessionResource,
     ForgotPasswordTokenResource,
     FileResource,
-    FileBlobResource
+    FileBlobResource,
+    RfiResource
   ];
 
   // Define CRUD routes.
