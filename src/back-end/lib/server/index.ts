@@ -91,6 +91,7 @@ export function makeJsonRequestBody(value: any): JsonRequestBody {
 export interface FileUpload {
   name: string;
   path: string;
+  authLevel?: object;
 }
 
 export type FileRequestBody = ADT<'file', FileUpload>;

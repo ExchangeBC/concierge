@@ -21,22 +21,20 @@ export const resource: Resource = {
     return {
       transformRequest: identityAsync,
       async respond(request): Promise<Response<ReadOneResponseBody, AppSession>> {
-        if (!permissions.readOneFileBlob()) {
+        const notFound = () => basicResponse(404, request.session, makeJsonResponseBody(['File not found']));
+        const file = await FileModel.findById(request.params.id);
+        if (!file) {
+          return notFound();
+        } else if (!permissions.readOneFileBlob(request.session, file.authLevel)) {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         } else {
-          const notFound = () => basicResponse(404, request.session, makeJsonResponseBody(['File not found']));
-          const file = await FileModel.findById(request.params.id);
-          if (!file) {
+          const filePath = FileSchema.getStorageName(file);
+          const contentDisposition = `attachment; filename="${file.originalName}"`;
+          const body = tryMakeFileResponseBody(filePath, undefined, undefined, contentDisposition);
+          if (!body) {
             return notFound();
           } else {
-            const filePath = FileSchema.getStorageName(file);
-            const contentDisposition = `attachment; filename="${file.originalName}"`;
-            const body = tryMakeFileResponseBody(filePath, undefined, undefined, contentDisposition);
-            if (!body) {
-              return notFound();
-            } else {
-              return basicResponse(200, request.session, body);
-            }
+            return basicResponse(200, request.session, body);
           }
         }
       }

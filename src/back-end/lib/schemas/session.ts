@@ -1,4 +1,4 @@
-import { createdAtSchema, updatedAtSchema } from 'back-end/lib/schemas';
+import { dateSchema } from 'back-end/lib/schemas';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { SessionId } from 'back-end/lib/server';
 import * as mongoose from 'mongoose';
@@ -22,8 +22,8 @@ export interface Data {
 export type Model = mongoose.Model<Data & mongoose.Document>;
 
 export const schema: mongoose.Schema = new mongoose.Schema({
-  createdAt: createdAtSchema,
-  updatedAt: updatedAtSchema,
+  createdAt: dateSchema(true),
+  updatedAt: dateSchema(true),
   sessionId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,

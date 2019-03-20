@@ -32,13 +32,18 @@ export const userTypeSchema: mongoose.SchemaTypeOpts<any> = {
 };
 
 // TODO Determine correct type for generic parameter.
-export const createdAtSchema: mongoose.SchemaTypeOpts<any> = {
-  type: Date,
-  required: true
+export function dateSchema(required = false): mongoose.SchemaTypeOpts<any> {
+  return {
+    type: Date,
+    required
+  };
 };
 
 // TODO Determine correct type for generic parameter.
-export const updatedAtSchema: mongoose.SchemaTypeOpts<any> = {
-  type: Date,
-  required: true
-};
+export function userIdSchema(required = false): mongoose.SchemaTypeOpts<any> {
+  return {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required
+  };
+}

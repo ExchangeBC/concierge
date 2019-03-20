@@ -3,7 +3,7 @@ import { defaults, get, remove } from 'lodash';
 import page from 'page';
 import { default as React, ReactElement } from 'react';
 import ReactDOM from 'react-dom';
-import { ADT } from 'shared/lib/types';
+import { ADT, AuthLevel } from 'shared/lib/types';
 
 export type Immutable<State> = RecordOf<State>;
 
@@ -80,12 +80,6 @@ export interface Component<Params, State, Msg> {
   update: Update<State, Msg>;
   view: ComponentView<State, Msg>;
 }
-
-export type AuthLevel<UserType>
-  = ADT<'any'>
-  | ADT<'signedIn'>
-  | ADT<'signedOut'>
-  | ADT<'userType', UserType[]>;
 
 export interface RouteAuthDefinition<Page, UserType> {
   level: AuthLevel<UserType>;

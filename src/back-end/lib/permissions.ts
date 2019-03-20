@@ -1,5 +1,5 @@
 import * as SessionSchema from 'back-end/lib/schemas/session';
-import { UserType } from 'shared/lib/types';
+import { AuthLevel, UserType } from 'shared/lib/types';
 
 type Session = SessionSchema.AppSession;
 
@@ -7,7 +7,7 @@ export const CURRENT_SESSION_ID = 'current';
 
 export const ERROR_MESSAGE = 'You do not have permission to perform this action.';
 
-export function isLoggedIn(session: Session): boolean {
+export function isSignedIn(session: Session): boolean {
   return !!session.user;
 }
 
@@ -37,10 +37,27 @@ export function isCurrentSession(id: string): boolean {
   return id === CURRENT_SESSION_ID;
 }
 
+export function isAuthorizedSession(session: Session, authLevel: AuthLevel<UserType>): boolean {
+  switch (authLevel.tag) {
+    case 'any':
+      return true;
+    case 'signedIn':
+      return isSignedIn(session);
+    case 'signedOut':
+      return !isSignedIn(session);
+    case 'userType':
+      if (session.user) {
+        return authLevel.value.indexOf(session.user.type) !== -1;
+      } else {
+        return false;
+      }
+  }
+}
+
 // Users.
 
 export function createUser(session: Session, userType: UserType): boolean {
-  return (!isLoggedIn(session) && userType !== UserType.ProgramStaff) || (isProgramStaff(session) && userType === UserType.ProgramStaff);
+  return (!isSignedIn(session) && userType !== UserType.ProgramStaff) || (isProgramStaff(session) && userType === UserType.ProgramStaff);
 }
 
 export function readOneUser(session: Session, id: string): boolean {
@@ -62,7 +79,7 @@ export function deleteUser(session: Session, userId: string, userType: UserType)
 // Sessions.
 
 export function createSession(session: Session): boolean {
-  return !isLoggedIn(session);
+  return !isSignedIn(session);
 }
 
 export function readOneSession(session: Session, id: string): boolean {
@@ -76,21 +93,21 @@ export function deleteSession(session: Session, id: string): boolean {
 // Forgot Password Tokens.
 
 export function createForgotPasswordToken(session: Session): boolean {
-  return !isLoggedIn(session);
+  return !isSignedIn(session);
 }
 
 // Files.
 
 export function createFile(session: Session): boolean {
-  return isLoggedIn(session);
+  return isSignedIn(session);
 }
 
-export function readOneFile(): boolean {
-  return true;
+export function readOneFile(session: Session, fileAuthLevel: AuthLevel<UserType>): boolean {
+  return isAuthorizedSession(session, fileAuthLevel);
 }
 
 // File blobs.
 
-export function readOneFileBlob(): boolean {
-  return true;
+export function readOneFileBlob(session: Session, fileAuthLevel: AuthLevel<UserType>): boolean {
+  return isAuthorizedSession(session, fileAuthLevel);
 }

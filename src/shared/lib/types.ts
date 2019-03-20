@@ -1,3 +1,5 @@
+import { get, isArray } from 'lodash';
+
 export interface ADT<Tag, Value = undefined> {
   tag: Tag;
   value: Value;
@@ -57,6 +59,27 @@ export function parseUserType(raw: string): UserType | null {
   }
 }
 
+/**
+ * Parses a list of strings to a list of `UserType`.
+ * If any of the strings are not a valid `UserType`,
+ * this function returns `null`.
+ *
+ * The `UserType` type is a generic parameter,
+ * enabling type polymorphism.
+ */
+
+export function parseUserTypeList<UserType>(list: string[], parseOneUserType: (raw: string) => UserType | null): UserType[] | null {
+  return list.reduce((acc: UserType[] | null, raw: string) => {
+    const parsed = parseOneUserType(raw);
+    if (acc && parsed) {
+      acc.push(parsed);
+    } else {
+      acc = null;
+    }
+    return acc;
+  }, []);
+}
+
 export function userTypeToTitleCase(userType: UserType): string {
   switch (userType) {
     case UserType.Buyer:
@@ -65,6 +88,41 @@ export function userTypeToTitleCase(userType: UserType): string {
       return 'Vendor';
     case UserType.ProgramStaff:
       return 'Program Staff';
+  }
+}
+
+export type AuthLevel<UserType>
+  = ADT<'any'>
+  | ADT<'signedIn'>
+  | ADT<'signedOut'>
+  | ADT<'userType', UserType[]>;
+
+/**
+ * Parses an `AuthLevel` from a plain object.
+ * Returns `null` if the parse fails.
+ */
+
+export function parseAuthLevel<UserType>(raw: object, parseOneUserType: (raw: string) => UserType | null): AuthLevel<UserType> | null {
+  switch (get(raw, 'tag')) {
+    case 'any':
+      return { tag: 'any', value: undefined };
+    case 'signedIn':
+      return { tag: 'signedIn', value: undefined };
+    case 'signedOut':
+      return { tag: 'signedOut', value: undefined };
+    case 'userType':
+      let rawUserTypes = get(raw, 'value');
+      rawUserTypes = isArray(rawUserTypes) ? rawUserTypes : [];
+      const userTypes = parseUserTypeList(rawUserTypes, parseOneUserType);
+      if (userTypes) {
+        return {
+          tag: 'userType',
+          value: userTypes
+        };
+      }
+      // Else, continues to return null.
+    default:
+      return null;
   }
 }
 
@@ -162,4 +220,10 @@ export function profileToName(profile: Profile): string | null {
     case UserType.Vendor:
       return profile.businessName || null;
   }
+}
+
+export interface Addendum {
+  createdAt: Date;
+  updatedAt: Date;
+  description: string;
 }

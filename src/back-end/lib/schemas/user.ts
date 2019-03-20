@@ -1,4 +1,4 @@
-import { createdAtSchema, updatedAtSchema } from 'back-end/lib/schemas';
+import { dateSchema, userIdSchema } from 'back-end/lib/schemas';
 import bcrypt from 'bcrypt';
 import * as mongoose from 'mongoose';
 import { PublicUser } from 'shared/lib/resources/user';
@@ -35,8 +35,8 @@ export function makePublicUser(user: Data): PublicUser {
 export type Model = mongoose.Model<Data & mongoose.Document>;
 
 export const schema: mongoose.Schema = new mongoose.Schema({
-  createdAt: createdAtSchema,
-  updatedAt: updatedAtSchema,
+  createdAt: dateSchema(true),
+  updatedAt: dateSchema(true),
   email: {
     type: String,
     required: true,
@@ -57,14 +57,8 @@ export const schema: mongoose.Schema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed,
     required: true
   },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  deactivatedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }
+  createdBy: userIdSchema(),
+  deactivatedBy: userIdSchema()
 });
 
 export async function authenticate(user: InstanceType<Model>, password: string): Promise<boolean> {

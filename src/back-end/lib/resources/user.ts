@@ -169,7 +169,7 @@ const resource: Resource = {
             // Sign in the user if they are creating their own account.
             // Otherwise, as is the case with Program Staff, leave them signed in.
             let session = request.session;
-            if (!permissions.isLoggedIn(request.session)) {
+            if (!permissions.isSignedIn(request.session)) {
               session = await SessionSchema.signIn(SessionModel, UserModel, request.session, user._id);
             }
             return basicResponse(201, session, makeJsonResponseBody(UserSchema.makePublicUser(user)));

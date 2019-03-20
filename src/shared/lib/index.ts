@@ -1,6 +1,6 @@
-import moment from 'moment-timezone';
-
 import { get, isArray, isBoolean } from 'lodash';
+import moment from 'moment-timezone';
+import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
 export function getString(obj: any, keyPath: string | string[]): string {
   return String(get(obj, keyPath, ''));
@@ -54,5 +54,18 @@ export function formatTermsAndConditionsAgreementDate(date?: Date): string {
     return `You agreed to the Terms & Conditions on ${formatDate(date)} at ${formatTime(date, true)}.`
   } else {
     return 'You have not agreed to the Terms & Conditions.';
+  }
+}
+
+/**
+ * This function tries to parse JSON safely without throwing
+ * a run-time exception if the input is invalid.
+ */
+
+export function parseJsonSafely(raw: string): ValidOrInvalid<any, undefined> {
+  try {
+    return valid(JSON.parse(raw));
+  } catch (error) {
+    return invalid(undefined);
   }
 }

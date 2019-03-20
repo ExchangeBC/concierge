@@ -11,6 +11,7 @@ import { assign, castArray } from 'lodash';
 import mongoose from 'mongoose';
 import multiparty from 'multiparty';
 import * as path from 'path';
+import { parseJsonSafely } from 'shared/lib';
 import { HttpMethod } from 'shared/lib/types';
 
 // tslint:disable no-console
@@ -41,15 +42,26 @@ function incomingHeaderMatches(headers: IncomingHttpHeaders, header: string, val
   return !!header.match(value);
 }
 
+/**
+ * Use `multiparty` to parse a HTTP request with a multipart body.
+ * It currently only supports multipart bodies with two fields:
+ *
+ * `file` must be the file you want to upload.
+ *
+ * `authLevel` is an optional field containing a JSON string defining
+ * access control to the file.
+ */
+
 function parseMultipartRequest(maxFilesSize: number, expressReq: expressLib.Request): Promise<FileRequestBody> {
   return new Promise((resolve, reject) => {
     let file: FileUpload | undefined;
+    let authLevel = '';
     const form = new multiparty.Form({
       maxFilesSize
     });
     // Listen for files and fields.
-    // We only want to receive one file, so we disregard all other files
-    // and fields.
+    // We only want to receive one file, so we disregard all other files.
+    // We only want the (optional) authLevel field, so we disregard all other fields.
     form.on('part', part => {
       part.on('error', error => reject(error));
       // We expect the file's field to have the name `file`.
@@ -61,6 +73,11 @@ function parseMultipartRequest(maxFilesSize: number, expressReq: expressLib.Requ
           name: part.filename,
           path: tmpPath
         };
+      } else if (part.name === 'authLevel' && !part.filename && !authLevel) {
+        part.setEncoding('utf8');
+        part.on('data', chunk => authLevel += chunk);
+        // No need to listen to 'end' event as the multiparty form won't end until the
+        // entire request body has been processed.
       } else {
         // Ignore all other files and fields.
         part.resume();
@@ -70,7 +87,19 @@ function parseMultipartRequest(maxFilesSize: number, expressReq: expressLib.Requ
     form.on('error', error => reject(error));
     // Resolve the promise once the request has finished parsing.
     form.on('close', () => {
-      if (file) {
+      if (file && authLevel) {
+        const parsedAuthLevel = parseJsonSafely(authLevel);
+        console.log(authLevel);
+        switch (parsedAuthLevel.tag) {
+          case 'valid':
+            file.authLevel = parsedAuthLevel.value as object;
+            resolve(makeFileRequestBody(file));
+            break;
+          case 'invalid':
+            reject(new Error('Invalid `authLevel` field.'));
+            break;
+        }
+      } else if (file) {
         resolve(makeFileRequestBody(file));
       } else {
         reject(new Error('No file uploaded'));

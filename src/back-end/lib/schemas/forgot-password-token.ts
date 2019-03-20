@@ -1,5 +1,5 @@
 import { TOKEN_SECRET } from 'back-end/config';
-import { createdAtSchema } from 'back-end/lib/schemas';
+import { dateSchema } from 'back-end/lib/schemas';
 import bcrypt from 'bcrypt';
 import * as mongoose from 'mongoose';
 
@@ -12,7 +12,7 @@ export interface Data {
 export type Model = mongoose.Model<Data & mongoose.Document>;
 
 export const schema: mongoose.Schema = new mongoose.Schema({
-  createdAt: createdAtSchema,
+  createdAt: dateSchema(true),
   token: String
 });
 

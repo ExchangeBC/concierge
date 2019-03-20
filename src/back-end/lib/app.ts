@@ -8,6 +8,7 @@ import UserResource from 'back-end/lib/resources/user';
 import FrontEndRouter from 'back-end/lib/routers/front-end';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
+import * as RfiVersionSchema from 'back-end/lib/schemas/rfi-version';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { addHooksToRoute, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route, Router, TextResponseBody } from 'back-end/lib/server';
@@ -31,6 +32,7 @@ export interface AvailableModels {
   User: UserSchema.Model;
   ForgotPasswordToken: ForgotPasswordTokenSchema.Model;
   File: FileSchema.Model;
+  RfiVersion: RfiVersionSchema.Model;
 }
 
 export function createModels(): AvailableModels {
@@ -39,7 +41,8 @@ export function createModels(): AvailableModels {
     Session: mongoose.model('Session', SessionSchema.schema),
     User: mongoose.model('User', UserSchema.schema),
     ForgotPasswordToken: mongoose.model('ForgotPasswordToken', ForgotPasswordTokenSchema.schema),
-    File: mongoose.model('File', FileSchema.schema)
+    File: mongoose.model('File', FileSchema.schema),
+    RfiVersion: mongoose.model('RfiVersion', RfiVersionSchema.schema)
   };
 };
 
