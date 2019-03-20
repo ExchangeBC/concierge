@@ -46,7 +46,7 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
   const validatedAddenda = validateAddendumDescriptions(addenda);
   const validatedAttachments = await validateFileIdArray(FileModel, attachments);
   // TODO ensure buyer has accepted terms.
-  const validatedBuyerContact = await validateUserId(UserModel, buyerContact, UserType.Buyer);
+  const validatedBuyerContact = await validateUserId(UserModel, buyerContact, UserType.Buyer, true);
   const validatedProgramStaffContact = await validateUserId(UserModel, programStaffContact, UserType.ProgramStaff);
   // Check if the payload is valid.
   if (allValid([validatedCreatedBy, validatedClosingAt, validatedRfiNumber, validatedTitle, validatedDescription, validatedPublicSectorEntity, validatedCategories, validatedDiscoveryDay, validatedAddenda, validatedAttachments, validatedBuyerContact, validatedProgramStaffContact])) {

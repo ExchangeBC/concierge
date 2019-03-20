@@ -60,7 +60,7 @@ export function validateFileIdArray(FileModel: FileSchema.Model, raw: string[]):
   });
 }
 
-export async function validateUserId(UserModel: UserSchema.Model, raw: string, userType?: UserType): Promise<Validation<mongoose.Types.ObjectId>> {
+export async function validateUserId(UserModel: UserSchema.Model, raw: string, userType?: UserType, acceptedTerms?: boolean): Promise<Validation<mongoose.Types.ObjectId>> {
   const validatedObjectId = validateObjectIdString(raw);
   switch (validatedObjectId.tag) {
     case 'valid':
@@ -69,6 +69,12 @@ export async function validateUserId(UserModel: UserSchema.Model, raw: string, u
         return invalid(['User does not exist']);
       } else if (userType && user.profile.type !== userType) {
         return invalid([`User is not a ${userType}.`]);
+      } else if (acceptedTerms !== undefined && !!user.acceptedTermsAt !== acceptedTerms) {
+        if (acceptedTerms) {
+          return invalid(['User has not yet accepted terms.']);
+        } else {
+          return invalid(['User has already accepted terms.']);
+        }
       } else {
         return valid(user._id);
       }
