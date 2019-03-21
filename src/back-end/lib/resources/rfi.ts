@@ -150,7 +150,7 @@ export const resource: Resource = {
             await validatedBody.value.save();
             return mapRequestBody(request, {
               tag: 201 as 201,
-              value: await RfiSchema.makePublicRfi(UserModel, FileModel, validatedBody.value, get(request.session.user, 'type'))
+              value: await RfiSchema.makePublicRfi(UserModel, FileModel, validatedBody.value, request.session)
             });
           case 'invalid':
             return mapRequestBody(request, {
@@ -179,7 +179,7 @@ export const resource: Resource = {
           if (!rfi) {
             return basicResponse(404, request.session, makeJsonResponseBody(['RFI not found']));
           } else {
-            const publicRfi = await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, get(request.session.user, 'type'));
+            const publicRfi = await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session);
             return basicResponse(200, request.session, makeJsonResponseBody(publicRfi));
           }
         }
@@ -199,7 +199,7 @@ export const resource: Resource = {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         } else {
           const rfis = await RfiModel.find().exec();
-          const publicRfis = await Promise.all(rfis.map(rfi => RfiSchema.makePublicRfi(UserModel, FileModel, rfi, get(request.session.user, 'type'))));
+          const publicRfis = await Promise.all(rfis.map(rfi => RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session)));
           return basicResponse(200, request.session, makeJsonResponseBody({
             total: publicRfis.length,
             offset: 0,

@@ -1,9 +1,11 @@
+import * as permissions from 'back-end/lib/permissions';
 import { dateSchema } from 'back-end/lib/schemas';
 import * as FileSchema from 'back-end/lib/schemas/file';
+import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import * as mongoose from 'mongoose';
-import { PublicRfi, PublicVersion } from 'shared/lib/resources/rfi';
-import { Addendum, UserType } from 'shared/lib/types';
+import { PublicDiscoveryDayResponse, PublicRfi, PublicVersion } from 'shared/lib/resources/rfi';
+import { Addendum, ProgramStaffProfile } from 'shared/lib/types';
 
 export interface Version {
   createdAt: Date;
@@ -21,9 +23,9 @@ export interface Version {
   programStaffContact: mongoose.Types.ObjectId;
 }
 
-// TODO stub implementation.
 export interface DiscoveryDayResponse {
-  empty: true;
+  createdAt: Date;
+  vendorId: mongoose.Types.ObjectId;
 }
 
 export interface Data {
@@ -44,11 +46,21 @@ export function getLatestVersion(rfi: Data): Version | undefined {
   }, undefined);
 }
 
-export async function makePublicRfi(UserModel: UserSchema.Model, FileModel: FileSchema.Model, rfi: Data, userType?: UserType): Promise<PublicRfi> {
+function makePublicDiscoveryDayResponse(ddr: DiscoveryDayResponse): PublicDiscoveryDayResponse {
+  return {
+    createdAt: ddr.createdAt,
+    vendorId: ddr.vendorId.toString()
+  };
+}
+
+export async function makePublicRfi(UserModel: UserSchema.Model, FileModel: FileSchema.Model, rfi: Data, session: AppSession): Promise<PublicRfi> {
+  const isProgramStaff = permissions.isProgramStaff(session);
   const latestVersion = getLatestVersion(rfi);
   let latestPublicVersion: PublicVersion | undefined;
   if (latestVersion) {
     const attachments = await Promise.all(latestVersion.attachments.map(fileId => FileSchema.findPublicFileByIdUnsafely(FileModel, fileId)));
+    const programStaffContact = await UserSchema.findPublicUserByIdUnsafely(UserModel, latestVersion.programStaffContact);
+    const programStaffProfile = programStaffContact.profile as ProgramStaffProfile;
     latestPublicVersion = {
       createdAt: latestVersion.createdAt,
       closingAt: latestVersion.closingAt,
@@ -60,17 +72,24 @@ export async function makePublicRfi(UserModel: UserSchema.Model, FileModel: File
       discoveryDay: latestVersion.discoveryDay,
       addenda: latestVersion.addenda,
       attachments,
-      programStaffContact: await UserSchema.findPublicUserByIdUnsafely(UserModel, latestVersion.programStaffContact),
-      buyerContact: userType === UserType.ProgramStaff ? await UserSchema.findPublicUserByIdUnsafely(UserModel, latestVersion.buyerContact) : undefined
+      programStaffContact: {
+        firstName: programStaffProfile.firstName,
+        lastName: programStaffProfile.lastName,
+        positionTitle: programStaffProfile.positionTitle
+      },
+      buyerContact: isProgramStaff ? await UserSchema.findPublicUserByIdUnsafely(UserModel, latestVersion.buyerContact) : undefined
     };
+  }
+  let discoveryDayResponses: PublicDiscoveryDayResponse[] | undefined;
+  if (isProgramStaff) {
+    discoveryDayResponses = rfi.discoveryDayResponses.map(v => makePublicDiscoveryDayResponse(v));
   }
   return {
     _id: rfi._id.toString(),
     createdAt: rfi.createdAt,
     publishedAt: rfi.publishedAt,
     latestVersion: latestPublicVersion,
-    // TODO might need to change this line to convert discovery days to the public variant.
-    discoveryDayResponses: userType === UserType.ProgramStaff ? rfi.discoveryDayResponses : undefined
+    discoveryDayResponses
   };
 }
 

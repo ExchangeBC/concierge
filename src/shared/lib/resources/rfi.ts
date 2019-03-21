@@ -13,13 +13,18 @@ export interface PublicVersion {
   discoveryDay: boolean;
   addenda: Addendum[];
   attachments: PublicFile[];
-  programStaffContact: PublicUser;
+  programStaffContact: {
+    firstName: string;
+    lastName: string;
+    positionTitle: string;
+  };
   buyerContact?: PublicUser; // Only defined for Program Staff.
 }
 
-// TODO stub implementation.
-interface PublicDiscoveryDayResponse {
-  empty: true;
+export interface PublicDiscoveryDayResponse {
+  createdAt: Date;
+  // TODO pass some vendor profile information here.
+  vendorId: string;
 }
 
 export interface PublicRfi {
