@@ -254,15 +254,11 @@ export const resource: Resource = {
                 return acc;
               }
             }, null);
-            if (currentVersion) {
-              request.logger.debug('current RFI version', currentVersion);
-            }
             const newVersion = validatedVersion.value;
             // Update the addenda correctly (support deleting, updating and adding new addenda).
             const now = new Date();
             const newAddenda = newVersion.addenda.map((newAddendum, index) => {
               const currentAddendum = get(currentVersion, ['addenda', index]);
-              request.logger.debug('addendum', { currentAddendum, newAddendum });
               if (currentAddendum && newAddendum.description !== currentAddendum.description) {
                 // Addendum has changed.
                 return {
