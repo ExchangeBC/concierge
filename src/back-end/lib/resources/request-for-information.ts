@@ -2,7 +2,7 @@ import { AvailableModels, SupportedRequestBodies } from 'back-end/lib/app';
 import * as crud from 'back-end/lib/crud';
 import * as permissions from 'back-end/lib/permissions';
 import * as FileSchema from 'back-end/lib/schemas/file';
-import * as RfiSchema from 'back-end/lib/schemas/rfi';
+import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
@@ -10,17 +10,17 @@ import { validateFileIdArray, validateObjectIdString, validateUserId } from 'bac
 import { get, isObject } from 'lodash';
 import * as mongoose from 'mongoose';
 import { getString, getStringArray, identityAsync } from 'shared/lib';
-import { CreateValidationErrors, PublicRfi, UpdateValidationErrors } from 'shared/lib/resources/rfi';
+import { CreateValidationErrors, PublicRfi, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
 import { ADT, PaginatedList, UserType } from 'shared/lib/types';
 import { allValid, getInvalidValue, invalid, valid, validateBoolean, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
-import { validateAddendumDescriptions, validateClosingAt, validateDescription, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/rfi';
+import { validateAddendumDescriptions, validateClosingAt, validateDescription, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
 
 type CreateRequestBody
   = ADT<201, PublicRfi>
   | ADT<401, CreateValidationErrors>
   | ADT<400, CreateValidationErrors>;
 
-async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, raw: object, session: AppSession): Promise<ValidOrInvalid<InstanceType<RfiSchema.Model>, CreateValidationErrors>> {
+async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, raw: object, session: AppSession): Promise<ValidOrInvalid<RfiSchema.Version, CreateValidationErrors>> {
   // Get raw values.
   const createdBy = getString(session.user, 'id');
   const closingAt = getString(raw, 'closingAt');
@@ -45,7 +45,6 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
   const validatedDiscoveryDay = validateBoolean(discoveryDay);
   const validatedAddenda = validateAddendumDescriptions(addenda);
   const validatedAttachments = await validateFileIdArray(FileModel, attachments);
-  // TODO ensure buyer has accepted terms.
   const validatedBuyerContact = await validateUserId(UserModel, buyerContact, UserType.Buyer, true);
   const validatedProgramStaffContact = await validateUserId(UserModel, programStaffContact, UserType.ProgramStaff);
   // Check if the payload is valid.
@@ -73,14 +72,7 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
       buyerContact: validatedBuyerContact.value as mongoose.Types.ObjectId,
       programStaffContact: validatedProgramStaffContact.value as mongoose.Types.ObjectId
     };
-    const rfi = new RfiModel({
-      createdAt,
-      // TODO publishedAt will need to change when we add drafts.
-      publishedAt: createdAt,
-      versions: [version],
-      discoveryDayResponses: []
-    });
-    return valid(rfi);
+    return valid(version);
   } else {
     // If anything is invalid, return the validation errors.
     return invalid({
@@ -109,6 +101,7 @@ type ReadManyResponseBody = JsonResponseBody<PaginatedList<PublicRfi> | string[]
 type UpdateRequestBody
   = ADT<200, PublicRfi>
   | ADT<401, UpdateValidationErrors>
+  | ADT<404, UpdateValidationErrors>
   | ADT<400, UpdateValidationErrors>;
 
 type UpdateResponseBody = JsonResponseBody<PublicRfi | UpdateValidationErrors>;
@@ -119,7 +112,7 @@ export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, A
 
 export const resource: Resource = {
 
-  routeNamespace: 'rfis',
+  routeNamespace: 'requestsForInformation',
 
   create(Models) {
     const RfiModel = Models.Rfi;
@@ -139,23 +132,31 @@ export const resource: Resource = {
           return mapRequestBody(request, {
             tag: 400 as 400,
             value: {
-              contentType: ['File must be uploaded in a multipart request.']
+              contentType: ['Requests for Information must be created with a JSON request.']
             }
           });
         }
         const rawBody = isObject(request.body.value) ? request.body.value : {};
-        const validatedBody: ValidOrInvalid<InstanceType<RfiSchema.Model>, CreateValidationErrors> = await validateCreateRequestBody(RfiModel, UserModel, FileModel, rawBody, request.session);
-        switch (validatedBody.tag) {
+        const validatedVersion = await validateCreateRequestBody(RfiModel, UserModel, FileModel, rawBody, request.session);
+        switch (validatedVersion.tag) {
           case 'valid':
-            await validatedBody.value.save();
+            const version = validatedVersion.value;
+            const rfi = new RfiModel({
+              createdAt: version.createdAt,
+              // TODO publishedAt will need to change when we add drafts.
+              publishedAt: version.createdAt,
+              versions: [version],
+              discoveryDayResponses: []
+            });
+            await rfi.save();
             return mapRequestBody(request, {
               tag: 201 as 201,
-              value: await RfiSchema.makePublicRfi(UserModel, FileModel, validatedBody.value, request.session)
+              value: await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session)
             });
           case 'invalid':
             return mapRequestBody(request, {
               tag: 400 as 400,
-              value: validatedBody.value
+              value: validatedVersion.value
             });
         }
       },
@@ -212,33 +213,53 @@ export const resource: Resource = {
   },
 
   update(Models) {
-    // const RfiModel = Models.Rfi;
-    // const FileModel = Models.File;
-    // const UserModel = Models.User;
+    const RfiModel = Models.Rfi;
+    const FileModel = Models.File;
+    const UserModel = Models.User;
     return {
       async transformRequest(request) {
-        if (!permissions.createRfi(request.session)) {
+        if (!permissions.updateRfi(request.session)) {
           return mapRequestBody(request, {
             tag: 401 as 401,
             value: {
               permissions: [permissions.ERROR_MESSAGE]
             }
           });
-        } else if (request.body.tag !== 'json') {
+        }
+        if (request.body.tag !== 'json') {
           return mapRequestBody(request, {
             tag: 400 as 400,
             value: {
-              contentType: ['File must be uploaded in a multipart request.']
+              contentType: ['Requests for Information must be updated with a JSON request.']
             }
           });
-        } else {
-          // TODO business logic
+        }
+        const rfi = await RfiModel.findById(request.params.id);
+        if (!rfi) {
           return mapRequestBody(request, {
-            tag: 400 as 400,
+            tag: 404 as 404,
             value: {
-              contentType: ['File must be uploaded in a multipart request.']
+              rfiId: ['RFI not found']
             }
           });
+        }
+        const rawBody = isObject(request.body.value) ? request.body.value : {};
+        const validatedVersion = await validateCreateRequestBody(RfiModel, UserModel, FileModel, rawBody, request.session);
+        // TODO need to be able to edit previous addenda.
+        switch (validatedVersion.tag) {
+          case 'valid':
+            const version = validatedVersion.value;
+            rfi.versions.push(version);
+            await rfi.save();
+            return mapRequestBody(request, {
+              tag: 200 as 200,
+              value: await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session)
+            });
+          case 'invalid':
+            return mapRequestBody(request, {
+              tag: 400 as 400,
+              value: validatedVersion.value
+            });
         }
       },
       async respond(request): Promise<Response<UpdateResponseBody, AppSession>> {

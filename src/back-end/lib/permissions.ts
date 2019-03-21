@@ -129,3 +129,13 @@ export function readManyRfis(): boolean {
 export function updateRfi(session: Session): boolean {
   return isProgramStaff(session);
 }
+
+// Discovery Day Responses.
+
+export function createDiscoveryDayResponse(session: Session): boolean {
+  return isVendor(session);
+}
+
+export function readOneDiscoveryDayResponse(session: Session): boolean {
+  return isVendor(session);
+}

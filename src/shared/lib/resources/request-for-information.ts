@@ -1,3 +1,4 @@
+import { PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
 import { PublicFile } from 'shared/lib/resources/file';
 import { PublicUser } from 'shared/lib/resources/user';
 import { Addendum } from 'shared/lib/types';
@@ -19,12 +20,6 @@ export interface PublicVersion {
     positionTitle: string;
   };
   buyerContact?: PublicUser; // Only defined for Program Staff.
-}
-
-export interface PublicDiscoveryDayResponse {
-  createdAt: Date;
-  // TODO pass some vendor profile information here.
-  vendorId: string;
 }
 
 export interface PublicRfi {

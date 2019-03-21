@@ -1,15 +1,16 @@
 import * as crud from 'back-end/lib/crud';
 import loggerHook from 'back-end/lib/hooks/logger';
+import DiscoveryDayResponseResource from 'back-end/lib/resources/discovery-day-response';
 import FileResource from 'back-end/lib/resources/file';
 import FileBlobResource from 'back-end/lib/resources/file-blob';
 import ForgotPasswordTokenResource from 'back-end/lib/resources/forgot-password-token';
-import RfiResource from 'back-end/lib/resources/rfi';
+import RfiResource from 'back-end/lib/resources/request-for-information';
 import SessionResource from 'back-end/lib/resources/session';
 import UserResource from 'back-end/lib/resources/user';
 import FrontEndRouter from 'back-end/lib/routers/front-end';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
-import * as RfiSchema from 'back-end/lib/schemas/rfi';
+import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { addHooksToRoute, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route, Router, TextResponseBody } from 'back-end/lib/server';
@@ -63,7 +64,8 @@ export function createRouter(Models: AvailableModels): Router<SupportedRequestBo
     ForgotPasswordTokenResource,
     FileResource,
     FileBlobResource,
-    RfiResource
+    RfiResource,
+    DiscoveryDayResponseResource
   ];
 
   // Define CRUD routes.

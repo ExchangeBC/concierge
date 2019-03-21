@@ -4,7 +4,8 @@ import * as FileSchema from 'back-end/lib/schemas/file';
 import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import * as mongoose from 'mongoose';
-import { PublicDiscoveryDayResponse, PublicRfi, PublicVersion } from 'shared/lib/resources/rfi';
+import { PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
+import { PublicRfi, PublicVersion } from 'shared/lib/resources/request-for-information';
 import { Addendum, ProgramStaffProfile } from 'shared/lib/types';
 
 export interface Version {
@@ -25,7 +26,7 @@ export interface Version {
 
 export interface DiscoveryDayResponse {
   createdAt: Date;
-  vendorId: mongoose.Types.ObjectId;
+  vendor: mongoose.Types.ObjectId;
 }
 
 export interface Data {
@@ -46,10 +47,10 @@ export function getLatestVersion(rfi: Data): Version | undefined {
   }, undefined);
 }
 
-function makePublicDiscoveryDayResponse(ddr: DiscoveryDayResponse): PublicDiscoveryDayResponse {
+export function makePublicDiscoveryDayResponse(ddr: DiscoveryDayResponse): PublicDiscoveryDayResponse {
   return {
     createdAt: ddr.createdAt,
-    vendorId: ddr.vendorId.toString()
+    vendor: ddr.vendor.toString()
   };
 }
 

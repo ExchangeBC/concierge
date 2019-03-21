@@ -60,13 +60,19 @@ export function validateFileIdArray(FileModel: FileSchema.Model, raw: string[]):
   });
 }
 
-export async function validateUserId(UserModel: UserSchema.Model, raw: string, userType?: UserType, acceptedTerms?: boolean): Promise<Validation<mongoose.Types.ObjectId>> {
-  const validatedObjectId = validateObjectIdString(raw);
+/**
+ * Validates whether a user exists for a given User ID.
+ * Optionally validates the user matches a specific UserType,
+ * and/or whether or not they have accepted the T&Cs.
+ */
+
+export async function validateUserId(UserModel: UserSchema.Model, id: string | mongoose.Types.ObjectId, userType?: UserType, acceptedTerms?: boolean): Promise<Validation<mongoose.Types.ObjectId>> {
+  const validatedObjectId = typeof id === 'string' ? validateObjectIdString(id) : valid(id);
   switch (validatedObjectId.tag) {
     case 'valid':
       const user = await UserModel.findById(validatedObjectId.value);
-      if (!user) {
-        return invalid(['User does not exist']);
+      if (!user || !user.active) {
+        return invalid(['User does not exist or is inactive.']);
       } else if (userType && user.profile.type !== userType) {
         return invalid([`User is not a ${userType}.`]);
       } else if (acceptedTerms !== undefined && !!user.acceptedTermsAt !== acceptedTerms) {
