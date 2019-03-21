@@ -78,7 +78,7 @@ export const resource: Resource = {
         const now = new Date();
         const rfi = await RfiModel.findById(validatedRfiId.value);
         // RFI doesn't exist or it isn't published yet.
-        if (!rfi || rfi.publishedAt.getTime() > now.getTime()) {
+        if (!rfi || !RfiSchema.hasBeenPublished(rfi)) {
           return mapRequestBody(request, {
             tag: 400 as 400,
             value: {

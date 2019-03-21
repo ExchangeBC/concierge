@@ -107,3 +107,7 @@ export const schema: mongoose.Schema = new mongoose.Schema({
   versions: requiredMixedSchema,
   discoveryDayResponses: requiredMixedSchema
 });
+
+export function hasBeenPublished(rfi: InstanceType<Model>): boolean {
+  return rfi.publishedAt.getTime() <= Date.now();
+}

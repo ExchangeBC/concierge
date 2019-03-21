@@ -177,7 +177,7 @@ export const resource: Resource = {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         } else {
           const rfi = await RfiModel.findById(request.params.id);
-          if (!rfi) {
+          if (!rfi || (!permissions.isProgramStaff(request.session) && !RfiSchema.hasBeenPublished(rfi))) {
             return basicResponse(404, request.session, makeJsonResponseBody(['RFI not found']));
           } else {
             const publicRfi = await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session);
@@ -199,7 +199,12 @@ export const resource: Resource = {
         if (!permissions.readManyRfis()) {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         } else {
-          const rfis = await RfiModel.find().exec();
+          let rfis = await RfiModel.find().exec();
+          if (!permissions.isProgramStaff(request.session)) {
+            rfis = rfis.filter(rfi => {
+              return RfiSchema.hasBeenPublished(rfi);
+            });
+          }
           const publicRfis = await Promise.all(rfis.map(rfi => RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session)));
           return basicResponse(200, request.session, makeJsonResponseBody({
             total: publicRfis.length,
