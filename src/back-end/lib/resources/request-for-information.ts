@@ -10,7 +10,7 @@ import { validateFileIdArray, validateObjectIdString, validateUserId } from 'bac
 import { get, isObject } from 'lodash';
 import * as mongoose from 'mongoose';
 import { getString, getStringArray, identityAsync } from 'shared/lib';
-import { CreateValidationErrors, PublicRfi, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
+import { CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicRfi, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
 import { ADT, PaginatedList, UserType } from 'shared/lib/types';
 import { allValid, getInvalidValue, invalid, valid, validateBoolean, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
 import { validateAddendumDescriptions, validateClosingAt, validateDescription, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
@@ -245,11 +245,46 @@ export const resource: Resource = {
         }
         const rawBody = isObject(request.body.value) ? request.body.value : {};
         const validatedVersion = await validateCreateRequestBody(RfiModel, UserModel, FileModel, rawBody, request.session);
-        // TODO need to be able to edit previous addenda.
         switch (validatedVersion.tag) {
           case 'valid':
-            const version = validatedVersion.value;
-            rfi.versions.push(version);
+            const currentVersion: RfiSchema.Version | null = rfi.versions.reduce((acc: RfiSchema.Version | null, version) => {
+              if (!acc || version.createdAt.getTime() > acc.createdAt.getTime()) {
+                return version;
+              } else {
+                return acc;
+              }
+            }, null);
+            if (currentVersion) {
+              request.logger.debug('current RFI version', currentVersion);
+            }
+            const newVersion = validatedVersion.value;
+            // Update the addenda correctly (support deleting, updating and adding new addenda).
+            const now = new Date();
+            const newAddenda = newVersion.addenda.map((newAddendum, index) => {
+              const currentAddendum = get(currentVersion, ['addenda', index]);
+              request.logger.debug('addendum', { currentAddendum, newAddendum });
+              if (currentAddendum && newAddendum.description !== currentAddendum.description) {
+                // Addendum has changed.
+                return {
+                  createdAt: currentAddendum.createdAt,
+                  updatedAt: now,
+                  description: newAddendum.description
+                };
+              } else if (currentAddendum && newAddendum.description === currentAddendum.description) {
+                // The addendum has not changed, so we return the current addendum,
+                // which has the correct `updatedAt` date.
+                return currentAddendum;
+              } else {
+                // Return the addendum if it is new, unchanged or flagged for deletion.
+                // Re: flagged for deletion, we will remove it later in this function.
+                return newAddendum;
+              }
+            });
+            newVersion.addenda = newAddenda.filter(addendum => {
+              return addendum.description !== DELETE_ADDENDUM_TOKEN;
+            });
+            // Persist the new version.
+            rfi.versions.push(newVersion);
             await rfi.save();
             return mapRequestBody(request, {
               tag: 200 as 200,

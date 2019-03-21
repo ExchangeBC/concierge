@@ -49,3 +49,10 @@ export interface CreateValidationErrors {
 export interface UpdateValidationErrors extends CreateValidationErrors {
   rfiId?: string[];
 }
+
+/**
+ * Constant to be used as an Addendum's description
+ * to mark it for deletion when updating an RFI.
+ */
+
+export const DELETE_ADDENDUM_TOKEN = '$$__DELETE_ADDENDUM_TOKEN__$$';
