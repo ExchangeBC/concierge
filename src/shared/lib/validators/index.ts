@@ -153,13 +153,13 @@ export function validateDate(raw: string, minDate?: Date, maxDate?: Date): Valid
   } else {
     const errors: string[] = [];
     if (!validMinDate && minDate && date) {
-      errors.push(`${formatDateAndTime(date)} must be at or after ${formatDateAndTime(minDate)}`);
+      errors.push(`Please select a date/time at or after ${formatDateAndTime(minDate)}`);
     }
     if (!validMaxDate && maxDate && date) {
-      errors.push(`${formatDateAndTime(date)} must be at or earlier than ${formatDateAndTime(maxDate)}`);
+      errors.push(`Please select a date/time at or earlier than ${formatDateAndTime(maxDate)}`);
     }
     if (!errors.length) {
-      errors.push(`"${raw}" is an invalid date.`);
+      errors.push('Please enter a valid date.');
     }
     return invalid(errors);
   }

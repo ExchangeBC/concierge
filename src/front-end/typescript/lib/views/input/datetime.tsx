@@ -4,8 +4,9 @@ import { debounce } from 'lodash';
 import { ChangeEvent, ChangeEventHandler, default as React, KeyboardEventHandler } from 'react';
 
 export interface State extends FormField.State {
-  type: 'text' | 'email' | 'password' | 'date';
-  placeholder?: string;
+  type: 'date' | 'time' | 'datetime-local';
+  min?: string;
+  max?: string;
 }
 
 type OnEnter = () => void;
@@ -26,19 +27,20 @@ export interface Props extends Pick<FormField.Props<State, HTMLInputElement, Ext
   onEnter?: OnEnter;
 }
 
-interface Params extends Pick<State, 'id' | 'required' | 'type' | 'label' | 'placeholder' | 'help'> {
+interface Params extends Pick<State, 'id' | 'required' | 'type' | 'min' | 'max' | 'label' | 'help'> {
   value?: string;
 }
 
 export function init(params: Params): State {
   return {
     id: params.id,
+    type: params.type,
     value: params.value || '',
+    min: params.min,
+    max: params.max,
     errors: [],
     required: params.required,
-    type: params.type,
-    label: params.label,
-    placeholder: params.placeholder
+    label: params.label
   };
 }
 
@@ -63,9 +65,6 @@ function makeOnKeyUp(onEnter?: OnEnter): KeyboardEventHandler<HTMLInputElement> 
 // Related React GitHub Issue: https://github.com/facebook/react/issues/12762
 class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement, ExtraProps>> {
 
-  private ref: HTMLInputElement | null;
-  private selectionStart: number | null;
-  private selectionEnd: number | null;
   private onChangeDebounced: OnChangeDebounced | null;
   private value: string;
   private className: string;
@@ -73,9 +72,6 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
 
   constructor(props: FormField.ChildProps<State, HTMLInputElement, ExtraProps>) {
     super(props);
-    this.ref = null;
-    this.selectionStart = null;
-    this.selectionEnd = null;
     this.onChangeDebounced = null;
     this.value = '';
     this.className = '';
@@ -86,8 +82,6 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
     const { state, onChange, className, extraProps } = this.props;
     const onKeyUp = (extraProps && extraProps.onKeyUp) || undefined;
     const disabled: boolean = !!(extraProps && extraProps.disabled) || false;
-    // Override the input type to text for emails to support selectionStart selection state.
-    const inputType = state.type === 'email' ? 'text' : state.type;
     // Manage this.onChangeDebounced.
     // This is pretty gross, but the only (simple) way to support real-time validation
     // and live user feedback of user input. We assume that onChangeDebounced never
@@ -96,11 +90,6 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
     // Effectively, you can't change the functionality of the prop `onChangeDebounced`.
     if (!this.onChangeDebounced && extraProps && extraProps.onChangeDebounced) {
       this.onChangeDebounced = debounce(() => {
-        // Update the component's cursor selection state.
-        if (this.ref) {
-          this.selectionStart = this.ref.selectionStart;
-          this.selectionEnd = this.ref.selectionEnd;
-        }
         // Run the debounced change handler.
         if (extraProps.onChangeDebounced) {
           extraProps.onChangeDebounced();
@@ -113,16 +102,16 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
     this.disabled = disabled;
     return (
       <input
-        type={inputType}
+        type={state.type}
         name={state.id}
         id={state.id}
         value={state.value || ''}
-        placeholder={disabled ? '' : (state.placeholder || '')}
+        min={state.min || ''}
+        max={state.max || ''}
         disabled={disabled}
         className={className}
         onChange={this.onChange.bind(this, onChange)}
-        onKeyUp={onKeyUp}
-        ref={ref => { this.ref = ref; }} />
+        onKeyUp={onKeyUp} />
     );
   }
 
@@ -130,15 +119,7 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
     return this.value !== nextProps.state.value || this.className !== nextProps.className || (!!nextProps.extraProps && this.disabled !== nextProps.extraProps.disabled);
   }
 
-  public componentDidUpdate() {
-    if (this.ref && this.selectionStart) {
-      this.ref.setSelectionRange(this.selectionStart, this.selectionEnd || this.selectionStart);
-    }
-  }
-
   private onChange(onChange: ChangeEventHandler<HTMLInputElement>, event: ChangeEvent<HTMLInputElement>) {
-    this.selectionStart = event.target.selectionStart;
-    this.selectionEnd = event.target.selectionEnd;
     onChange(event);
     if (this.onChangeDebounced) { this.onChangeDebounced(); }
   }

@@ -200,6 +200,9 @@ const update: Update<State, Msg> = (state, msg) => {
       if (state.pages.signUpProgramStaff) {
         state = state.setIn(['pages', 'signUpProgramStaff'], PageSignUpProgramStaff.update(state.pages.signUpProgramStaff, msg)[0]);
       }
+      if (state.pages.requestForInformationCreate) {
+        state = state.setIn(['pages', 'requestForInformationCreate'], PageRequestForInformationCreate.update(state.pages.requestForInformationCreate, msg)[0]);
+      }
       if (state.pages.termsAndConditions) {
         state = state.setIn(['pages', 'termsAndConditions'], PageTermsAndConditions.update(state.pages.termsAndConditions, msg)[0]);
       }

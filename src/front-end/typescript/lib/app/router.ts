@@ -311,7 +311,7 @@ const router: Router<State, Page, UserType> = {
         return {
           tag: 'requestForInformationCreate',
           value: {
-            isEditing: true
+            fixedBarBottom: state.fixedBarBottom
           }
         };
       case 'requestForInformationList':

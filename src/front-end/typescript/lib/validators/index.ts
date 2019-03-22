@@ -13,3 +13,13 @@ export function validateConfirmPassword(password: string, confirmPassword: strin
       return validatedPassword;
   }
 }
+
+export const OBJECT_ID_REGEXP = /^[a-f0-9]{24}$/;
+
+export function validateObjectIdString(id: string): Validation<string> {
+  if (id.match(OBJECT_ID_REGEXP)) {
+    return valid(id);
+  } else {
+    return invalid([`"${id}" is not a valid ObjectId.`]);
+  }
+}

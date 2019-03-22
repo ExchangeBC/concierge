@@ -5,9 +5,11 @@ module.exports = {
   },
   js: {
     files: [
-      gruntConfig.out.js
+      `${gruntConfig.src.ts}/**`,
+      `${gruntConfig.src.tsShared}/**`
     ],
     tasks: [
+      "browserify:development",
       "compress"
     ]
   },

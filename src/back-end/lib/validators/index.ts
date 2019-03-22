@@ -39,7 +39,7 @@ export function validateObjectIdString(id: string): Validation<mongoose.Types.Ob
   if (isValid) {
     return valid(mongooseDefault.Types.ObjectId(id));
   } else {
-    return invalid([`${id} is not a valid ObjectId.`]);
+    return invalid([`"${id}" is not a valid ObjectId.`]);
   }
 }
 

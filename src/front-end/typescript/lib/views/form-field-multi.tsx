@@ -86,7 +86,7 @@ const ConditionalLabel: View<Props<any>> = (props) => {
   const { label, required } = props.state;
   if (label) {
     return (
-      <Label className={required ? 'font-weight-bold' : ''}>
+      <Label className={`mb-0 mr-2 ${required ? 'font-weight-bold' : ''}`}>
         {label}
         <span className='text-info'>{required ? '*' : ''}</span>
         <ConditionHelpToggle {...props} />
@@ -178,7 +178,7 @@ export function view<ChildElement>(props: Props<ChildElement>) {
   const labelClassName = state.labelClassName || '';
   return (
     <FormGroup className={`form-field-${state.idNamespace}`}>
-      <div className={`d-flex justify-content-between align-items-center ${labelClassName}`}>
+      <div className={`d-flex align-items-center mb-2 ${labelClassName}`}>
         <ConditionalLabel {...props} />
         <ConditionalAddButton {...props} />
       </div>

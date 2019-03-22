@@ -38,6 +38,7 @@ export interface CreateValidationErrors {
   title?: string[];
   description?: string[];
   publicSectorEntity?: string[];
+  numCategories?: string[];
   categories?: string[][];
   discoveryDay?: string[];
   addenda?: string[][];

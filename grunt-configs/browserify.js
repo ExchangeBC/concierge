@@ -33,7 +33,6 @@ const makeConfig = debug => ({
         }
       ]
     ],
-    watch: debug, // Use watchify for faster rebuilds in development.
     browserifyOptions: {
       debug,
       extensions: [".js", ".json", ".ts", ".tsx", ".jsx"]

@@ -9,6 +9,35 @@ body {
   overflow-x: hidden;
 }
 
+input:-ms-clear {
+  display: none;
+}
+
+input[type="date"],
+input[type="time"] {
+
+  &::-ms-clear {
+    display: none;
+  }
+
+  &::-webkit-clear-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    display: none;
+  }
+}
+
+input,
+select,
+button,
+a {
+
+  &:disabled,
+  &.disabled {
+    cursor: not-allowed;
+  }
+}
+
 // Custom Bootstrap overrides.
 
 $grid-breakpoints: (

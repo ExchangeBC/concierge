@@ -10,7 +10,8 @@ global.gruntConfig = {
   src: {
     "static": `${src}/static`,
     sass: `${src}/sass`,
-    ts: `${src}/typescript`
+    ts: `${src}/typescript`,
+    tsShared: `src/shared`
   },
   out: {
     css: `${build}/app.css`,

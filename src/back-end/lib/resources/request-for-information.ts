@@ -41,6 +41,7 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
   const validatedTitle = validateTitle(title);
   const validatedDescription = validateDescription(description);
   const validatedPublicSectorEntity = validatePublicSectorEntity(publicSectorEntity);
+  const validatedNumCategories = !categories.length ? invalid(['Please select at least one Commodity Code.']) : valid(null);
   const validatedCategories = validateCategories(categories, 'Commodity Code');
   const validatedDiscoveryDay = validateBoolean(discoveryDay);
   const validatedAddenda = validateAddendumDescriptions(addenda);
@@ -48,7 +49,7 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
   const validatedBuyerContact = await validateUserId(UserModel, buyerContact, UserType.Buyer, true);
   const validatedProgramStaffContact = await validateUserId(UserModel, programStaffContact, UserType.ProgramStaff);
   // Check if the payload is valid.
-  if (allValid([validatedCreatedBy, validatedClosingAt, validatedRfiNumber, validatedTitle, validatedDescription, validatedPublicSectorEntity, validatedCategories, validatedDiscoveryDay, validatedAddenda, validatedAttachments, validatedBuyerContact, validatedProgramStaffContact])) {
+  if (allValid([validatedCreatedBy, validatedClosingAt, validatedRfiNumber, validatedTitle, validatedDescription, validatedPublicSectorEntity, validatedNumCategories, validatedCategories, validatedDiscoveryDay, validatedAddenda, validatedAttachments, validatedBuyerContact, validatedProgramStaffContact])) {
     // If everything is valid, return the model.
     const createdAt = new Date();
     const version: RfiSchema.Version = {
@@ -82,6 +83,7 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
       title: getInvalidValue(validatedTitle, undefined),
       description: getInvalidValue(validatedDescription, undefined),
       publicSectorEntity: getInvalidValue(validatedPublicSectorEntity, undefined),
+      numCategories: getInvalidValue(validatedNumCategories, undefined),
       categories: getInvalidValue(validatedCategories, undefined),
       discoveryDay: getInvalidValue(validatedDiscoveryDay, undefined),
       addenda: getInvalidValue(validatedAddenda, undefined),
