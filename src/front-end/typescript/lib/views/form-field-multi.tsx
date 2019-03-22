@@ -7,6 +7,7 @@ import { Alert, Button, FormGroup, FormText, InputGroup, InputGroupAddon, Label 
 export interface Field {
   value: string;
   errors: string[];
+  removable?: boolean;
 }
 
 export function emptyField(): Field {
@@ -20,6 +21,7 @@ export interface State {
   idNamespace: string;
   label?: string;
   labelClassName?: string;
+  required: boolean;
   fields: Field[];
   help?: {
     text: string;
@@ -32,7 +34,8 @@ export function getFieldValues(state: State): string[] {
 }
 
 export function setFieldValues(state: Immutable<State>, values: string[]): Immutable<State> {
-  const fields = values.map(value => ({ value, errors: [] }));
+  const fields = cloneDeep(state.fields);
+  fields.forEach((field, i) => field.value = values[i] || '');
   return state.set('fields', fields);
 }
 
@@ -80,11 +83,12 @@ const ConditionHelpToggle: View<Props<any>> = ({ state, toggleHelp, disabled = f
 };
 
 const ConditionalLabel: View<Props<any>> = (props) => {
-  const { label } = props.state;
+  const { label, required } = props.state;
   if (label) {
     return (
-      <Label>
+      <Label className={required ? 'font-weight-bold' : ''}>
         {label}
+        <span className='text-info'>{required ? '*' : ''}</span>
         <ConditionHelpToggle {...props} />
       </Label>
     );
@@ -133,13 +137,14 @@ const ConditionalFieldErrors: View<Field> = ({ errors }) => {
   }
 }
 
-function ConditionalRemoveButton<ChildElement>(props: Props<ChildElement> & { index: number }) {
+function ConditionalRemoveButton<ChildElement>(props: Props<ChildElement> & { index: number, field: Field }) {
   if (props.disabled) {
     return null;
   } else {
+    const { removable = true } = props.field;
     return (
       <InputGroupAddon addonType='append'>
-        <Button color='secondary' onClick={() => props.onRemove(props.index)}>
+        <Button color='secondary' onClick={() => removable && props.onRemove(props.index)} disabled={!removable}>
           <Icon name='trash' color='white' width={1.25} height={1.25} />
         </Button>
       </InputGroupAddon>
@@ -157,7 +162,7 @@ function Children<ChildElement>(props: Props<ChildElement>) {
       <FormGroup key={`form-field-multi-child-${i}`}>
         <InputGroup>
           <Child id={id} className={className} state={field} onChange={onChange(i)} disabled={disabled} />
-          <ConditionalRemoveButton index={i} {...props} />
+          <ConditionalRemoveButton index={i} field={field} {...props} />
         </InputGroup>
         <ConditionalFieldErrors {...field} />
       </FormGroup>

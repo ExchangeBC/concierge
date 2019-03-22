@@ -15,7 +15,8 @@ import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-pas
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
 import * as PageProfile from 'front-end/lib/pages/profile';
-import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information-list';
+import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
+import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
@@ -133,6 +134,9 @@ const update: Update<State, Msg> = (state, msg) => {
               break;
             case 'userList':
               state = state.setIn(['pages', 'userList'], immutable(await PageUserList.init(msg.value.page.value)));
+              break;
+            case 'requestForInformationCreate':
+              state = state.setIn(['pages', 'requestForInformationCreate'], immutable(await PageRequestForInformationCreate.init(msg.value.page.value)));
               break;
             case 'requestForInformationList':
               state = state.setIn(['pages', 'requestForInformationList'], immutable(await PageRequestForInformationList.init(msg.value.page.value)));
@@ -306,6 +310,15 @@ const update: Update<State, Msg> = (state, msg) => {
         mapChildMsg: value => ({ tag: 'pageUserList', value }),
         childStatePath: ['pages', 'userList'],
         childUpdate: PageUserList.update,
+        childMsg: msg.value
+      });
+
+    case 'pageRequestForInformationCreate':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageRequestForInformationCreate', value }),
+        childStatePath: ['pages', 'requestForInformationCreate'],
+        childUpdate: PageRequestForInformationCreate.update,
         childMsg: msg.value
       });
 

@@ -16,7 +16,8 @@ import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-pas
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
 import * as PageProfile from 'front-end/lib/pages/profile';
-import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information-list';
+import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
+import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
@@ -155,6 +156,15 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.userList}
           mapPageMsg={value => ({ tag: 'pageUserList', value })}
           View={PageUserList.view} />
+      );
+
+    case 'requestForInformationCreate':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.requestForInformationCreate}
+          mapPageMsg={value => ({ tag: 'pageRequestForInformationCreate', value })}
+          View={PageRequestForInformationCreate.view} />
       );
 
     case 'requestForInformationList':

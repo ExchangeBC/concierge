@@ -6,6 +6,8 @@ import { cloneDeep } from 'lodash';
 import { default as React, FormEventHandler } from 'react';
 import { ADT, Omit } from 'shared/lib/types';
 
+export { Option } from 'front-end/lib/views/input/select';
+
 export interface State {
   options: Option[];
   unselectedLabel?: string;

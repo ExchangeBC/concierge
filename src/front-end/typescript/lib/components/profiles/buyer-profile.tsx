@@ -233,6 +233,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
         idNamespace: 'buyer-industry-sectors',
         label: 'Industry Sector(s)',
         labelClassName: 'h3 mb-3',
+        required: false,
         fields: []
       }
     })),
@@ -243,6 +244,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
         idNamespace: 'buyer-categories',
         label: 'Area(s) of Interest',
         labelClassName: 'h3 mb-3',
+        required: false,
         fields: []
       }
     }))

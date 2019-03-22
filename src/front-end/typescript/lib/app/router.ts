@@ -7,6 +7,11 @@ import { get } from 'lodash';
 import { getString } from 'shared/lib';
 import { UserType, userTypeToTitleCase } from 'shared/lib/types';
 
+// TODO we can remove `pageId` strings from the routes array
+// by adding a function to each routes definition instead.
+// The function would take in params and state,
+// and return a value of type `Page`.
+
 const PAGE_TITLE_SUFFIX = 'Procurement Concierge Program';
 
 const isSignedOut: RouteAuthDefinition<Page, UserType> = {
@@ -25,6 +30,13 @@ const isSignedIn: RouteAuthDefinition<Page, UserType> = {
       }
     };
   },
+  signOut: false
+};
+
+const isVendor: RouteAuthDefinition<Page, UserType> = {
+  level: { tag: 'userType', value: [UserType.Vendor] },
+  // TODO redirect to the view RFI page.
+  redirect: page => ({ tag: 'landing', value: null }),
   signOut: false
 };
 
@@ -162,9 +174,26 @@ const router: Router<State, Page, UserType> = {
       pageId: 'guide'
     },
     {
-      path: '/requests-for-information',
+      path: '/requests-for-information/create',
+      pageId: 'requestForInformationCreate'
+    },
+    {
+      path: '/requests-for-information/:rfiId/view',
+      pageId: 'requestForInformationList'
+    },
+    {
+      path: '/requests-for-information/:rfiId/edit',
       pageId: 'requestForInformationList',
-      auth: isSignedIn
+      auth: isProgramStaff
+    },
+    {
+      path: '/requests-for-information/:rfiId/respond',
+      pageId: 'requestForInformationList',
+      auth: isVendor
+    },
+    {
+      path: '/requests-for-information',
+      pageId: 'requestForInformationList'
     },
     {
       path: '/notice/change-password',
@@ -278,6 +307,13 @@ const router: Router<State, Page, UserType> = {
           tag: 'userList',
           value: null
         };
+      case 'requestForInformationCreate':
+        return {
+          tag: 'requestForInformationCreate',
+          value: {
+            isEditing: true
+          }
+        };
       case 'requestForInformationList':
         return {
           tag: 'requestForInformationList',
@@ -333,7 +369,6 @@ const router: Router<State, Page, UserType> = {
           tag: 'noticeNotFound',
           value: null
         };
-      // TODO remove default
       default:
         return {
           tag: 'noticeNotFound',
@@ -368,6 +403,8 @@ const router: Router<State, Page, UserType> = {
         return `/profile/${page.value.profileUserId}`;
       case 'userList':
         return '/users';
+      case 'requestForInformationCreate':
+        return '/requests-for-information/create';
       case 'requestForInformationList':
         return '/requests-for-information';
       case 'about':
@@ -423,6 +460,8 @@ const router: Router<State, Page, UserType> = {
         return makeMetadata('Profile');
       case 'userList':
         return makeMetadata('Users');
+      case 'requestForInformationCreate':
+        return makeMetadata('Requests for Information');
       case 'requestForInformationList':
         return makeMetadata('Requests for Information');
       case 'about':
