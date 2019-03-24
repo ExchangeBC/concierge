@@ -71,6 +71,7 @@ export interface Props<ChildElement, Value, OnAddParams, ExtraChildProps> {
   AddButton: View<AddButtonProps<OnAddParams>>;
   addButtonProps: AddButtonProps<OnAddParams>;
   Child: View<ChildProps<ChildElement, Value, ExtraChildProps>>;
+  childClassName?: string;
   extraChildProps: ExtraChildProps;
   onChange(index: number): ChangeEventHandler<ChildElement>;
   onRemove(index: number): () => void;
@@ -94,7 +95,7 @@ const ConditionalLabel: View<Props<any, any, any, any>> = (props) => {
   const { label, required } = props.state;
   if (label) {
     return (
-      <Label className={`mb-0 mr-2 ${required ? 'font-weight-bold' : ''}`}>
+      <Label className={`mb-0 mr-3 mb-2 ${required ? 'font-weight-bold' : ''}`}>
         {label}
         <span className='text-info'>{required ? '*' : ''}</span>
         <ConditionHelpToggle {...props} />
@@ -108,7 +109,7 @@ const ConditionalLabel: View<Props<any, any, any, any>> = (props) => {
 export function makeDefaultAddButton(text = 'Add'): View<AddButtonProps<void>> {
   return props => {
     return (
-      <Button color='secondary' size='sm' className='ml-2' onClick={() => props.onAdd()}>
+      <Button color='secondary' size='sm' className='mb-2' onClick={() => props.onAdd()}>
         {text}
       </Button>
     );
@@ -188,13 +189,13 @@ export function DefaultChild<ChildElement, Value, ExtraProps>(props: DefaultChil
 }
 
 function Children<ChildElement, Value, OnAddParams, ExtraChildProps>(props: Props<ChildElement, Value, OnAddParams, ExtraChildProps>) {
-  const { Child, state, onChange, onRemove, extraChildProps, disabled = false } = props;
+  const { Child, state, onChange, onRemove, childClassName = '', extraChildProps, disabled = false } = props;
   const children = state.fields.map((field, i) => {
     const id = `${state.idNamespace}-${i}`;
     const invalid = !!field.errors.length;
     const className = `form-control ${invalid ? 'is-invalid' : ''}`;
     return (
-      <FormGroup key={`form-field-multi-child-${i}`}>
+      <FormGroup key={`form-field-multi-child-${i}`} className={childClassName}>
         <Child
           key={`form-field-multi-child-${i}`}
           id={id}
@@ -218,7 +219,7 @@ export function view<ChildElement, Value, OnAddParams, ExtraChildProps>(props: P
   const labelClassName = state.labelClassName || '';
   return (
     <FormGroup className={`form-field-${state.idNamespace}`}>
-      <div className={`d-flex align-items-center mb-2 ${labelClassName}`}>
+      <div className={`d-flex flex-wrap align-items-center mb-2 ${labelClassName}`}>
         <ConditionalLabel {...props} />
         <ConditionalAddButton {...props} />
       </div>

@@ -1,6 +1,8 @@
 import { prefixRequest } from 'front-end/lib/http';
 import shajs from 'sha.js';
+import * as FileResource from 'shared/lib/resources/file';
 import * as ForgotPasswordTokenResource from 'shared/lib/resources/forgot-password-token';
+import * as RfiResource from 'shared/lib/resources/request-for-information';
 import * as UserResource from 'shared/lib/resources/user';
 import { HttpMethod, PaginatedList, Profile, UserType } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
@@ -200,3 +202,62 @@ export async function updateForgotPasswordToken(token: string, userId: string, p
     return invalid({});
   }
 }
+
+export interface CreateFileRequestBody {
+  name: string;
+  file: File;
+}
+
+export async function createFile(file: CreateFileRequestBody): Promise<ValidOrInvalid<FileResource.PublicFile, string[]>> {
+  try {
+    const requestBody = new FormData();
+    requestBody.append('file', file.file);
+    requestBody.append('name', file.name);
+    const response = await request(HttpMethod.Post, 'files', requestBody);
+    switch (response.status) {
+      case 201:
+        return valid(response.data as FileResource.PublicFile);
+      case 401:
+      case 400:
+        return invalid(response.data as string[]);
+      default:
+        return invalid([]);
+    }
+  } catch (error) {
+    // tslint:disable:next-line no-console
+    console.error(error);
+    return invalid([]);
+  }
+};
+
+export interface CreateRfiRequestBody {
+  rfiNumber: string;
+  title: string;
+  publicSectorEntity: string;
+  description: string;
+  discoveryDay: boolean;
+  closingAt: Date;
+  buyerContact: string;
+  programStaffContact: string;
+  categories: string[];
+  attachments: string[];
+  addenda: string[];
+}
+
+export async function createRfi(rfi: CreateRfiRequestBody): Promise<ValidOrInvalid<RfiResource.PublicRfi, RfiResource.CreateValidationErrors>> {
+  try {
+    const response = await request(HttpMethod.Post, 'requestsForInformation', rfi);
+    switch (response.status) {
+      case 201:
+        return valid(response.data as RfiResource.PublicRfi);
+      case 400:
+        return invalid(response.data as RfiResource.CreateValidationErrors);
+      default:
+        return invalid({});
+    }
+  } catch (error) {
+    // tslint:disable:next-line no-console
+    console.error(error);
+    return invalid({});
+  }
+};

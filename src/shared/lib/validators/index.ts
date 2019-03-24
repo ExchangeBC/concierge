@@ -3,7 +3,7 @@ import { isEmpty, uniq } from 'lodash';
 import moment from 'moment';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
-import { formatDateAndTime } from 'shared/lib';
+import { formatDate, formatDateAndTime, formatTime } from 'shared/lib';
 import { ADT, parsePhoneType, parseUserType, PhoneType, UserType } from 'shared/lib/types';
 
 export type ValidOrInvalid<Valid, Invalid> = ADT<'valid', Valid> | ADT<'invalid', Invalid>;
@@ -141,28 +141,54 @@ export function validateStringArray(values: string[], availableValues: Set<strin
   }
 }
 
-export function validateDate(raw: string, minDate?: Date, maxDate?: Date): Validation<Date> {
+function compareDates(a: Date, b: Date): -1 | 0 | 1 {
+  const epochA = a.getTime();
+  const epochB = b.getTime();
+  if (epochA < epochB) {
+    return -1;
+  } else if (epochA > epochB) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+function parseDate(raw: string): Date | null {
   const parsed = moment(raw);
-  const isValid: boolean = parsed.isValid();
-  const epoch: number | null = isValid ? parsed.valueOf() : null;
-  const date: Date | null = (epoch && new Date(epoch)) || null;
-  const validMinDate = !minDate || (epoch && epoch >= minDate.getTime());
-  const validMaxDate = !maxDate || (epoch && epoch >= maxDate.getTime())
-  if (date && validMinDate && validMaxDate) {
+  return parsed.isValid() ? parsed.toDate() : null;
+}
+
+export function validateGenericDate(raw: string, name: string, preposition: string, format: (d: Date) => string, minDate?: Date, maxDate?: Date): Validation<Date> {
+  const date: Date | null = parseDate(raw);
+  if (!date) {
+    return invalid(['Please enter a valid date.']);
+  }
+  const validMinDate = !minDate || compareDates(date, minDate) !== -1;
+  const validMaxDate = !maxDate || compareDates(date, maxDate) !== 1;
+  if (validMinDate && validMaxDate) {
     return valid(date);
   } else {
     const errors: string[] = [];
-    if (!validMinDate && minDate && date) {
-      errors.push(`Please select a date/time at or after ${formatDateAndTime(minDate)}`);
+    if (!validMinDate && minDate) {
+      errors.push(`Please select a ${name} ${preposition} or after ${format(minDate)}`);
     }
-    if (!validMaxDate && maxDate && date) {
-      errors.push(`Please select a date/time at or earlier than ${formatDateAndTime(maxDate)}`);
-    }
-    if (!errors.length) {
-      errors.push('Please enter a valid date.');
+    if (!validMaxDate && maxDate) {
+      errors.push(`Please select a ${name} ${preposition} or earlier than ${format(maxDate)}`);
     }
     return invalid(errors);
   }
+}
+
+export function validateDatetime(raw: string, minDate?: Date, maxDate?: Date): Validation<Date> {
+  return validateGenericDate(raw, 'date/time', 'at', formatDateAndTime, minDate, maxDate);
+}
+
+export function validateDate(raw: string, minDate?: Date, maxDate?: Date): Validation<Date> {
+  return validateGenericDate(raw, 'date', 'on', formatDate, minDate, maxDate);
+}
+
+export function validateTime(raw: string, minDate?: Date, maxDate?: Date): Validation<Date> {
+  return validateGenericDate(raw, 'time', 'at', formatTime, minDate, maxDate);
 }
 
 export function validateStringId(id: string, name = 'ID'): Validation<string> {

@@ -1,7 +1,7 @@
 import { COOKIE_SECRET, TMP_DIR } from 'back-end/config';
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
-import { ErrorResponseBody, FileRequestBody, FileResponseBody, FileUpload, JsonRequestBody, JsonResponseBody, makeErrorResponseBody, makeFileRequestBody, makeJsonRequestBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
+import { ErrorResponseBody, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, makeErrorResponseBody, makeFileRequestBody, makeJsonRequestBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import expressLib from 'express';
@@ -44,9 +44,11 @@ function incomingHeaderMatches(headers: IncomingHttpHeaders, header: string, val
 
 /**
  * Use `multiparty` to parse a HTTP request with a multipart body.
- * It currently only supports multipart bodies with two fields:
+ * It currently only supports multipart bodies with these fields:
  *
  * `file` must be the file you want to upload.
+ *
+ * `name` must be the user-defined name of the file.
  *
  * `authLevel` is an optional field containing a JSON string defining
  * access control to the file.
@@ -54,8 +56,9 @@ function incomingHeaderMatches(headers: IncomingHttpHeaders, header: string, val
 
 function parseMultipartRequest(maxFilesSize: number, expressReq: expressLib.Request): Promise<FileRequestBody> {
   return new Promise((resolve, reject) => {
-    let file: FileUpload | undefined;
+    let filePath: string | undefined;
     let authLevel = '';
+    let fileName = '';
     const form = new multiparty.Form({
       maxFilesSize
     });
@@ -65,17 +68,19 @@ function parseMultipartRequest(maxFilesSize: number, expressReq: expressLib.Requ
     form.on('part', part => {
       part.on('error', error => reject(error));
       // We expect the file's field to have the name `file`.
-      if (part.name === 'file' && part.filename && !file) {
+      if (part.name === 'file' && part.filename && !filePath) {
         // We only want to receive one file.
         const tmpPath = path.join(TMP_DIR, new mongoose.Types.ObjectId().toString());
         part.pipe(createWriteStream(tmpPath));
-        file = {
-          name: part.filename,
-          path: tmpPath
-        };
+        filePath = tmpPath;
       } else if (part.name === 'authLevel' && !part.filename && !authLevel) {
         part.setEncoding('utf8');
         part.on('data', chunk => authLevel += chunk);
+        // No need to listen to 'end' event as the multiparty form won't end until the
+        // entire request body has been processed.
+      } else if (part.name === 'name' && !part.filename && !authLevel) {
+        part.setEncoding('utf8');
+        part.on('data', chunk => fileName += chunk);
         // No need to listen to 'end' event as the multiparty form won't end until the
         // entire request body has been processed.
       } else {
@@ -87,19 +92,25 @@ function parseMultipartRequest(maxFilesSize: number, expressReq: expressLib.Requ
     form.on('error', error => reject(error));
     // Resolve the promise once the request has finished parsing.
     form.on('close', () => {
-      if (file && authLevel) {
+      if (filePath && authLevel && fileName) {
         const parsedAuthLevel = parseJsonSafely(authLevel);
         switch (parsedAuthLevel.tag) {
           case 'valid':
-            file.authLevel = parsedAuthLevel.value as object;
-            resolve(makeFileRequestBody(file));
+            resolve(makeFileRequestBody({
+              name: fileName,
+              path: filePath,
+              authLevel: parsedAuthLevel.value as object
+            }));
             break;
           case 'invalid':
             reject(new Error('Invalid `authLevel` field.'));
             break;
         }
-      } else if (file) {
-        resolve(makeFileRequestBody(file));
+      } else if (filePath && fileName) {
+        resolve(makeFileRequestBody({
+          name: fileName,
+          path: filePath
+        }));
       } else {
         reject(new Error('No file uploaded'));
       }

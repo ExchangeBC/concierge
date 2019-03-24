@@ -1,8 +1,11 @@
 import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentViewProps, immutable, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import * as FormFieldMulti from 'front-end/lib/views/form-field-multi';
+import * as Input from 'front-end/lib/views/input/input';
 import { ChangeEvent, ChangeEventHandler, default as React } from 'react';
 import { Button } from 'reactstrap';
+import { bytesToMegabytes } from 'shared/lib';
+import { MAX_MULTIPART_FILES_SIZE } from 'shared/lib/resources/file';
 import { ADT, Omit } from 'shared/lib/types';
 
 export interface Value {
@@ -76,11 +79,12 @@ export const update: Update<State, Msg> = (state, msg) => {
     case 'add':
       const file = msg.value;
       let addFields = state.formFieldMulti.fields;
+      const errors = file.size > MAX_MULTIPART_FILES_SIZE ? [`Please remove this file, and select one less than ${bytesToMegabytes(MAX_MULTIPART_FILES_SIZE)} MB in size.`] : [];
       addFields = addFields.concat(FormFieldMulti.makeField({
         file,
         // The file name's input placeholder will show the original file name.
         name: ''
-      }));
+      }, errors));
       return [state.setIn(['formFieldMulti', 'fields'], addFields)];
     case 'remove':
       let removeFields = state.formFieldMulti.fields;
@@ -100,12 +104,13 @@ export const update: Update<State, Msg> = (state, msg) => {
 };
 
 const Child: View<FormFieldMulti.ChildProps<HTMLInputElement, Value, void>> = props => {
-  const { className, field, onChange, disabled = false } = props;
+  const { id, className, field, onChange, disabled = false } = props;
   return (
     <FormFieldMulti.DefaultChild childProps={props}>
-      <input
+      <Input.View
+        id={id}
         type='text'
-        className={`${className} form-control`}
+        className={className}
         value={field.value.name}
         placeholder={field.value.file.name}
         disabled={disabled}
@@ -121,14 +126,18 @@ function AddButton(props: FormFieldMulti.AddButtonProps<File>) {
       props.onAdd(file);
     }
   };
+  // Keep file value as empty string so it never stores the last
+  // selected file, which breaks selecting the same file twice
+  // in a row.
   return (
-    <div className='position-relative ml-2'>
+    <div className='position-relative'>
       <input
         type='file'
         className='position-absolute w-100 h-100'
         style={{ top: '0px', left: '0px', opacity: 0 }}
+        value={''}
         onChange={onChange} />
-      <Button color='secondary' size='sm'>
+      <Button color='secondary' size='sm' className='mb-2'>
         Add Attachment
       </Button>
     </div>

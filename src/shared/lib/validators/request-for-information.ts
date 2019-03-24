@@ -1,4 +1,4 @@
-import { ArrayValidation, validateArray, validateDate, validateGenericString, Validation } from 'shared/lib/validators';
+import { ArrayValidation, validateArray, validateDatetime, validateGenericString, Validation } from 'shared/lib/validators';
 
 /**
  * Function to validate whether a string is a valid
@@ -7,7 +7,7 @@ import { ArrayValidation, validateArray, validateDate, validateGenericString, Va
  */
 
 export function validateClosingAt(raw: string): Validation<Date> {
-  return validateDate(raw, new Date());
+  return validateDatetime(raw, new Date());
 }
 
 export function validateRfiNumber(raw: string): Validation<string> {
@@ -15,11 +15,11 @@ export function validateRfiNumber(raw: string): Validation<string> {
 }
 
 export function validateTitle(raw: string): Validation<string> {
-  return validateGenericString(raw, 'Title');
+  return validateGenericString(raw, 'Project Title');
 }
 
 export function validateDescription(raw: string): Validation<string> {
-  return validateGenericString(raw, 'Description', 1, 20000);
+  return validateGenericString(raw, 'RFI Description', 1, 20000);
 }
 
 export function validatePublicSectorEntity(raw: string): Validation<string> {

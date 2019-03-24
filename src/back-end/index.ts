@@ -1,9 +1,10 @@
-import { getConfigErrors, MAX_MULTIPART_FILES_SIZE, MONGO_URL, SERVER_HOST, SERVER_PORT } from 'back-end/config';
+import { getConfigErrors, MONGO_URL, SERVER_HOST, SERVER_PORT } from 'back-end/config';
 import * as app from 'back-end/lib/app';
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import { express, ExpressAdapter } from 'back-end/lib/server/adapters';
+import { MAX_MULTIPART_FILES_SIZE } from 'shared/lib/resources/file';
 
 const logger = makeDomainLogger(consoleAdapter, 'back-end');
 

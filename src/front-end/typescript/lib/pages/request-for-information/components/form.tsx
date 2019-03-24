@@ -4,7 +4,6 @@ import * as LongTextMulti from 'front-end/lib/components/input/long-text-multi';
 import * as SelectMulti from 'front-end/lib/components/input/select-multi';
 import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
-// import { validateObjectIdString } from 'front-end/lib/validators';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as DateTime from 'front-end/lib/views/input/datetime';
 import * as LongText from 'front-end/lib/views/input/long-text';
@@ -12,17 +11,15 @@ import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
 import * as Switch from 'front-end/lib/views/input/switch';
 import { find, get } from 'lodash';
-// import { flow } from 'lodash/fp';
-// import moment from 'moment';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import { getString } from 'shared/lib';
 import { PublicRfi } from 'shared/lib/resources/request-for-information';
 import { PublicUser } from 'shared/lib/resources/user';
-import { ADT, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
-import { getInvalidValue, invalid, valid, validateCategories, validateDate, Validation } from 'shared/lib/validators';
-import { validateDescription, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
+import { ADT, Omit, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
+import { getInvalidValue, invalid, valid, validateCategories, validateDate, validateTime, Validation } from 'shared/lib/validators';
+import { validateAddendumDescriptions, validateDescription, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
 
 const FALLBACK_NAME = 'No Name Provided';
 
@@ -73,49 +70,29 @@ export interface State {
   addenda: Immutable<LongTextMulti.State>;
 };
 
-// TODO create a CreateRequestBody type in shared,
-// and use it with the back-end.
-/*interface Version extends Omit<PublicVersion, 'createdAt' | 'closingAt' | 'addenda' | 'attachments' | 'programStaffContact' | 'buyerContact'> {
-  closingAt: string;
-  addenda: string[];
-  attachments: string[];
-  programStaffContact: string;
-  buyerContact: string;
+export interface Values extends Omit<api.CreateRfiRequestBody, 'attachments'> {
+  attachments: FileMulti.Value[];
 }
 
-interface ValidatedVersion {
-  closingAt: Validation<Date>;
-  rfiNumber: Validation<string>;
-  title: Validation<string>;
-  description: Validation<string>;
-  publicSectorEntity: Validation<string>;
-  categories: ValidOrInvalid<string[], string[][]>;
-  discoveryDay: Validation<boolean>;
-  addenda: ValidOrInvalid<string[], string[][]>;
-  attachments: ValidOrInvalid<string[], string[][]>;
-  buyerContact: Validation<string>;
-  programStaffContact: Validation<string>;
-}*/
+function getClosingAt(state: State): Date {
+  return new Date(`${state.closingDate.value} ${state.closingTime.value}`);
+}
 
-/*function getClosingAt(state: Immutable<State>): string {
-  return moment(`${state.closingDate.value} ${state.closingTime.value}`, 'YYY-MM-DD HH:mm').toString();
-}*/
-
-/*function getValues(state: Immutable<State>): Version {
+export function getValues(state: State): Values {
   return {
-    closingAt: getClosingAt(state),
     rfiNumber: state.rfiNumber.value,
     title: state.title.value,
     publicSectorEntity: state.publicSectorEntity.value,
+    description: state.description.value,
+    discoveryDay: state.discoveryDay.value,
+    closingAt: getClosingAt(state),
     buyerContact: state.buyerContact.value,
     programStaffContact: state.programStaffContact.value,
     categories: SelectMulti.getValues(state.categories),
-    description: '',
-    discoveryDay: false,
-    addenda: [],
-    attachments: []
+    attachments: FileMulti.getValues(state.attachments),
+    addenda: LongTextMulti.getValues(state.addenda)
   };
-}*/
+}
 
 export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
   const result = await api.readManyUsers();
@@ -174,7 +151,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       id: 'rfi-description',
       required: true,
       label: 'RFI Description',
-      placeholder: 'Here is a list of suggested sections to include in the RFI description:\n- Business Requirement(s) or Issue(s);\n- Brief Ministry Overview;\n- Objectives of the RFI;\n- Ministry Obligations; and,\n- Response Instructions.',
+      placeholder: 'Suggested sections for an RFI\'s description:\n- Business Requirement(s) or Issue(s);\n- Brief Ministry Overview;\n- Objectives of the RFI;\n- Ministry Obligations; and,\n- Response Instructions.',
       value: getString(existingRfi, 'description')
     }),
     discoveryDay: Switch.init({
@@ -239,11 +216,11 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       }
     })),
     addenda: immutable(await LongTextMulti.init({
-      addButtonText: 'Add Attachment',
+      addButtonText: 'Add Addendum',
       field: {
         label: 'Addendum',
         placeholder: 'Additional information related to the RFI.',
-        textareaStyle: {
+        textAreaStyle: {
           height: '120px'
         }
       },
@@ -280,6 +257,7 @@ export const update: Update<State, Msg> = (state, msg) => {
         const buyer = find(state.buyers, { _id: msg.value });
         if (buyer && buyer.profile.type === UserType.Buyer) {
           state = state.setIn(['publicSectorEntity', 'value'], buyer.profile.publicSectorEntity);
+          state = validateValue(state, 'publicSectorEntity', validatePublicSectorEntity);
         }
       }
       return [validateValue(state, 'buyerContact', validateBuyerContact)];
@@ -305,8 +283,9 @@ export const update: Update<State, Msg> = (state, msg) => {
         childUpdate: FileMulti.update,
         childMsg: msg.value
       })[0];
-      // tslint:disable:next-line no-console
-      console.log(FileMulti.getValues(state.attachments));
+      // No need to validate attachments as FileMulti
+      // is fairly 'intelligent' about file names,
+      // and handles file size constraint validation as-is.
       return [state];
     case 'onChangeAddenda':
       state = updateComponentChild({
@@ -316,8 +295,8 @@ export const update: Update<State, Msg> = (state, msg) => {
         childUpdate: LongTextMulti.update,
         childMsg: msg.value
       })[0];
-      // tslint:disable:next-line no-console
-      console.log(LongTextMulti.getValues(state.addenda));
+      const validatedAddenda = validateAddendumDescriptions(LongTextMulti.getValues(state.addenda));
+      state = state.set('addenda', LongTextMulti.setErrors(state.addenda, getInvalidValue(validatedAddenda, [])));
       return [state];
     case 'validateRfiNumber':
       return [validateValue(state, 'rfiNumber', validateRfiNumber)];
@@ -328,9 +307,9 @@ export const update: Update<State, Msg> = (state, msg) => {
     case 'validateDescription':
       return [validateValue(state, 'description', validateDescription)];
     case 'validateClosingDate':
-      return [validateValue(state, 'closingDate', validateClosingDate)];
+      return [validateClosingDateAndTime(state)];
     case 'validateClosingTime':
-      return [validateValue(state, 'closingTime', validateClosingTime)];
+      return [validateClosingDateAndTime(state)];
     default:
       return [state];
   }
@@ -349,10 +328,18 @@ function validateClosingDate(raw: string): Validation<Date> {
   return validateDate(`${raw} 23:59`, minDate);
 }
 
-function validateClosingTime(raw: string): Validation<Date> {
+function validateClosingTime(rawTime: string, rawClosingDate: string): Validation<Date> {
   const minDate = new Date();
-  raw = `${minDate.getUTCFullYear()}-${minDate.getUTCMonth() + 1}-${minDate.getUTCDate()} ${raw}`;
-  return validateDate(raw, minDate);
+  minDate.setSeconds(0);
+  minDate.setMilliseconds(0);
+  const rawDate = rawClosingDate || `${minDate.getFullYear()}-${minDate.getMonth() + 1}-${minDate.getDate()}`;
+  const raw = `${rawDate} ${rawTime}`;
+  return validateTime(raw, minDate);
+}
+
+function validateClosingDateAndTime(state: Immutable<State>): Immutable<State> {
+  state = validateValue(state, 'closingDate', validateClosingDate);
+  return validateValue(state, 'closingTime', v => validateClosingTime(v, state.closingDate.value));
 }
 
 function validateBuyerContact(raw: string): Validation<string> {
@@ -366,6 +353,25 @@ function validateProgramStaffContact(raw: string): Validation<string> {
 function validateValue(state: Immutable<State>, key: keyof State, validate: (value: string) => Validation<any>): Immutable<State> {
   const validation = validate(state.getIn([key, 'value']));
   return state.setIn([key, 'errors'], getInvalidValue(validation, []));
+}
+
+export function isValid(state: State): boolean {
+  const {
+    rfiNumber,
+    title,
+    publicSectorEntity,
+    description,
+    closingDate,
+    closingTime,
+    buyerContact,
+    programStaffContact,
+    categories,
+    attachments,
+    addenda
+  } = state;
+  const providedRequiredFields = !!(rfiNumber.value && title.value && publicSectorEntity.value && description.value && closingDate.value && closingTime.value && buyerContact.value && programStaffContact.value);
+  const noValidationErrors = !(rfiNumber.errors.length || title.errors.length || publicSectorEntity.errors.length || description.errors.length || closingDate.errors.length || closingTime.errors.length || buyerContact.errors.length || programStaffContact.errors.length);
+  return providedRequiredFields && noValidationErrors && SelectMulti.isValid(categories) && FileMulti.isValid(attachments) && LongTextMulti.isValid(addenda);
 }
 
 const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
@@ -423,7 +429,7 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='6'>
+        <Col xs='12' md='8' lg='7'>
           <SelectMulti.view
             state={state.categories}
             dispatch={dispatchCategories}

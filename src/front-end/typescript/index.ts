@@ -41,6 +41,7 @@ start(app, element, debug)
         case 'pageSignUpVendor':
         case 'pageSignUpProgramStaff':
         case 'pageTermsAndConditions':
+        case 'pageRequestForInformationCreate':
           // Ensure this subscription is not mutually recursive.
           if (msg.value.tag !== 'updateFixedBarBottom') {
             debouncedDispatchFixedBarBottomSlow();

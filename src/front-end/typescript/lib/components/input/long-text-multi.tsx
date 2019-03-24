@@ -2,6 +2,7 @@ import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentViewProps, immutable, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import * as FormFieldMulti from 'front-end/lib/views/form-field-multi';
 import Icon from 'front-end/lib/views/icon';
+import * as TextArea from 'front-end/lib/views/input/text-area';
 import { ChangeEventHandler, CSSProperties, default as React } from 'react';
 import { Button, Label } from 'reactstrap';
 import { ADT, Omit } from 'shared/lib/types';
@@ -13,7 +14,7 @@ export interface State {
   field: {
     placeholder: string;
     label?: string;
-    textareaStyle?: CSSProperties;
+    textAreaStyle?: CSSProperties;
   };
   formFieldMulti: Immutable<FormFieldMulti.State<Value>>;
 }
@@ -116,16 +117,17 @@ const ConditionalLabel: View<FormFieldMulti.ChildProps<HTMLTextAreaElement, Valu
 };
 
 const Child: View<FormFieldMulti.ChildProps<HTMLTextAreaElement, Value, ExtraChildProps>> = props => {
-  const { extraProps, className, field, onChange, disabled = false } = props;
+  const { id, extraProps, className, field, onChange, disabled = false } = props;
   return (
-    <div className='px-7'>
+    <div>
       <ConditionalLabel {...props} />
-      <textarea
-        className={`${className} form-control`}
+      <TextArea.View
+        id={id}
+        className={className}
         value={field.value}
         placeholder={extraProps.field.placeholder}
         disabled={disabled}
-        style={extraProps.field.textareaStyle || {}}
+        style={extraProps.field.textAreaStyle}
         onChange={onChange} />
     </div>
   );
@@ -154,6 +156,7 @@ export const view: View<Props> = ({ state, dispatch, disabled = false }) => {
     AddButton,
     addButtonProps: { onAdd },
     Child,
+    childClassName: 'px-md-7',
     onChange,
     onRemove,
     extraChildProps: {

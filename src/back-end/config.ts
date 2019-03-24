@@ -51,9 +51,6 @@ export const TMP_DIR = tmpdir();
 const fileStorageDir = get('FILE_STORAGE_DIR', '');
 export const FILE_STORAGE_DIR = fileStorageDir && resolve(REPOSITORY_ROOT_DIR, fileStorageDir);
 
-// Default is 10MB.
-export const MAX_MULTIPART_FILES_SIZE = parseInt(get('MAX_MULTIPART_FILES_SIZE', '10485760'), 10);
-
 const productionMailerConfigOptions = {
   host: get('MAILER_HOST', ''),
   port: parseInt(get('MAILER_PORT', '25'), 10),
@@ -119,10 +116,6 @@ export function getConfigErrors(): string[] {
 
   if (!FILE_STORAGE_DIR) {
     errors.push('FILE_STORAGE_DIR must be specified.');
-  }
-
-  if (!isPositiveInteger(MAX_MULTIPART_FILES_SIZE)) {
-    errors.push('MAX_MULTIPART_FILES_SIZE must be a positive integer.');
   }
 
   if (ENV === 'production' && (!productionMailerConfigOptions.host || !isPositiveInteger(productionMailerConfigOptions.port))) {
