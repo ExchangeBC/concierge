@@ -77,7 +77,8 @@ async function getRequestBody(state: State): Promise<ValidOrInvalid<api.CreateRf
         publicSectorEntity: values.publicSectorEntity,
         description: values.description,
         discoveryDay: values.discoveryDay,
-        closingAt: values.closingAt,
+        closingDate: values.closingDate,
+        closingTime: values.closingTime,
         buyerContact: values.buyerContact,
         programStaffContact: values.programStaffContact,
         categories: values.categories,
@@ -107,6 +108,10 @@ export const update: Update<State, Msg> = (state, msg) => {
       return [
         state,
         async dispatch => {
+          const fail = (state: Immutable<State>, errors: RfiResource.CreateValidationErrors) => {
+            state = stopLoading(state);
+            return state.set('rfiForm', RfiForm.setErrors(state.rfiForm, errors));
+          };
           const requestBody = await getRequestBody(state);
           switch (requestBody.tag) {
             case 'valid':
@@ -120,15 +125,17 @@ export const update: Update<State, Msg> = (state, msg) => {
                       value: null
                     }
                   });
-                  return state;
+                  break;
                 case 'invalid':
-                  // TODO persist errors.
-                  return stopLoading(state);
+                  state = fail(state, result.value);
+                  break;
               }
+              break;
             case 'invalid':
-              // TODO persist errors.
-              return stopLoading(state);
+              state = fail(state, requestBody.value);
+              break;
           }
+          return state;
         }
       ];
     case 'updateFixedBarBottom':

@@ -33,7 +33,8 @@ export interface PublicRfi {
 export interface CreateValidationErrors {
   permissions?: string[];
   contentType?: string[];
-  closingAt?: string[];
+  closingDate?: string[];
+  closingTime?: string[];
   rfiNumber?: string[];
   title?: string[];
   description?: string[];

@@ -12,8 +12,8 @@ import * as mongoose from 'mongoose';
 import { getString, getStringArray, identityAsync } from 'shared/lib';
 import { CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicRfi, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
 import { ADT, PaginatedList, UserType } from 'shared/lib/types';
-import { allValid, getInvalidValue, invalid, valid, validateBoolean, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
-import { validateAddendumDescriptions, validateClosingAt, validateDescription, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
+import { allValid, getInvalidValue, getValidValue, invalid, valid, validateBoolean, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
+import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
 
 type CreateRequestBody
   = ADT<201, PublicRfi>
@@ -23,7 +23,8 @@ type CreateRequestBody
 async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, raw: object, session: AppSession): Promise<ValidOrInvalid<RfiSchema.Version, CreateValidationErrors>> {
   // Get raw values.
   const createdBy = getString(session.user, 'id');
-  const closingAt = getString(raw, 'closingAt');
+  const closingDate = getString(raw, 'closingDate');
+  const closingTime = getString(raw, 'closingTime');
   const rfiNumber = getString(raw, 'rfiNumber');
   const title = getString(raw, 'title');
   const description = getString(raw, 'description');
@@ -36,7 +37,8 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
   const programStaffContact = getString(raw, 'programStaffContact');
   // Validate individual values.
   const validatedCreatedBy = validateObjectIdString(createdBy);
-  const validatedClosingAt = validateClosingAt(closingAt);
+  const validatedClosingDate = validateClosingDate(closingDate);
+  const validatedClosingTime = validateClosingTime(closingTime, getValidValue(validatedClosingDate, ''));
   const validatedRfiNumber = validateRfiNumber(rfiNumber);
   const validatedTitle = validateTitle(title);
   const validatedDescription = validateDescription(description);
@@ -49,13 +51,13 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
   const validatedBuyerContact = await validateUserId(UserModel, buyerContact, UserType.Buyer, true);
   const validatedProgramStaffContact = await validateUserId(UserModel, programStaffContact, UserType.ProgramStaff);
   // Check if the payload is valid.
-  if (allValid([validatedCreatedBy, validatedClosingAt, validatedRfiNumber, validatedTitle, validatedDescription, validatedPublicSectorEntity, validatedNumCategories, validatedCategories, validatedDiscoveryDay, validatedAddenda, validatedAttachments, validatedBuyerContact, validatedProgramStaffContact])) {
+  if (allValid([validatedCreatedBy, validatedClosingDate, validatedClosingTime, validatedRfiNumber, validatedTitle, validatedDescription, validatedPublicSectorEntity, validatedNumCategories, validatedCategories, validatedDiscoveryDay, validatedAddenda, validatedAttachments, validatedBuyerContact, validatedProgramStaffContact])) {
     // If everything is valid, return the model.
     const createdAt = new Date();
     const version: RfiSchema.Version = {
       createdAt,
       createdBy: validatedCreatedBy.value as mongoose.Types.ObjectId,
-      closingAt: validatedClosingAt.value as Date,
+      closingAt: new Date(`${validatedClosingDate.value} ${validatedClosingTime.value}`),
       rfiNumber: validatedRfiNumber.value as string,
       title: validatedTitle.value as string,
       description: validatedDescription.value as string,
@@ -78,7 +80,8 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
     // If anything is invalid, return the validation errors.
     return invalid({
       permissions: validatedCreatedBy.tag === 'invalid' ? [permissions.ERROR_MESSAGE] : undefined,
-      closingAt: getInvalidValue(validatedClosingAt, undefined),
+      closingDate: getInvalidValue(validatedClosingDate, undefined),
+      closingTime: getInvalidValue(validatedClosingTime, undefined),
       rfiNumber: getInvalidValue(validatedRfiNumber, undefined),
       title: getInvalidValue(validatedTitle, undefined),
       description: getInvalidValue(validatedDescription, undefined),

@@ -175,7 +175,8 @@ const router: Router<State, Page, UserType> = {
     },
     {
       path: '/requests-for-information/create',
-      pageId: 'requestForInformationCreate'
+      pageId: 'requestForInformationCreate',
+      auth: isProgramStaff
     },
     {
       path: '/requests-for-information/:rfiId/view',

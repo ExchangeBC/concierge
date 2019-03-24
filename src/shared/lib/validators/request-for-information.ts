@@ -1,4 +1,4 @@
-import { ArrayValidation, validateArray, validateDatetime, validateGenericString, Validation } from 'shared/lib/validators';
+import { ArrayValidation, valid, validateArray, validateDate, validateDatetime, validateGenericString, validateTime, Validation } from 'shared/lib/validators';
 
 /**
  * Function to validate whether a string is a valid
@@ -32,4 +32,32 @@ export function validateAddendumDescription(raw: string): Validation<string> {
 
 export function validateAddendumDescriptions(raw: string[]): ArrayValidation<string[]> {
   return validateArray(raw, validateAddendumDescription);
+}
+
+export function validateClosingDate(raw: string): Validation<string> {
+  const minDate = new Date();
+  const validation = validateDate(`${raw} 23:59`, minDate);
+  switch (validation.tag) {
+    case 'valid':
+      return valid(raw);
+    case 'invalid':
+      return validation;
+  }
+}
+
+export function validateClosingTime(rawTime: string, rawDate: string): Validation<string> {
+  if (!rawDate) {
+    return valid(rawTime);
+  }
+  const minDate = new Date();
+  minDate.setSeconds(0);
+  minDate.setMilliseconds(0);
+  const raw = `${rawDate} ${rawTime}`;
+  const validation = validateTime(raw, minDate);
+  switch (validation.tag) {
+    case 'valid':
+      return valid(rawTime);
+    case 'invalid':
+      return validation;
+  }
 }

@@ -15,11 +15,12 @@ import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import { getString } from 'shared/lib';
+import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { PublicRfi } from 'shared/lib/resources/request-for-information';
 import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, Omit, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
-import { getInvalidValue, invalid, valid, validateCategories, validateDate, validateTime, Validation } from 'shared/lib/validators';
-import { validateAddendumDescriptions, validateDescription, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
+import { getInvalidValue, invalid, valid, validateCategories, Validation } from 'shared/lib/validators';
+import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
 
 const FALLBACK_NAME = 'No Name Provided';
 
@@ -74,10 +75,6 @@ export interface Values extends Omit<api.CreateRfiRequestBody, 'attachments'> {
   attachments: FileMulti.Value[];
 }
 
-function getClosingAt(state: State): Date {
-  return new Date(`${state.closingDate.value} ${state.closingTime.value}`);
-}
-
 export function getValues(state: State): Values {
   return {
     rfiNumber: state.rfiNumber.value,
@@ -85,7 +82,8 @@ export function getValues(state: State): Values {
     publicSectorEntity: state.publicSectorEntity.value,
     description: state.description.value,
     discoveryDay: state.discoveryDay.value,
-    closingAt: getClosingAt(state),
+    closingDate: state.closingDate.value,
+    closingTime: state.closingTime.value,
     buyerContact: state.buyerContact.value,
     programStaffContact: state.programStaffContact.value,
     categories: SelectMulti.getValues(state.categories),
@@ -323,20 +321,6 @@ function updateBooleanValue(state: Immutable<State>, key: string, value: boolean
   return state.setIn([key, 'value'], value);
 }
 
-function validateClosingDate(raw: string): Validation<Date> {
-  const minDate = new Date();
-  return validateDate(`${raw} 23:59`, minDate);
-}
-
-function validateClosingTime(rawTime: string, rawClosingDate: string): Validation<Date> {
-  const minDate = new Date();
-  minDate.setSeconds(0);
-  minDate.setMilliseconds(0);
-  const rawDate = rawClosingDate || `${minDate.getFullYear()}-${minDate.getMonth() + 1}-${minDate.getDate()}`;
-  const raw = `${rawDate} ${rawTime}`;
-  return validateTime(raw, minDate);
-}
-
 function validateClosingDateAndTime(state: Immutable<State>): Immutable<State> {
   state = validateValue(state, 'closingDate', validateClosingDate);
   return validateValue(state, 'closingTime', v => validateClosingTime(v, state.closingDate.value));
@@ -353,6 +337,23 @@ function validateProgramStaffContact(raw: string): Validation<string> {
 function validateValue(state: Immutable<State>, key: keyof State, validate: (value: string) => Validation<any>): Immutable<State> {
   const validation = validate(state.getIn([key, 'value']));
   return state.setIn([key, 'errors'], getInvalidValue(validation, []));
+}
+
+export function setErrors(state: Immutable<State>, errors: RfiResource.CreateValidationErrors): Immutable<State> {
+  return state
+    // TODO use separate error fields.
+    .setIn(['closingDate', 'errors'], errors.closingDate || [])
+    .setIn(['closingTime', 'errors'], errors.closingTime || [])
+    .setIn(['rfiNumber', 'errors'], errors.rfiNumber || [])
+    .setIn(['title', 'errors'], errors.title || [])
+    .setIn(['description', 'errors'], errors.description || [])
+    .setIn(['publicSectorEntity', 'errors'], errors.publicSectorEntity || [])
+    .setIn(['discoveryDay', 'errors'], errors.discoveryDay || [])
+    .setIn(['buyerContact', 'errors'], errors.buyerContact || [])
+    .setIn(['programStaffContact', 'errors'], errors.programStaffContact || [])
+    .set('categories', SelectMulti.setErrors(state.categories, errors.categories || []))
+    .set('addenda', LongTextMulti.setErrors(state.addenda, errors.addenda || []))
+    .set('attachments', FileMulti.setErrors(state.attachments, errors.attachments || []));
 }
 
 export function isValid(state: State): boolean {

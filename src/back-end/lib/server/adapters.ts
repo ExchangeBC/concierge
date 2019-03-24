@@ -1,11 +1,11 @@
 import { COOKIE_SECRET, TMP_DIR } from 'back-end/config';
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
-import { ErrorResponseBody, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, makeErrorResponseBody, makeFileRequestBody, makeJsonRequestBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
+import { ErrorResponseBody, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, makeFileRequestBody, makeJsonRequestBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import expressLib from 'express';
-import { createWriteStream } from 'fs';
+import { createWriteStream, existsSync, unlinkSync } from 'fs';
 import { IncomingHttpHeaders } from 'http';
 import { assign, castArray } from 'lodash';
 import mongoose from 'mongoose';
@@ -13,8 +13,6 @@ import multiparty from 'multiparty';
 import * as path from 'path';
 import { parseJsonSafely } from 'shared/lib';
 import { HttpMethod } from 'shared/lib/types';
-
-// tslint:disable no-console
 
 const SESSION_COOKIE_NAME = 'sid';
 
@@ -26,7 +24,7 @@ export interface AdapterRunParams<SupportedRequestBodies, SupportedResponseBodie
   sessionToSessionId: SessionToSessionId<Session>;
   host: string;
   port: number;
-  maxMultipartFilesSize: number
+  maxMultipartFilesSize: number;
 }
 
 export type Adapter<App, SupportedRequestBodies, SupportedResponseBodies, Session> = (params: AdapterRunParams<SupportedRequestBodies, SupportedResponseBodies, Session>) => App;
@@ -54,14 +52,18 @@ function incomingHeaderMatches(headers: IncomingHttpHeaders, header: string, val
  * access control to the file.
  */
 
-function parseMultipartRequest(maxFilesSize: number, expressReq: expressLib.Request): Promise<FileRequestBody> {
+function parseMultipartRequest(maxSize: number, expressReq: expressLib.Request): Promise<FileRequestBody> {
   return new Promise((resolve, reject) => {
+    // Reject the promise if the content length is too large.
+    const contentLength = expressReq.get('content-length') || maxSize + 1;
+    if (contentLength > maxSize) {
+      return reject(new Error('Content-Length is too large.'));
+    }
+    // Parse the request.
     let filePath: string | undefined;
     let authLevel = '';
     let fileName = '';
-    const form = new multiparty.Form({
-      maxFilesSize
-    });
+    const form = new multiparty.Form();
     // Listen for files and fields.
     // We only want to receive one file, so we disregard all other files.
     // We only want the (optional) authLevel field, so we disregard all other fields.
@@ -121,6 +123,7 @@ function parseMultipartRequest(maxFilesSize: number, expressReq: expressLib.Requ
 }
 
 export function express<Session>(): ExpressAdapter<Session> {
+  const logger = makeDomainLogger(consoleAdapter, 'adapter:express');
 
   return ({ router, sessionIdToSession, sessionToSessionId, host, port, maxMultipartFilesSize }) => {
     function respond(response: Response<ExpressResponseBodies, Session>, expressRes: expressLib.Response): void {
@@ -166,12 +169,15 @@ export function express<Session>(): ExpressAdapter<Session> {
         return (expressReq, expressRes, next) => {
           fn(expressReq, expressRes, next)
             .catch(err => {
-              const body = makeErrorResponseBody(err);
               // Respond with a 500 if an error occurs.
-              console.error(err);
+              logger.error(err);
               expressRes
                 .status(500)
-                .json(body.value);
+                .json({
+                  message: err.message,
+                  stack: err.stack,
+                  raw: err.toString()
+                });
             });
         };
       }
@@ -205,8 +211,8 @@ export function express<Session>(): ExpressAdapter<Session> {
           query: expressReq.query,
           body
         };
-        request.logger.debug('parsed request body', request.body);
         // Transform the request according to the route handler.
+        request.logger.debug('parsed request body', request.body);
         const transformRequest = route.handler.transformRequest;
         if (transformRequest) {
           request = assign(request, await transformRequest(request));
@@ -215,6 +221,10 @@ export function express<Session>(): ExpressAdapter<Session> {
         const hookState = route.hook ? await route.hook.before(request) : null;
         // Respond to the request using internal types.
         const response = await route.handler.respond(request);
+        // Delete temporary file if it exists.
+        if (body.tag === 'file' && existsSync(body.value.path)) {
+          unlinkSync(request.body.value.path);
+        }
         // Run the after hook if specified.
         // Note: we run the after hook after our business logic has completed,
         // not once the express framework sends the response.

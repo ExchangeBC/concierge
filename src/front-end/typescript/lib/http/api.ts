@@ -215,6 +215,7 @@ export async function createFile(file: CreateFileRequestBody): Promise<ValidOrIn
     requestBody.append('name', file.name);
     const response = await request(HttpMethod.Post, 'files', requestBody);
     switch (response.status) {
+      case 200:
       case 201:
         return valid(response.data as FileResource.PublicFile);
       case 401:
@@ -236,7 +237,8 @@ export interface CreateRfiRequestBody {
   publicSectorEntity: string;
   description: string;
   discoveryDay: boolean;
-  closingAt: Date;
+  closingDate: string;
+  closingTime: string;
   buyerContact: string;
   programStaffContact: string;
   categories: string[];
