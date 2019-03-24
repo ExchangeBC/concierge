@@ -1,75 +1,83 @@
 import { Immutable, View } from 'front-end/lib/framework';
 import Icon from 'front-end/lib/views/icon';
 import { cloneDeep, reduce } from 'lodash';
-import { default as React, FormEventHandler } from 'react';
+import { ChangeEventHandler, default as React, ReactElement } from 'react';
 import { Alert, Button, FormGroup, FormText, InputGroup, InputGroupAddon, Label } from 'reactstrap';
 
-export interface Field {
-  value: string;
+export interface Field<Value> {
+  value: Value;
   errors: string[];
   removable?: boolean;
 }
 
-export function emptyField(): Field {
+export function makeField<Value>(value: Value, errors: string[] = []): Field<Value> {
   return {
-    value: '',
-    errors: []
+    value,
+    errors
   };
 }
 
-export interface State {
+export interface State<Value> {
   idNamespace: string;
   label?: string;
   labelClassName?: string;
   required: boolean;
-  fields: Field[];
+  fields: Array<Field<Value>>;
   help?: {
     text: string;
     show: boolean;
   }
 }
 
-export function getFieldValues(state: State): string[] {
+export function getFieldValues<Value>(state: State<Value>): Value[] {
   return state.fields.map(field => field.value);
 }
 
-export function setFieldValues(state: Immutable<State>, values: string[]): Immutable<State> {
+export function setFieldValues<Value>(state: Immutable<State<Value>>, values: Value[]): Immutable<State<Value>> {
   const fields = cloneDeep(state.fields);
-  fields.forEach((field, i) => field.value = values[i] || '');
+  fields.forEach((field, i) => field.value = values[i] || field.value);
   return state.set('fields', fields);
 }
 
-export function setFieldErrors(state: Immutable<State>, errors: string[][]): Immutable<State> {
+export function setFieldErrors<Value>(state: Immutable<State<Value>>, errors: string[][]): Immutable<State<Value>> {
   const fields = cloneDeep(state.fields);
   fields.forEach((field, i) => field.errors = errors[i] || []);
   return state.set('fields', fields);
 }
 
-export function isValid(state: Immutable<State>): boolean {
-  return reduce(state.fields, (acc: boolean, v: Field) => {
+export function isValid<Value>(state: Immutable<State<Value>>): boolean {
+  return reduce(state.fields, (acc: boolean, v: Field<Value>) => {
     return acc && (!v.errors || !v.errors.length);
   }, true);
 }
 
-export interface ChildProps<ChildElement> {
+export interface ChildProps<ChildElement, Value, ExtraProps> {
   id: string;
   className: string;
-  state: Field;
+  field: Field<Value>;
   disabled: boolean;
-  onChange: FormEventHandler<ChildElement>;
+  onChange: ChangeEventHandler<ChildElement>;
+  extraProps: ExtraProps;
+  onRemove(): void;
 }
 
-export interface Props<ChildElement> {
-  state: State;
-  Child: View<ChildProps<ChildElement>>;
+export interface AddButtonProps<OnAddParams> {
+  onAdd(params?: OnAddParams): void;
+}
+
+export interface Props<ChildElement, Value, OnAddParams, ExtraChildProps> {
+  state: State<Value>;
   disabled?: boolean;
-  onChange(index: number): FormEventHandler<ChildElement>;
-  onAdd(): void;
-  onRemove(index: number): void;
+  AddButton: View<AddButtonProps<OnAddParams>>;
+  addButtonProps: AddButtonProps<OnAddParams>;
+  Child: View<ChildProps<ChildElement, Value, ExtraChildProps>>;
+  extraChildProps: ExtraChildProps;
+  onChange(index: number): ChangeEventHandler<ChildElement>;
+  onRemove(index: number): () => void;
   toggleHelp?(): void;
 }
 
-const ConditionHelpToggle: View<Props<any>> = ({ state, toggleHelp, disabled = false }) => {
+const ConditionHelpToggle: View<Props<any, any, any, any>> = ({ state, toggleHelp, disabled = false }) => {
   const { help } = state;
   if (help && toggleHelp && !disabled) {
     return (
@@ -82,7 +90,7 @@ const ConditionHelpToggle: View<Props<any>> = ({ state, toggleHelp, disabled = f
   }
 };
 
-const ConditionalLabel: View<Props<any>> = (props) => {
+const ConditionalLabel: View<Props<any, any, any, any>> = (props) => {
   const { label, required } = props.state;
   if (label) {
     return (
@@ -97,19 +105,26 @@ const ConditionalLabel: View<Props<any>> = (props) => {
   }
 };
 
-const ConditionalAddButton: View<Props<any>> = ({ state, onAdd, disabled = false }) => {
-  if (!disabled) {
+export function makeDefaultAddButton(text = 'Add'): View<AddButtonProps<void>> {
+  return props => {
     return (
-      <Button color='secondary' size='sm' className='ml-2' onClick={() => onAdd()}>
-        Add
+      <Button color='secondary' size='sm' className='ml-2' onClick={() => props.onAdd()}>
+        {text}
       </Button>
     );
-  } else {
+  };
+}
+
+function ConditionalAddButton<OnAddParams>(props: Props<any, any, OnAddParams, any>) {
+  const { AddButton, addButtonProps, disabled = false } = props;
+  if (disabled) {
     return null;
+  } else {
+    return (<AddButton onAdd={addButtonProps.onAdd} />);
   }
 }
 
-const ConditionalHelp: View<Props<any>> = ({ state, disabled = false }) => {
+const ConditionalHelp: View<Props<any, any, any, any>> = ({ state, disabled = false }) => {
   const { help } = state;
   if (help && help.show && !disabled) {
     return (
@@ -122,7 +137,7 @@ const ConditionalHelp: View<Props<any>> = ({ state, disabled = false }) => {
   }
 }
 
-const ConditionalFieldErrors: View<Field> = ({ errors }) => {
+const ConditionalFieldErrors: View<Field<any>> = ({ errors }) => {
   if (errors.length) {
     const errorElements = errors.map((error, i) => {
       return (<div key={`form-field-multi-conditional-errors-${i}`}>{error}</div>);
@@ -137,14 +152,14 @@ const ConditionalFieldErrors: View<Field> = ({ errors }) => {
   }
 }
 
-function ConditionalRemoveButton<ChildElement>(props: Props<ChildElement> & { index: number, field: Field }) {
+function ConditionalRemoveButton<ChildElement, Value>(props: ChildProps<ChildElement, Value, any>) {
   if (props.disabled) {
     return null;
   } else {
     const { removable = true } = props.field;
     return (
       <InputGroupAddon addonType='append'>
-        <Button color='secondary' onClick={() => removable && props.onRemove(props.index)} disabled={!removable}>
+        <Button color='secondary' onClick={() => removable && props.onRemove()} disabled={!removable}>
           <Icon name='trash' color='white' width={1.25} height={1.25} />
         </Button>
       </InputGroupAddon>
@@ -152,18 +167,43 @@ function ConditionalRemoveButton<ChildElement>(props: Props<ChildElement> & { in
   }
 }
 
-function Children<ChildElement>(props: Props<ChildElement>) {
-  const { Child, state, onChange, disabled = false } = props;
+export interface DefaultChildProps<ChildElement, Value, ExtraProps> {
+  childProps: ChildProps<ChildElement, Value, ExtraProps>;
+  children: ReactElement<any> | Array<ReactElement<any>> | string;
+}
+
+/**
+ * Helper React component to create a "standard"
+ * child component.
+ */
+
+export function DefaultChild<ChildElement, Value, ExtraProps>(props: DefaultChildProps<ChildElement, Value, ExtraProps>) {
+  const { childProps, children } = props;
+  return (
+    <InputGroup>
+      {children}
+      <ConditionalRemoveButton {...childProps} />
+    </InputGroup>
+  );
+}
+
+function Children<ChildElement, Value, OnAddParams, ExtraChildProps>(props: Props<ChildElement, Value, OnAddParams, ExtraChildProps>) {
+  const { Child, state, onChange, onRemove, extraChildProps, disabled = false } = props;
   const children = state.fields.map((field, i) => {
     const id = `${state.idNamespace}-${i}`;
     const invalid = !!field.errors.length;
     const className = `form-control ${invalid ? 'is-invalid' : ''}`;
     return (
       <FormGroup key={`form-field-multi-child-${i}`}>
-        <InputGroup>
-          <Child id={id} className={className} state={field} onChange={onChange(i)} disabled={disabled} />
-          <ConditionalRemoveButton index={i} field={field} {...props} />
-        </InputGroup>
+        <Child
+          key={`form-field-multi-child-${i}`}
+          id={id}
+          className={className}
+          field={field}
+          onChange={onChange(i)}
+          onRemove={onRemove(i)}
+          extraProps={extraChildProps}
+          disabled={disabled} />
         <ConditionalFieldErrors {...field} />
       </FormGroup>
     );
@@ -173,7 +213,7 @@ function Children<ChildElement>(props: Props<ChildElement>) {
   );
 };
 
-export function view<ChildElement>(props: Props<ChildElement>) {
+export function view<ChildElement, Value, OnAddParams, ExtraChildProps>(props: Props<ChildElement, Value, OnAddParams, ExtraChildProps>) {
   const { state } = props;
   const labelClassName = state.labelClassName || '';
   return (

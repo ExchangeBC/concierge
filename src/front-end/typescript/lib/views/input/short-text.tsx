@@ -16,6 +16,7 @@ interface ExtraProps {
   onKeyUp: KeyboardEventHandler<HTMLInputElement>;
   disabled: boolean;
   onChangeDebounced?: OnChangeDebounced;
+  inputClassName: string;
 }
 
 export interface Props extends Pick<FormField.Props<State, HTMLInputElement, ExtraProps>, 'toggleHelp'> {
@@ -24,6 +25,7 @@ export interface Props extends Pick<FormField.Props<State, HTMLInputElement, Ext
   onChange: ChangeEventHandler<HTMLInputElement>;
   onChangeDebounced?: OnChangeDebounced;
   onEnter?: OnEnter;
+  inputClassName?: string;
 }
 
 interface Params extends Pick<State, 'id' | 'required' | 'type' | 'label' | 'placeholder' | 'help'> {
@@ -86,6 +88,7 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
     const { state, onChange, className, extraProps } = this.props;
     const onKeyUp = (extraProps && extraProps.onKeyUp) || undefined;
     const disabled: boolean = !!(extraProps && extraProps.disabled) || false;
+    const inputClassName: string = (extraProps && extraProps.inputClassName) || '';
     // Override the input type to text for emails to support selectionStart selection state.
     const inputType = state.type === 'email' ? 'text' : state.type;
     // Manage this.onChangeDebounced.
@@ -109,7 +112,7 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
     }
     // Update the component's store of the state.
     this.value = state.value;
-    this.className = className;
+    this.className = `${className} ${inputClassName}`;
     this.disabled = disabled;
     return (
       <input
@@ -119,7 +122,7 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
         value={state.value || ''}
         placeholder={disabled ? '' : (state.placeholder || '')}
         disabled={disabled}
-        className={className}
+        className={`${className} form-control`}
         onChange={this.onChange.bind(this, onChange)}
         onKeyUp={onKeyUp}
         ref={ref => { this.ref = ref; }} />
@@ -150,11 +153,12 @@ const Child: View<FormField.ChildProps<State, HTMLInputElement, ExtraProps>> = p
   );
 };
 
-export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter, toggleHelp, disabled = false }) => {
+export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter, toggleHelp, disabled = false, inputClassName = '' }) => {
   const extraProps: ExtraProps = {
     onKeyUp: makeOnKeyUp(onEnter),
     onChangeDebounced,
-    disabled
+    disabled,
+    inputClassName
   };
   return (
     <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={extraProps} />

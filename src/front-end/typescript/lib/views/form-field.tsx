@@ -3,8 +3,8 @@ import { default as React, FormEventHandler } from 'react';
 import { Alert, FormGroup, FormText, Label } from 'reactstrap';
 import { getInvalidValue, getValidValue, Validation } from 'shared/lib/validators';
 
-export interface State {
-  value: string;
+export interface State<Value = string> {
+  value: Value;
   id: string;
   required: boolean;
   errors: string[];
@@ -22,10 +22,11 @@ export interface ChildProps<State, ChildElement, ExtraProps> {
   extraProps?: ExtraProps;
 }
 
-export interface Props<ChildState extends State, ChildElement, ChildExtraProps> {
+export interface Props<ChildState extends State<Value>, ChildElement, ChildExtraProps, Value = string> {
   state: ChildState;
   Child: View<ChildProps<ChildState, ChildElement, ChildExtraProps>>;
   onChange: FormEventHandler<ChildElement>;
+  labelClassName?: string;
   extraProps?: ChildExtraProps;
   toggleHelp?(): void;
 }
@@ -45,9 +46,10 @@ const ConditionHelpToggle: View<Props<any, any, any>> = ({ state, toggleHelp }) 
 
 const ConditionalLabel: View<Props<any, any, any>> = (props) => {
   const { id, label, required } = props.state;
+  const className = `${required ? 'font-weight-bold' : ''} ${props.labelClassName || ''}`;
   if (label) {
     return (
-      <Label for={id} className={required ? 'font-weight-bold' : ''}>
+      <Label for={id} className={className}>
         {label}
         <span className='text-info'>{required ? '*' : ''}</span>
         <ConditionHelpToggle {...props} />
@@ -58,7 +60,7 @@ const ConditionalLabel: View<Props<any, any, any>> = (props) => {
   }
 };
 
-const ConditionalHelp: View<State> = ({ help }) => {
+const ConditionalHelp: View<State<any>> = ({ help }) => {
   if (help && help.show) {
     return (
       <Alert color='info'>
@@ -70,7 +72,7 @@ const ConditionalHelp: View<State> = ({ help }) => {
   }
 }
 
-const ConditionalErrors: View<State> = ({ errors }) => {
+const ConditionalErrors: View<State<any>> = ({ errors }) => {
   if (errors.length) {
     const errorElements = errors.map((error, i) => {
       return (<div key={`form-field-conditional-errors-${i}`}>{error}</div>);
@@ -85,10 +87,10 @@ const ConditionalErrors: View<State> = ({ errors }) => {
   }
 }
 
-export function view<ChildState extends State, ChildElement, ChildExtraProps>(props: Props<ChildState, ChildElement, ChildExtraProps>) {
+export function view<ChildState extends State<Value>, ChildElement, ChildExtraProps, Value>(props: Props<ChildState, ChildElement, ChildExtraProps, Value>) {
   const { state, Child, onChange, extraProps } = props;
   const invalid = !!state.errors.length;
-  const className = `form-control ${invalid ? 'is-invalid' : ''}`;
+  const className = invalid ? 'is-invalid' : '';
   return (
     <FormGroup className={`form-field-${state.id}`}>
       <ConditionalLabel {...props} />

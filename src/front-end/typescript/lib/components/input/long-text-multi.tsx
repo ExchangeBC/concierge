@@ -1,24 +1,28 @@
 import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentViewProps, immutable, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import * as FormFieldMulti from 'front-end/lib/views/form-field-multi';
-import { Option } from 'front-end/lib/views/input/select';
-import { cloneDeep } from 'lodash';
-import { default as React, FormEventHandler } from 'react';
+import Icon from 'front-end/lib/views/icon';
+import { ChangeEventHandler, CSSProperties, default as React } from 'react';
+import { Button, Label } from 'reactstrap';
 import { ADT, Omit } from 'shared/lib/types';
 
-export { Option } from 'front-end/lib/views/input/select';
+export type Value = string;
 
 export interface State {
-  options: Option[];
-  unselectedLabel?: string;
-  formFieldMulti: Immutable<FormFieldMulti.State<string>>;
+  addButtonText?: string;
+  field: {
+    placeholder: string;
+    label?: string;
+    textareaStyle?: CSSProperties;
+  };
+  formFieldMulti: Immutable<FormFieldMulti.State<Value>>;
 }
 
-export function getValues(state: Immutable<State>): string[] {
+export function getValues(state: Immutable<State>): Value[] {
   return FormFieldMulti.getFieldValues(state.formFieldMulti);
 };
 
-export function setValues(state: Immutable<State>, values: string[]): Immutable<State> {
+export function setValues(state: Immutable<State>, values: Value[]): Immutable<State> {
   return state.set(
     'formFieldMulti',
     FormFieldMulti.setFieldValues(state.formFieldMulti, values)
@@ -44,19 +48,15 @@ type InnerMsg
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
 export interface Params extends Omit<State, 'formFieldMulti'> {
-  formFieldMulti: FormFieldMulti.State<string>;
+  formFieldMulti: FormFieldMulti.State<Value>;
 }
 
-type ExtraChildProps = Pick<State, 'options'>;
+type ExtraChildProps = Pick<State, 'field'>;
 
 export const init: Init<Params, State> = async params => {
-  let options = params.options;
-  if (params.unselectedLabel) {
-    options = [{ value: '', label: params.unselectedLabel }].concat(params.options);
-  }
   return {
-    options,
-    unselectedLabel: params.unselectedLabel,
+    addButtonText: params.addButtonText,
+    field: params.field,
     formFieldMulti: immutable(params.formFieldMulti)
   };
 };
@@ -72,11 +72,11 @@ export const update: Update<State, Msg> = (state, msg) => {
       removeFields = removeFields.filter((field, i) => i !== msg.value);
       return [state.setIn(['formFieldMulti', 'fields'], removeFields)];
     case 'change':
-      const changeFields = cloneDeep(state.formFieldMulti.fields);
-      changeFields.forEach((field, i) => {
+      const changeFields = state.formFieldMulti.fields.map((field, i) => {
         if (i === msg.value.index) {
           field.value = msg.value.value;
         }
+        return field;
       });
       return [state.setIn(['formFieldMulti', 'fields'], changeFields)];
     default:
@@ -84,34 +84,60 @@ export const update: Update<State, Msg> = (state, msg) => {
   }
 };
 
-const Child: View<FormFieldMulti.ChildProps<HTMLSelectElement, string, ExtraChildProps>> = props => {
-  const { id, className, field, onChange, extraProps, disabled = false } = props;
-  const children = extraProps.options.map((o: Option, i: number) => {
-    return (<option key={`select-multi-option-${o.value}-${i}`} value={o.value}>{o.label}</option>);
-  });
-  return (
-    <FormFieldMulti.DefaultChild childProps={props}>
-      <select
-        id={id}
-        name={id}
-        value={field.value}
-        disabled={disabled}
-        className={className}
-        onChange={onChange}>
-        {children}
-      </select>
-    </FormFieldMulti.DefaultChild>
-  );
+const ConditionalRemoveButton: View<FormFieldMulti.ChildProps<HTMLTextAreaElement, Value, ExtraChildProps>> = props => {
+  if (props.disabled) {
+    return null;
+  } else {
+    const { removable = true } = props.field;
+    return (
+      <Button
+        color='link'
+        onClick={() => removable && props.onRemove()}
+        disabled={!removable}
+        className='p-0'>
+        <Icon name='trash' color='secondary' width={1.25} height={1.25} />
+      </Button>
+    );
+  }
+}
+
+const ConditionalLabel: View<FormFieldMulti.ChildProps<HTMLTextAreaElement, Value, ExtraChildProps>> = props => {
+  const text = props.extraProps.field.label;
+  if (text) {
+    return (
+      <Label className='mb-2 w-100 d-flex justify-content-between align-items-center'>
+        {text}
+        <ConditionalRemoveButton {...props} />
+      </Label>
+    );
+  } else {
+    return null;
+  }
 };
 
-const AddButton: View<FormFieldMulti.AddButtonProps<void>> = FormFieldMulti.makeDefaultAddButton();
+const Child: View<FormFieldMulti.ChildProps<HTMLTextAreaElement, Value, ExtraChildProps>> = props => {
+  const { extraProps, className, field, onChange, disabled = false } = props;
+  return (
+    <div className='px-7'>
+      <ConditionalLabel {...props} />
+      <textarea
+        className={`${className} form-control`}
+        value={field.value}
+        placeholder={extraProps.field.placeholder}
+        disabled={disabled}
+        style={extraProps.field.textareaStyle || {}}
+        onChange={onChange} />
+    </div>
+  );
+};
 
 interface Props extends ComponentViewProps<State, Msg> {
   disabled?: boolean;
 }
 
 export const view: View<Props> = ({ state, dispatch, disabled = false }) => {
-  const onChange = (index: number): FormEventHandler<HTMLSelectElement> => event => {
+  const AddButton: View<FormFieldMulti.AddButtonProps<void>> = FormFieldMulti.makeDefaultAddButton(state.addButtonText);
+  const onChange = (index: number): ChangeEventHandler<HTMLTextAreaElement> => event => {
     dispatch({
       tag: 'change',
       value: {
@@ -122,7 +148,7 @@ export const view: View<Props> = ({ state, dispatch, disabled = false }) => {
   };
   const onAdd = () => dispatch({ tag: 'add', value: undefined });
   const onRemove = (index: number) => () => dispatch({ tag: 'remove', value: index });
-  const formFieldProps: FormFieldMulti.Props<HTMLSelectElement, string, void, ExtraChildProps> = {
+  const formFieldProps: FormFieldMulti.Props<HTMLTextAreaElement, Value, void, ExtraChildProps> = {
     state: state.formFieldMulti,
     disabled,
     AddButton,
@@ -131,7 +157,7 @@ export const view: View<Props> = ({ state, dispatch, disabled = false }) => {
     onChange,
     onRemove,
     extraChildProps: {
-      options: state.options
+      field: state.field
     }
   };
   return (

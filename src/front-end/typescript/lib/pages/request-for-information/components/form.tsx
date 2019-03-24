@@ -1,13 +1,17 @@
 import { Page } from 'front-end/lib/app/types';
+import * as FileMulti from 'front-end/lib/components/input/file-multi';
+import * as LongTextMulti from 'front-end/lib/components/input/long-text-multi';
 import * as SelectMulti from 'front-end/lib/components/input/select-multi';
 import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 // import { validateObjectIdString } from 'front-end/lib/validators';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as DateTime from 'front-end/lib/views/input/datetime';
+import * as LongText from 'front-end/lib/views/input/long-text';
 import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
-import { find } from 'lodash';
+import * as Switch from 'front-end/lib/views/input/switch';
+import { find, get } from 'lodash';
 // import { flow } from 'lodash/fp';
 // import moment from 'moment';
 import { default as React } from 'react';
@@ -18,7 +22,7 @@ import { PublicRfi } from 'shared/lib/resources/request-for-information';
 import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
 import { getInvalidValue, invalid, valid, validateCategories, validateDate, Validation } from 'shared/lib/validators';
-import { validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
+import { validateDescription, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
 
 const FALLBACK_NAME = 'No Name Provided';
 
@@ -31,14 +35,20 @@ export type InnerMsg
   = ADT<'onChangeRfiNumber', string>
   | ADT<'onChangeTitle', string>
   | ADT<'onChangePublicSectorEntity', string>
+  | ADT<'onChangeDescription', string>
+  | ADT<'onChangeDiscoveryDay', boolean>
   | ADT<'onChangeClosingDate', string>
   | ADT<'onChangeClosingTime', string>
   | ADT<'onChangeBuyerContact', string>
   | ADT<'onChangeProgramStaffContact', string>
   | ADT<'onChangeCategories', SelectMulti.Msg>
+  | ADT<'onChangeAttachments', FileMulti.Msg>
+  | ADT<'onChangeAddenda', LongTextMulti.Msg>
   | ADT<'validateRfiNumber'>
   | ADT<'validateTitle'>
   | ADT<'validatePublicSectorEntity'>
+  | ADT<'validateDescription'>
+  | ADT<'validateDiscoveryDay'>
   | ADT<'validateClosingDate'>
   | ADT<'validateClosingTime'>;
 
@@ -52,15 +62,15 @@ export interface State {
   rfiNumber: ShortText.State;
   title: ShortText.State;
   publicSectorEntity: ShortText.State;
+  description: LongText.State;
+  discoveryDay: Switch.State;
   closingDate: DateTime.State;
   closingTime: DateTime.State;
   buyerContact: Select.State;
   programStaffContact: Select.State;
   categories: Immutable<SelectMulti.State>;
-  description: false;
-  discoveryDay: false;
-  attachments: false;
-  addenda: false;
+  attachments: Immutable<FileMulti.State>;
+  addenda: Immutable<LongTextMulti.State>;
 };
 
 // TODO create a CreateRequestBody type in shared,
@@ -160,6 +170,19 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       placeholder: 'Public Sector Entity',
       value: getString(existingRfi, 'publicSectorEntity')
     }),
+    description: LongText.init({
+      id: 'rfi-description',
+      required: true,
+      label: 'RFI Description',
+      placeholder: 'Here is a list of suggested sections to include in the RFI description:\n- Business Requirement(s) or Issue(s);\n- Brief Ministry Overview;\n- Objectives of the RFI;\n- Ministry Obligations; and,\n- Response Instructions.',
+      value: getString(existingRfi, 'description')
+    }),
+    discoveryDay: Switch.init({
+      id: 'rfi-discovery-day',
+      label: 'Additional Response Option(s) (Optional)',
+      value: get(existingRfi, 'discoveryDay', false),
+      inlineLabel: 'This RFI is (or will be) associated with a Discovery Day session.'
+    }),
     closingDate: DateTime.init({
       id: 'rfi-closing-date',
       type: 'date',
@@ -206,27 +229,53 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
         }]
       }
     })),
-    description: false,
-    discoveryDay: false,
-    attachments: false,
-    addenda: false
+    attachments: immutable(await FileMulti.init({
+      formFieldMulti: {
+        idNamespace: 'rfi-categories',
+        label: 'Attachments (Optional)',
+        labelClassName: 'h3 mb-4',
+        required: false,
+        fields: []
+      }
+    })),
+    addenda: immutable(await LongTextMulti.init({
+      addButtonText: 'Add Attachment',
+      field: {
+        label: 'Addendum',
+        placeholder: 'Additional information related to the RFI.',
+        textareaStyle: {
+          height: '120px'
+        }
+      },
+      formFieldMulti: {
+        idNamespace: 'rfi-addenda',
+        label: 'Addenda (Optional)',
+        labelClassName: 'h3 mb-4',
+        required: false,
+        fields: []
+      }
+    }))
   };
 };
 
 export const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
     case 'onChangeRfiNumber':
-      return [updateValue(state, 'rfiNumber', msg.value)];
+      return [updateStringValue(state, 'rfiNumber', msg.value)];
     case 'onChangeTitle':
-      return [updateValue(state, 'title', msg.value)];
+      return [updateStringValue(state, 'title', msg.value)];
     case 'onChangePublicSectorEntity':
-      return [updateValue(state, 'publicSectorEntity', msg.value)];
+      return [updateStringValue(state, 'publicSectorEntity', msg.value)];
+    case 'onChangeDescription':
+      return [updateStringValue(state, 'description', msg.value)];
+    case 'onChangeDiscoveryDay':
+      return [updateBooleanValue(state, 'discoveryDay', msg.value)];
     case 'onChangeClosingDate':
-      return [updateValue(state, 'closingDate', msg.value)];
+      return [updateStringValue(state, 'closingDate', msg.value)];
     case 'onChangeClosingTime':
-      return [updateValue(state, 'closingTime', msg.value)];
+      return [updateStringValue(state, 'closingTime', msg.value)];
     case 'onChangeBuyerContact':
-      state = updateValue(state, 'buyerContact', msg.value);
+      state = updateStringValue(state, 'buyerContact', msg.value);
       if (!state.publicSectorEntity.value) {
         const buyer = find(state.buyers, { _id: msg.value });
         if (buyer && buyer.profile.type === UserType.Buyer) {
@@ -235,12 +284,12 @@ export const update: Update<State, Msg> = (state, msg) => {
       }
       return [validateValue(state, 'buyerContact', validateBuyerContact)];
     case 'onChangeProgramStaffContact':
-      state = updateValue(state, 'programStaffContact', msg.value);
+      state = updateStringValue(state, 'programStaffContact', msg.value);
       return [validateValue(state, 'programStaffContact', validateProgramStaffContact)];
     case 'onChangeCategories':
       state = updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'categories', value }),
+        mapChildMsg: value => ({ tag: 'onChangeCategories', value }),
         childStatePath: ['categories'],
         childUpdate: SelectMulti.update,
         childMsg: msg.value
@@ -248,12 +297,36 @@ export const update: Update<State, Msg> = (state, msg) => {
       const validatedCategories = validateCategories(SelectMulti.getValues(state.categories), 'Commodity Code');
       state = state.set('categories', SelectMulti.setErrors(state.categories, getInvalidValue(validatedCategories, [])));
       return [state];
+    case 'onChangeAttachments':
+      state = updateComponentChild({
+        state,
+        mapChildMsg: value => ({ tag: 'onChangeAttachments', value }),
+        childStatePath: ['attachments'],
+        childUpdate: FileMulti.update,
+        childMsg: msg.value
+      })[0];
+      // tslint:disable:next-line no-console
+      console.log(FileMulti.getValues(state.attachments));
+      return [state];
+    case 'onChangeAddenda':
+      state = updateComponentChild({
+        state,
+        mapChildMsg: value => ({ tag: 'onChangeAddenda', value }),
+        childStatePath: ['addenda'],
+        childUpdate: LongTextMulti.update,
+        childMsg: msg.value
+      })[0];
+      // tslint:disable:next-line no-console
+      console.log(LongTextMulti.getValues(state.addenda));
+      return [state];
     case 'validateRfiNumber':
       return [validateValue(state, 'rfiNumber', validateRfiNumber)];
     case 'validateTitle':
       return [validateValue(state, 'title', validateTitle)];
     case 'validatePublicSectorEntity':
       return [validateValue(state, 'publicSectorEntity', validatePublicSectorEntity)];
+    case 'validateDescription':
+      return [validateValue(state, 'description', validateDescription)];
     case 'validateClosingDate':
       return [validateValue(state, 'closingDate', validateClosingDate)];
     case 'validateClosingTime':
@@ -263,7 +336,11 @@ export const update: Update<State, Msg> = (state, msg) => {
   }
 };
 
-function updateValue(state: Immutable<State>, key: string, value: string): Immutable<State> {
+function updateStringValue(state: Immutable<State>, key: string, value: string): Immutable<State> {
+  return state.setIn([key, 'value'], value);
+}
+
+function updateBooleanValue(state: Immutable<State>, key: string, value: boolean): Immutable<State> {
   return state.setIn([key, 'value'], value);
 }
 
@@ -292,13 +369,13 @@ function validateValue(state: Immutable<State>, key: keyof State, validate: (val
 }
 
 const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const disabled = !state.isEditing;
+  const isDisabled = !state.isEditing;
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
   const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeCategories' as 'onChangeCategories', value }));
   return (
-    <div className='mb-3'>
+    <div className='mb-4'>
       <Row>
         <Col xs='12'>
           <FormSectionHeading text='Details' />
@@ -308,7 +385,7 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Col xs='12' md='4'>
           <ShortText.view
             state={state.rfiNumber}
-            disabled={disabled}
+            disabled={isDisabled}
             onChangeDebounced={onChangeDebounced('validateRfiNumber')}
             onChange={onChangeShortText('onChangeRfiNumber')} />
         </Col>
@@ -317,7 +394,7 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Col xs='12' md='10'>
           <ShortText.view
             state={state.title}
-            disabled={disabled}
+            disabled={isDisabled}
             onChangeDebounced={onChangeDebounced('validateTitle')}
             onChange={onChangeShortText('onChangeTitle')} />
         </Col>
@@ -326,13 +403,13 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Col xs='12' md='4'>
           <Select.view
             state={state.buyerContact}
-            disabled={disabled}
+            disabled={isDisabled}
             onChange={onChangeSelect('onChangeBuyerContact')} />
         </Col>
         <Col xs='12' md='6'>
           <ShortText.view
             state={state.publicSectorEntity}
-            disabled={disabled}
+            disabled={isDisabled}
             onChangeDebounced={onChangeDebounced('validatePublicSectorEntity')}
             onChange={onChangeShortText('onChangePublicSectorEntity')} />
         </Col>
@@ -341,7 +418,7 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Col xs='12' md='4'>
           <Select.view
             state={state.programStaffContact}
-            disabled={disabled}
+            disabled={isDisabled}
             onChange={onChangeSelect('onChangeProgramStaffContact')} />
         </Col>
       </Row>
@@ -350,21 +427,21 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
           <SelectMulti.view
             state={state.categories}
             dispatch={dispatchCategories}
-            disabled={disabled} />
+            disabled={isDisabled} />
         </Col>
       </Row>
       <Row>
         <Col xs='12' md='3' lg='2'>
           <DateTime.view
             state={state.closingDate}
-            disabled={disabled}
+            disabled={isDisabled}
             onChangeDebounced={onChangeDebounced('validateClosingDate')}
             onChange={onChangeShortText('onChangeClosingDate')} />
         </Col>
         <Col xs='12' md='2'>
           <DateTime.view
             state={state.closingTime}
-            disabled={disabled}
+            disabled={isDisabled}
             onChangeDebounced={onChangeDebounced('validateClosingTime')}
             onChange={onChangeShortText('onChangeClosingTime')} />
         </Col>
@@ -374,13 +451,70 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
 };
 
 const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  const isDisabled = !state.isEditing;
+  const onChangeLongText = (tag: any) => LongText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChangeSwitch = (tag: any) => Switch.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.checked }));
+  const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
   return (
-    <div>
+    <div className='mb-4'>
       <Row>
         <Col xs='12'>
           <FormSectionHeading text='Description'>
-            <p>Describe the RFI using Markdown.</p>
+            <p>Use <a href='https://www.markdownguide.org/cheat-sheet' target='_blank'>Markdown</a> to describe the RFI.</p>
           </FormSectionHeading>
+        </Col>
+      </Row>
+      <Row className='mb-3'>
+        <Col xs='12'>
+          <LongText.view
+            state={state.description}
+            disabled={isDisabled}
+            onChangeDebounced={onChangeDebounced('validateDescription')}
+            onChange={onChangeLongText('onChangeDescription')}
+            style={{ height: '50vh', minHeight: '400px' }} />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12'>
+          <Switch.view
+            state={state.discoveryDay}
+            disabled={isDisabled}
+            onChange={onChangeSwitch('onChangeDiscoveryDay')}
+            labelClassName='h4 mb-3' />
+        </Col>
+      </Row>
+    </div>
+  );
+};
+
+const Attachments: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  const isDisabled = !state.isEditing;
+  const dispatchAttachments: Dispatch<FileMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeAttachments' as 'onChangeAttachments', value }));
+  return (
+    <div className='pb-4 border-bottom mb-5'>
+      <Row className='mb-3'>
+        <Col xs='12' md='6'>
+          <FileMulti.view
+            state={state.attachments}
+            dispatch={dispatchAttachments}
+            disabled={isDisabled} />
+        </Col>
+      </Row>
+    </div>
+  );
+};
+
+const Addenda: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  const isDisabled = !state.isEditing;
+  const dispatchAddenda: Dispatch<LongTextMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeAddenda' as 'onChangeAddenda', value }));
+  return (
+    <div className='mb-4'>
+      <Row>
+        <Col xs='12'>
+          <LongTextMulti.view
+            state={state.addenda}
+            dispatch={dispatchAddenda}
+            disabled={isDisabled} />
         </Col>
       </Row>
     </div>
@@ -392,6 +526,8 @@ export const view: ComponentView<State, Msg> = props => {
     <div>
       <Details {...props} />
       <Description {...props} />
+      <Attachments {...props} />
+      <Addenda {...props} />
     </div>
   );
 };

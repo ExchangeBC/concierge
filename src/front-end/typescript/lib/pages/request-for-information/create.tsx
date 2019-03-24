@@ -66,7 +66,7 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
             <h1>Create a Request for Information (RFI)</h1>
           </Col>
         </Row>
-        <Row className='mb-3'>
+        <Row className='mb-4'>
           <Col xs='12' md='10'>
             <p>Use this form to create a Request for Information (RFI) for a program or business area. Please ensure that all information is complete and accurate before publishing.</p>
           </Col>

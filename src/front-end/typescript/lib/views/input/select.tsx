@@ -60,7 +60,7 @@ const Child: View<ChildProps> = props => {
       id={state.id}
       value={state.value}
       disabled={disabled}
-      className={className}
+      className={`${className} form-control`}
       onChange={onChange}>
       {children}
     </select>

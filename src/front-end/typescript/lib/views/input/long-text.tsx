@@ -1,12 +1,10 @@
 import { Dispatch, View } from 'front-end/lib/framework';
 import * as FormField from 'front-end/lib/views/form-field';
 import { debounce } from 'lodash';
-import { ChangeEvent, ChangeEventHandler, default as React, KeyboardEventHandler } from 'react';
+import { ChangeEvent, ChangeEventHandler, CSSProperties, default as React, KeyboardEventHandler } from 'react';
 
 export interface State extends FormField.State {
-  type: 'date' | 'time' | 'datetime-local';
-  min?: string;
-  max?: string;
+  placeholder?: string;
 }
 
 type OnEnter = () => void;
@@ -14,43 +12,43 @@ type OnEnter = () => void;
 type OnChangeDebounced = () => void;
 
 interface ExtraProps {
-  onKeyUp: KeyboardEventHandler<HTMLInputElement>;
+  onKeyUp: KeyboardEventHandler<HTMLTextAreaElement>;
   disabled: boolean;
   onChangeDebounced?: OnChangeDebounced;
+  style?: CSSProperties;
 }
 
-export interface Props extends Pick<FormField.Props<State, HTMLInputElement, ExtraProps>, 'toggleHelp'> {
+export interface Props extends Pick<FormField.Props<State, HTMLTextAreaElement, ExtraProps>, 'toggleHelp'> {
   state: State;
   disabled?: boolean;
-  onChange: ChangeEventHandler<HTMLInputElement>;
+  onChange: ChangeEventHandler<HTMLTextAreaElement>;
   onChangeDebounced?: OnChangeDebounced;
   onEnter?: OnEnter;
+  style?: CSSProperties;
 }
 
-interface Params extends Pick<State, 'id' | 'required' | 'type' | 'min' | 'max' | 'label' | 'help'> {
+interface Params extends Pick<State, 'id' | 'required' | 'label' | 'placeholder' | 'help'> {
   value?: string;
 }
 
 export function init(params: Params): State {
   return {
     id: params.id,
-    type: params.type,
     value: params.value || '',
-    min: params.min,
-    max: params.max,
     errors: [],
     required: params.required,
-    label: params.label
+    label: params.label,
+    placeholder: params.placeholder
   };
 }
 
-export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (event: ChangeEvent<HTMLInputElement>) => Msg): ChangeEventHandler<HTMLInputElement> {
+export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (event: ChangeEvent<HTMLTextAreaElement>) => Msg): ChangeEventHandler<HTMLTextAreaElement> {
   return event => {
     dispatch(fn(event));
   };
 }
 
-function makeOnKeyUp(onEnter?: OnEnter): KeyboardEventHandler<HTMLInputElement> {
+function makeOnKeyUp(onEnter?: OnEnter): KeyboardEventHandler<HTMLTextAreaElement> {
   return event => {
     if (event.key === 'Enter' && onEnter) { onEnter(); }
   };
@@ -63,15 +61,21 @@ function makeOnKeyUp(onEnter?: OnEnter): KeyboardEventHandler<HTMLInputElement> 
 // as of 2019.03.04.
 // Workaround idea: https://stackoverflow.com/questions/46000544/react-controlled-input-cursor-jumps
 // Related React GitHub Issue: https://github.com/facebook/react/issues/12762
-class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement, ExtraProps>> {
+class TextArea extends React.Component<FormField.ChildProps<State, HTMLTextAreaElement, ExtraProps>> {
 
+  private ref: HTMLTextAreaElement | null;
+  private selectionStart: number | null;
+  private selectionEnd: number | null;
   private onChangeDebounced: OnChangeDebounced | null;
   private value: string;
   private className: string;
   private disabled: boolean;
 
-  constructor(props: FormField.ChildProps<State, HTMLInputElement, ExtraProps>) {
+  constructor(props: FormField.ChildProps<State, HTMLTextAreaElement, ExtraProps>) {
     super(props);
+    this.ref = null;
+    this.selectionStart = null;
+    this.selectionEnd = null;
     this.onChangeDebounced = null;
     this.value = '';
     this.className = '';
@@ -82,6 +86,7 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
     const { state, onChange, className, extraProps } = this.props;
     const onKeyUp = (extraProps && extraProps.onKeyUp) || undefined;
     const disabled: boolean = !!(extraProps && extraProps.disabled) || false;
+    const style = (extraProps && extraProps.style) || {};
     // Manage this.onChangeDebounced.
     // This is pretty gross, but the only (simple) way to support real-time validation
     // and live user feedback of user input. We assume that onChangeDebounced never
@@ -90,6 +95,11 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
     // Effectively, you can't change the functionality of the prop `onChangeDebounced`.
     if (!this.onChangeDebounced && extraProps && extraProps.onChangeDebounced) {
       this.onChangeDebounced = debounce(() => {
+        // Update the component's cursor selection state.
+        if (this.ref) {
+          this.selectionStart = this.ref.selectionStart;
+          this.selectionEnd = this.ref.selectionEnd;
+        }
         // Run the debounced change handler.
         if (extraProps.onChangeDebounced) {
           extraProps.onChangeDebounced();
@@ -101,41 +111,50 @@ class Input extends React.Component<FormField.ChildProps<State, HTMLInputElement
     this.className = className;
     this.disabled = disabled;
     return (
-      <input
-        type={state.type}
+      <textarea
         name={state.id}
         id={state.id}
         value={state.value || ''}
-        min={state.min || ''}
-        max={state.max || ''}
+        placeholder={disabled ? '' : (state.placeholder || '')}
         disabled={disabled}
         className={`${className} form-control`}
+        style={style}
         onChange={this.onChange.bind(this, onChange)}
-        onKeyUp={onKeyUp} />
+        onKeyUp={onKeyUp}
+        ref={ref => { this.ref = ref; }} />
     );
   }
 
-  public shouldComponentUpdate(nextProps: FormField.ChildProps<State, HTMLInputElement, ExtraProps>) {
+  public shouldComponentUpdate(nextProps: FormField.ChildProps<State, HTMLTextAreaElement, ExtraProps>) {
     return this.value !== nextProps.state.value || this.className !== nextProps.className || (!!nextProps.extraProps && this.disabled !== nextProps.extraProps.disabled);
   }
 
-  private onChange(onChange: ChangeEventHandler<HTMLInputElement>, event: ChangeEvent<HTMLInputElement>) {
+  public componentDidUpdate() {
+    if (this.ref && this.selectionStart) {
+      this.ref.setSelectionRange(this.selectionStart, this.selectionEnd || this.selectionStart);
+    }
+  }
+
+  private onChange(onChange: ChangeEventHandler<HTMLTextAreaElement>, event: ChangeEvent<HTMLTextAreaElement>) {
+    this.selectionStart = event.target.selectionStart;
+    this.selectionEnd = event.target.selectionEnd;
     onChange(event);
     if (this.onChangeDebounced) { this.onChangeDebounced(); }
   }
 }
 
-const Child: View<FormField.ChildProps<State, HTMLInputElement, ExtraProps>> = props => {
+const Child: View<FormField.ChildProps<State, HTMLTextAreaElement, ExtraProps>> = props => {
   return (
-    <Input {...props} />
+    <TextArea {...props} />
   );
 };
 
-export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter, toggleHelp, disabled = false }) => {
+export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter, toggleHelp, style, disabled = false }) => {
   const extraProps: ExtraProps = {
     onKeyUp: makeOnKeyUp(onEnter),
     onChangeDebounced,
-    disabled
+    disabled,
+    style
   };
   return (
     <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={extraProps} />
