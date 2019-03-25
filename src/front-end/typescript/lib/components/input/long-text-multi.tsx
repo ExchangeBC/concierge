@@ -3,11 +3,36 @@ import { Component, ComponentMsg, ComponentViewProps, immutable, Immutable, Init
 import * as FormFieldMulti from 'front-end/lib/views/form-field-multi';
 import Icon from 'front-end/lib/views/icon';
 import * as TextArea from 'front-end/lib/views/input/text-area';
+import { compact } from 'lodash';
 import { ChangeEventHandler, CSSProperties, default as React } from 'react';
 import { Button, Label } from 'reactstrap';
 import { ADT, Omit } from 'shared/lib/types';
 
-export type Value = string;
+export type Value
+  = ADT<'new', string>
+  | ADT<'existing', string>
+  | ADT<'deleted'>;
+
+export function makeNewValue(value: string): ADT<'new', string> {
+  return {
+    tag: 'new',
+    value
+  };
+}
+
+export function makeExistingValue(value: string): ADT<'existing', string> {
+  return {
+    tag: 'existing',
+    value
+  };
+}
+
+export function makeDeletedValue(): ADT<'deleted'> {
+  return {
+    tag: 'deleted',
+    value: undefined
+  };
+}
 
 export interface State {
   addButtonText?: string;
@@ -22,6 +47,10 @@ export interface State {
 export function getValues(state: Immutable<State>): Value[] {
   return FormFieldMulti.getFieldValues(state.formFieldMulti);
 };
+
+export function getValuesAsStrings(state: Immutable<State>, deletedString: string): string[] {
+  return getValues(state).map(value => value.tag === 'deleted' ? deletedString : value.value);
+}
 
 export function setValues(state: Immutable<State>, values: Value[]): Immutable<State> {
   return state.set(
@@ -66,16 +95,33 @@ export const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
     case 'add':
       let addFields = state.formFieldMulti.fields;
-      addFields = addFields.concat(FormFieldMulti.makeField(''));
+      addFields = addFields.concat(FormFieldMulti.makeField(makeNewValue('')));
       return [state.setIn(['formFieldMulti', 'fields'], addFields)];
     case 'remove':
-      let removeFields = state.formFieldMulti.fields;
-      removeFields = removeFields.filter((field, i) => i !== msg.value);
+      const fields = state.formFieldMulti.fields;
+      const processedFields = fields.map((field, i) => {
+        if (i !== msg.value) {
+          return field;
+        }
+        switch (field.value.tag) {
+          // Only remove 'new' fields.
+          case 'new':
+            return null;
+          // Transform 'existing' fields to deleted ones.
+          case 'existing':
+            return FormFieldMulti.makeField(makeDeletedValue());
+          // Do nothing with 'deleted' fields.
+          // In practice this "shouldn't" happen.
+          case 'deleted':
+            return field
+        }
+      });
+      const removeFields: Array<FormFieldMulti.Field<Value>> = compact(processedFields);
       return [state.setIn(['formFieldMulti', 'fields'], removeFields)];
     case 'change':
       const changeFields = state.formFieldMulti.fields.map((field, i) => {
-        if (i === msg.value.index) {
-          field.value = msg.value.value;
+        if (i === msg.value.index && (field.value.tag === 'new' || field.value.tag === 'existing')) {
+          field.value.value = msg.value.value;
         }
         return field;
       });
@@ -118,13 +164,14 @@ const ConditionalLabel: View<FormFieldMulti.ChildProps<HTMLTextAreaElement, Valu
 
 const Child: View<FormFieldMulti.ChildProps<HTMLTextAreaElement, Value, ExtraChildProps>> = props => {
   const { id, extraProps, className, field, onChange, disabled = false } = props;
+  if (field.value.tag === 'deleted') { return null; }
   return (
     <div>
       <ConditionalLabel {...props} />
       <TextArea.View
         id={id}
         className={className}
-        value={field.value}
+        value={field.value.value}
         placeholder={extraProps.field.placeholder}
         disabled={disabled}
         style={extraProps.field.textAreaStyle}

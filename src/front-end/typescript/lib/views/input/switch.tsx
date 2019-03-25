@@ -45,6 +45,7 @@ const Child: View<ChildProps> = props => {
     <CustomInput
       id={state.id}
       name={state.id}
+      checked={state.value}
       disabled={disabled}
       type='switch'
       label={state.inlineLabel}

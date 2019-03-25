@@ -179,13 +179,13 @@ const router: Router<State, Page, UserType> = {
       auth: isProgramStaff
     },
     {
-      path: '/requests-for-information/:rfiId/view',
-      pageId: 'requestForInformationList'
+      path: '/requests-for-information/:rfiId/edit',
+      pageId: 'requestForInformationEdit',
+      auth: isProgramStaff
     },
     {
-      path: '/requests-for-information/:rfiId/edit',
-      pageId: 'requestForInformationList',
-      auth: isProgramStaff
+      path: '/requests-for-information/:rfiId/view',
+      pageId: 'requestForInformationList'
     },
     {
       path: '/requests-for-information/:rfiId/respond',
@@ -315,6 +315,14 @@ const router: Router<State, Page, UserType> = {
             fixedBarBottom: state.fixedBarBottom
           }
         };
+      case 'requestForInformationEdit':
+        return {
+          tag: 'requestForInformationEdit',
+          value: {
+            rfiId: get(params, 'rfiId', ''),
+            fixedBarBottom: state.fixedBarBottom
+          }
+        };
       case 'requestForInformationList':
         return {
           tag: 'requestForInformationList',
@@ -406,6 +414,8 @@ const router: Router<State, Page, UserType> = {
         return '/users';
       case 'requestForInformationCreate':
         return '/requests-for-information/create';
+      case 'requestForInformationEdit':
+        return `/requests-for-information/${page.value.rfiId}/edit`;
       case 'requestForInformationList':
         return '/requests-for-information';
       case 'about':
@@ -462,7 +472,9 @@ const router: Router<State, Page, UserType> = {
       case 'userList':
         return makeMetadata('Users');
       case 'requestForInformationCreate':
-        return makeMetadata('Requests for Information');
+        return makeMetadata('Create a Request for Information');
+      case 'requestForInformationEdit':
+        return makeMetadata('Edit a Request for Information');
       case 'requestForInformationList':
         return makeMetadata('Requests for Information');
       case 'about':

@@ -14,15 +14,17 @@ import { find, get } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
-import { getString } from 'shared/lib';
+import { getString, rawFormatDate } from 'shared/lib';
+import * as FileResource from 'shared/lib/resources/file';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { PublicRfi } from 'shared/lib/resources/request-for-information';
 import { PublicUser } from 'shared/lib/resources/user';
-import { ADT, Omit, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
+import { Addendum, ADT, Omit, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
 import { getInvalidValue, invalid, valid, validateCategories, Validation } from 'shared/lib/validators';
 import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
 
 const FALLBACK_NAME = 'No Name Provided';
+const DEFAULT_CLOSING_TIME = '14:00';
 
 export interface Params {
   isEditing: boolean;
@@ -75,7 +77,7 @@ export interface Values extends Omit<api.CreateRfiRequestBody, 'attachments'> {
   attachments: FileMulti.Value[];
 }
 
-export function getValues(state: State): Values {
+export function getValues(state: State, includeDeletedAddenda = false): Values {
   return {
     rfiNumber: state.rfiNumber.value,
     title: state.title.value,
@@ -88,7 +90,7 @@ export function getValues(state: State): Values {
     programStaffContact: state.programStaffContact.value,
     categories: SelectMulti.getValues(state.categories),
     attachments: FileMulti.getValues(state.attachments),
-    addenda: LongTextMulti.getValues(state.addenda)
+    addenda: LongTextMulti.getValuesAsStrings(state.addenda, RfiResource.DELETE_ADDENDUM_TOKEN)
   };
 }
 
@@ -116,6 +118,26 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       label: profileToName(user.profile) || FALLBACK_NAME
     };
   };
+  const getRfiString = (k: string | string[]): string => getString(existingRfi, ['latestVersion'].concat(k));
+  const rawClosingAt = getRfiString('closingAt');
+  const closingDateValue = rawClosingAt ? rawFormatDate(new Date(rawClosingAt), 'YYYY-MM-DD', false) : '';
+  const closingTimeValue = rawClosingAt ? rawFormatDate(new Date(rawClosingAt), 'HH:mm', false) : DEFAULT_CLOSING_TIME;
+  const existingCategoryFields = get(existingRfi, ['latestVersion', 'categories'], [])
+    .map((value: string, index: number) => {
+      return {
+        value,
+        errors: [],
+        removable: index !== 0
+      };
+    });
+  const existingAddenda = get(existingRfi, ['latestVersion', 'addenda'], [])
+    .map((value: Addendum, index: number) => {
+      return {
+        value: LongTextMulti.makeExistingValue(value.description),
+        errors: [],
+        removable: true
+      };
+    });
   return {
     loading: 0,
     isEditing,
@@ -127,7 +149,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       type: 'text',
       label: 'Request for Information (RFI) Number',
       placeholder: 'RFI Number',
-      value: getString(existingRfi, 'rfiNumber')
+      value: getRfiString('rfiNumber')
     }),
     title: ShortText.init({
       id: 'rfi-title',
@@ -135,7 +157,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       type: 'text',
       label: 'Project Title',
       placeholder: 'Project Title',
-      value: getString(existingRfi, 'title')
+      value: getRfiString('title')
     }),
     publicSectorEntity: ShortText.init({
       id: 'rfi-public-sector-entity',
@@ -143,19 +165,19 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       type: 'text',
       label: 'Public Sector Entity',
       placeholder: 'Public Sector Entity',
-      value: getString(existingRfi, 'publicSectorEntity')
+      value: getRfiString('publicSectorEntity')
     }),
     description: LongText.init({
       id: 'rfi-description',
       required: true,
       label: 'RFI Description',
       placeholder: 'Suggested sections for an RFI\'s description:\n- Business Requirement(s) or Issue(s);\n- Brief Ministry Overview;\n- Objectives of the RFI;\n- Ministry Obligations; and,\n- Response Instructions.',
-      value: getString(existingRfi, 'description')
+      value: getRfiString('description')
     }),
     discoveryDay: Switch.init({
       id: 'rfi-discovery-day',
       label: 'Additional Response Option(s) (Optional)',
-      value: get(existingRfi, 'discoveryDay', false),
+      value: get(existingRfi, ['latestVersion', 'discoveryDay'], false),
       inlineLabel: 'This RFI is (or will be) associated with a Discovery Day session.'
     }),
     closingDate: DateTime.init({
@@ -163,20 +185,18 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       type: 'date',
       required: true,
       label: 'Closing Date',
-      // value: getString(existingRfi, 'closingAt'),
-      value: ''
+      value: closingDateValue
     }),
     closingTime: DateTime.init({
       id: 'rfi-closing-time',
       type: 'time',
       required: true,
       label: 'Closing Time',
-      // value: getString(existingRfi, 'closingAt'),
-      value: '14:00'
+      value: closingTimeValue
     }),
     buyerContact: Select.init({
       id: 'rfi-buyer-contact',
-      value: '',
+      value: getRfiString(['buyerContact', '_id']),
       required: true,
       label: `${userTypeToTitleCase(UserType.Buyer)} Contact`,
       unselectedLabel: `Select ${userTypeToTitleCase(UserType.Buyer)}`,
@@ -184,7 +204,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
     }),
     programStaffContact: Select.init({
       id: 'rfi-program-staff-contact',
-      value: '',
+      value: getRfiString(['programStaffContact', '_id']),
       required: true,
       label: `${userTypeToTitleCase(UserType.ProgramStaff)} Contact`,
       unselectedLabel: `Select ${userTypeToTitleCase(UserType.ProgramStaff)}`,
@@ -197,7 +217,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
         idNamespace: 'rfi-categories',
         label: 'Commodity Code(s)',
         required: true,
-        fields: [{
+        fields: existingCategoryFields.length ? existingCategoryFields : [{
           value: '',
           errors: [],
           removable: false
@@ -210,7 +230,13 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
         label: 'Attachments (Optional)',
         labelClassName: 'h3 mb-4',
         required: false,
-        fields: []
+        fields: get(existingRfi, ['latestVersion', 'attachments'], [])
+          .map((attachment: FileResource.PublicFile) => {
+            return {
+              value: FileMulti.makeExistingValue(attachment),
+              errors: []
+            };
+          })
       }
     })),
     addenda: immutable(await LongTextMulti.init({
@@ -227,7 +253,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
         label: 'Addenda (Optional)',
         labelClassName: 'h3 mb-4',
         required: false,
-        fields: []
+        fields: existingAddenda
       }
     }))
   };
@@ -293,7 +319,7 @@ export const update: Update<State, Msg> = (state, msg) => {
         childUpdate: LongTextMulti.update,
         childMsg: msg.value
       })[0];
-      const validatedAddenda = validateAddendumDescriptions(LongTextMulti.getValues(state.addenda));
+      const validatedAddenda = validateAddendumDescriptions(LongTextMulti.getValuesAsStrings(state.addenda, RfiResource.DELETE_ADDENDUM_TOKEN));
       state = state.set('addenda', LongTextMulti.setErrors(state.addenda, getInvalidValue(validatedAddenda, [])));
       return [state];
     case 'validateRfiNumber':

@@ -7,7 +7,6 @@ import * as FixedBar from 'front-end/lib/views/fixed-bar';
 import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
-import { noop } from 'lodash';
 import { default as React } from 'react';
 import { Col, Container, Row } from 'reactstrap';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
@@ -20,20 +19,23 @@ export interface Params {
 
 export type InnerMsg
   = ADT<'rfiForm', RfiForm.Msg>
+  | ADT<'preview'>
   | ADT<'publish'>
   | ADT<'updateFixedBarBottom', number>;
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
 export interface State {
-  loading: number;
+  previewLoading: number;
+  publishLoading: number;
   fixedBarBottom: number;
   rfiForm: Immutable<RfiForm.State>
 };
 
 export const init: Init<Params, State> = async ({ fixedBarBottom = 0 }) => {
   return {
-    loading: 0,
+    previewLoading: 0,
+    publishLoading: 0,
     fixedBarBottom,
     rfiForm: immutable(await RfiForm.init({
       isEditing: true
@@ -41,12 +43,20 @@ export const init: Init<Params, State> = async ({ fixedBarBottom = 0 }) => {
   };
 };
 
-function startLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('loading', state.loading + 1);
+/*function startPreviewLoading(state: Immutable<State>): Immutable<State> {
+  return state.set('previewLoading', state.previewLoading + 1);
 }
 
-function stopLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('loading', Math.max(state.loading - 1, 0));
+function stopPreviewLoading(state: Immutable<State>): Immutable<State> {
+  return state.set('previewLoading', state.previewLoading - 1);
+}*/
+
+function startPublishLoading(state: Immutable<State>): Immutable<State> {
+  return state.set('publishLoading', state.publishLoading + 1);
+}
+
+function stopPublishLoading(state: Immutable<State>): Immutable<State> {
+  return state.set('publishLoading', state.publishLoading - 1);
 }
 
 /**
@@ -56,12 +66,12 @@ function stopLoading(state: Immutable<State>): Immutable<State> {
 
 async function uploadFiles(files: FileMulti.Value[]): Promise<ArrayValidation<string[]>> {
   return validateArrayAsync(files, async file => {
-    const result = await api.createFile(file);
-    switch (result.tag) {
-      case 'valid':
-        return valid(result.value._id);
-      case 'invalid':
-        return result;
+    switch (file.tag) {
+      case 'existing':
+        return valid(file.value._id);
+      case 'new':
+        const result = await api.createFile(file.value);
+        return result.tag === 'valid' ? valid(result.value._id) : result;
     }
   });
 }
@@ -103,13 +113,15 @@ export const update: Update<State, Msg> = (state, msg) => {
         childMsg: msg.value
       })[0];
       return [state];
+    case 'preview':
+      return [state];
     case 'publish':
-      state = startLoading(state);
+      state = startPublishLoading(state);
       return [
         state,
         async dispatch => {
           const fail = (state: Immutable<State>, errors: RfiResource.CreateValidationErrors) => {
-            state = stopLoading(state);
+            state = stopPublishLoading(state);
             return state.set('rfiForm', RfiForm.setErrors(state.rfiForm, errors));
           };
           const requestBody = await getRequestBody(state);
@@ -121,8 +133,10 @@ export const update: Update<State, Msg> = (state, msg) => {
                   dispatch({
                     tag: '@newUrl',
                     value: {
-                      tag: 'requestForInformationList',
-                      value: null
+                      tag: 'requestForInformationEdit',
+                      value: {
+                        rfiId: result.value._id
+                      }
                     }
                   });
                   break;
@@ -149,8 +163,11 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const dispatchRfiForm: Dispatch<RfiForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'rfiForm' as 'rfiForm', value }));
   const bottomBarIsFixed = state.fixedBarBottom === 0;
   const cancelPage: Page = { tag: 'requestForInformationList', value: null };
+  const preview = () => dispatch({ tag: 'preview', value: undefined });
   const publish = () => dispatch({ tag: 'publish', value: undefined });
-  const isLoading = state.loading > 0;
+  const isPreviewLoading = state.previewLoading > 0;
+  const isPublishLoading = state.publishLoading > 0;
+  const isLoading = isPreviewLoading || isPublishLoading;
   const isDisabled = isLoading || !RfiForm.isValid(state.rfiForm);
   return (
     <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>
@@ -168,10 +185,10 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <RfiForm.view state={state.rfiForm} dispatch={dispatchRfiForm} />
       </Container>
       <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
-        <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={publish} loading={isLoading} disabled={isDisabled}>
+        <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={publish} loading={isPublishLoading} disabled={isDisabled}>
           Publish
         </LoadingButton>
-        <LoadingButton color='secondary'  onClick={noop} loading={isLoading} disabled={isDisabled} className='mx-3'>
+        <LoadingButton color='secondary'  onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3'>
           Preview
         </LoadingButton>
         <Link page={cancelPage} text='Cancel' textColor='secondary' disabled={isLoading} buttonClassName='px-0' />

@@ -77,3 +77,19 @@ export function bytesToMegabytes(bytes: number): number {
 export function megabytesToBytes(megabytes: number): number {
   return megabytes * 1024 * 1024;
 }
+
+export function compareDates(a: Date, b: Date): -1 | 0 | 1 {
+  const epochA = a.getTime();
+  const epochB = b.getTime();
+  if (epochA < epochB) {
+    return -1;
+  } else if (epochA > epochB) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+export function diffDates(a: Date, b: Date, unit: moment.unitOfTime.Diff): number {
+  return moment(a).diff(moment(b), unit, true);
+}

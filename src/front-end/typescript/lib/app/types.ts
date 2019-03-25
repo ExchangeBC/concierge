@@ -15,6 +15,7 @@ import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
 import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
+import * as PageRequestForInformationEdit from 'front-end/lib/pages/request-for-information/edit';
 import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
@@ -41,6 +42,7 @@ export type Page
   | ADT<'profile', PageProfile.Params>
   | ADT<'userList', PageUserList.Params>
   | ADT<'requestForInformationCreate', PageRequestForInformationCreate.Params>
+  | ADT<'requestForInformationEdit', PageRequestForInformationEdit.Params>
   | ADT<'requestForInformationList', PageRequestForInformationList.Params>
   | ADT<'about', PageAbout.Params>
   | ADT<'accessibility', PageAccessibility.Params>
@@ -74,6 +76,7 @@ export interface State {
     profile?: Immutable<PageProfile.State>;
     userList?: Immutable<PageUserList.State>;
     requestForInformationCreate?: Immutable<PageRequestForInformationCreate.State>;
+    requestForInformationEdit?: Immutable<PageRequestForInformationEdit.State>;
     requestForInformationList?: Immutable<PageRequestForInformationList.State>;
     about?: Immutable<PageAbout.State>;
     accessibility?: Immutable<PageAccessibility.State>;
@@ -104,6 +107,7 @@ type InnerMsg
   | ADT<'pageProfile', PageProfile.Msg>
   | ADT<'pageUserList', PageUserList.Msg>
   | ADT<'pageRequestForInformationCreate', PageRequestForInformationCreate.Msg>
+  | ADT<'pageRequestForInformationEdit', PageRequestForInformationEdit.Msg>
   | ADT<'pageRequestForInformationList', PageRequestForInformationList.Msg>
   | ADT<'pageAbout', PageAbout.Msg>
   | ADT<'pageAccessibility', PageAccessibility.Msg>

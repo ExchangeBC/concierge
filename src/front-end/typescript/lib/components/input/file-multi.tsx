@@ -6,11 +6,30 @@ import { ChangeEvent, ChangeEventHandler, default as React } from 'react';
 import { Button } from 'reactstrap';
 import { bytesToMegabytes } from 'shared/lib';
 import { MAX_MULTIPART_FILES_SIZE } from 'shared/lib/resources/file';
+import { PublicFile } from 'shared/lib/resources/file';
 import { ADT, Omit } from 'shared/lib/types';
 
-export interface Value {
+export interface NewFile {
   file: File;
   name: string;
+}
+
+export type Value
+  = ADT<'existing', PublicFile>
+  | ADT<'new', NewFile>;
+
+export function makeExistingValue(value: PublicFile): ADT<'existing', PublicFile> {
+  return {
+    tag: 'existing',
+    value
+  };
+}
+
+export function makeNewValue(value: NewFile): ADT<'new', NewFile> {
+  return {
+    tag: 'new',
+    value
+  };
 }
 
 export interface State {
@@ -27,15 +46,19 @@ function getFileExtension(name: string) {
 export function getValues(state: Immutable<State>): Value[] {
   const values = FormFieldMulti.getFieldValues(state.formFieldMulti);
   return values.map(value => {
-    const { file, name } = value;
-    const originalExtension = getFileExtension(value.file.name);
-    return {
-      file,
-      // Help the user by appending the original file extension if they
-      // overrode the attachment name.
-      // If no overridden name is provided, use the original file name.
-      name: name ? name.replace(new RegExp(`(${originalExtension})?$`), originalExtension) : file.name
-    };
+    if (value.tag === 'new') {
+      const { file, name } = value.value;
+      const originalExtension = getFileExtension(file.name);
+      return makeNewValue({
+        file,
+        // Help the user by appending the original file extension if they
+        // overrode the attachment name.
+        // If no overridden name is provided, use the original file name.
+        name: name ? name.replace(new RegExp(`(${originalExtension})?$`), originalExtension) : file.name
+      });
+    } else {
+      return value;
+    }
   });
 };
 
@@ -80,11 +103,11 @@ export const update: Update<State, Msg> = (state, msg) => {
       const file = msg.value;
       let addFields = state.formFieldMulti.fields;
       const errors = file.size > MAX_MULTIPART_FILES_SIZE ? [`Please remove this file, and select one less than ${bytesToMegabytes(MAX_MULTIPART_FILES_SIZE)} MB in size.`] : [];
-      addFields = addFields.concat(FormFieldMulti.makeField({
+      addFields = addFields.concat(FormFieldMulti.makeField(makeNewValue({
         file,
         // The file name's input placeholder will show the original file name.
         name: ''
-      }, errors));
+      }), errors));
       return [state.setIn(['formFieldMulti', 'fields'], addFields)];
     case 'remove':
       let removeFields = state.formFieldMulti.fields;
@@ -92,8 +115,8 @@ export const update: Update<State, Msg> = (state, msg) => {
       return [state.setIn(['formFieldMulti', 'fields'], removeFields)];
     case 'change':
       const changeFields = state.formFieldMulti.fields.map((field, i) => {
-        if (i === msg.value.index) {
-          field.value.name = msg.value.value;
+        if (i === msg.value.index && field.value.tag === 'new') {
+          field.value.value.name = msg.value.value;
         }
         return field;
       });
@@ -105,15 +128,18 @@ export const update: Update<State, Msg> = (state, msg) => {
 
 const Child: View<FormFieldMulti.ChildProps<HTMLInputElement, Value, void>> = props => {
   const { id, className, field, onChange, disabled = false } = props;
+  const value = field.value.tag === 'new' ? field.value.value.name : field.value.value.originalName;
+  const placeholder = field.value.tag === 'new' ? field.value.value.file.name : field.value.value.originalName;
+  const isExistingFile = field.value.tag === 'existing';
   return (
     <FormFieldMulti.DefaultChild childProps={props}>
       <Input.View
         id={id}
         type='text'
         className={className}
-        value={field.value.name}
-        placeholder={field.value.file.name}
-        disabled={disabled}
+        value={value}
+        placeholder={placeholder}
+        disabled={isExistingFile || disabled}
         onChange={onChange} />
     </FormFieldMulti.DefaultChild>
   );

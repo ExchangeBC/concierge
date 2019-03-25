@@ -15,6 +15,7 @@ export interface PublicVersion {
   addenda: Addendum[];
   attachments: PublicFile[];
   programStaffContact: {
+    _id?: string; // Only defined for Program Staff.
     firstName: string;
     lastName: string;
     positionTitle: string;

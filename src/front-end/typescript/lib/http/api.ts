@@ -263,3 +263,37 @@ export async function createRfi(rfi: CreateRfiRequestBody): Promise<ValidOrInval
     return invalid({});
   }
 };
+
+export async function updateRfi(rfiId: string, rfi: CreateRfiRequestBody): Promise<ValidOrInvalid<RfiResource.PublicRfi, RfiResource.UpdateValidationErrors>> {
+  try {
+    const response = await request(HttpMethod.Put, `requestsForInformation/${rfiId}`, rfi);
+    switch (response.status) {
+      case 200:
+        return valid(response.data as RfiResource.PublicRfi);
+      case 400:
+        return invalid(response.data as RfiResource.UpdateValidationErrors);
+      default:
+        return invalid({});
+    }
+  } catch (error) {
+    // tslint:disable:next-line no-console
+    console.error(error);
+    return invalid({});
+  }
+};
+
+export async function readOneRfi(rfiId: string): Promise<ValidOrInvalid<RfiResource.PublicRfi, null>> {
+  try {
+    const response = await request(HttpMethod.Get, `requestsForInformation/${rfiId}`);
+    switch (response.status) {
+      case 200:
+        return valid(response.data as RfiResource.PublicRfi);
+      default:
+        return invalid(null);
+    }
+  } catch (error) {
+    // tslint:disable:next-line no-console
+    console.error(error);
+    return invalid(null);
+  }
+}

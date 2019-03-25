@@ -46,7 +46,8 @@ export function validateClosingDate(raw: string): Validation<string> {
 }
 
 export function validateClosingTime(rawTime: string, rawDate: string): Validation<string> {
-  if (!rawDate) {
+  const validatedDate = validateClosingDate(rawDate);
+  if (validatedDate.tag === 'invalid') {
     return valid(rawTime);
   }
   const minDate = new Date();

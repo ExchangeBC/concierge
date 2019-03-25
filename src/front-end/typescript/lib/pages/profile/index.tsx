@@ -5,6 +5,7 @@ import * as api from 'front-end/lib/http/api';
 import * as BuyerProfile from 'front-end/lib/pages/profile/components/buyer';
 import * as ProgramStaffProfile from 'front-end/lib/pages/profile/components/program-staff';
 import * as VendorProfile from 'front-end/lib/pages/profile/components/vendor';
+import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import { default as React, ReactElement } from 'react';
 import { Alert, Col, Row } from 'reactstrap';
 import { PublicUser } from 'shared/lib/resources/user';
@@ -131,13 +132,15 @@ function ViewProfile<ProfileState, ProfileMsg>(props: ViewProfileProps<ProfileSt
 export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (state.errors.length) {
     return (
-      <Row>
-        <Col xs='12'>
-          <Alert color='danger'>
-            {state.errors.map((e, i) => (<div key={`profile-error-${i}`}>{e}</div>))}
-          </Alert>
-        </Col>
-      </Row>
+      <PageContainer.View paddingY>
+        <Row>
+          <Col xs='12'>
+            <Alert color='danger'>
+              {state.errors.map((e, i) => (<div key={`profile-error-${i}`}>{e}</div>))}
+            </Alert>
+          </Col>
+        </Row>
+      </PageContainer.View>
     );
   } else if (state.buyer) {
     return (

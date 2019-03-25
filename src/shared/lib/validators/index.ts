@@ -3,7 +3,7 @@ import { isEmpty, uniq } from 'lodash';
 import moment from 'moment';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
-import { formatDate, formatDateAndTime, formatTime } from 'shared/lib';
+import { compareDates, formatDate, formatDateAndTime, formatTime } from 'shared/lib';
 import { ADT, parsePhoneType, parseUserType, PhoneType, UserType } from 'shared/lib/types';
 
 export type ValidOrInvalid<Valid, Invalid> = ADT<'valid', Valid> | ADT<'invalid', Invalid>;
@@ -138,18 +138,6 @@ export function validateStringArray(values: string[], availableValues: Set<strin
       return valid(uniq(result.value as string[]));
     case 'invalid':
       return result;
-  }
-}
-
-function compareDates(a: Date, b: Date): -1 | 0 | 1 {
-  const epochA = a.getTime();
-  const epochB = b.getTime();
-  if (epochA < epochB) {
-    return -1;
-  } else if (epochA > epochB) {
-    return 1;
-  } else {
-    return 0;
   }
 }
 

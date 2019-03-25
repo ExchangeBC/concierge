@@ -16,6 +16,7 @@ import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
 import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
+import * as PageRequestForInformationEdit from 'front-end/lib/pages/request-for-information/edit';
 import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
@@ -138,6 +139,9 @@ const update: Update<State, Msg> = (state, msg) => {
             case 'requestForInformationCreate':
               state = state.setIn(['pages', 'requestForInformationCreate'], immutable(await PageRequestForInformationCreate.init(msg.value.page.value)));
               break;
+            case 'requestForInformationEdit':
+              state = state.setIn(['pages', 'requestForInformationEdit'], immutable(await PageRequestForInformationEdit.init(msg.value.page.value)));
+              break;
             case 'requestForInformationList':
               state = state.setIn(['pages', 'requestForInformationList'], immutable(await PageRequestForInformationList.init(msg.value.page.value)));
               break;
@@ -202,6 +206,9 @@ const update: Update<State, Msg> = (state, msg) => {
       }
       if (state.pages.requestForInformationCreate) {
         state = state.setIn(['pages', 'requestForInformationCreate'], PageRequestForInformationCreate.update(state.pages.requestForInformationCreate, msg)[0]);
+      }
+      if (state.pages.requestForInformationEdit) {
+        state = state.setIn(['pages', 'requestForInformationEdit'], PageRequestForInformationEdit.update(state.pages.requestForInformationEdit, msg)[0]);
       }
       if (state.pages.termsAndConditions) {
         state = state.setIn(['pages', 'termsAndConditions'], PageTermsAndConditions.update(state.pages.termsAndConditions, msg)[0]);
@@ -322,6 +329,15 @@ const update: Update<State, Msg> = (state, msg) => {
         mapChildMsg: value => ({ tag: 'pageRequestForInformationCreate', value }),
         childStatePath: ['pages', 'requestForInformationCreate'],
         childUpdate: PageRequestForInformationCreate.update,
+        childMsg: msg.value
+      });
+
+    case 'pageRequestForInformationEdit':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageRequestForInformationEdit', value }),
+        childStatePath: ['pages', 'requestForInformationEdit'],
+        childUpdate: PageRequestForInformationEdit.update,
         childMsg: msg.value
       });
 

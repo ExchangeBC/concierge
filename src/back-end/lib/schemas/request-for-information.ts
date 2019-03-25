@@ -74,6 +74,7 @@ export async function makePublicRfi(UserModel: UserSchema.Model, FileModel: File
       addenda: latestVersion.addenda,
       attachments,
       programStaffContact: {
+        _id: isProgramStaff ? programStaffContact._id : undefined,
         firstName: programStaffProfile.firstName,
         lastName: programStaffProfile.lastName,
         positionTitle: programStaffProfile.positionTitle
