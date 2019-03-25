@@ -36,6 +36,11 @@ export function makePublicUser(user: Data): PublicUser {
  * Helper to find a user by its ID and
  * marshall it into a `PublicUser`.
  * If the user does not exist, throw and error.
+ *
+ * TODO This function does not care about whether
+ * the requested user is active or not.
+ * This is probably something worth addressing in the future
+ * if this function is used further.
  */
 
 export async function findPublicUserByIdUnsafely(UserModel: Model, userId: mongoose.Types.ObjectId): Promise<PublicUser> {

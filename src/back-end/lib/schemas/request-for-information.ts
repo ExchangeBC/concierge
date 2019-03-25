@@ -73,6 +73,8 @@ export async function makePublicRfi(UserModel: UserSchema.Model, FileModel: File
       discoveryDay: latestVersion.discoveryDay,
       addenda: latestVersion.addenda,
       attachments,
+      // We expect the program staff and buyer contact information to be present
+      // whether or not they are `active`.
       programStaffContact: {
         _id: isProgramStaff ? programStaffContact._id : undefined,
         firstName: programStaffProfile.firstName,

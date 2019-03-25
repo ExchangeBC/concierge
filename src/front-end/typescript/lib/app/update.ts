@@ -18,6 +18,7 @@ import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
 import * as PageRequestForInformationEdit from 'front-end/lib/pages/request-for-information/edit';
 import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
+import * as PageRequestForInformationView from 'front-end/lib/pages/request-for-information/view';
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
@@ -92,8 +93,6 @@ const update: Update<State, Msg> = (state, msg) => {
                 break;
               }
           }
-          // Scroll to the top-left of the page for page changes.
-          if (window.scrollTo) { window.scrollTo(0, 0); }
           state = state
             .set('activePage', msg.value.page)
             // We switch this flag to true so the view function knows to display the page.
@@ -142,6 +141,9 @@ const update: Update<State, Msg> = (state, msg) => {
             case 'requestForInformationEdit':
               state = state.setIn(['pages', 'requestForInformationEdit'], immutable(await PageRequestForInformationEdit.init(msg.value.page.value)));
               break;
+            case 'requestForInformationView':
+              state = state.setIn(['pages', 'requestForInformationView'], immutable(await PageRequestForInformationView.init(msg.value.page.value)));
+              break;
             case 'requestForInformationList':
               state = state.setIn(['pages', 'requestForInformationList'], immutable(await PageRequestForInformationList.init(msg.value.page.value)));
               break;
@@ -176,6 +178,8 @@ const update: Update<State, Msg> = (state, msg) => {
               state = state.setIn(['pages', 'noticeNotFound'], immutable(await PageNoticeNotFound.init(null)));
               break;
           }
+          // Scroll to the top-left of the page for page changes.
+          if (window.scrollTo) { window.scrollTo(0, 0); }
           // Unset the previous page's state.
           // Ensure we don't unintentionally overwrite the active page's state.
           if (outgoingPage.tag !== msg.value.page.tag) {
@@ -209,6 +213,9 @@ const update: Update<State, Msg> = (state, msg) => {
       }
       if (state.pages.requestForInformationEdit) {
         state = state.setIn(['pages', 'requestForInformationEdit'], PageRequestForInformationEdit.update(state.pages.requestForInformationEdit, msg)[0]);
+      }
+      if (state.pages.requestForInformationView) {
+        state = state.setIn(['pages', 'requestForInformationView'], PageRequestForInformationView.update(state.pages.requestForInformationView, msg)[0]);
       }
       if (state.pages.termsAndConditions) {
         state = state.setIn(['pages', 'termsAndConditions'], PageTermsAndConditions.update(state.pages.termsAndConditions, msg)[0]);
@@ -338,6 +345,15 @@ const update: Update<State, Msg> = (state, msg) => {
         mapChildMsg: value => ({ tag: 'pageRequestForInformationEdit', value }),
         childStatePath: ['pages', 'requestForInformationEdit'],
         childUpdate: PageRequestForInformationEdit.update,
+        childMsg: msg.value
+      });
+
+    case 'pageRequestForInformationView':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageRequestForInformationView', value }),
+        childStatePath: ['pages', 'requestForInformationView'],
+        childUpdate: PageRequestForInformationView.update,
         childMsg: msg.value
       });
 

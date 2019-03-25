@@ -203,6 +203,9 @@ export function initializeRouter<State, Msg, Page, UserType>(router: Router<Stat
       signOut: false
     });
     page(path, ctx => {
+      // Do nothing if a hash is present in the path
+      // only if it isn't the initial load.
+      if (!ctx.init && ctx.hash) { return; }
       // We need to determine the page via locationToPage
       // after running beforeIncomingPage since state updates
       // can be asynchronous.

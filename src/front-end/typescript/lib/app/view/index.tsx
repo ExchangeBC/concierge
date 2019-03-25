@@ -19,6 +19,7 @@ import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
 import * as PageRequestForInformationEdit from 'front-end/lib/pages/request-for-information/edit';
 import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
+import * as PageRequestForInformationView from 'front-end/lib/pages/request-for-information/view';
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
@@ -175,6 +176,15 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.requestForInformationEdit}
           mapPageMsg={value => ({ tag: 'pageRequestForInformationEdit', value })}
           View={PageRequestForInformationEdit.view} />
+      );
+
+    case 'requestForInformationView':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.requestForInformationView}
+          mapPageMsg={value => ({ tag: 'pageRequestForInformationView', value })}
+          View={PageRequestForInformationView.view} />
       );
 
     case 'requestForInformationList':

@@ -185,7 +185,7 @@ const router: Router<State, Page, UserType> = {
     },
     {
       path: '/requests-for-information/:rfiId/view',
-      pageId: 'requestForInformationList'
+      pageId: 'requestForInformationView'
     },
     {
       path: '/requests-for-information/:rfiId/respond',
@@ -323,6 +323,15 @@ const router: Router<State, Page, UserType> = {
             fixedBarBottom: state.fixedBarBottom
           }
         };
+      case 'requestForInformationView':
+        return {
+          tag: 'requestForInformationView',
+          value: {
+            rfiId: get(params, 'rfiId', ''),
+            userType: get(state.session, ['user', 'type']),
+            fixedBarBottom: state.fixedBarBottom
+          }
+        };
       case 'requestForInformationList':
         return {
           tag: 'requestForInformationList',
@@ -416,6 +425,8 @@ const router: Router<State, Page, UserType> = {
         return '/requests-for-information/create';
       case 'requestForInformationEdit':
         return `/requests-for-information/${page.value.rfiId}/edit`;
+      case 'requestForInformationView':
+        return `/requests-for-information/${page.value.rfiId}/view`;
       case 'requestForInformationList':
         return '/requests-for-information';
       case 'about':
@@ -474,7 +485,9 @@ const router: Router<State, Page, UserType> = {
       case 'requestForInformationCreate':
         return makeMetadata('Create a Request for Information');
       case 'requestForInformationEdit':
-        return makeMetadata('Edit a Request for Information');
+        return makeMetadata('Editing Request for Information');
+      case 'requestForInformationView':
+        return makeMetadata('Request for Information');
       case 'requestForInformationList':
         return makeMetadata('Requests for Information');
       case 'about':

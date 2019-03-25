@@ -1,6 +1,6 @@
 import { View } from 'front-end/lib/framework';
 import { BootstrapColor } from 'front-end/lib/types';
-import { default as React, ReactElement } from 'react';
+import { CSSProperties, default as React, ReactElement } from 'react';
 
 export type AvailableIcons
   = 'chevron-left'
@@ -8,6 +8,7 @@ export type AvailableIcons
   | 'check'
   | 'help-circle'
   | 'trash'
+  | 'paperclip'
   | 'rfi'
   | 'matchmaking'
   | 'discovery-day';
@@ -18,6 +19,7 @@ interface Props {
   width?: number;
   height?: number;
   className?: string;
+  style?: CSSProperties;
 }
 
 interface SvgProps extends Props {
@@ -25,9 +27,9 @@ interface SvgProps extends Props {
 }
 
 const Feather: View<SvgProps> = props => {
-  const { color, width = 1.25, height = 1.25, className = '', children } = props;
+  const { color, width = 1.25, height = 1.25, className = '', style = {}, children } = props;
   return (
-    <svg xmlns='http://www.w3.org/2000/svg' style={{ width: `${width}rem`, height: `${height}rem` }} viewBox='0 0 24 24' fill='none' stroke='currentColor' className={`icon text-${color} ${className}`} strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+    <svg xmlns='http://www.w3.org/2000/svg' style={{ ...style, width: `${width}rem`, height: `${height}rem` }} viewBox='0 0 24 24' fill='none' stroke='currentColor' className={`icon text-${color} ${className}`} strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
       {children}
     </svg>
   );
@@ -38,9 +40,9 @@ interface FontAwesomeProps extends SvgProps {
 }
 
 const FontAwesome: View<FontAwesomeProps> = props => {
-  const { color, width = 1.25, height = 1.25, viewBox, className = '', children } = props;
+  const { color, width = 1.25, height = 1.25, viewBox, className = '', style = {}, children } = props;
   return (
-    <svg xmlns='http://www.w3.org/2000/svg' style={{ width: `${width}rem`, height: `${height}rem` }} viewBox={viewBox} fill='currentColor' stroke='none' className={`icon text-${color} ${className}`}>
+    <svg xmlns='http://www.w3.org/2000/svg' style={{ ...style, width: `${width}rem`, height: `${height}rem` }} viewBox={viewBox} fill='currentColor' stroke='none' className={`icon text-${color} ${className}`}>
       {children}
     </svg>
   );
@@ -59,6 +61,8 @@ const Icon: View<Props> = props => {
       return (<Feather {...props}><g><circle cx='12' cy='12' r='10'></circle><path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'></path><line x1='12' y1='17' x2='12' y2='17'></line></g></Feather>);
     case 'trash':
       return (<Feather {...props}><g><polyline points='3 6 5 6 21 6'></polyline><path d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'></path><line x1='10' y1='11' x2='10' y2='17'></line><line x1='14' y1='11' x2='14' y2='17'></line></g></Feather>);
+    case 'paperclip':
+      return (<Feather {...props}><path d='M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48'></path></Feather>);
     case 'rfi':
       return (<FontAwesome viewBox='0 0 45 60' {...props}><path d='M23.0461121,42.5777435 C25.3605652,40.6828308 29.381218,41.4421463 30.7793427,44.2371368 C31.0184097,44.7199631 31.4683914,44.9988556 31.9698715,44.9988556 L33.75,44.9988556 C34.7859192,44.9988556 35.625,45.8379364 35.625,46.8738556 C35.625,47.9097748 34.7859192,48.7488556 33.75,48.7488556 L31.9687271,48.7488556 C30.0433731,48.7488556 28.3077621,47.6776886 27.4429321,45.9551239 C27.098465,45.2589798 26.4937592,45.1898575 26.2488556,45.1898575 C26.003952,45.1898575 25.3992462,45.2601242 25.0734329,45.915184 L24.1757584,47.7116776 C23.8570404,48.3503723 23.2054138,48.75 22.4988556,48.75 C22.4554825,48.75 22.4121094,48.7477112 22.3675919,48.7441635 C21.6772842,48.6960983 20.9391403,48.1243515 20.7198715,47.4679184 L18.75,41.5523529 L17.505455,45.2894211 C16.8164062,47.3578262 14.8863602,48.75 12.7043152,48.75 L11.25,48.75 C10.2140808,48.75 9.375,47.9109192 9.375,46.875 C9.375,45.8390808 10.2140808,45 11.25,45 L12.7043152,45 C13.2679367,45 13.7695312,44.6414566 13.9453125,44.1047287 L16.0804367,37.700386 C16.4648437,36.5495682 17.5382996,35.7773209 18.75,35.7773209 C19.9617004,35.7773209 21.0351562,36.550827 21.4195633,37.700386 L23.0461121,42.5777435 Z M43.3394623,11.4820862 C44.3941498,12.5367737 45,13.978157 45,15.4652023 L45,54.3761444 C45,57.4804687 42.472229,60 39.3667603,60 L5.62385559,60 C2.51953125,60 -3.55271368e-15,57.4804687 -3.55271368e-15,54.3761444 L-3.55271368e-15,5.63552856 C-3.55271368e-15,2.53120422 2.51953125,0.0116729736 5.62385559,0 L29.5370865,0 C31.0242462,0 32.4539566,0.597610474 33.5086441,1.65229797 L43.3394623,11.4820862 Z M29.9941635,6.09260559 L29.9941635,15.0082397 L38.9109421,15.0082397 L29.9941635,6.09260559 Z M39.375,54.3761444 L39.375,20.6319809 L27.1828079,20.6319809 C25.6242371,20.6319809 24.3703079,19.3793106 24.3703079,17.8207397 L24.3703079,5.63552856 L5.62385559,5.63552856 L5.62385559,54.3761444 L39.375,54.3761444 Z M10.3125,13.125 C9.79454041,13.125 9.375,12.7054596 9.375,12.1875 L9.375,10.3125 C9.375,9.79454041 9.79454041,9.375 10.3125,9.375 L19.6875,9.375 C20.2054596,9.375 20.625,9.79454041 20.625,10.3125 L20.625,12.1875 C20.625,12.7054596 20.2054596,13.125 19.6875,13.125 L10.3125,13.125 Z M10.3125,20.625 C9.79454041,20.625 9.375,20.2054596 9.375,19.6875 L9.375,17.8125 C9.375,17.2945404 9.79454041,16.875 10.3125,16.875 L19.6875,16.875 C20.2054596,16.875 20.625,17.2945404 20.625,17.8125 L20.625,19.6875 C20.625,20.2054596 20.2054596,20.625 19.6875,20.625 L10.3125,20.625 Z' fill='currentColor' fillRule='nonzero'></path></FontAwesome>);
     case 'matchmaking':

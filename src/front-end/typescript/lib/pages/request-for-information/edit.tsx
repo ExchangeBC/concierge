@@ -10,7 +10,7 @@ import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
 import { Alert, Button, Col, Container, Row } from 'reactstrap';
-import { formatDateAndTime } from 'shared/lib';
+import { formatDateAndTime, getString } from 'shared/lib';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { ADT } from 'shared/lib/types';
 import { ArrayValidation, invalid, valid, validateArrayAsync, ValidOrInvalid } from 'shared/lib/validators';
@@ -213,6 +213,7 @@ export const Buttons: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const preview = () => dispatch({ tag: 'preview', value: undefined });
   const startEditing = () => dispatch({ tag: 'startEditing', value: undefined });
   const cancelEditing = () => dispatch({ tag: 'cancelEditing', value: undefined });
+  const viewPage: Page = { tag: 'requestForInformationView', value: { rfiId: getString(state.valid, ['rfi', '_id']) }};
   const isEditing = getIsEditing(state);
   const isPreviewLoading = state.previewLoading > 0;
   const isPublishLoading = state.publishLoading > 0;
@@ -221,11 +222,11 @@ export const Buttons: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (isEditing) {
     return (
       <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
-        <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={publish} loading={isPublishLoading} disabled={isDisabled}>
+        <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={publish} loading={isPublishLoading} disabled={isDisabled} className='text-nowrap'>
           Publish Changes
         </LoadingButton>
-        <LoadingButton color='secondary' onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3'>
-          Preview
+        <LoadingButton color='secondary' onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
+          Preview Changes
         </LoadingButton>
         <Link onClick={cancelEditing} text='Cancel' textColor='secondary' disabled={isLoading} buttonClassName='px-0' />
       </FixedBar.View>
@@ -233,12 +234,10 @@ export const Buttons: ComponentView<State, Msg> = ({ state, dispatch }) => {
   } else {
     return (
       <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
-        <Button color={isLoading ? 'secondary' : 'primary'} onClick={startEditing} disabled={isLoading}>
+        <Button color={isLoading ? 'secondary' : 'primary'} onClick={startEditing} disabled={isLoading} className='text-nowrap'>
           Edit RFI
         </Button>
-        <LoadingButton color='secondary' onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3'>
-          Preview
-        </LoadingButton>
+        <Link page={viewPage} text='View RFI' buttonColor='secondary' disabled={isLoading} className='ml-3 ml-md-0 mr-md-3 text-nowrap' />
       </FixedBar.View>
     );
   }
@@ -265,18 +264,18 @@ export const view: ComponentView<State, Msg> = props => {
   const bottomBarIsFixed = state.fixedBarBottom === 0;
   const rfi = state.valid.rfi;
   const version = state.valid.rfi.latestVersion;
-  const publishedDateString = formatDateAndTime(rfi.publishedAt);
-  const updatedDateString = formatDateAndTime(version.createdAt);
+  const publishedDateString = formatDateAndTime(rfi.publishedAt, true);
+  const updatedDateString = formatDateAndTime(version.createdAt, true);
   return (
     <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>
       <Container className='mb-5 flex-grow-1'>
         <Row>
           <Col xs='12' md='10'>
-            <h1 className='d-flex align-items-center flex-wrap'>
+            <h1 className='d-flex flex-column-reverse flex-md-row align-items-start align-items-md-center flex-wrap'>
               RFI Number: {version.rfiNumber}
               <RfiStatus.Badge
                 status={RfiStatus.rfiToStatus(rfi)}
-                className='ml-3 text-uppercase'
+                className='d-block d-md-inline mb-2 mb-md-0 ml-md-3'
                 style={{ fontSize: '1.4rem' }} />
             </h1>
           </Col>
@@ -289,7 +288,7 @@ export const view: ComponentView<State, Msg> = props => {
         <Row className='mb-4'>
           <Col xs='12'>
             <p className='text-secondary small'>
-              <span className='d-block d-md-inline mb-3 mb-md-0'>
+              <span className='d-block d-md-inline'>
                 Published: {publishedDateString}
               </span>
               <span className='px-3 d-none d-md-inline'>|</span>

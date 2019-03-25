@@ -67,7 +67,13 @@ const ContextualLinks: View<Props> = ({ activePage, session, toggleIsOpen }) => 
         </Nav>
       );
     default:
-      return (<div></div>);
+      return (
+        <Nav navbar>
+          <NavItem>
+            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={activeClass(isRequestForInformationListPage)} onClick={onClick} />
+          </NavItem>
+        </Nav>
+      );
   }
 };
 

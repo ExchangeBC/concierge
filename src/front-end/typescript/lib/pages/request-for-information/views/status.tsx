@@ -57,9 +57,9 @@ export function rfiToStatus(rfi: PublicRfi): Status {
 }
 
 export const Badge: View<Props> = props => {
-  const { status: statusText, className, style = {} } = props;
+  const { status: statusText, className = '', style = {} } = props;
   return (
-    <BootstrapBadge color={statusToColor(statusText)} className={className} style={style || {}}>
+    <BootstrapBadge color={statusToColor(statusText)} className={`${className} text-uppercase`} style={style || {}}>
       {statusToText(statusText)}
     </BootstrapBadge>
   );

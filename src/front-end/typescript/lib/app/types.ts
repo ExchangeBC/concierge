@@ -17,6 +17,7 @@ import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
 import * as PageRequestForInformationEdit from 'front-end/lib/pages/request-for-information/edit';
 import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
+import * as PageRequestForInformationView from 'front-end/lib/pages/request-for-information/view';
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
@@ -43,6 +44,7 @@ export type Page
   | ADT<'userList', PageUserList.Params>
   | ADT<'requestForInformationCreate', PageRequestForInformationCreate.Params>
   | ADT<'requestForInformationEdit', PageRequestForInformationEdit.Params>
+  | ADT<'requestForInformationView', PageRequestForInformationView.Params>
   | ADT<'requestForInformationList', PageRequestForInformationList.Params>
   | ADT<'about', PageAbout.Params>
   | ADT<'accessibility', PageAccessibility.Params>
@@ -77,6 +79,7 @@ export interface State {
     userList?: Immutable<PageUserList.State>;
     requestForInformationCreate?: Immutable<PageRequestForInformationCreate.State>;
     requestForInformationEdit?: Immutable<PageRequestForInformationEdit.State>;
+    requestForInformationView?: Immutable<PageRequestForInformationView.State>;
     requestForInformationList?: Immutable<PageRequestForInformationList.State>;
     about?: Immutable<PageAbout.State>;
     accessibility?: Immutable<PageAccessibility.State>;
@@ -108,6 +111,7 @@ type InnerMsg
   | ADT<'pageUserList', PageUserList.Msg>
   | ADT<'pageRequestForInformationCreate', PageRequestForInformationCreate.Msg>
   | ADT<'pageRequestForInformationEdit', PageRequestForInformationEdit.Msg>
+  | ADT<'pageRequestForInformationView', PageRequestForInformationView.Msg>
   | ADT<'pageRequestForInformationList', PageRequestForInformationList.Msg>
   | ADT<'pageAbout', PageAbout.Msg>
   | ADT<'pageAccessibility', PageAccessibility.Msg>

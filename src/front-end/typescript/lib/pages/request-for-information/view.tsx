@@ -16,13 +16,17 @@ import { formatDate, formatTime } from 'shared/lib';
 import * as FileResource from 'shared/lib/resources/file';
 import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
-import { Addendum, ADT } from 'shared/lib/types';
+import { Addendum, ADT, UserType } from 'shared/lib/types';
 
 const ERROR_MESSAGE = 'The Request for Information you are looking for is not available.';
 const CONTACT_EMAIL = 'Procurement.Concierge@gov.bc.ca';
 const ATTACHMENTS_ID = 'attachments';
 
-export type Params = null;
+export interface Params {
+  rfiId: string;
+  userType?: UserType;
+  fixedBarBottom?: number;
+}
 
 export type InnerMsg
   = ADT<'respondToDiscoveryDay'>
@@ -34,22 +38,25 @@ export type Msg = ComponentMsg<InnerMsg, Page>;
 export interface State {
   fixedBarBottom: number;
   respondToDiscoveryDayLoading: number;
+  userType?: UserType;
   rfi?: RfiResource.PublicRfi;
 };
 
-export const init: Init<Params, State> = async () => {
-  const result = await api.readOneRfi('55');
+export const init: Init<Params, State> = async ({ rfiId, userType, fixedBarBottom = 0 }) => {
+  const result = await api.readOneRfi(rfiId);
   switch (result.tag) {
     case 'valid':
       return {
-        fixedBarBottom: 0,
+        fixedBarBottom,
         respondToDiscoveryDayLoading: 0,
+        userType,
         rfi: result.value
       };
     case 'invalid':
       return {
-        fixedBarBottom: 0,
-        respondToDiscoveryDayLoading: 0
+        fixedBarBottom,
+        respondToDiscoveryDayLoading: 0,
+        userType
       };
   }
 };
@@ -197,8 +204,34 @@ const RespondToDiscoveryDayButton: View<RespondToDiscoveryDayButtonProps> = prop
   );
 };
 
-export const view: ComponentView<State, Msg> = props => {
+function showButtons(userType?: UserType): boolean {
+  return !userType || userType === UserType.Vendor;
+}
+
+const Buttons: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
+  // Only show these buttons for Vendors and unauthenticated users.
+  if (!showButtons(state.userType) || !state.rfi || !state.rfi.latestVersion) { return null; }
+  const bottomBarIsFixed = state.fixedBarBottom === 0;
+  const version = state.rfi.latestVersion;
+  const respondToDiscoveryDay = () => dispatch({ tag: 'respondToDiscoveryDay', value: undefined });
+  const isLoading = state.respondToDiscoveryDayLoading > 0;
+  return (
+    <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
+      <Link buttonColor={isLoading ? 'secondary' : 'primary'} disabled={isLoading} className='text-nowrap'>
+        Respond to RFI
+      </Link>
+      <RespondToDiscoveryDayButton
+        discoveryDay={version.discoveryDay}
+        onClick={respondToDiscoveryDay}
+        loading={isLoading} />
+      <div className='text-secondary font-weight-bold d-none d-md-block mr-auto'>I want to...</div>
+    </FixedBar.View>
+  );
+};
+
+export const view: ComponentView<State, Msg> = props => {
+  const { state } = props;
   if (!state.rfi || !state.rfi.latestVersion) {
     return (
       <PageContainer.View paddingY>
@@ -214,13 +247,14 @@ export const view: ComponentView<State, Msg> = props => {
       </PageContainer.View>
     );
   }
-  const bottomBarIsFixed = state.fixedBarBottom === 0;
+  const buttonsAreVisible = showButtons(state.userType);
+  const bottomBarIsFixed = buttonsAreVisible && state.fixedBarBottom === 0;
+  const paddingY = !buttonsAreVisible;
+  const paddingTop = buttonsAreVisible;
   const rfi = state.rfi;
   const version = state.rfi.latestVersion;
-  const respondToDiscoveryDay = () => dispatch({ tag: 'respondToDiscoveryDay', value: undefined });
-  const isLoading = state.respondToDiscoveryDayLoading > 0;
   return (
-    <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>
+    <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingY={paddingY} paddingTop={paddingTop} fullWidth>
       <Container className='mb-5 flex-grow-1'>
         <Row className='mb-5'>
           <Col xs='12' className='d-flex flex-column text-center align-items-center'>
@@ -239,16 +273,7 @@ export const view: ComponentView<State, Msg> = props => {
         <Attachments files={version.attachments} />
         <Addenda addenda={version.addenda} />
       </Container>
-      <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
-        <Link buttonColor={isLoading ? 'secondary' : 'primary'} disabled={isLoading} className='text-nowrap'>
-          Respond to RFI
-        </Link>
-        <RespondToDiscoveryDayButton
-          discoveryDay={version.discoveryDay}
-          onClick={respondToDiscoveryDay}
-          loading={isLoading} />
-        <div className='text-secondary font-weight-bold d-none d-md-block mr-auto'>I want to...</div>
-      </FixedBar.View>
+      <Buttons {...props} />
     </PageContainer.View>
   );
 };
