@@ -21,6 +21,7 @@ export interface State<Value> {
   idNamespace: string;
   label?: string;
   labelClassName?: string;
+  reverseFieldOrderInView?: boolean;
   required: boolean;
   fields: Array<Field<Value>>;
   help?: {
@@ -34,8 +35,7 @@ export function getFieldValues<Value>(state: State<Value>): Value[] {
 }
 
 export function setFieldValues<Value>(state: Immutable<State<Value>>, values: Value[]): Immutable<State<Value>> {
-  const fields = cloneDeep(state.fields);
-  fields.forEach((field, i) => field.value = values[i] || field.value);
+  const fields = values.map((value, i) => makeField(value));
   return state.set('fields', fields);
 }
 
@@ -190,11 +190,12 @@ export function DefaultChild<ChildElement, Value, ExtraProps>(props: DefaultChil
 
 function Children<ChildElement, Value, OnAddParams, ExtraChildProps>(props: Props<ChildElement, Value, OnAddParams, ExtraChildProps>) {
   const { Child, state, onChange, onRemove, childClassName = '', extraChildProps, disabled = false } = props;
-  const children = state.fields.map((field, i) => {
-    const id = `${state.idNamespace}-${i}`;
+  const { fields, idNamespace, reverseFieldOrderInView = false } = state;
+  const children = fields.reduce((acc, field, i) => {
+    const id = `${idNamespace}-${i}`;
     const invalid = !!field.errors.length;
     const className = `form-control ${invalid ? 'is-invalid' : ''}`;
-    return (
+    const child = (
       <FormGroup key={`form-field-multi-child-${i}`} className={childClassName}>
         <Child
           key={`form-field-multi-child-${i}`}
@@ -208,7 +209,13 @@ function Children<ChildElement, Value, OnAddParams, ExtraChildProps>(props: Prop
         <ConditionalFieldErrors {...field} />
       </FormGroup>
     );
-  });
+    if (reverseFieldOrderInView) {
+      acc.unshift(child);
+    } else {
+      acc.push(child);
+    }
+    return acc;
+  }, [] as Array<ReactElement<any>>);
   return (
     <div>{children}</div>
   );

@@ -4,7 +4,7 @@ import * as FileResource from 'shared/lib/resources/file';
 import * as ForgotPasswordTokenResource from 'shared/lib/resources/forgot-password-token';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
 import * as UserResource from 'shared/lib/resources/user';
-import { HttpMethod, PaginatedList, Profile, UserType } from 'shared/lib/types';
+import { HttpMethod, Omit, PaginatedList, Profile, UserType } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
 const request = prefixRequest('api');
@@ -75,7 +75,7 @@ export type ReadManyUserResponseBody = PaginatedList<UserResource.PublicUser>;
 
 export async function readManyUsers(): Promise<ValidOrInvalid<ReadManyUserResponseBody, null>> {
   try {
-    const response = await request(HttpMethod.Get, `users`);
+    const response = await request(HttpMethod.Get, 'users');
     switch (response.status) {
       case 200:
         return valid(response.data as ReadManyUserResponseBody);
@@ -231,6 +231,39 @@ export async function createFile(file: CreateFileRequestBody): Promise<ValidOrIn
   }
 };
 
+interface RawRfiVersion extends Omit<RfiResource.PublicVersion, 'createdAt' | 'closingAt'> {
+  createdAt: string;
+  closingAt: string;
+}
+
+interface RawRfi extends Omit<RfiResource.PublicRfi, 'createdAt' | 'publishedAt' | 'latestVersion'> {
+  createdAt: string;
+  publishedAt: string;
+  latestVersion?: RawRfiVersion;
+}
+
+function rawRfiToPublicRfi(raw: RawRfi): RfiResource.PublicRfi {
+  return {
+    ...raw,
+    createdAt: new Date(raw.createdAt),
+    publishedAt: new Date(raw.publishedAt),
+    latestVersion: raw.latestVersion && {
+      ...raw.latestVersion,
+      createdAt: new Date(raw.latestVersion.createdAt),
+      closingAt: new Date(raw.latestVersion.closingAt),
+      attachments: raw.latestVersion.attachments.map(file => ({
+        ...file,
+        createdAt: new Date(file.createdAt)
+      })),
+      addenda: raw.latestVersion.addenda.map(addendum => ({
+        ...addendum,
+        createdAt: new Date(addendum.createdAt),
+        updatedAt: new Date(addendum.updatedAt)
+      }))
+    }
+  };
+}
+
 export interface CreateRfiRequestBody {
   rfiNumber: string;
   title: string;
@@ -251,7 +284,8 @@ export async function createRfi(rfi: CreateRfiRequestBody): Promise<ValidOrInval
     const response = await request(HttpMethod.Post, 'requestsForInformation', rfi);
     switch (response.status) {
       case 201:
-        return valid(response.data as RfiResource.PublicRfi);
+        const rawRfi = response.data as RawRfi;
+        return valid(rawRfiToPublicRfi(rawRfi));
       case 400:
         return invalid(response.data as RfiResource.CreateValidationErrors);
       default:
@@ -269,7 +303,8 @@ export async function updateRfi(rfiId: string, rfi: CreateRfiRequestBody): Promi
     const response = await request(HttpMethod.Put, `requestsForInformation/${rfiId}`, rfi);
     switch (response.status) {
       case 200:
-        return valid(response.data as RfiResource.PublicRfi);
+        const rawRfi = response.data as RawRfi;
+        return valid(rawRfiToPublicRfi(rawRfi));
       case 400:
         return invalid(response.data as RfiResource.UpdateValidationErrors);
       default:
@@ -287,7 +322,32 @@ export async function readOneRfi(rfiId: string): Promise<ValidOrInvalid<RfiResou
     const response = await request(HttpMethod.Get, `requestsForInformation/${rfiId}`);
     switch (response.status) {
       case 200:
-        return valid(response.data as RfiResource.PublicRfi);
+        const rawRfi = response.data as RawRfi;
+        return valid(rawRfiToPublicRfi(rawRfi));
+      default:
+        return invalid(null);
+    }
+  } catch (error) {
+    // tslint:disable:next-line no-console
+    console.error(error);
+    return invalid(null);
+  }
+}
+
+type RawReadManyRfiResponseBody = PaginatedList<RawRfi>;
+
+export type ReadManyRfiResponseBody = PaginatedList<RfiResource.PublicRfi>;
+
+export async function readManyRfis(): Promise<ValidOrInvalid<ReadManyRfiResponseBody, null>> {
+  try {
+    const response = await request(HttpMethod.Get, 'requestsForInformation');
+    switch (response.status) {
+      case 200:
+        const body = response.data as RawReadManyRfiResponseBody;
+        return valid({
+          ...body,
+          items: body.items.map(rawRfi => rawRfiToPublicRfi(rawRfi))
+        });
       default:
         return invalid(null);
     }

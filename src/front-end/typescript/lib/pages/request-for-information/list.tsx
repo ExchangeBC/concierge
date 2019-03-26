@@ -1,254 +1,268 @@
 import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Init, Update, View } from 'front-end/lib/framework';
-import * as api from 'front-end/lib/http/api';
-import { publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
-import * as RfiStatus from 'front-end/lib/pages/request-for-information/views/status';
-import * as FixedBar from 'front-end/lib/views/fixed-bar';
-import FormSectionHeading from 'front-end/lib/views/form-section-heading';
+import { Component, ComponentMsg, ComponentView, Immutable, Init, Update, View } from 'front-end/lib/framework';
+import { readManyRfis } from 'front-end/lib/http/api';
+import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
+import { parseRfiStatus, RfiStatus, rfiStatusToTitleCase, rfiToRfiStatus } from 'front-end/lib/types';
 import Icon from 'front-end/lib/views/icon';
+import * as Select from 'front-end/lib/views/input/select';
+import * as ShortText from 'front-end/lib/views/input/short-text';
 import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
-import LoadingButton from 'front-end/lib/views/loading-button';
-import Markdown from 'front-end/lib/views/markdown';
-import { default as React, ReactElement } from 'react';
-import { Alert, Col, Container, Row } from 'reactstrap';
-import { formatDate, formatTime } from 'shared/lib';
-import * as FileResource from 'shared/lib/resources/file';
-import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
-import * as RfiResource from 'shared/lib/resources/request-for-information';
-import { Addendum, ADT } from 'shared/lib/types';
+import { truncate } from 'lodash';
+import { CSSProperties, default as React, ReactElement } from 'react';
+import { Col, Row, Table } from 'reactstrap';
+import AVAILABLE_CATEGORIES from 'shared/data/categories';
+import { compareDates, rawFormatDate } from 'shared/lib';
+import { PublicRfi } from 'shared/lib/resources/request-for-information';
+import { ADT } from 'shared/lib/types';
 
-const ERROR_MESSAGE = 'The Request for Information you are looking for is not available.';
-const CONTACT_EMAIL = 'Procurement.Concierge@gov.bc.ca';
-const ATTACHMENTS_ID = 'attachments';
+interface Rfi extends PublicRfi {
+  status: RfiStatus | null;
+}
+
+export interface State {
+  rfis: Rfi[];
+  visibleRfis: Rfi[];
+  statusFilter: Select.State;
+  categoryFilter: Select.State;
+  searchFilter: ShortText.State;
+};
 
 export type Params = null;
 
-export type InnerMsg
-  = ADT<'respondToDiscoveryDay'>
-  | ADT<'respondToRfi'>
-  | ADT<'updateFixedBarBottom', number>;
+type InnerMsg
+  = ADT<'statusFilter', string>
+  | ADT<'categoryFilter', string>
+  | ADT<'searchFilter', string>;
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
-export interface State {
-  fixedBarBottom: number;
-  respondToDiscoveryDayLoading: number;
-  rfi?: RfiResource.PublicRfi;
-};
-
 export const init: Init<Params, State> = async () => {
-  const result = await api.readOneRfi('55');
-  switch (result.tag) {
-    case 'valid':
-      return {
-        fixedBarBottom: 0,
-        respondToDiscoveryDayLoading: 0,
-        rfi: result.value
-      };
-    case 'invalid':
-      return {
-        fixedBarBottom: 0,
-        respondToDiscoveryDayLoading: 0
-      };
+  const result = await readManyRfis();
+  let rfis: Rfi[] = [];
+  if (result.tag === 'valid') {
+    // Sort rfis by rfi type first, then name.
+    rfis = result.value.items.map(rfi => ({
+      ...rfi,
+      status: rfiToRfiStatus(rfi)
+    }));
+    rfis = rfis.sort((a, b) => {
+      if (a.status === b.status) {
+        return compareDates(a.publishedAt, b.publishedAt) * -1;
+      } else if (!b.status || a.status === RfiStatus.Open) {
+        return -1;
+      } else if (!a.status || b.status === RfiStatus.Open) {
+        return 1;
+      } else {
+        return a.status.localeCompare(b.status);
+      }
+    });
   }
+  return {
+    rfis,
+    visibleRfis: rfis,
+    statusFilter: Select.init({
+      id: 'rfi-list-filter-status',
+      value: '',
+      required: false,
+      label: 'Status',
+      unselectedLabel: 'All',
+      options: [
+        { value: RfiStatus.Open, label: rfiStatusToTitleCase(RfiStatus.Open) },
+        { value: RfiStatus.Closed, label: rfiStatusToTitleCase(RfiStatus.Closed) }
+      ]
+    }),
+    categoryFilter: Select.init({
+      id: 'rfi-list-filter-category',
+      value: '',
+      required: false,
+      label: 'Commodity Code',
+      unselectedLabel: 'All',
+      options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value }))
+    }),
+    searchFilter: ShortText.init({
+      id: 'rfi-list-filter-search',
+      type: 'text',
+      required: false,
+      placeholder: 'Search'
+    })
+  };
 };
 
-/*function startRespondToDiscoveryDayLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('respondToDiscoveryDayLoading', state.respondToDiscoveryDayLoading + 1);
+function rfiMatchesStatus(rfi: Rfi, filterStatus: RfiStatus | null): boolean {
+  if (!filterStatus) { return false; }
+  switch (rfi.status) {
+    case RfiStatus.Expired:
+      return filterStatus === RfiStatus.Closed;
+    default:
+      return rfi.status === filterStatus;
+  }
 }
 
-function stopRespondToDiscoveryDayLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('respondToDiscoveryDayLoading', state.respondToDiscoveryDayLoading - 1);
-}*/
+function rfiMatchesCategory(rfi: PublicRfi, category: string): boolean {
+  return !!rfi.latestVersion && rfi.latestVersion.categories.includes(category);
+}
+
+function rfiMatchesSearch(rfi: PublicRfi, query: RegExp): boolean {
+  return !!rfi.latestVersion && !!rfi.latestVersion.title.match(query);
+}
+
+function updateAndQuery(state: Immutable<State>, key?: string, value?: string): Immutable<State> {
+  // Update state with the filter value.
+  if (key && value !== undefined) {
+    state = state.setIn([key, 'value'], value);
+  }
+  // Query the list of available RFIs based on all filters' state.
+  const statusQuery = state.statusFilter.value;
+  const categoryQuery = state.categoryFilter.value;
+  const rawSearchQuery = state.searchFilter.value;
+  const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split('').join('.*'), 'i') : null;
+  const rfis = state.rfis.filter(rfi => {
+    let match = true;
+    match = match && (!statusQuery || rfiMatchesStatus(rfi, parseRfiStatus(statusQuery)));
+    match = match && (!categoryQuery || rfiMatchesCategory(rfi, categoryQuery));
+    match = match && (!searchQuery || rfiMatchesSearch(rfi, searchQuery));
+    return match;
+  });
+  return state.set('visibleRfis', rfis); ;
+}
 
 export const update: Update<State, Msg> = (state, msg) => {
-  if (!state.rfi) { return [state]; }
   switch (msg.tag) {
-    case 'respondToDiscoveryDay':
-      return [state];
-    case 'respondToRfi':
-      return [state];
-    case 'updateFixedBarBottom':
-      return [state.set('fixedBarBottom', msg.value)];
+    case 'statusFilter':
+      return [updateAndQuery(state, 'statusFilter', msg.value)];
+    case 'categoryFilter':
+      return [updateAndQuery(state, 'categoryFilter', msg.value)];
+    case 'searchFilter':
+      return [updateAndQuery(state, 'searchFilter', msg.value)];
     default:
       return [state];
   }
 };
 
-interface DetailProps {
-  title: string;
-  values: Array<string | ReactElement<any>>;
-}
-
-const Detail: View<DetailProps> = ({ title, values }) => {
-  values = values.map((v, i) => (<div key={`${title}-${i}`}>{v}</div>));
+export const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
-    <Row className='align-items-start mb-3'>
-      <Col xs='12' md='5' className='font-weight-bold text-secondary text-center text-md-right'>{title}</Col>
-      <Col xs='12' md='7' className='text-center text-md-left'>{values}</Col>
+    <Row className='d-none d-md-flex align-items-end'>
+      <Col xs='12' md='3'>
+        <Select.view
+          state={state.statusFilter}
+          onChange={onChangeSelect('statusFilter')} />
+      </Col>
+      <Col xs='12' md='4'>
+        <Select.view
+          state={state.categoryFilter}
+          onChange={onChangeSelect('categoryFilter')} />
+      </Col>
+      <Col xs='12' md='4' className='ml-md-auto'>
+        <ShortText.view
+          state={state.searchFilter}
+          onChange={onChangeShortText('searchFilter')} />
+      </Col>
     </Row>
   );
 };
 
-const Details: View<{ rfi: RfiResource.PublicRfi }> = ({ rfi }) => {
-  const version = rfi.latestVersion;
-  if (!version) { return null; }
-  const contactValues = [
-    `${version.programStaffContact.firstName} ${version.programStaffContact.lastName}`,
-    version.programStaffContact.positionTitle,
-    (<a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>)
-  ];
-  const statusValues = [
-    (<RfiStatus.Badge status={RfiStatus.rfiToStatus(rfi)} style={{ fontSize: '0.85rem' }} />)
-  ];
-  const attachmentsValues = version.attachments.length
-    ? [(<a href={`#${ATTACHMENTS_ID}`}>View Attachments</a>)]
-    : ['No attachments'];
+function formatTableDate(date: Date): string {
+  return rawFormatDate(date, 'YYYY-MM-DD', false);
+}
+
+interface TableHeadingCellProps {
+  className?: string;
+  style?: CSSProperties;
+  children: ReactElement<any> | Array<ReactElement<any>> | string;
+}
+
+const TableHeadingCell: View<TableHeadingCellProps> = ({ className, style, children }) => {
+  return (<th className={`text-secondary text-uppercase small font-weight-bold ${className || ''}`} style={style}>{children}</th>);
+};
+
+const truncateString = (s: string, length: number) => truncate(s, { length, separator: /\s\+/ });
+export const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  const noneFound = (<tr><td className='text-nowrap'>No RFIs found.</td></tr>);
+  let children: ReactElement<any> | Array<ReactElement<any>> = noneFound;
+  if (state.visibleRfis.length) {
+    children = state.visibleRfis.reduce((acc: Array<ReactElement<any>>, rfi, i) => {
+      const version = rfi.latestVersion;
+      if (!version) { return acc }
+      acc.push((
+          <tr key={`rfi-list-results-row-${i}`}>
+            <td className='text-nowrap'>{version.rfiNumber}</td>
+            <td><StatusBadge status={rfi.status || undefined} /></td>
+            <td>
+              <a href={`/requests-for-information/${rfi._id}/edit`}>
+                {truncateString(version.title, 50)}
+              </a>
+            </td>
+            <td>{truncateString(version.publicSectorEntity, 50)}</td>
+            <td>{formatTableDate(version.createdAt)}</td>
+            <td>{formatTableDate(version.closingAt)}</td>
+            <td className='text-center'>{version.discoveryDay ? (<Icon name='check' color='body' width={1.5} height={1.5} />) : ''}</td>
+          </tr>
+      ));
+      return acc;
+    }, []);
+    if (!children.length) { children = noneFound; }
+  }
   return (
     <Row>
-      <Col xs='12' md='7'>
-        <Detail title='Commodity Code(s)' values={version.categories} />
-        <Detail title='Public Sector Entity' values={[version.publicSectorEntity]} />
-        <Detail title='Contact' values={contactValues} />
-      </Col>
-      <Col xs='12' md='5'>
-        <Detail title='Status' values={statusValues} />
-        <Detail title='Closing Date' values={[formatDate(version.closingAt)]} />
-        <Detail title='Closing Time' values={[formatTime(version.closingAt, true)]} />
-        <Detail title='Attachments' values={attachmentsValues} />
-      </Col>
-    </Row>
-  );
-}
-
-const Description: View<{ value: string }> = ({ value }) => {
-  return (
-    <Row className='mt-5 pt-5 border-top'>
       <Col xs='12'>
-        <Markdown source={value} />
+        <Table className='mb-0' hover={!!state.visibleRfis.length} responsive>
+          <thead>
+            <tr className='bg-light text-nowrap'>
+              <TableHeadingCell style={{ width: '140px' }}>
+                RFI Number
+              </TableHeadingCell>
+              <TableHeadingCell style={{ width: '140px' }}>
+                Status
+              </TableHeadingCell>
+              <TableHeadingCell style={{ width: '300px', minWidth: '300px' }}>
+                Project Title
+              </TableHeadingCell>
+              <TableHeadingCell style={{ width: '210px', minWidth: '210px' }}>
+                Public Sector Entity
+              </TableHeadingCell>
+              <TableHeadingCell style={{ width: '130px' }}>
+                Last Updated
+              </TableHeadingCell>
+              <TableHeadingCell style={{ width: '110px', minWidth: '110px' }}>
+                Closing
+              </TableHeadingCell>
+              <TableHeadingCell style={{ width: '80px' }} className='text-center' >
+                <Icon name='calendar' color='secondary' />
+              </TableHeadingCell>
+            </tr>
+          </thead>
+          <tbody>
+            {children}
+          </tbody>
+        </Table>
       </Col>
     </Row>
-  );
-}
-
-const Attachments: View<{ files: FileResource.PublicFile[] }> = ({ files }) => {
-  if (!files.length) { return null; }
-  const children = files.map((file, i) => {
-    return (
-      <div className='d-flex align-items-start mb-2' key={`view-rfi-attachment-${i}`}>
-        <Icon name='paperclip' color='secondary' className='mr-2 mt-1 flex-shrink-0' width={1.1} height={1.1} />
-        <a href={makeFileBlobPath(file._id)} className='d-block' download>
-          {file.originalName}
-        </a>
-      </div>
-    );
-  });
-  return (
-    <div className='pt-5 mt-5 border-top' id={ATTACHMENTS_ID}>
-      <FormSectionHeading text='Attachments' />
-      <Row>
-        <Col xs='12'>
-          {children}
-        </Col>
-      </Row>
-    </div>
-  );
-}
-
-const Addenda: View<{ addenda: Addendum[] }> = ({ addenda }) => {
-  if (!addenda.length) { return null; }
-  const children = addenda.map((addendum, i) => {
-    return (
-      <div key={`view-rfi-addendum-${i}`} className={`pb-${i === addenda.length - 1 ? '0' : '4'} w-100`}>
-        <Col xs='12' md={{ size: 10, offset: 1 }} className={i !== 0 ? 'pt-4 border-top' : ''}>
-          <p className='mb-2'>{addendum.description}</p>
-        </Col>
-        <Col xs='12' md={{ size: 10, offset: 1 }} className='d-flex flex-column flex-md-row justify-content-between text-secondary'>
-          <small>{publishedDateToString(addendum.createdAt)}</small>
-          <small>{updatedDateToString(addendum.updatedAt)}</small>
-        </Col>
-      </div>
-    );
-  });
-  return (
-    <Row className='mt-5 pt-5 border-top'>
-      <Col xs='12'>
-        <h3 className='pb-3'>Addenda</h3>
-      </Col>
-      {children}
-    </Row>
-  );
-}
-
-interface RespondToDiscoveryDayButtonProps {
-  loading: boolean;
-  discoveryDay: boolean
-  onClick(): void;
-}
-
-const RespondToDiscoveryDayButton: View<RespondToDiscoveryDayButtonProps> = props => {
-  const disabled = props.discoveryDay || props.loading;
-  const text = props.discoveryDay ? 'Discovery Session Request Sent' : 'Attend Discovery Session';
-  return (
-    <LoadingButton color='secondary' onClick={props.onClick} loading={props.loading} disabled={disabled} className='ml-3 ml-md-0 mx-md-3 text-nowrap'>
-      {text}
-    </LoadingButton>
   );
 };
 
 export const view: ComponentView<State, Msg> = props => {
-  const { state, dispatch } = props;
-  if (!state.rfi || !state.rfi.latestVersion) {
-    return (
-      <PageContainer.View paddingY>
-        <Row>
-          <Col xs='12'>
-            <Alert color='danger'>
-              <div>
-                {ERROR_MESSAGE}
-              </div>
-            </Alert>
-          </Col>
-        </Row>
-      </PageContainer.View>
-    );
-  }
-  const bottomBarIsFixed = state.fixedBarBottom === 0;
-  const rfi = state.rfi;
-  const version = state.rfi.latestVersion;
-  const respondToDiscoveryDay = () => dispatch({ tag: 'respondToDiscoveryDay', value: undefined });
-  const isLoading = state.respondToDiscoveryDayLoading > 0;
   return (
-    <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>
-      <Container className='mb-5 flex-grow-1'>
-        <Row className='mb-5'>
-          <Col xs='12' className='d-flex flex-column text-center align-items-center'>
-            <h1 className='h4'>RFI Number: {version.rfiNumber}</h1>
-            <h2 className='h1'>{version.title}</h2>
-            <div className='text-secondary small'>
-              {publishedDateToString(rfi.publishedAt)}
-            </div>
-            <div className='text-secondary small'>
-              {updatedDateToString(version.createdAt)}
-            </div>
-          </Col>
-        </Row>
-        <Details rfi={rfi} />
-        <Description value={version.description} />
-        <Attachments files={version.attachments} />
-        <Addenda addenda={version.addenda} />
-      </Container>
-      <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
-        <Link buttonColor={isLoading ? 'secondary' : 'primary'} disabled={isLoading} className='text-nowrap'>
-          Respond to RFI
-        </Link>
-        <RespondToDiscoveryDayButton
-          discoveryDay={version.discoveryDay}
-          onClick={respondToDiscoveryDay}
-          loading={isLoading} />
-        <div className='text-secondary font-weight-bold d-none d-md-block mr-auto'>I want to...</div>
-      </FixedBar.View>
+    <PageContainer.View paddingY>
+      <Row className='mb-5 mb-md-2 justify-content-md-between'>
+        <Col xs='12' md='auto'>
+          <h1 className='mb-3 mb-md-0'>Concierge RFIs</h1>
+        </Col>
+        <Col xs='12' md='auto'>
+          <Link page={{ tag: 'requestForInformationCreate', value: {} }} buttonColor='secondary' text='Create RFI' />
+        </Col>
+      </Row>
+      <Row className='mb-3 d-none d-md-flex'>
+        <Col xs='12' md='8'>
+          <p>
+            Click on an RFI's title in the table below to view it.
+          </p>
+        </Col>
+      </Row>
+      <Filters {...props} />
+      <Results {...props} />
     </PageContainer.View>
   );
 };

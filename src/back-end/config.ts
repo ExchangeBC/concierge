@@ -114,6 +114,8 @@ export function getConfigErrors(): string[] {
     errors.push('COOKIE_SECRET must be specified.');
   }
 
+  // TODO validate FILE_STORAGE_DIR is a directory
+  // and we have correct write permissions.
   if (!FILE_STORAGE_DIR) {
     errors.push('FILE_STORAGE_DIR must be specified.');
   }

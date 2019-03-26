@@ -1,19 +1,19 @@
+import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { Page } from 'front-end/lib/app/types';
-import * as FileMulti from 'front-end/lib/components/input/file-multi';
 import { Component, ComponentMsg, ComponentView, Dispatch, Immutable, immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as RfiForm from 'front-end/lib/pages/request-for-information/components/form';
-import * as RfiStatus from 'front-end/lib/pages/request-for-information/views/status';
+import { makeRequestBody, publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
+import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
 import * as FixedBar from 'front-end/lib/views/fixed-bar';
 import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
 import { Alert, Button, Col, Container, Row } from 'reactstrap';
-import { formatDateAndTime, getString } from 'shared/lib';
+import { getString } from 'shared/lib';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { ADT } from 'shared/lib/types';
-import { ArrayValidation, invalid, valid, validateArrayAsync, ValidOrInvalid } from 'shared/lib/validators';
 
 const ERROR_MESSAGE = 'The Request for Information you are looking for is not available.';
 
@@ -73,21 +73,10 @@ export const init: Init<Params, State> = async ({ rfiId, fixedBarBottom = 0 }) =
   }
 };
 
-/*function startPreviewLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('previewLoading', state.previewLoading + 1);
-}
-
-function stopPreviewLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('previewLoading', state.previewLoading - 1);
-}*/
-
-function startPublishLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('publishLoading', state.publishLoading + 1);
-}
-
-function stopPublishLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('publishLoading', state.publishLoading - 1);
-}
+/*const startPreviewLoading: UpdateState<State> = makeStartLoading('previewLoading');
+const stopPreviewLoading: UpdateState<State>  = makeStopLoading('previewLoading');*/
+const startPublishLoading: UpdateState<State> = makeStartLoading('publishLoading');
+const stopPublishLoading: UpdateState<State>  = makeStopLoading('publishLoading');
 
 function setIsEditing(state: Immutable<State>, value: boolean): Immutable<State> {
   if (!state.valid) { return state; }
@@ -97,49 +86,6 @@ function setIsEditing(state: Immutable<State>, value: boolean): Immutable<State>
 function getIsEditing(state: Immutable<State>): boolean {
   if (!state.valid) { return false; }
   return state.getIn(['valid', 'rfiForm', 'isEditing']);
-}
-
-/**
- * Uploads a set of files to the back-end and returns
- * a promise of their `_id`s.
- */
-
-async function uploadFiles(files: FileMulti.Value[]): Promise<ArrayValidation<string[]>> {
-  return validateArrayAsync(files, async file => {
-    switch (file.tag) {
-      case 'existing':
-        return valid(file.value._id);
-      case 'new':
-        const result = await api.createFile(file.value);
-        return result.tag === 'valid' ? valid(result.value._id) : result;
-    }
-  });
-}
-
-async function getRequestBody(state: ValidState): Promise<ValidOrInvalid<api.CreateRfiRequestBody, RfiResource.CreateValidationErrors>> {
-  const values = RfiForm.getValues(state.rfiForm);
-  const uploadedFiles = await uploadFiles(values.attachments);
-  switch (uploadedFiles.tag) {
-    case 'valid':
-      return valid({
-        rfiNumber: values.rfiNumber,
-        title: values.title,
-        publicSectorEntity: values.publicSectorEntity,
-        description: values.description,
-        discoveryDay: values.discoveryDay,
-        closingDate: values.closingDate,
-        closingTime: values.closingTime,
-        buyerContact: values.buyerContact,
-        programStaffContact: values.programStaffContact,
-        categories: values.categories,
-        attachments: uploadedFiles.value,
-        addenda: values.addenda
-      });
-    case 'invalid':
-      return invalid({
-        attachments: uploadedFiles.value
-      });
-  }
 }
 
 export const update: Update<State, Msg> = (state, msg) => {
@@ -177,7 +123,7 @@ export const update: Update<State, Msg> = (state, msg) => {
             state = setIsEditing(state, false);
             return state.setIn(['valid', 'rfiForm'], RfiForm.setErrors(valid.rfiForm, errors));
           };
-          const requestBody = await getRequestBody(valid);
+          const requestBody = await makeRequestBody(valid.rfiForm);
           switch (requestBody.tag) {
             case 'valid':
               const result = await api.updateRfi(valid.rfi._id, requestBody.value);
@@ -264,8 +210,6 @@ export const view: ComponentView<State, Msg> = props => {
   const bottomBarIsFixed = state.fixedBarBottom === 0;
   const rfi = state.valid.rfi;
   const version = state.valid.rfi.latestVersion;
-  const publishedDateString = formatDateAndTime(rfi.publishedAt, true);
-  const updatedDateString = formatDateAndTime(version.createdAt, true);
   return (
     <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>
       <Container className='mb-5 flex-grow-1'>
@@ -273,8 +217,8 @@ export const view: ComponentView<State, Msg> = props => {
           <Col xs='12' md='10'>
             <h1 className='d-flex flex-column-reverse flex-md-row align-items-start align-items-md-center flex-wrap'>
               RFI Number: {version.rfiNumber}
-              <RfiStatus.Badge
-                status={RfiStatus.rfiToStatus(rfi)}
+              <StatusBadge
+                rfi={rfi}
                 className='d-block d-md-inline mb-2 mb-md-0 ml-md-3'
                 style={{ fontSize: '1.4rem' }} />
             </h1>
@@ -289,11 +233,11 @@ export const view: ComponentView<State, Msg> = props => {
           <Col xs='12'>
             <p className='text-secondary small'>
               <span className='d-block d-md-inline'>
-                Published: {publishedDateString}
+                {publishedDateToString(rfi.createdAt)}
               </span>
               <span className='px-3 d-none d-md-inline'>|</span>
               <span className='d-block d-md-inline'>
-                Last Updated: {updatedDateString}
+                {updatedDateToString(version.createdAt)}
               </span>
             </p>
           </Col>

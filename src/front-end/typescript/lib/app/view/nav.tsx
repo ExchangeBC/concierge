@@ -20,8 +20,15 @@ const ContextualLinks: View<Props> = ({ activePage, session, toggleIsOpen }) => 
   const isRequestForInformationListPage = activePage.tag === 'requestForInformationList';
   const activeClass = (active: boolean) => active ? 'font-weight-bold text-body' : 'text-dark';
   const onClick = () => toggleIsOpen(false);
+  const buttonClassName = (isActive: boolean) => `${activeClass(isActive)} px-0 px-md-3`;
   if (!session || !session.user) {
-    return (<div></div>);
+    return (
+      <Nav navbar>
+        <NavItem>
+          <Link nav href='/requests-for-information' text='RFIs' buttonClassName={buttonClassName(isRequestForInformationListPage)} onClick={onClick} />
+        </NavItem>
+      </Nav>
+    );
   }
   const myProfilePage: Page = {
     tag: 'profile',
@@ -34,10 +41,10 @@ const ContextualLinks: View<Props> = ({ activePage, session, toggleIsOpen }) => 
       return (
         <Nav navbar>
           <NavItem>
-            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={activeClass(isRequestForInformationListPage)} onClick={onClick} />
+            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={buttonClassName(isRequestForInformationListPage)} onClick={onClick} />
           </NavItem>
           <NavItem>
-            <Link nav page={myProfilePage} text='My Profile' buttonClassName={activeClass(isMyProfilePage)} onClick={onClick} />
+            <Link nav page={myProfilePage} text='My Profile' buttonClassName={buttonClassName(isMyProfilePage)} onClick={onClick} />
           </NavItem>
         </Nav>
       );
@@ -45,10 +52,10 @@ const ContextualLinks: View<Props> = ({ activePage, session, toggleIsOpen }) => 
       return (
         <Nav navbar>
           <NavItem>
-            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={activeClass(isRequestForInformationListPage)} onClick={onClick} />
+            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={buttonClassName(isRequestForInformationListPage)} onClick={onClick} />
           </NavItem>
           <NavItem>
-            <Link nav page={myProfilePage} text='My Profile' buttonClassName={activeClass(isMyProfilePage)} onClick={onClick} />
+            <Link nav page={myProfilePage} text='My Profile' buttonClassName={buttonClassName(isMyProfilePage)} onClick={onClick} />
           </NavItem>
         </Nav>
       );
@@ -56,21 +63,13 @@ const ContextualLinks: View<Props> = ({ activePage, session, toggleIsOpen }) => 
       return (
         <Nav navbar>
           <NavItem>
-            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={activeClass(isRequestForInformationListPage)} onClick={onClick} />
+            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={buttonClassName(isRequestForInformationListPage)} onClick={onClick} />
           </NavItem>
           <NavItem>
-            <Link nav href='/users' text='Users' buttonClassName={activeClass(isUserListPage)} onClick={onClick} />
+            <Link nav href='/users' text='Users' buttonClassName={buttonClassName(isUserListPage)} onClick={onClick} />
           </NavItem>
           <NavItem>
-            <Link nav page={myProfilePage} text='My Profile' buttonClassName={activeClass(isMyProfilePage)} onClick={onClick} />
-          </NavItem>
-        </Nav>
-      );
-    default:
-      return (
-        <Nav navbar>
-          <NavItem>
-            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={activeClass(isRequestForInformationListPage)} onClick={onClick} />
+            <Link nav page={myProfilePage} text='My Profile' buttonClassName={buttonClassName(isMyProfilePage)} onClick={onClick} />
           </NavItem>
         </Nav>
       );
@@ -83,10 +82,10 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
     return (
       <Nav navbar className='ml-md-auto'>
         <NavItem className='d-none d-md-block'>
-          <Link nav href='' text={session.user.email} textColor='dark' onClick={onClick} disabled />
+          <Link nav href='' text={session.user.email} textColor='dark' onClick={onClick} buttonClassName='px-0 px-md-3' disabled />
         </NavItem>
         <NavItem>
-          <Link nav href='/sign-out' text='Sign Out' textColor='dark' onClick={onClick} />
+          <Link nav href='/sign-out' text='Sign Out' textColor='dark' onClick={onClick} className='pr-md-0' buttonClassName='px-0 pl-md-3' />
         </NavItem>
       </Nav>
     );
@@ -94,10 +93,10 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
     return (
       <Nav navbar className='ml-md-auto'>
         <NavItem>
-          <Link nav href='/sign-in' text='Sign In' textColor='dark' onClick={onClick} />
+          <Link nav href='/sign-in' text='Sign In' textColor='dark' onClick={onClick} buttonClassName='px-0 px-md-3' />
         </NavItem>
         <NavItem>
-          <Link nav href='/sign-up/buyer' text='Sign Up' buttonColor='info' onClick={onClick} className='pr-0' />
+          <Link nav href='/sign-up/buyer' text='Sign Up' buttonColor='info' onClick={onClick} className='pr-0 mt-2 mt-md-0' />
         </NavItem>
       </Nav>
     );
@@ -112,7 +111,7 @@ const Navigation: View<Props> = props => {
           <img src='/images/logo.svg' style={{ height: '2.25rem' }} alt='Procurement Concierge Program' />
         </NavbarBrand>
         <NavbarToggler className='ml-auto' onClick={() => props.toggleIsOpen()} />
-        <Collapse isOpen={props.isOpen} navbar>
+        <Collapse isOpen={props.isOpen} className='pt-3 pt-md-0' navbar>
           <ContextualLinks {...props} />
           <AuthLinks {...props} />
         </Collapse>

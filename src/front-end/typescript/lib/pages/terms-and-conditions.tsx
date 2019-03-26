@@ -130,8 +130,9 @@ const AcceptedAt: ComponentView<State, Msg> = props => {
     const isLoading = state.loading > 0;
     const isDisabled = isLoading || !isValid(state);
     const acceptTerms = () => !isDisabled && !state.acceptedTermsAt && dispatch({ tag: 'acceptTerms', value: undefined });
+    // We only want the Accept/Skip buttons to appear on the bottom of the page.
     return (
-      <FixedBar.View location={fixedBarLocation}>
+      <FixedBar.View>
         <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={acceptTerms} loading={isLoading} disabled={isDisabled}>
           I Accept
         </LoadingButton>
@@ -143,7 +144,7 @@ const AcceptedAt: ComponentView<State, Msg> = props => {
 
 export const view: ComponentView<State, Msg> = props => {
   const { state } = props;
-  const bottomBarIsFixed = state.fixedBarBottom === 0;
+  const bottomBarIsFixed = state.fixedBarBottom === 0 && !!state.acceptedTermsAt;
   return (
     <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>
       <Container className='mb-5 flex-grow-1'>
@@ -153,7 +154,7 @@ export const view: ComponentView<State, Msg> = props => {
           </Col>
         </Row>
         <ConditionalErrors {...props} />
-        <Row className='mb-5'>
+        <Row>
           <Col xs='12'>
             <Markdown source={state.markdownSource} />
           </Col>

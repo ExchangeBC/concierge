@@ -73,8 +73,7 @@ $spacers: (
 $theme-colors: (
   primary: #0c99d6,
   info: #0f4c8b,
-  warn: #fcb817,
-  danger: #f16924
+  warn: #fcb817
 );
 
 $enable-validation-icons: false;
@@ -88,6 +87,10 @@ $fixed-bar-height: 71px;
 @import 'node_modules/bootstrap/scss/bootstrap.scss';
 
 // Custom utilities.
+
+.text-wrap {
+  white-space: normal !important;
+}
 
 .vertical-line {
   position: relative;

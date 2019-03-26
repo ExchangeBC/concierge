@@ -253,6 +253,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
         label: 'Addenda (Optional)',
         labelClassName: 'h3 mb-4',
         required: false,
+        reverseFieldOrderInView: true,
         fields: existingAddenda
       }
     }))

@@ -47,7 +47,7 @@ const Child: View<ChildProps> = props => {
       name={state.id}
       checked={state.value}
       disabled={disabled}
-      type='switch'
+      type='checkbox'
       label={state.inlineLabel}
       className={className}
       onChange={onChange} />

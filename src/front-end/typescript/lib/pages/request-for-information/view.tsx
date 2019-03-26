@@ -2,7 +2,7 @@ import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Init, Update, View } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
-import * as RfiStatus from 'front-end/lib/pages/request-for-information/views/status';
+import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
 import * as FixedBar from 'front-end/lib/views/fixed-bar';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import Icon from 'front-end/lib/views/icon';
@@ -12,7 +12,7 @@ import LoadingButton from 'front-end/lib/views/loading-button';
 import Markdown from 'front-end/lib/views/markdown';
 import { default as React, ReactElement } from 'react';
 import { Alert, Col, Container, Row } from 'reactstrap';
-import { formatDate, formatTime } from 'shared/lib';
+import { compareDates, formatDate, formatTime } from 'shared/lib';
 import * as FileResource from 'shared/lib/resources/file';
 import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
@@ -46,6 +46,13 @@ export const init: Init<Params, State> = async ({ rfiId, userType, fixedBarBotto
   const result = await api.readOneRfi(rfiId);
   switch (result.tag) {
     case 'valid':
+      const rfi = result.value;
+      // Sort addenda by createdAt (i.e. publish) date.
+      if (rfi.latestVersion) {
+        rfi.latestVersion.addenda.sort((a, b) => {
+          return compareDates(a.createdAt, b.createdAt) * -1;
+        });
+      }
       return {
         fixedBarBottom,
         respondToDiscoveryDayLoading: 0,
@@ -107,7 +114,7 @@ const Details: View<{ rfi: RfiResource.PublicRfi }> = ({ rfi }) => {
     (<a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>)
   ];
   const statusValues = [
-    (<RfiStatus.Badge status={RfiStatus.rfiToStatus(rfi)} style={{ fontSize: '0.85rem' }} />)
+    (<StatusBadge rfi={rfi} style={{ fontSize: '0.85rem' }} />)
   ];
   const attachmentsValues = version.attachments.length
     ? [(<a href={`#${ATTACHMENTS_ID}`}>View Attachments</a>)]
@@ -190,15 +197,17 @@ const Addenda: View<{ addenda: Addendum[] }> = ({ addenda }) => {
 
 interface RespondToDiscoveryDayButtonProps {
   loading: boolean;
-  discoveryDay: boolean
+  discoveryDay: boolean;
+  alreadyResponded: boolean;
   onClick(): void;
 }
 
 const RespondToDiscoveryDayButton: View<RespondToDiscoveryDayButtonProps> = props => {
-  const disabled = props.discoveryDay || props.loading;
-  const text = props.discoveryDay ? 'Discovery Session Request Sent' : 'Attend Discovery Session';
+  const { loading, discoveryDay, alreadyResponded, onClick } = props;
+  const disabled = alreadyResponded || loading;
+  const text = discoveryDay ? 'Discovery Session Request Sent' : 'Attend Discovery Session';
   return (
-    <LoadingButton color='secondary' onClick={props.onClick} loading={props.loading} disabled={disabled} className='ml-3 ml-md-0 mx-md-3 text-nowrap'>
+    <LoadingButton color='secondary' onClick={onClick} loading={loading} disabled={disabled} className='ml-3 ml-md-0 mx-md-3 text-nowrap'>
       {text}
     </LoadingButton>
   );
@@ -223,6 +232,7 @@ const Buttons: ComponentView<State, Msg> = props => {
       </Link>
       <RespondToDiscoveryDayButton
         discoveryDay={version.discoveryDay}
+        alreadyResponded={false}
         onClick={respondToDiscoveryDay}
         loading={isLoading} />
       <div className='text-secondary font-weight-bold d-none d-md-block mr-auto'>I want to...</div>
