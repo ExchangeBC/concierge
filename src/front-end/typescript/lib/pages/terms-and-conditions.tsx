@@ -22,6 +22,7 @@ export interface State {
   acceptedTermsAt?: Date;
 };
 
+// TODO add redirectOnSuccess param like the sign-in page.
 export interface Params {
   userId: string;
   fixedBarBottom?: number;

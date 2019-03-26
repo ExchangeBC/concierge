@@ -168,7 +168,7 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
     const isDisabled = isLoading || !isValid(state, Profile);
     const createAccount = () => !isDisabled && dispatch({ tag: 'createAccount', value: undefined });
     const isProgramStaff = Profile.userType === UserType.ProgramStaff;
-    const cancelPage: Page = isProgramStaff ? { tag: 'userList', value: null } : { tag: 'landing', value: null };
+    const cancelPage: Page = isProgramStaff ? { tag: 'userList', value: null } : { tag: 'landing', value: {} };
     const bottomBarIsFixed = state.fixedBarBottom === 0;
     return (
       <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>

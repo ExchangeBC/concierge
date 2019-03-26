@@ -15,7 +15,7 @@ export const init: Init<Params, State> = async () => {
       text: 'Return to the Home Page',
       page: {
         tag: 'landing',
-        value: null
+        value: {}
       }
     }
   };

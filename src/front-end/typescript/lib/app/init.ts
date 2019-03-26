@@ -1,6 +1,5 @@
 import { State } from 'front-end/lib/app/types';
-import { immutable, Init } from 'front-end/lib/framework';
-import * as PageLanding from 'front-end/lib/pages/landing';
+import { Init } from 'front-end/lib/framework';
 
 const init: Init<null, State> = async () => {
   return {
@@ -9,10 +8,8 @@ const init: Init<null, State> = async () => {
     inTransition: false,
     fixedBarBottom: 0,
     session: undefined,
-    activePage: { tag: 'landing', value: null },
-    pages: {
-      landing: immutable(await PageLanding.init(null))
-    }
+    activePage: { tag: 'landing', value: {} },
+    pages: {}
   };
 };
 

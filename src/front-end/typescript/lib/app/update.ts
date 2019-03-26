@@ -100,7 +100,7 @@ const update: Update<State, Msg> = (state, msg) => {
           // Set the new active page's state.
           switch (msg.value.page.tag) {
             case 'landing':
-              state = state.setIn(['pages', 'landing'], immutable(await PageLanding.init(null)));
+              state = state.setIn(['pages', 'landing'], immutable(await PageLanding.init(msg.value.page.value)));
               break;
             case 'signIn':
               state = state.setIn(['pages', 'signIn'], immutable(await PageSignIn.init(msg.value.page.value)));

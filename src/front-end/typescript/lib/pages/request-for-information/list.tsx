@@ -14,7 +14,7 @@ import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import { compareDates, rawFormatDate } from 'shared/lib';
 import { PublicRfi } from 'shared/lib/resources/request-for-information';
-import { ADT } from 'shared/lib/types';
+import { ADT, UserType } from 'shared/lib/types';
 
 function formatTableDate(date: Date): string {
   return rawFormatDate(date, 'YYYY-MM-DD', false);
@@ -24,6 +24,7 @@ function formatTableDate(date: Date): string {
 
 type TableCellData
   = ADT<'rfiNumber', string>
+  | ADT<'publishDate', Date>
   | ADT<'status', RfiStatus | null>
   | ADT<'title', { href: string, text: string }>
   | ADT<'publicSectorEntity', string>
@@ -34,36 +35,25 @@ type TableCellData
 const Table: TableComponent.TableComponent<TableCellData> = TableComponent.component();
 
 const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
-  let child: string | null | ReactElement<any> = null;
-  let wrapText = false;
+  const wrap = (child: string | null | ReactElement<any>, wrapText = false) => {
+    return (<td className={wrapText ? 'text-wrap' : ''}>{child}</td>);
+  };
   switch (data.tag) {
     case 'rfiNumber':
-      child = data.value;
-      break;
+      return wrap(data.value);
     case 'title':
-      child = (
-        <a href={data.value.href}>{data.value.text}</a>
-      );
-      wrapText = true;
-      break;
+      return wrap((<a href={data.value.href}>{data.value.text}</a>), true);
     case 'publicSectorEntity':
-      child = data.value;
-      wrapText = true;
-      break;
+      return wrap(data.value, true);
     case 'status':
-      child = (<StatusBadge status={data.value || undefined} />);
-      break;
+      return wrap((<StatusBadge status={data.value || undefined} />));
+    case 'publishDate':
     case 'lastUpdated':
     case 'closingDate':
-      child = formatTableDate(data.value);
-      break;
+      return wrap(formatTableDate(data.value));
     case 'discoveryDay':
-      child = data.value ? (<Icon name='check' color='body' width={1.5} height={1.5} />) : null;
-      break;
+      return wrap(data.value ? (<Icon name='check' color='body' width={1.5} height={1.5} />) : null);
   }
-  return (
-    <td className={wrapText ? 'text-wrap' : ''}>{child}</td>
-  );
 }
 
 // Add status property to each RFI
@@ -73,6 +63,7 @@ interface Rfi extends PublicRfi {
 }
 
 export interface State {
+  userType?: UserType;
   rfis: Rfi[];
   visibleRfis: Rfi[];
   statusFilter: Select.State;
@@ -81,7 +72,7 @@ export interface State {
   table: Immutable<TableComponent.State<TableCellData>>;
 };
 
-export type Params = null;
+export type Params = Pick<State, 'userType'>;
 
 type InnerMsg
   = ADT<'statusFilter', string>
@@ -91,7 +82,7 @@ type InnerMsg
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
-export const init: Init<Params, State> = async () => {
+export const init: Init<Params, State> = async ({ userType }) => {
   const result = await readManyRfis();
   let rfis: Rfi[] = [];
   if (result.tag === 'valid') {
@@ -114,6 +105,7 @@ export const init: Init<Params, State> = async () => {
     });
   }
   return {
+    userType,
     rfis,
     visibleRfis: rfis,
     statusFilter: Select.init({
@@ -211,6 +203,15 @@ export const update: Update<State, Msg> = (state, msg) => {
 export const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const categoryFilterElement = state.userType !== UserType.ProgramStaff
+    ? null
+    : (
+        <Col xs='12' md='4'>
+          <Select.view
+            state={state.categoryFilter}
+            onChange={onChangeSelect('categoryFilter')} />
+        </Col>
+      );
   return (
     <Row className='d-none d-md-flex align-items-end'>
       <Col xs='12' md='3'>
@@ -218,11 +219,7 @@ export const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
           state={state.statusFilter}
           onChange={onChangeSelect('statusFilter')} />
       </Col>
-      <Col xs='12' md='4'>
-        <Select.view
-          state={state.categoryFilter}
-          onChange={onChangeSelect('categoryFilter')} />
-      </Col>
+      {categoryFilterElement}
       <Col xs='12' md='4' className='ml-md-auto'>
         <ShortText.view
           state={state.searchFilter}
@@ -255,6 +252,24 @@ const programStaffTableHeadCells: TableComponent.THSpec[] = [
   }
 ];
 
+const nonProgramStaffTableHeadCells: TableComponent.THSpec[] = [
+  { children: 'RFI Number' },
+  { children: 'Publish Date' },
+  { children: 'Status' },
+  {
+    children: 'Project Title',
+    style: {
+      minWidth: '300px'
+    }
+  },
+  { children: 'Last Updated' },
+  {
+    children: (<Icon name='calendar' color='secondary' />),
+    tooltipText: 'Discovery Day Available'
+  },
+  { children: 'Closing Date' }
+];
+
 function programStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.TDSpec<TableCellData>>> {
   return rfis.map(rfi => {
     const version = rfi.latestVersion;
@@ -278,17 +293,51 @@ function programStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.TDSp
   });
 }
 
+function nonProgramStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.TDSpec<TableCellData>>> {
+  return rfis.map(rfi => {
+    const version = rfi.latestVersion;
+    if (!version) { return []; }
+    return [
+      TableComponent.makeTDSpec({ tag: 'rfiNumber' as 'rfiNumber', value: version.rfiNumber }),
+      TableComponent.makeTDSpec({ tag: 'publishDate' as 'publishDate', value: rfi.publishedAt }),
+      TableComponent.makeTDSpec({ tag: 'status' as 'status', value: rfi.status }),
+      TableComponent.makeTDSpec({
+        tag: 'title' as 'title',
+        value: {
+          // TODO after refactoring <Link>, use it here somehow.
+          href: `/requests-for-information/${rfi._id}/view`,
+          text: version.title
+        }
+      }),
+      TableComponent.makeTDSpec({ tag: 'lastUpdated' as 'lastUpdated', value: version.createdAt }),
+      TableComponent.makeTDSpec({ tag: 'discoveryDay' as 'discoveryDay', value: version.discoveryDay }),
+      TableComponent.makeTDSpec({ tag: 'closingDate' as 'closingDate', value: version.closingAt })
+    ];
+  });
+}
+
 export const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const bodyRows = programStaffTableBodyRows(state.visibleRfis);
-  if (!bodyRows.length) { return (<div>No RFIs found.</div>); }
+  if (!state.visibleRfis.length) { return (<div>No RFIs found.</div>); }
+  const isProgramStaff = state.userType === UserType.ProgramStaff;
+  const headCells = isProgramStaff ? programStaffTableHeadCells : nonProgramStaffTableHeadCells;
+  const bodyRows = isProgramStaff ? programStaffTableBodyRows(state.visibleRfis) : nonProgramStaffTableBodyRows(state.visibleRfis);
   const dispatchTable: Dispatch<ComponentMsg<TableComponent.Msg, Page>> = mapComponentDispatch(dispatch, value => ({ tag: 'table', value }));
   return (
     <Table.view
       className='text-nowrap'
-      headCells={programStaffTableHeadCells}
+      headCells={headCells}
       bodyRows={bodyRows}
       state={state.table}
       dispatch={dispatchTable} />
+  );
+}
+
+export const ConditionalCreateButton: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  if (state.userType !== UserType.ProgramStaff) { return null; }
+  return (
+    <Col xs='12' md='auto'>
+      <Link page={{ tag: 'requestForInformationCreate', value: {} }} buttonColor='secondary' text='Create RFI' />
+    </Col>
   );
 }
 
@@ -299,9 +348,7 @@ export const view: ComponentView<State, Msg> = props => {
         <Col xs='12' md='auto'>
           <h1 className='mb-3 mb-md-0'>Concierge RFIs</h1>
         </Col>
-        <Col xs='12' md='auto'>
-          <Link page={{ tag: 'requestForInformationCreate', value: {} }} buttonColor='secondary' text='Create RFI' />
-        </Col>
+        <ConditionalCreateButton {...props} />
       </Row>
       <Row className='mb-3 d-none d-md-flex'>
         <Col xs='12' md='8'>

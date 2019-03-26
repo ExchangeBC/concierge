@@ -204,8 +204,9 @@ interface RespondToDiscoveryDayButtonProps {
 
 const RespondToDiscoveryDayButton: View<RespondToDiscoveryDayButtonProps> = props => {
   const { loading, discoveryDay, alreadyResponded, onClick } = props;
+  if (!discoveryDay) { return null; }
   const disabled = alreadyResponded || loading;
-  const text = discoveryDay ? 'Discovery Session Request Sent' : 'Attend Discovery Session';
+  const text = alreadyResponded ? 'Discovery Session Request Sent' : 'Attend Discovery Session';
   return (
     <LoadingButton color='secondary' onClick={onClick} loading={loading} disabled={disabled} className='ml-3 ml-md-0 mx-md-3 text-nowrap'>
       {text}

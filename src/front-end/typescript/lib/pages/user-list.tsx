@@ -1,19 +1,45 @@
 import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
+import * as TableComponent from 'front-end/lib/components/table';
+import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import { readManyUsers } from 'front-end/lib/http/api';
 import Icon from 'front-end/lib/views/icon';
 import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
 import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
-import { truncate } from 'lodash';
 import { default as React, ReactElement } from 'react';
-import { Col, Row, Table } from 'reactstrap';
+import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, parseUserType, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
 
 const FALLBACK_NAME = 'No Name Provided';
+
+// Define Table component.
+
+type TableCellData
+  = ADT<'userType', UserType>
+  | ADT<'name', { href: string, text: string }>
+  | ADT<'email', string>
+  | ADT<'acceptedTerms', boolean>;
+
+const Table: TableComponent.TableComponent<TableCellData> = TableComponent.component();
+
+const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
+  const wrap = (child: string | null | ReactElement<any>) => {
+    return (<td>{child}</td>);
+  };
+  switch (data.tag) {
+    case 'userType':
+      return wrap(userTypeToTitleCase(data.value));
+    case 'name':
+      return wrap((<a href={data.value.href}>{data.value.text}</a>));
+    case 'email':
+      return wrap(data.value);
+    case 'acceptedTerms':
+      return wrap(data.value ? (<Icon name='check' color='body' width={1.5} height={1.5} />) : null);
+  }
+}
 
 export interface State {
   users: PublicUser[];
@@ -21,6 +47,7 @@ export interface State {
   userTypeFilter: Select.State;
   categoryFilter: Select.State;
   searchFilter: ShortText.State;
+  table: Immutable<TableComponent.State<TableCellData>>;
 };
 
 export type Params = null;
@@ -28,7 +55,8 @@ export type Params = null;
 type InnerMsg
   = ADT<'userTypeFilter', string>
   | ADT<'categoryFilter', string>
-  | ADT<'searchFilter', string>;
+  | ADT<'searchFilter', string>
+  | ADT<'table', TableComponent.Msg>;
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
@@ -75,7 +103,12 @@ export const init: Init<Params, State> = async () => {
       type: 'text',
       required: false,
       placeholder: 'Search'
-    })
+    }),
+    table: immutable(await Table.init({
+      idNamespace: 'user-list',
+      THView: TableComponent.DefaultTHView,
+      TDView
+    }))
   };
 };
 
@@ -127,6 +160,14 @@ export const update: Update<State, Msg> = (state, msg) => {
       return [updateAndQuery(state, 'categoryFilter', msg.value)];
     case 'searchFilter':
       return [updateAndQuery(state, 'searchFilter', msg.value)];
+    case 'table':
+      return updateComponentChild({
+        state,
+        mapChildMsg: value => ({ tag: 'table', value }),
+        childStatePath: ['table'],
+        childUpdate: Table.update,
+        childMsg: msg.value
+      });
     default:
       return [state];
   }
@@ -156,45 +197,54 @@ export const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
   );
 };
 
-export const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const truncateString = (s: string) => truncate(s, { length: 50, separator: /\s\+/ });
-  let children: ReactElement<any> | Array<ReactElement<any>> = (<tr><td>No users found.</td></tr>);
-  if (state.visibleUsers.length) {
-    children = state.visibleUsers.map((user, i) => {
-      return (
-          <tr key={`user-list-results-row-${i}`}>
-              <td>{userTypeToTitleCase(user.profile.type)}</td>
-              <td>
-                <a href={`/profile/${user._id}`}>
-                  {truncateString(profileToName(user.profile) || FALLBACK_NAME)}
-                </a>
-              </td>
-              <td>{truncateString(user.email)}</td>
-              <td className='text-center'>{user.acceptedTermsAt ? (<Icon name='check' color='body' width={1.5} height={1.5} />) : ''}</td>
-          </tr>
-      );
-    });
-  }
+const tableHeadCells: TableComponent.THSpec[] = [
+  { children: 'Type' },
+  {
+    children: 'Name',
+    style: {
+      minWidth: '280px'
+    }
+  },
+  {
+    children: 'Email Address',
+    style: {
+      minWidth: '210px'
+    }
+  },
+  { children: 'T&C' }
+];
+
+function tableBodyRows(users: PublicUser[]): Array<Array<TableComponent.TDSpec<TableCellData>>> {
+  return users.map(user => {
+    return [
+      TableComponent.makeTDSpec({ tag: 'userType' as 'userType', value: user.profile.type }),
+      TableComponent.makeTDSpec({
+        tag: 'name' as 'name',
+        value: {
+          // TODO after refactoring <Link>, use it here somehow.
+          href: `/profiles/${user._id}`,
+          text: profileToName(user.profile) || FALLBACK_NAME
+        }
+      }),
+      TableComponent.makeTDSpec({ tag: 'email' as 'email', value: user.email }),
+      TableComponent.makeTDSpec({ tag: 'acceptedTerms' as 'acceptedTerms', value: !!user.acceptedTermsAt })
+    ];
+  });
+}
+
+export const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  if (!state.visibleUsers.length) { return (<div>No users found.</div>); }
+  const bodyRows = tableBodyRows(state.visibleUsers);
+  const dispatchTable: Dispatch<ComponentMsg<TableComponent.Msg, Page>> = mapComponentDispatch(dispatch, value => ({ tag: 'table', value }));
   return (
-    <Row>
-      <Col xs='12'>
-        <Table className='text-nowrap mb-0' hover={!!state.visibleUsers.length} responsive>
-          <thead>
-            <tr>
-              <th style={{ width: '140px' }}>Type</th>
-              <th style={{ width: '300px' }}>Name</th>
-              <th style={{ width: '200px' }}>Email Address</th>
-              <th className='text-center' style={{ width: '80px' }}>T&C</th>
-            </tr>
-          </thead>
-          <tbody>
-            {children}
-          </tbody>
-        </Table>
-      </Col>
-    </Row>
+    <Table.view
+      className='text-nowrap'
+      headCells={tableHeadCells}
+      bodyRows={bodyRows}
+      state={state.table}
+      dispatch={dispatchTable} />
   );
-};
+}
 
 export const view: ComponentView<State, Msg> = props => {
   return (
@@ -215,7 +265,7 @@ export const view: ComponentView<State, Msg> = props => {
         </Col>
       </Row>
       <Filters {...props} />
-      <Results {...props} />
+      <ConditionalTable {...props} />
     </PageContainer.View>
   );
 };

@@ -1,5 +1,5 @@
 import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/lib/framework';
+import { Component, ComponentMsg, ComponentView, Init, Update, View } from 'front-end/lib/framework';
 import Icon from 'front-end/lib/views/icon';
 import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
@@ -7,20 +7,37 @@ import React from 'react';
 import { Col, Container, Row } from 'reactstrap';
 import { UserType, userTypeToTitleCase } from 'shared/lib/types';
 
-export type Params = null;
-
 export interface State {
-  empty: true;
+  signedIn: boolean;
+  userType?: UserType;
 };
+
+export type Params = Partial<State>;
 
 export type Msg = ComponentMsg<null, Page>;
 
-export const init: Init<Params, State> = async () => {
-  return { empty: true };
-};
+export const init: Init<Params, State> = async params => ({
+  signedIn: !!params.signedIn,
+  userType: params.userType
+});
 
 export const update: Update<State, Msg> = (state, msg) => {
   return [state];
+};
+
+const CallToActionButton: View<{ signedIn: boolean, className?: string, userType?: UserType }> = ({ className, signedIn, userType }) => {
+  let page: Page = { tag: 'signUpBuyer', value: {} };
+  let text = 'Get Started';
+  if (signedIn) {
+    page = {
+      tag: 'requestForInformationList',
+      value: { userType }
+    };
+    text = 'View RFIs';
+  }
+  return (
+    <Link page={page} buttonSize='lg' buttonColor='primary' text={text} className={className} />
+  );
 };
 
 const Hero: ComponentView<State, Msg> = ({ state, dispatch }) => {
@@ -36,7 +53,7 @@ const Hero: ComponentView<State, Msg> = ({ state, dispatch }) => {
         </Row>
         <Row>
           <Col md={{ size: 'auto', offset: 1 }}>
-            <Link page={{ tag: 'signUpBuyer', value: {} }} buttonSize='lg' buttonColor='primary' text='Get Started' />
+            <CallToActionButton signedIn={state.signedIn} userType={state.userType} />
           </Col>
         </Row>
       </Container>
@@ -167,7 +184,7 @@ const CallToAction: ComponentView<State, Msg> = ({ state, dispatch }) => {
             </h4>
           </Col>
           <Col xs='12' md='3' lg='2' className='d-flex justify-content-md-end mt-3 mt-md-0'>
-            <Link page={{ tag: 'signUpBuyer', value: {} }} text='Get Started' buttonColor='primary' buttonSize='lg' className='d-flex align-items-center' />
+            <CallToActionButton signedIn={state.signedIn} userType={state.userType} className='d-flex align-items-center' />
           </Col>
         </Row>
       </Container>

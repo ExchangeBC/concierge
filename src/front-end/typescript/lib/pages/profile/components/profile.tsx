@@ -156,7 +156,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
                   // Otherwise, redirect users to the landing page.
                   dispatch(newUrl({
                     tag: 'landing' as 'landing',
-                    value: null
+                    value: {}
                   }));
                 }
                 return stopDeactivateLoading(state)

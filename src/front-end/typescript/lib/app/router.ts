@@ -16,7 +16,7 @@ const PAGE_TITLE_SUFFIX = 'Procurement Concierge Program';
 
 const isSignedOut: RouteAuthDefinition<Page, UserType> = {
   level: { tag: 'signedOut', value: undefined },
-  redirect: () => ({ tag: 'landing', value: null }),
+  redirect: () => ({ tag: 'landing', value: {} }),
   signOut: false
 };
 
@@ -36,13 +36,13 @@ const isSignedIn: RouteAuthDefinition<Page, UserType> = {
 const isVendor: RouteAuthDefinition<Page, UserType> = {
   level: { tag: 'userType', value: [UserType.Vendor] },
   // TODO redirect to the view RFI page.
-  redirect: page => ({ tag: 'landing', value: null }),
+  redirect: page => ({ tag: 'landing', value: {} }),
   signOut: false
 };
 
 const isBuyerOrVendor: RouteAuthDefinition<Page, UserType> = {
   level: { tag: 'userType', value: [UserType.Buyer, UserType.Vendor] },
-  redirect: () => ({ tag: 'landing', value: null }),
+  redirect: () => ({ tag: 'landing', value: {} }),
   signOut: false
 };
 
@@ -71,7 +71,7 @@ const router: Router<State, Page, UserType> = {
 
   fallbackPage: {
     tag: 'landing',
-    value: null
+    value: {}
   },
 
   routes: [
@@ -140,7 +140,7 @@ const router: Router<State, Page, UserType> = {
       auth: isBuyerOrVendor
     },
     {
-      path: '/profile/:userId',
+      path: '/profiles/:userId',
       pageId: 'profile',
       auth: isSignedIn
     },
@@ -220,7 +220,10 @@ const router: Router<State, Page, UserType> = {
       case 'landing':
         return {
           tag: 'landing',
-          value: null
+          value: {
+            signedIn: !!(state.session && state.session.user),
+            userType: get(state.session, ['user', 'type'])
+          }
         };
       case 'signIn':
         const signInSerializedParams = get(params, 'params');
@@ -335,7 +338,9 @@ const router: Router<State, Page, UserType> = {
       case 'requestForInformationList':
         return {
           tag: 'requestForInformationList',
-          value: null
+          value: {
+            userType: get(state.session, ['user', 'type'])
+          }
         };
       case 'about':
         return {
@@ -418,7 +423,7 @@ const router: Router<State, Page, UserType> = {
       case 'termsAndConditions':
         return '/terms-and-conditions';
       case 'profile':
-        return `/profile/${page.value.profileUserId}`;
+        return `/profiles/${page.value.profileUserId}`;
       case 'userList':
         return '/users';
       case 'requestForInformationCreate':

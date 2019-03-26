@@ -108,7 +108,7 @@ export const update: Update<State, Msg> = (state, msg) => {
 export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const dispatchRfiForm: Dispatch<RfiForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'rfiForm' as 'rfiForm', value }));
   const bottomBarIsFixed = state.fixedBarBottom === 0;
-  const cancelPage: Page = { tag: 'requestForInformationList', value: null };
+  const cancelPage: Page = { tag: 'requestForInformationList', value: {} };
   const preview = () => dispatch({ tag: 'preview', value: undefined });
   const publish = () => dispatch({ tag: 'publish', value: undefined });
   const isPreviewLoading = state.previewLoading > 0;
