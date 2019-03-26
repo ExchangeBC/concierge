@@ -336,7 +336,7 @@ export const ConditionalCreateButton: ComponentView<State, Msg> = ({ state, disp
   if (state.userType !== UserType.ProgramStaff) { return null; }
   return (
     <Col xs='12' md='auto'>
-      <Link page={{ tag: 'requestForInformationCreate', value: {} }} buttonColor='secondary' text='Create RFI' />
+      <Link page={{ tag: 'requestForInformationCreate', value: {} }} buttonColor='secondary' text='Create a RFI' />
     </Col>
   );
 }
@@ -346,7 +346,7 @@ export const view: ComponentView<State, Msg> = props => {
     <PageContainer.View paddingY>
       <Row className='mb-5 mb-md-2 justify-content-md-between'>
         <Col xs='12' md='auto'>
-          <h1 className='mb-3 mb-md-0'>Requests for Information</h1>
+          <h1 className='mb-3 mb-md-0'>Requests for Information (RFIs)</h1>
         </Col>
         <ConditionalCreateButton {...props} />
       </Row>

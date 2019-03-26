@@ -44,7 +44,7 @@ export const TOKEN_SECRET = get('TOKEN_SECRET', '');
 
 export const COOKIE_SECRET = get('COOKIE_SECRET', '');
 
-export const FRONT_END_BUILD_DIR = resolve(__dirname, '../../build/front-end');
+export const FRONT_END_BUILD_DIR = resolve(REPOSITORY_ROOT_DIR, 'build/front-end');
 
 export const TMP_DIR = tmpdir();
 
