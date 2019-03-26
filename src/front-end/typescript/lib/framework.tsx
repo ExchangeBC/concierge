@@ -75,10 +75,16 @@ export interface ComponentViewProps<State, Msg> {
 
 export type ComponentView<State, Msg> = View<ComponentViewProps<State, Msg>>;
 
-export interface Component<Params, State, Msg> {
+/**
+ * The optional `Props` type parameter enables you
+ * to define views that take additional props in a
+ * type-safe manner.
+ */
+
+export interface Component<Params, State, Msg, Props extends ComponentViewProps<State, Msg> = ComponentViewProps<State, Msg>> {
   init: Init<Params, State>;
   update: Update<State, Msg>;
-  view: ComponentView<State, Msg>;
+  view: View<Props>;
 }
 
 export interface RouteAuthDefinition<Page, UserType> {

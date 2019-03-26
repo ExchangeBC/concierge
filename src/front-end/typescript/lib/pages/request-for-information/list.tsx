@@ -1,5 +1,6 @@
 import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Immutable, Init, Update, View } from 'front-end/lib/framework';
+import * as TableComponent from 'front-end/lib/components/table';
+import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import { readManyRfis } from 'front-end/lib/http/api';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
 import { parseRfiStatus, RfiStatus, rfiStatusToTitleCase, rfiToRfiStatus } from 'front-end/lib/types';
@@ -10,12 +11,31 @@ import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import { truncate } from 'lodash';
 import { CSSProperties, default as React, ReactElement } from 'react';
-import { Col, Row, Table } from 'reactstrap';
+import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import { compareDates, rawFormatDate } from 'shared/lib';
 import { PublicRfi } from 'shared/lib/resources/request-for-information';
 import { ADT } from 'shared/lib/types';
 
+// Define Table component.
+
+type TableCellData
+  = ADT<'rfiNumber', string>
+  | ADT<'status', RfiStatus>
+  | ADT<'title', string>
+  | ADT<'publicSectorEntity', string>
+  | ADT<'lastUpdated', Date>
+  | ADT<'closing', Date>
+  | ADT<'discoveryDay', boolean>;
+
+const Table: TableComponent.TableComponent<TableCellData> = TableComponent.component();
+
+const TDView: View<TableComponent.TDProps<TableCellData>> = props => {
+  return null;
+}
+
+// Add status property to each RFI
+// as we want to cache the RFI status on each one up front.
 interface Rfi extends PublicRfi {
   status: RfiStatus | null;
 }
@@ -26,6 +46,7 @@ export interface State {
   statusFilter: Select.State;
   categoryFilter: Select.State;
   searchFilter: ShortText.State;
+  table: Immutable<TableComponent.State<TableCellData>>;
 };
 
 export type Params = null;
@@ -33,7 +54,8 @@ export type Params = null;
 type InnerMsg
   = ADT<'statusFilter', string>
   | ADT<'categoryFilter', string>
-  | ADT<'searchFilter', string>;
+  | ADT<'searchFilter', string>
+  | ADT<'table', TableComponent.Msg>;
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
@@ -41,11 +63,12 @@ export const init: Init<Params, State> = async () => {
   const result = await readManyRfis();
   let rfis: Rfi[] = [];
   if (result.tag === 'valid') {
-    // Sort rfis by rfi type first, then name.
+    // Cache status on each RFI.
     rfis = result.value.items.map(rfi => ({
       ...rfi,
       status: rfiToRfiStatus(rfi)
     }));
+    // Sort rfis by status first, then name.
     rfis = rfis.sort((a, b) => {
       if (a.status === b.status) {
         return compareDates(a.publishedAt, b.publishedAt) * -1;
@@ -85,7 +108,12 @@ export const init: Init<Params, State> = async () => {
       type: 'text',
       required: false,
       placeholder: 'Search'
-    })
+    }),
+    table: immutable(await Table.init({
+      idNamespace: 'rfi-list',
+      THView: TableComponent.DefaultTHView,
+      TDView
+    }))
   };
 };
 
@@ -135,6 +163,14 @@ export const update: Update<State, Msg> = (state, msg) => {
       return [updateAndQuery(state, 'categoryFilter', msg.value)];
     case 'searchFilter':
       return [updateAndQuery(state, 'searchFilter', msg.value)];
+    case 'table':
+      return updateComponentChild({
+        state,
+        mapChildMsg: value => ({ tag: 'table', value }),
+        childStatePath: ['table'],
+        childUpdate: Table.update,
+        childMsg: msg.value
+      });
     default:
       return [state];
   }
@@ -244,6 +280,8 @@ export const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
 };
 
 export const view: ComponentView<State, Msg> = props => {
+  const { state, dispatch } = props;
+  const dispatchTable: Dispatch<ComponentMsg<TableComponent.Msg, Page>> = mapComponentDispatch(dispatch, value => ({ tag: 'table', value }));
   return (
     <PageContainer.View paddingY>
       <Row className='mb-5 mb-md-2 justify-content-md-between'>
@@ -262,7 +300,9 @@ export const view: ComponentView<State, Msg> = props => {
         </Col>
       </Row>
       <Filters {...props} />
-      <Results {...props} />
+      <Table.view
+        state={state.table}
+        dispatch={dispatchTable} />
     </PageContainer.View>
   );
 };
