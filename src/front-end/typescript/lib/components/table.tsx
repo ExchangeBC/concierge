@@ -55,7 +55,7 @@ interface ConditionalTooltipProps {
 const ConditionalTooltip: View<ConditionalTooltipProps> = props => {
   if (props.data) {
     return (
-      <Tooltip placement='top' {...props.data}>
+      <Tooltip placement='top' autohide={false} boundariesElement='window' {...props.data}>
         {props.data.text}
       </Tooltip>
     );
@@ -66,6 +66,7 @@ const ConditionalTooltip: View<ConditionalTooltipProps> = props => {
 
 export interface THSpec {
   children: Children;
+  style?: CSSProperties;
   tooltipText?: string;
 }
 
@@ -76,7 +77,7 @@ export interface THProps extends THSpec {
   id: string;
 }
 
-export const DefaultTHView: View<THProps> = ({ id, children, index, tooltipText, dispatch, tooltipIsOpen }) => {
+export const DefaultTHView: View<THProps> = ({ id, style, children, index, tooltipText, dispatch, tooltipIsOpen }) => {
   const tooltipData = !tooltipText
     ? undefined
     : {
@@ -86,16 +87,12 @@ export const DefaultTHView: View<THProps> = ({ id, children, index, tooltipText,
         toggle: () => dispatch({ tag: 'toggleTooltip', value: index })
       };
   return (
-    <th>
+    <th key={id} id={id} style={style}>
       {children}
       <ConditionalTooltip data={tooltipData} />
     </th>
   );
 };
-
-export interface TDProps<Data> {
-  data: Data;
-}
 
 interface THeadProps {
   cells: THProps[];
@@ -105,7 +102,7 @@ interface THeadProps {
 export const THead: View<THeadProps> = ({ cells, THView }) => {
   const children = cells.map((cell, i) => (<THView key={`table-thead-${i}`} {...cell} />));
   return (
-    <thead className='text-small text-secondary text-uppercase font-weight-bold bg-light'>
+    <thead className='small text-secondary text-uppercase font-weight-bold bg-light'>
       <tr>
         {children}
       </tr>
@@ -113,17 +110,28 @@ export const THead: View<THeadProps> = ({ cells, THView }) => {
   );
 };
 
+export interface TDSpec<Data> {
+  data: Data;
+}
+
+export function makeTDSpec<Data>(data: Data): TDSpec<Data> {
+  return { data };
+}
+
+export type TDProps<Data> = TDSpec<Data>;
+
 interface TBodyProps<Data> {
+  id: string;
   rows: Array<Array<TDProps<Data>>>;
   TDView: View<TDProps<Data>>;
 }
 
 export function makeTBody<Data>(): View<TBodyProps<Data>> {
-  return ({ rows, TDView }) => {
+  return ({ id, rows, TDView }) => {
     const children = rows.map((row, i) => {
-      const cellChildren = row.map((cell, j) => (<TDView key={`table-tbody-${i}-${j}`} {...cell} />));
+      const cellChildren = row.map((cell, j) => (<TDView key={`${id}-${i}-${j}`} {...cell} />));
       return (
-        <tr>
+        <tr key={`${id}-${i}`}>
           {cellChildren}
         </tr>
       );
@@ -138,7 +146,7 @@ export function makeTBody<Data>(): View<TBodyProps<Data>> {
 
 interface ViewProps<Data> extends ComponentViewProps<State<Data>, Msg> {
   headCells: THSpec[];
-  bodyRows: Array<Array<TDProps<Data>>>;
+  bodyRows: Array<Array<TDSpec<Data>>>;
   className?: string;
   style?: CSSProperties;
 }
@@ -160,6 +168,7 @@ export function view<Data>(): View<ViewProps<Data>> {
       })
     };
     const bodyProps: TBodyProps<Data> = {
+      id: `table-${state.idNamespace}-tbody`,
       TDView: state.TDView,
       rows: bodyRows
     };

@@ -9,29 +9,61 @@ import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
 import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
-import { truncate } from 'lodash';
-import { CSSProperties, default as React, ReactElement } from 'react';
+import { default as React, ReactElement } from 'react';
 import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import { compareDates, rawFormatDate } from 'shared/lib';
 import { PublicRfi } from 'shared/lib/resources/request-for-information';
 import { ADT } from 'shared/lib/types';
 
+function formatTableDate(date: Date): string {
+  return rawFormatDate(date, 'YYYY-MM-DD', false);
+}
+
 // Define Table component.
 
 type TableCellData
   = ADT<'rfiNumber', string>
-  | ADT<'status', RfiStatus>
-  | ADT<'title', string>
+  | ADT<'status', RfiStatus | null>
+  | ADT<'title', { href: string, text: string }>
   | ADT<'publicSectorEntity', string>
   | ADT<'lastUpdated', Date>
-  | ADT<'closing', Date>
+  | ADT<'closingDate', Date>
   | ADT<'discoveryDay', boolean>;
 
 const Table: TableComponent.TableComponent<TableCellData> = TableComponent.component();
 
-const TDView: View<TableComponent.TDProps<TableCellData>> = props => {
-  return null;
+const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
+  let child: string | null | ReactElement<any> = null;
+  let wrapText = false;
+  switch (data.tag) {
+    case 'rfiNumber':
+      child = data.value;
+      break;
+    case 'title':
+      child = (
+        <a href={data.value.href}>{data.value.text}</a>
+      );
+      wrapText = true;
+      break;
+    case 'publicSectorEntity':
+      child = data.value;
+      wrapText = true;
+      break;
+    case 'status':
+      child = (<StatusBadge status={data.value || undefined} />);
+      break;
+    case 'lastUpdated':
+    case 'closingDate':
+      child = formatTableDate(data.value);
+      break;
+    case 'discoveryDay':
+      child = data.value ? (<Icon name='check' color='body' width={1.5} height={1.5} />) : null;
+      break;
+  }
+  return (
+    <td className={wrapText ? 'text-wrap' : ''}>{child}</td>
+  );
 }
 
 // Add status property to each RFI
@@ -200,88 +232,67 @@ export const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
   );
 };
 
-function formatTableDate(date: Date): string {
-  return rawFormatDate(date, 'YYYY-MM-DD', false);
-}
-
-interface TableHeadingCellProps {
-  className?: string;
-  style?: CSSProperties;
-  children: ReactElement<any> | Array<ReactElement<any>> | string;
-}
-
-const TableHeadingCell: View<TableHeadingCellProps> = ({ className, style, children }) => {
-  return (<th className={`text-secondary text-uppercase small font-weight-bold ${className || ''}`} style={style}>{children}</th>);
-};
-
-const truncateString = (s: string, length: number) => truncate(s, { length, separator: /\s\+/ });
-export const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const noneFound = (<tr><td className='text-nowrap'>No RFIs found.</td></tr>);
-  let children: ReactElement<any> | Array<ReactElement<any>> = noneFound;
-  if (state.visibleRfis.length) {
-    children = state.visibleRfis.reduce((acc: Array<ReactElement<any>>, rfi, i) => {
-      const version = rfi.latestVersion;
-      if (!version) { return acc }
-      acc.push((
-          <tr key={`rfi-list-results-row-${i}`}>
-            <td className='text-nowrap'>{version.rfiNumber}</td>
-            <td><StatusBadge status={rfi.status || undefined} /></td>
-            <td>
-              <a href={`/requests-for-information/${rfi._id}/edit`}>
-                {truncateString(version.title, 50)}
-              </a>
-            </td>
-            <td>{truncateString(version.publicSectorEntity, 50)}</td>
-            <td>{formatTableDate(version.createdAt)}</td>
-            <td>{formatTableDate(version.closingAt)}</td>
-            <td className='text-center'>{version.discoveryDay ? (<Icon name='check' color='body' width={1.5} height={1.5} />) : ''}</td>
-          </tr>
-      ));
-      return acc;
-    }, []);
-    if (!children.length) { children = noneFound; }
+const programStaffTableHeadCells: TableComponent.THSpec[] = [
+  { children: 'RFI Number' },
+  { children: 'Status' },
+  {
+    children: 'Project Title',
+    style: {
+      minWidth: '300px'
+    }
+  },
+  {
+    children: 'Public Sector Entity',
+    style: {
+      minWidth: '210px'
+    }
+  },
+  { children: 'Last Updated' },
+  { children: 'Closing Date' },
+  {
+    children: (<Icon name='calendar' color='secondary' />),
+    tooltipText: 'Discovery Day'
   }
+];
+
+function programStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.TDSpec<TableCellData>>> {
+  return rfis.map(rfi => {
+    const version = rfi.latestVersion;
+    if (!version) { return []; }
+    return [
+      TableComponent.makeTDSpec({ tag: 'rfiNumber' as 'rfiNumber', value: version.rfiNumber }),
+      TableComponent.makeTDSpec({ tag: 'status' as 'status', value: rfi.status }),
+      TableComponent.makeTDSpec({
+        tag: 'title' as 'title',
+        value: {
+          // TODO after refactoring <Link>, use it here somehow.
+          href: `/requests-for-information/${rfi._id}/edit`,
+          text: version.title
+        }
+      }),
+      TableComponent.makeTDSpec({ tag: 'publicSectorEntity' as 'publicSectorEntity', value: version.publicSectorEntity }),
+      TableComponent.makeTDSpec({ tag: 'lastUpdated' as 'lastUpdated', value: version.createdAt }),
+      TableComponent.makeTDSpec({ tag: 'closingDate' as 'closingDate', value: version.closingAt }),
+      TableComponent.makeTDSpec({ tag: 'discoveryDay' as 'discoveryDay', value: version.discoveryDay })
+    ];
+  });
+}
+
+export const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  const bodyRows = programStaffTableBodyRows(state.visibleRfis);
+  if (!bodyRows.length) { return (<div>No RFIs found.</div>); }
+  const dispatchTable: Dispatch<ComponentMsg<TableComponent.Msg, Page>> = mapComponentDispatch(dispatch, value => ({ tag: 'table', value }));
   return (
-    <Row>
-      <Col xs='12'>
-        <Table className='mb-0' hover={!!state.visibleRfis.length} responsive>
-          <thead>
-            <tr className='bg-light text-nowrap'>
-              <TableHeadingCell style={{ width: '140px' }}>
-                RFI Number
-              </TableHeadingCell>
-              <TableHeadingCell style={{ width: '140px' }}>
-                Status
-              </TableHeadingCell>
-              <TableHeadingCell style={{ width: '300px', minWidth: '300px' }}>
-                Project Title
-              </TableHeadingCell>
-              <TableHeadingCell style={{ width: '210px', minWidth: '210px' }}>
-                Public Sector Entity
-              </TableHeadingCell>
-              <TableHeadingCell style={{ width: '130px' }}>
-                Last Updated
-              </TableHeadingCell>
-              <TableHeadingCell style={{ width: '110px', minWidth: '110px' }}>
-                Closing
-              </TableHeadingCell>
-              <TableHeadingCell style={{ width: '80px' }} className='text-center' >
-                <Icon name='calendar' color='secondary' />
-              </TableHeadingCell>
-            </tr>
-          </thead>
-          <tbody>
-            {children}
-          </tbody>
-        </Table>
-      </Col>
-    </Row>
+    <Table.view
+      className='text-nowrap'
+      headCells={programStaffTableHeadCells}
+      bodyRows={bodyRows}
+      state={state.table}
+      dispatch={dispatchTable} />
   );
-};
+}
 
 export const view: ComponentView<State, Msg> = props => {
-  const { state, dispatch } = props;
-  const dispatchTable: Dispatch<ComponentMsg<TableComponent.Msg, Page>> = mapComponentDispatch(dispatch, value => ({ tag: 'table', value }));
   return (
     <PageContainer.View paddingY>
       <Row className='mb-5 mb-md-2 justify-content-md-between'>
@@ -300,9 +311,7 @@ export const view: ComponentView<State, Msg> = props => {
         </Col>
       </Row>
       <Filters {...props} />
-      <Table.view
-        state={state.table}
-        dispatch={dispatchTable} />
+      <ConditionalTable {...props} />
     </PageContainer.View>
   );
 };
