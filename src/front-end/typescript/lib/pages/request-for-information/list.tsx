@@ -346,7 +346,7 @@ export const view: ComponentView<State, Msg> = props => {
     <PageContainer.View paddingY>
       <Row className='mb-5 mb-md-2 justify-content-md-between'>
         <Col xs='12' md='auto'>
-          <h1 className='mb-3 mb-md-0'>Concierge RFIs</h1>
+          <h1 className='mb-3 mb-md-0'>Requests for Information</h1>
         </Col>
         <ConditionalCreateButton {...props} />
       </Row>
