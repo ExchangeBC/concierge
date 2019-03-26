@@ -173,7 +173,7 @@ export function view<Data>(): View<ViewProps<Data>> {
       rows: bodyRows
     };
     return (
-      <Table className={className} style={style} hover={!!bodyRows.length} responsive>
+      <Table className={className} style={style} responsive>
         <THead {...headProps} />
         <TBody {...bodyProps} />
       </Table>
