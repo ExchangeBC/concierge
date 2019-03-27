@@ -1,4 +1,4 @@
-import { COOKIE_SECRET, TMP_DIR } from 'back-end/config';
+import { COOKIE_SECRET, ENV, TMP_DIR } from 'back-end/config';
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
 import { ErrorResponseBody, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, makeFileRequestBody, makeJsonRequestBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
@@ -131,7 +131,10 @@ export function express<Session>(): ExpressAdapter<Session> {
         .status(response.code)
         .set(response.headers);
       // Manage the session ID cookie.
-      const setSessionId = (id: string) => expressRes.cookie(SESSION_COOKIE_NAME, id, { signed: true });
+      const setSessionId = (id: string) => expressRes.cookie(SESSION_COOKIE_NAME, id, {
+        signed: true,
+        secure: ENV !== 'development'
+      });
       const sessionId = sessionToSessionId(response.session)
       setSessionId(sessionId.toString());
       switch (response.body.tag) {
