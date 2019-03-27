@@ -1,6 +1,6 @@
 import { FRONT_END_BUILD_DIR } from 'back-end/config';
 import { FileResponseBody, makeTextResponseBody, nullConfigurableRequest, Route, Router, TextResponseBody, tryMakeFileResponseBodyWithGzip } from 'back-end/lib/server';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { HttpMethod } from 'shared/lib/types';
 
 const FALLBACK_FILE_PATH = join(FRONT_END_BUILD_DIR, 'index.html');
@@ -13,7 +13,7 @@ const frontEndAssetRoute: Route<any, null, null, null, FileResponseBody | TextRe
       return nullConfigurableRequest();
     },
     async respond(request) {
-      const filePath = join(FRONT_END_BUILD_DIR, request.path);
+      const filePath = join(FRONT_END_BUILD_DIR, resolve(request.path));
       let fileResponseBody = tryMakeFileResponseBodyWithGzip(filePath);
       fileResponseBody = fileResponseBody || tryMakeFileResponseBodyWithGzip(FALLBACK_FILE_PATH);
       return {
