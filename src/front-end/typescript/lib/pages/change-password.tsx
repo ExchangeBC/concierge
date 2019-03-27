@@ -89,7 +89,7 @@ export const update: Update<State, Msg> = (state, msg) => {
       state = startLoading(state);
       return [
         state,
-        async dispatch => {
+        async (state, dispatch) => {
           const result = await api.updateUser({
             _id: state.userId,
             currentPassword: state.currentPassword.value,

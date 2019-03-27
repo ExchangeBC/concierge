@@ -56,7 +56,7 @@ export const update: Update<State, Msg> = (state, msg) => {
       state = startLoading(state);
       return [
         state,
-        async dispatch => {
+        async (state, dispatch) => {
           await api.createForgotPasswordToken(state.email.value);
           // Always redirect user to the confirmation page,
           // so we don't give away any information about which users

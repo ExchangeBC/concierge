@@ -66,7 +66,7 @@ const update: Update<State, Msg> = (state, msg) => {
       state = startTransition(state);
       return [
         state,
-        async dispatch => {
+        async (state, dispatch) => {
           state = endTransition(state);
           const outgoingPage = state.activePage;
           const auth = msg.value.auth;

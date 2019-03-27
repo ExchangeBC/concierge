@@ -76,7 +76,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
         state = startLoading(state);
         return [
           state,
-          async dispatch => {
+          async (state, dispatch) => {
             const { email, password } = AccountInformation.getValues(state.accountInformation);
             const user = {
               email,

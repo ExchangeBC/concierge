@@ -2,7 +2,7 @@ import { Record, RecordOf } from 'immutable';
 import { defaults, get, remove } from 'lodash';
 import page from 'page';
 import { default as React, ReactElement } from 'react';
-import ReactDOM from 'react-dom';
+import ReactDom from 'react-dom';
 import { ADT, AuthLevel } from 'shared/lib/types';
 
 export type Immutable<State> = RecordOf<State>;
@@ -14,7 +14,7 @@ export function immutable<State>(state: State): Immutable<State> {
 export type Init<Params, State> = (params: Params) => Promise<State>;
 
 // Update returns a tuple representing sync and async state mutations.
-type UpdateReturnValue<State, Msg> = [Immutable<State>, ((dispatch: Dispatch<Msg>) => Promise<Immutable<State>>)?];
+type UpdateReturnValue<State, Msg> = [Immutable<State>, ((state: Immutable<State>, dispatch: Dispatch<Msg>) => Promise<Immutable<State>>)?];
 
 export type Update<State, Msg> = (state: Immutable<State>, msg: Msg) => UpdateReturnValue<State, Msg>;
 
@@ -35,9 +35,9 @@ export function updateAppChild<PS, PM, CS, CM, Page, UserType>(params: UpdateChi
   state = state.setIn(childStatePath, newChildState);
   let asyncStateUpdate;
   if (newAsyncChildState) {
-    asyncStateUpdate = async (dispatch: Dispatch<AppMsg<PM, Page, UserType>>) => {
+    asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<AppMsg<PM, Page, UserType>>) => {
       const mappedDispatch = mapAppDispatch(dispatch, mapChildMsg);
-      return state.setIn(childStatePath, await newAsyncChildState(mappedDispatch));
+      return state.setIn(childStatePath, await newAsyncChildState(state.getIn(childStatePath), mappedDispatch));
     }
   }
   return [
@@ -55,9 +55,9 @@ export function updateComponentChild<PS, PM, CS, CM, Page>(params: UpdateChildPa
   state = state.setIn(childStatePath, newChildState);
   let asyncStateUpdate;
   if (newAsyncChildState) {
-    asyncStateUpdate = async (dispatch: Dispatch<ComponentMsg<PM, Page>>) => {
+    asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<ComponentMsg<PM, Page>>) => {
       const mappedDispatch = mapComponentDispatch(dispatch, mapChildMsg);
-      return state.setIn(childStatePath, await newAsyncChildState(mappedDispatch));
+      return state.setIn(childStatePath, await newAsyncChildState(state.getIn(childStatePath), mappedDispatch));
     }
   }
   return [
@@ -266,46 +266,44 @@ export async function start<State, Msg extends ADT<any, any>, Page, UserType>(ap
   let promise = Promise.resolve();
   // Set up dispatch function to queue state mutations.
   const dispatch: Dispatch<AppMsg<Msg, Page, UserType>> = msg => {
-    promise = promise
-      .then(() => {
-        switch (msg.tag) {
-          case '@redirect':
-            runReplaceUrl(msg.value);
-            return state;
-          case '@newUrl':
-            runNewUrl(app.router.pageToUrl(msg.value));
-            return state;
-          case '@replaceUrl':
-            runReplaceUrl(app.router.pageToUrl(msg.value));
-            return state;
-          default:
-            break;
-        }
-        const [newState, promiseState] = app.update(state, msg);
-        // Update state with its synchronous change.
-        state = newState;
-        if (promiseState) {
+    // Synchronous state changes should happen outside a promise chain
+    // in the main thread. Otherwise real-time UI changes don't happen
+    // (e.g. form input) causing a bad UX.
+    notifyMsgSubscriptions(msg);
+    switch (msg.tag) {
+      case '@redirect':
+        runReplaceUrl(msg.value);
+        break;
+      case '@newUrl':
+        runNewUrl(app.router.pageToUrl(msg.value));
+        break;
+      case '@replaceUrl':
+        runReplaceUrl(app.router.pageToUrl(msg.value));
+        break;
+    }
+    const [newState, promiseState] = app.update(state, msg);
+    state = newState;
+    notifyStateSubscriptions();
+    // Asynchronous changes should be sequenced inside
+    // a promise chain.
+    if (promiseState) {
+      promise = promise
+        .then(() => promiseState(state, dispatch))
+        .then(newState => {
+          // Update state with its asynchronous change.
+          state = newState;
           notifyStateSubscriptions();
-          return promiseState(dispatch);
-        } else {
-          return newState;
-        }
-      })
-      .then(newState => {
-        // Update state with its asynchronous change.
-        state = newState;
-        notifyMsgSubscriptions(msg);
-        notifyStateSubscriptions();
-      });
+        });
+    }
     return promise;
   };
   // Render the view whenever state changes.
   const render = (state: Immutable<State>, dispatch: Dispatch<AppMsg<Msg, Page, UserType>>): void => {
-    ReactDOM.render(
+    ReactDom.render(
       <app.view state={state} dispatch={dispatch} />,
       element
     );
-  }
+  };
   stateSubscribe(render);
   // Set up function to notify msg subscriptions.
   function notifyMsgSubscriptions(msg: AppMsg<Msg, Page, UserType>): void {

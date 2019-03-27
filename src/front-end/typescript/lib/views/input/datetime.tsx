@@ -67,7 +67,6 @@ const Child: View<FormField.ChildProps<State, HTMLInputElement, ExtraProps>> = p
       min={state.min}
       max={state.max}
       onChange={onChange}
-      onChangeDebounced={extraProps && extraProps.onChangeDebounced}
       onKeyUp={extraProps && extraProps.onKeyUp} />
   );
 };

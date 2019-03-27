@@ -65,7 +65,7 @@ export const update: Update<State, Msg> = (state, msg) => {
       state = startPublishLoading(state);
       return [
         state,
-        async dispatch => {
+        async (state, dispatch) => {
           const fail = (state: Immutable<State>, errors: RfiResource.CreateValidationErrors) => {
             state = stopPublishLoading(state);
             return state.set('rfiForm', RfiForm.setErrors(state.rfiForm, errors));

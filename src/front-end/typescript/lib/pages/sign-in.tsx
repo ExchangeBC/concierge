@@ -79,7 +79,7 @@ export const update: Update<State, Msg> = (state, msg) => {
       state = startLoading(state);
       return [
         state,
-        async dispatch => {
+        async (state, dispatch) => {
           const result = await api.createSession(state.email.value, state.password.value);
           switch (result.tag) {
             case 'valid':

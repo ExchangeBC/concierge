@@ -142,7 +142,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
           .set('promptDeactivationConfirmation', false);
         return [
           state,
-          async dispatch => {
+          async (state, dispatch) => {
             const result = await api.deleteUser(state.profileUser._id);
             switch (result.tag) {
               case 'valid':

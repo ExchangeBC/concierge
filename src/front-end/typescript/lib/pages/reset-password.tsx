@@ -81,7 +81,7 @@ export const update: Update<State, Msg> = (state, msg) => {
       state = startLoading(state);
       return [
         state,
-        async dispatch => {
+        async (state, dispatch) => {
           const result = await api.updateForgotPasswordToken(state.forgotPasswordToken, state.userId, state.newPassword.value);
           switch (result.tag) {
             case 'valid':
