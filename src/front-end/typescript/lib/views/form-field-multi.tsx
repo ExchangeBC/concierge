@@ -2,7 +2,7 @@ import { Immutable, View } from 'front-end/lib/framework';
 import Icon from 'front-end/lib/views/icon';
 import { cloneDeep, reduce } from 'lodash';
 import { ChangeEventHandler, default as React, ReactElement } from 'react';
-import { Alert, Button, FormGroup, FormText, InputGroup, InputGroupAddon, Label } from 'reactstrap';
+import { Alert, Button, FormGroup, FormText, Label } from 'reactstrap';
 
 export interface Field<Value> {
   value: Value;
@@ -71,7 +71,7 @@ export interface Props<ChildElement, Value, OnAddParams, ExtraChildProps> {
   AddButton: View<AddButtonProps<OnAddParams>>;
   addButtonProps: AddButtonProps<OnAddParams>;
   Child: View<ChildProps<ChildElement, Value, ExtraChildProps>>;
-  childClassName?: string;
+  formGroupClassName?: string;
   extraChildProps: ExtraChildProps;
   onChange(index: number): ChangeEventHandler<ChildElement>;
   onRemove(index: number): () => void;
@@ -109,7 +109,7 @@ const ConditionalLabel: View<Props<any, any, any, any>> = (props) => {
 export function makeDefaultAddButton(text = 'Add'): View<AddButtonProps<void>> {
   return props => {
     return (
-      <Button color='secondary' size='sm' className='mb-2' onClick={() => props.onAdd()}>
+      <Button color='info' size='sm' className='mb-2' onClick={() => props.onAdd()}>
         {text}
       </Button>
     );
@@ -153,17 +153,21 @@ const ConditionalFieldErrors: View<Field<any>> = ({ errors }) => {
   }
 }
 
-function ConditionalRemoveButton<ChildElement, Value>(props: ChildProps<ChildElement, Value, any>) {
+export function ConditionalRemoveButton<ChildElement, Value>(props: ChildProps<ChildElement, Value, any>) {
   if (props.disabled) {
     return null;
   } else {
     const { removable = true } = props.field;
+    const className = `${!removable ? 'disabled' : ''} btn btn-sm btn-link text-hover-danger`;
     return (
-      <InputGroupAddon addonType='append'>
-        <Button color='secondary' onClick={() => removable && props.onRemove()} disabled={!removable}>
-          <Icon name='trash' color='white' width={1.25} height={1.25} />
-        </Button>
-      </InputGroupAddon>
+      <Icon
+        name='trash'
+        color='secondary'
+        width={1.25}
+        height={1.25}
+        className={className}
+        style={{ boxSizing: 'content-box', cursor: 'pointer' }}
+        onClick={() => removable && props.onRemove()} />
     );
   }
 }
@@ -181,26 +185,26 @@ export interface DefaultChildProps<ChildElement, Value, ExtraProps> {
 export function DefaultChild<ChildElement, Value, ExtraProps>(props: DefaultChildProps<ChildElement, Value, ExtraProps>) {
   const { childProps, children } = props;
   return (
-    <InputGroup>
+    <div className='d-flex align-items-center'>
       {children}
       <ConditionalRemoveButton {...childProps} />
-    </InputGroup>
+    </div>
   );
 }
 
 function Children<ChildElement, Value, OnAddParams, ExtraChildProps>(props: Props<ChildElement, Value, OnAddParams, ExtraChildProps>) {
-  const { Child, state, onChange, onRemove, childClassName = '', extraChildProps, disabled = false } = props;
+  const { Child, state, onChange, onRemove, formGroupClassName = '', extraChildProps, disabled = false } = props;
   const { fields, idNamespace, reverseFieldOrderInView = false } = state;
   const children = fields.reduce((acc, field, i) => {
     const id = `${idNamespace}-${i}`;
     const invalid = !!field.errors.length;
-    const className = `form-control ${invalid ? 'is-invalid' : ''}`;
+    const childClassName = `form-control ${invalid ? 'is-invalid' : ''}`;
     const child = (
-      <FormGroup key={`form-field-multi-child-${i}`} className={childClassName}>
+      <FormGroup key={`form-field-multi-child-${i}`} className={formGroupClassName}>
         <Child
           key={`form-field-multi-child-${i}`}
           id={id}
-          className={className}
+          className={childClassName}
           field={field}
           onChange={onChange(i)}
           onRemove={onRemove(i)}

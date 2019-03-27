@@ -254,7 +254,7 @@ export const view: ComponentView<State, Msg> = props => {
           <h1 className='mb-3 mb-md-0'>Concierge Users</h1>
         </Col>
         <Col xs='12' md='auto'>
-          <Link page={{ tag: 'signUpProgramStaff', value: {} }} buttonColor='secondary' text='Create a Program Staff Account' />
+          <Link page={{ tag: 'signUpProgramStaff', value: {} }} buttonColor='info' text='Create a Program Staff Account' />
         </Col>
       </Row>
       <Row className='mb-3 d-none d-md-flex'>

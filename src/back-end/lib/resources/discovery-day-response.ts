@@ -64,6 +64,7 @@ export const resource: Resource = {
         // Validate the RFI ID and session user ID.
         const rawRfiId = getString(request.body.value, 'rfiId');
         const validatedRfiId = validateObjectIdString(rawRfiId);
+        // TODO ensure vendor has accepted terms.
         const validatedVendor = await validateUserId(UserModel, request.session.user.id, UserType.Vendor, true);
         if (validatedRfiId.tag === 'invalid' || validatedVendor.tag === 'invalid') {
           return mapRequestBody(request, {

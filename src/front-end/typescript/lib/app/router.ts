@@ -3,6 +3,7 @@ import { RouteAuthDefinition, Router } from 'front-end/lib/framework';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
+import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
 import { get } from 'lodash';
 import { getString } from 'shared/lib';
 import { UserType, userTypeToTitleCase } from 'shared/lib/types';
@@ -135,7 +136,7 @@ const router: Router<State, Page, UserType> = {
       auth: isSignedOut
     },
     {
-      path: '/terms-and-conditions',
+      path: '/terms-and-conditions/:params',
       pageId: 'termsAndConditions',
       auth: isBuyerOrVendor
     },
@@ -292,11 +293,19 @@ const router: Router<State, Page, UserType> = {
           value: null
         };
       case 'termsAndConditions':
+        const termsSerializedParams = get(params, 'params');
+        let termsValue: PageTermsAndConditions.Params = {
+          userId: get(state.session, ['user', 'id'], '')
+        };
+        if (termsSerializedParams) {
+          termsValue = {
+            ...deserialize(termsSerializedParams),
+            ...termsValue
+          };
+        }
         return {
           tag: 'termsAndConditions',
-          value: {
-            userId: get(state.session, ['user', 'id'], '')
-          }
+          value: termsValue
         };
       case 'profile':
         return {
@@ -421,7 +430,7 @@ const router: Router<State, Page, UserType> = {
       case 'forgotPassword':
         return '/forgot-password';
       case 'termsAndConditions':
-        return '/terms-and-conditions';
+        return `/terms-and-conditions/${serialize(page.value)}`;
       case 'profile':
         return `/profiles/${page.value.profileUserId}`;
       case 'userList':

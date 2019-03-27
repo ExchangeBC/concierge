@@ -1,5 +1,6 @@
 import { prefixRequest } from 'front-end/lib/http';
 import shajs from 'sha.js';
+import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as FileResource from 'shared/lib/resources/file';
 import * as ForgotPasswordTokenResource from 'shared/lib/resources/forgot-password-token';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
@@ -357,3 +358,56 @@ export async function readManyRfis(): Promise<ValidOrInvalid<ReadManyRfiResponse
     return invalid(null);
   }
 }
+
+interface RawDdr extends Omit<DdrResource.PublicDiscoveryDayResponse, 'createdAt'> {
+  createdAt: string;
+}
+
+function rawDdrToPublicDdr(raw: RawDdr): DdrResource.PublicDiscoveryDayResponse {
+  return {
+    ...raw,
+    createdAt: new Date(raw.createdAt)
+  };
+}
+
+export interface CreateDdrRequestBody {
+  rfiId: string;
+}
+
+export async function createDdr(ddr: CreateDdrRequestBody): Promise<ValidOrInvalid<DdrResource.PublicDiscoveryDayResponse, DdrResource.CreateValidationErrors>> {
+  try {
+    const response = await request(HttpMethod.Post, 'discoveryDayResponses', ddr);
+    switch (response.status) {
+      case 201:
+        const rawDdr = response.data as RawDdr;
+        return valid(rawDdrToPublicDdr(rawDdr));
+      case 400:
+        return invalid(response.data as DdrResource.CreateValidationErrors);
+      default:
+        return invalid({});
+    }
+  } catch (error) {
+    // tslint:disable:next-line no-console
+    console.error(error);
+    return invalid({});
+  }
+};
+
+export async function readOneDdr(rfiId: string): Promise<ValidOrInvalid<DdrResource.PublicDiscoveryDayResponse, null>> {
+  try {
+    const response = await request(HttpMethod.Get, `discoveryDayResponses/${rfiId}`);
+    switch (response.status) {
+      case 200:
+        const rawDdr = response.data as RawDdr;
+        return valid(rawDdrToPublicDdr(rawDdr));
+      case 400:
+        return invalid(null);
+      default:
+        return invalid(null);
+    }
+  } catch (error) {
+    // tslint:disable:next-line no-console
+    console.error(error);
+    return invalid(null);
+  }
+};

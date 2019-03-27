@@ -131,10 +131,10 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <RfiForm.view state={state.rfiForm} dispatch={dispatchRfiForm} />
       </Container>
       <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
-        <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={publish} loading={isPublishLoading} disabled={isDisabled} className='text-nowrap'>
+        <LoadingButton color='primary' onClick={publish} loading={isPublishLoading} disabled={isDisabled} className='text-nowrap'>
           Publish RFI
         </LoadingButton>
-        <LoadingButton color='secondary'  onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
+        <LoadingButton color='info'  onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
           Preview RFI
         </LoadingButton>
         <Link page={cancelPage} text='Cancel' textColor='secondary' disabled={isLoading} buttonClassName='px-0' />

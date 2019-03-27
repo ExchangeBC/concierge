@@ -8,5 +8,6 @@ export interface CreateValidationErrors {
   permissions?: string[];
   contentType?: string[];
   rfiId?: string[];
+  acceptedTermsAt?: string[];
   vendor?: string[];
 }

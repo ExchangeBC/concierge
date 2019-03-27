@@ -1,6 +1,7 @@
+import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import router from 'front-end/lib/app/router';
 import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
+import { Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { updateField, validateField } from 'front-end/lib/views/form-field';
 import * as ShortText from 'front-end/lib/views/input/short-text';
@@ -55,13 +56,8 @@ export const init: Init<Params, State> = async ({ redirectOnSuccess }) => {
   };
 };
 
-function startLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('loading', state.loading + 1);
-}
-
-function stopLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('loading', Math.max(state.loading - 1, 0));
-}
+const startLoading: UpdateState<State> = makeStartLoading('loading');
+const stopLoading: UpdateState<State> = makeStopLoading('loading');
 
 export const update: Update<State, Msg> = (state, msg) => {
   // Reset errors every time state updates.
@@ -183,7 +179,7 @@ export const view: ComponentView<State, Msg> = props => {
           </Row>
           <Row>
             <Col xs='12'>
-              <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={submit} loading={isLoading} disabled={isDisabled}>
+              <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled}>
                 Sign In
               </LoadingButton>
               <Link page={{ tag: 'landing', value: {} }} text='Cancel' textColor='secondary' />

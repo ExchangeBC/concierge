@@ -194,7 +194,7 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
           </Row>
         </Container>
         <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
-          <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={createAccount} loading={isLoading} disabled={isDisabled}>
+          <LoadingButton color='primary' onClick={createAccount} loading={isLoading} disabled={isDisabled}>
             Create Account
           </LoadingButton>
           <Link page={cancelPage} text='Cancel' textColor='secondary' disabled={isLoading} />

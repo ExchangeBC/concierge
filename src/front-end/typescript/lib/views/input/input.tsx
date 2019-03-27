@@ -103,8 +103,6 @@ export class View extends React.Component<Props> {
 
   public shouldComponentUpdate(nextProps: Props) {
     const shouldUpdate = this.value !== (nextProps.value || '') || this.className !== (nextProps.className || '') || (this.disabled !== !!nextProps.disabled);
-    // tslint:disable:next-line no-console
-    console.log(this.value, nextProps.value, shouldUpdate);
     return shouldUpdate;
   }
 

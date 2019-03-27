@@ -1,11 +1,10 @@
 import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentViewProps, immutable, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import * as FormFieldMulti from 'front-end/lib/views/form-field-multi';
-import Icon from 'front-end/lib/views/icon';
 import * as TextArea from 'front-end/lib/views/input/text-area';
 import { compact } from 'lodash';
 import { ChangeEventHandler, CSSProperties, default as React } from 'react';
-import { Button, Label } from 'reactstrap';
+import { Label } from 'reactstrap';
 import { ADT, Omit } from 'shared/lib/types';
 
 export type Value
@@ -131,30 +130,13 @@ export const update: Update<State, Msg> = (state, msg) => {
   }
 };
 
-const ConditionalRemoveButton: View<FormFieldMulti.ChildProps<HTMLTextAreaElement, Value, ExtraChildProps>> = props => {
-  if (props.disabled) {
-    return null;
-  } else {
-    const { removable = true } = props.field;
-    return (
-      <Button
-        color='link'
-        onClick={() => removable && props.onRemove()}
-        disabled={!removable}
-        className='p-0'>
-        <Icon name='trash' color='secondary' width={1.25} height={1.25} />
-      </Button>
-    );
-  }
-}
-
 const ConditionalLabel: View<FormFieldMulti.ChildProps<HTMLTextAreaElement, Value, ExtraChildProps>> = props => {
   const text = props.extraProps.field.label;
   if (text) {
     return (
       <Label className='mb-2 w-100 d-flex justify-content-between align-items-center'>
         {text}
-        <ConditionalRemoveButton {...props} />
+        <FormFieldMulti.ConditionalRemoveButton {...props} />
       </Label>
     );
   } else {
@@ -203,7 +185,7 @@ export const view: View<Props> = ({ state, dispatch, disabled = false }) => {
     AddButton,
     addButtonProps: { onAdd },
     Child,
-    childClassName: 'px-md-7',
+    formGroupClassName: 'px-md-7',
     onChange,
     onRemove,
     extraChildProps: {

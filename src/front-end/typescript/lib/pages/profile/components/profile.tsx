@@ -266,7 +266,7 @@ function conditionalTopProfileButtons<PS, PM, P extends ProfileType>(Profile: Pr
     if (!state.isEditingProfile) {
       return (
         <div className='d-flex pl-3'>
-          <Link buttonColor='secondary' buttonSize='sm' text='Edit Profile' onClick={startEditingProfile} />
+          <Link buttonColor='info' buttonSize='sm' text='Edit Profile' onClick={startEditingProfile} />
         </div>
       );
     } else {
@@ -352,7 +352,7 @@ function conditionalChangePassword<PS, PM, P extends ProfileType>(Profile: Profi
         </Row>
         <Row>
           <Col xs='12'>
-            <Link page={{ tag: 'changePassword', value: { userId: state.profileUser._id } }} buttonColor='secondary' text='Change Password' />
+            <Link page={{ tag: 'changePassword', value: { userId: state.profileUser._id } }} buttonColor='info' text='Change Password' />
           </Col>
         </Row>
       </div>
@@ -420,7 +420,7 @@ function conditionalDeactivateAccount<PS, PM, P extends ProfileType>(Profile: Pr
         </Row>
         <Row>
           <Col xs='12'>
-            <LoadingButton onClick={deactivateAccount} color={showPrompt ? 'danger' : 'secondary'} loading={isLoading} disabled={isLoading}>
+            <LoadingButton onClick={deactivateAccount} color={showPrompt ? 'danger' : 'info'} loading={isLoading} disabled={isLoading}>
               {showPrompt ? 'Click Again to Confirm' : 'Deactivate Account'}
             </LoadingButton>
             {showPrompt ? (<Link onClick={cancelDeactivateAccount} text='Cancel' textColor='secondary' />) : null}

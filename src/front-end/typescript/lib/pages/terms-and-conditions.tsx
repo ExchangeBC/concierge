@@ -1,3 +1,4 @@
+import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
@@ -17,14 +18,16 @@ export interface State {
   loading: number;
   fixedBarBottom: number;
   errors: string[];
+  warnings: string[];
   markdownSource: string;
   userId: string;
   acceptedTermsAt?: Date;
+  redirectPage?: Page;
 };
 
-// TODO add redirectOnSuccess param like the sign-in page.
-export interface Params {
-  userId: string;
+// TODO add redirectPage param like the sign-in page.
+export interface Params extends Pick<State, 'userId' | 'redirectPage'> {
+  warnings?: string[];
   fixedBarBottom?: number;
 }
 
@@ -34,7 +37,7 @@ type InnerMsg
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
-export const init: Init<Params, State> = async ({ userId, fixedBarBottom = 0 }) => {
+export const init: Init<Params, State> = async ({ userId, redirectPage, warnings = [], fixedBarBottom = 0 }) => {
   const result = await api.readOneUser(userId);
   const acceptedTermsAt = result.tag === 'valid' ? result.value.acceptedTermsAt : undefined;
   const errors = result.tag === 'invalid' ? ['An error occurred while loading this page. Please refresh the page and try again.'] : []
@@ -42,19 +45,26 @@ export const init: Init<Params, State> = async ({ userId, fixedBarBottom = 0 }) 
     loading: 0,
     fixedBarBottom,
     errors,
+    warnings,
     markdownSource: await markdown.getDocument('terms_and_conditions'),
     userId,
-    acceptedTermsAt
+    acceptedTermsAt,
+    redirectPage
   };
 };
 
-function startLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('loading', state.loading + 1);
-}
+const startLoading: UpdateState<State> = makeStartLoading('loading');
+const stopLoading: UpdateState<State> = makeStopLoading('loading');
 
-function stopLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('loading', Math.max(state.loading - 1, 0));
-}
+function getRedirectPage(state: Immutable<State>): Page {
+  if (state.redirectPage) { return state.redirectPage; }
+  return {
+    tag: 'profile',
+    value: {
+      profileUserId: state.userId
+    }
+  };
+};
 
 export const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
@@ -69,14 +79,10 @@ export const update: Update<State, Msg> = (state, msg) => {
           });
           switch (result.tag) {
             case 'valid':
+              state = state.set('warnings', []);
               dispatch({
                 tag: '@newUrl',
-                value: {
-                  tag: 'profile',
-                  value: {
-                    profileUserId: state.userId
-                  }
-                }
+                value: getRedirectPage(state)
               });
               return state;
             case 'invalid':
@@ -95,33 +101,38 @@ function isValid(state: State): boolean {
   return !state.errors.length;
 }
 
-const ConditionalErrors: ComponentView<State, Msg> = ({ state }) => {
-  if (state.errors.length) {
+const ConditionalAlerts: ComponentView<State, Msg> = ({ state }) => {
+  const hasErrors = !!state.errors.length;
+  const hasWarnings = !!state.warnings.length;
+  if (hasErrors || hasWarnings) {
     return (
       <Row className='mb-3'>
         <Col xs='12'>
           <Alert color='danger'>
-            {state.errors.map((e, i) => (<div key={`sign-in-error-${i}`}>{e}</div>))}
+            {hasErrors ? state.errors.map((s, i) => (<div key={`terms-error-${i}`}>{s}</div>)) : null}
+          </Alert>
+          <Alert color='warn'>
+            {hasWarnings ? state.warnings.map((s, i) => (<div key={`terms-warning-${i}`}>{s}</div>)) : null}
           </Alert>
         </Col>
       </Row>
     );
   } else {
-    return (<div></div>);
+    return null;
   }
 };
 
 const AcceptedAt: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   const fixedBarLocation = state.fixedBarBottom === 0 ? 'bottom' : undefined;
-  const profilePage: Page = { tag: 'profile', value: { profileUserId: state.userId } };
+  const skipPage: Page = state.redirectPage || { tag: 'profile', value: { profileUserId: state.userId } };
   if (state.acceptedTermsAt) {
     return (
       <FixedBar.View location={fixedBarLocation}>
         <p className='text-align-right mb-0'>
           {formatTermsAndConditionsAgreementDate(state.acceptedTermsAt)}
         </p>
-        <Link page={profilePage} text='Skip' className='mr-auto d-none d-md-block' buttonClassName='p-0 d-flex align-items-center' textColor='secondary'>
+        <Link page={skipPage} text='Skip' className='mr-auto d-none d-md-block' buttonClassName='p-0 d-flex align-items-center' textColor='secondary'>
           <Icon name='chevron-left' color='secondary' className='mr-1' />
           My Profile
         </Link>
@@ -137,7 +148,7 @@ const AcceptedAt: ComponentView<State, Msg> = props => {
         <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={acceptTerms} loading={isLoading} disabled={isDisabled}>
           I Accept
         </LoadingButton>
-        <Link page={profilePage} text='Skip' textColor='secondary' />
+        <Link page={skipPage} text='Skip' textColor='secondary' />
       </FixedBar.View>
     );
   }
@@ -154,7 +165,7 @@ export const view: ComponentView<State, Msg> = props => {
             <h1>Concierge Terms & Conditions</h1>
           </Col>
         </Row>
-        <ConditionalErrors {...props} />
+        <ConditionalAlerts {...props} />
         <Row>
           <Col xs='12'>
             <Markdown source={state.markdownSource} />

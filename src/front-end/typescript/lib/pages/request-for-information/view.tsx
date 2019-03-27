@@ -1,5 +1,6 @@
+import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Init, Update, View } from 'front-end/lib/framework';
+import { Component, ComponentMsg, ComponentView, Immutable, Init, newUrl, Update, View } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
@@ -13,6 +14,7 @@ import Markdown from 'front-end/lib/views/markdown';
 import { default as React, ReactElement } from 'react';
 import { Alert, Col, Container, Row } from 'reactstrap';
 import { compareDates, formatDate, formatTime } from 'shared/lib';
+import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as FileResource from 'shared/lib/resources/file';
 import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
@@ -40,24 +42,31 @@ export interface State {
   respondToDiscoveryDayLoading: number;
   userType?: UserType;
   rfi?: RfiResource.PublicRfi;
+  ddr?: DdrResource.PublicDiscoveryDayResponse;
 };
 
 export const init: Init<Params, State> = async ({ rfiId, userType, fixedBarBottom = 0 }) => {
-  const result = await api.readOneRfi(rfiId);
-  switch (result.tag) {
+  const rfiResult = await api.readOneRfi(rfiId);
+  switch (rfiResult.tag) {
     case 'valid':
-      const rfi = result.value;
+      const rfi = rfiResult.value;
       // Sort addenda by createdAt (i.e. publish) date.
       if (rfi.latestVersion) {
         rfi.latestVersion.addenda.sort((a, b) => {
           return compareDates(a.createdAt, b.createdAt) * -1;
         });
       }
+      const ddrResult = await api.readOneDdr(rfi._id);
+      let ddr: DdrResource.PublicDiscoveryDayResponse | undefined;
+      if (ddrResult.tag === 'valid') {
+        ddr = ddrResult.value;
+      }
       return {
         fixedBarBottom,
         respondToDiscoveryDayLoading: 0,
         userType,
-        rfi: result.value
+        rfi,
+        ddr
       };
     case 'invalid':
       return {
@@ -68,19 +77,56 @@ export const init: Init<Params, State> = async ({ rfiId, userType, fixedBarBotto
   }
 };
 
-/*function startRespondToDiscoveryDayLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('respondToDiscoveryDayLoading', state.respondToDiscoveryDayLoading + 1);
-}
-
-function stopRespondToDiscoveryDayLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('respondToDiscoveryDayLoading', state.respondToDiscoveryDayLoading - 1);
-}*/
+const startRespondToDiscoveryDayLoading: UpdateState<State> = makeStartLoading('respondToDiscoveryDayLoading');
+const stopRespondToDiscoveryDayLoading: UpdateState<State> = makeStopLoading('respondToDiscoveryDayLoading');
 
 export const update: Update<State, Msg> = (state, msg) => {
   if (!state.rfi) { return [state]; }
   switch (msg.tag) {
     case 'respondToDiscoveryDay':
-      return [state];
+      return [
+        startRespondToDiscoveryDayLoading(state),
+        async (state, dispatch) => {
+          if (!state.rfi) { return state; }
+          const finish = (state: Immutable<State>) => stopRespondToDiscoveryDayLoading(state);
+          // TODO once we refactor how page's do auth and get session information,
+          // we should clean up this code.
+          const session = await api.getSession();
+          if (session.tag === 'invalid' || !session.value.user) { return finish(state); }
+          const user = await api.readOneUser(session.value.user.id);
+          if (user.tag === 'invalid') { return finish(state); }
+          const acceptedTerms = !!user.value.acceptedTermsAt;
+          // Ask the user to accept the terms first.
+          if (!acceptedTerms) {
+            dispatch(newUrl({
+              tag: 'termsAndConditions' as 'termsAndConditions',
+              value: {
+                userId: user.value._id,
+                redirectPage: {
+                  tag: 'requestForInformationView' as 'requestForInformationView',
+                  value: {
+                    rfiId: state.rfi._id,
+                    userType: user.value.profile.type
+                  }
+                }
+              }
+            }));
+            return finish(state);
+          }
+          // Otherwise, process the response.
+          const result = await api.createDdr({
+            rfiId: state.rfi._id
+          });
+          switch (result.tag) {
+            case 'valid':
+              return finish(state.set('ddr', result.value));
+            case 'invalid':
+              // TODO show error messages from the server.
+              // TODO Redirect to T&C if required.
+              return finish(state);
+          }
+        }
+      ];
     case 'respondToRfi':
       return [state];
     case 'updateFixedBarBottom':
@@ -208,7 +254,7 @@ const RespondToDiscoveryDayButton: View<RespondToDiscoveryDayButtonProps> = prop
   const disabled = alreadyResponded || loading;
   const text = alreadyResponded ? 'Discovery Session Request Sent' : 'Attend Discovery Session';
   return (
-    <LoadingButton color='secondary' onClick={onClick} loading={loading} disabled={disabled} className='ml-3 ml-md-0 mx-md-3 text-nowrap'>
+    <LoadingButton color='info' onClick={onClick} loading={loading} disabled={disabled} className='ml-3 ml-md-0 mx-md-3 text-nowrap'>
       {text}
     </LoadingButton>
   );
@@ -224,16 +270,17 @@ const Buttons: ComponentView<State, Msg> = props => {
   if (!showButtons(state.userType) || !state.rfi || !state.rfi.latestVersion) { return null; }
   const bottomBarIsFixed = state.fixedBarBottom === 0;
   const version = state.rfi.latestVersion;
-  const respondToDiscoveryDay = () => dispatch({ tag: 'respondToDiscoveryDay', value: undefined });
+  const alreadyRespondedToDiscoveryDay = !!state.ddr;
+  const respondToDiscoveryDay = () => !alreadyRespondedToDiscoveryDay && dispatch({ tag: 'respondToDiscoveryDay', value: undefined });
   const isLoading = state.respondToDiscoveryDayLoading > 0;
   return (
     <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
-      <Link buttonColor={isLoading ? 'secondary' : 'primary'} disabled={isLoading} className='text-nowrap'>
+      <Link buttonColor='primary' disabled={isLoading} className='text-nowrap'>
         Respond to RFI
       </Link>
       <RespondToDiscoveryDayButton
         discoveryDay={version.discoveryDay}
-        alreadyResponded={false}
+        alreadyResponded={alreadyRespondedToDiscoveryDay}
         onClick={respondToDiscoveryDay}
         loading={isLoading} />
       <div className='text-secondary font-weight-bold d-none d-md-block mr-auto'>I want to...</div>

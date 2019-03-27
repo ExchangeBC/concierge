@@ -168,10 +168,10 @@ export const Buttons: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (isEditing) {
     return (
       <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
-        <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={publish} loading={isPublishLoading} disabled={isDisabled} className='text-nowrap'>
+        <LoadingButton color='primary' onClick={publish} loading={isPublishLoading} disabled={isDisabled} className='text-nowrap'>
           Publish Changes
         </LoadingButton>
-        <LoadingButton color='secondary' onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
+        <LoadingButton color='info' onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
           Preview Changes
         </LoadingButton>
         <Link onClick={cancelEditing} text='Cancel' textColor='secondary' disabled={isLoading} buttonClassName='px-0' />
@@ -180,10 +180,10 @@ export const Buttons: ComponentView<State, Msg> = ({ state, dispatch }) => {
   } else {
     return (
       <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
-        <Button color={isLoading ? 'secondary' : 'primary'} onClick={startEditing} disabled={isLoading} className='text-nowrap'>
+        <Button color='primary' onClick={startEditing} disabled={isLoading} className='text-nowrap'>
           Edit RFI
         </Button>
-        <Link page={viewPage} text='View RFI' buttonColor='secondary' disabled={isLoading} className='ml-3 ml-md-0 mr-md-3 text-nowrap' />
+        <Link page={viewPage} text='View RFI' buttonColor='info' disabled={isLoading} className='ml-3 ml-md-0 mr-md-3 text-nowrap' />
       </FixedBar.View>
     );
   }

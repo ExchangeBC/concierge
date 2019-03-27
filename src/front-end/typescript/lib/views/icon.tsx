@@ -15,11 +15,12 @@ export type AvailableIcons
 
 interface Props {
   name: AvailableIcons;
-  color: BootstrapColor;
+  color?: BootstrapColor;
   width?: number;
   height?: number;
   className?: string;
   style?: CSSProperties;
+  onClick?(): void;
 }
 
 interface SvgProps extends Props {
@@ -27,9 +28,9 @@ interface SvgProps extends Props {
 }
 
 const Feather: View<SvgProps> = props => {
-  const { color, width = 1.25, height = 1.25, className = '', style = {}, children } = props;
+  const { color, width = 1.25, height = 1.25, className = '', style = {}, children, onClick } = props;
   return (
-    <svg xmlns='http://www.w3.org/2000/svg' style={{ ...style, width: `${width}rem`, height: `${height}rem` }} viewBox='0 0 24 24' fill='none' stroke='currentColor' className={`icon text-${color} ${className}`} strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+    <svg xmlns='http://www.w3.org/2000/svg' style={{ ...style, width: `${width}rem`, height: `${height}rem` }} viewBox='0 0 24 24' fill='none' stroke='currentColor' className={`icon ${color ? `text-${color}` : ''} ${className}`} strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' onClick={onClick}>
       {children}
     </svg>
   );
@@ -40,9 +41,9 @@ interface FontAwesomeProps extends SvgProps {
 }
 
 const FontAwesome: View<FontAwesomeProps> = props => {
-  const { color, width = 1.25, height = 1.25, viewBox, className = '', style = {}, children } = props;
+  const { color, width = 1.25, height = 1.25, viewBox, className = '', style = {}, children, onClick } = props;
   return (
-    <svg xmlns='http://www.w3.org/2000/svg' style={{ ...style, width: `${width}rem`, height: `${height}rem` }} viewBox={viewBox} fill='currentColor' stroke='none' className={`icon text-${color} ${className}`}>
+    <svg xmlns='http://www.w3.org/2000/svg' style={{ ...style, width: `${width}rem`, height: `${height}rem` }} viewBox={viewBox} fill='currentColor' stroke='none' className={`icon ${color ? `text-${color}` : ''} ${className}`} onClick={onClick}>
       {children}
     </svg>
   );

@@ -27,18 +27,7 @@ input[type="time"] {
   }
 }
 
-input,
-select,
-button,
-a {
-
-  &:disabled,
-  &.disabled {
-    cursor: not-allowed;
-  }
-}
-
-// Custom Bootstrap overrides.
+// Custom Bootstrap variable overrides.
 
 $grid-breakpoints: (
   xs: 0,
@@ -70,13 +59,14 @@ $spacers: (
 	7: ($spacer * 5)
 );
 
-$theme-colors: (
-  primary: #0c99d6,
-  info: #0f4c8b,
-  warn: #fcb817,
-  danger: #DC3545,
-  success: #28A745
-);
+// Theme colors.
+// Bootstrap updates the theme map based on these variables,
+// so we don't need to update the map at all.
+$primary: #0c99d6;
+$info: #0f4c8b;
+$warn: #fcb817;
+$danger: #DC3545;
+$success: #28A745;
 
 $enable-validation-icons: false;
 
@@ -88,7 +78,30 @@ $fixed-bar-height: 71px;
 
 @import 'node_modules/bootstrap/scss/bootstrap.scss';
 
+// Custom Bootstrap style overrides.
+
+.btn,
+button {
+
+  &.disabled:not(.btn-link),
+  &:disabled:not(.btn-link) {
+    background-color: $secondary;
+    border-color: $secondary;
+  }
+}
+
 // Custom utilities.
+
+// Create classes for each of the text colors
+// that apply the color when the element is being hovered.
+// .text-hover-primary, .text-hover-danger, etc.
+@each $color, $value in $theme-colors {
+  .text-hover-#{$color} {
+    @include hover {
+      color: $value !important;
+    }
+  }
+}
 
 .text-wrap {
   white-space: normal !important;
