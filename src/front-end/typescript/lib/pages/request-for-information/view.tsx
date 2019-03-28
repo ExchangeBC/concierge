@@ -50,10 +50,16 @@ export const init: Init<Params, State> = async ({ rfiId, userType, fixedBarBotto
   switch (rfiResult.tag) {
     case 'valid':
       const rfi = rfiResult.value;
-      const ddrResult = await api.readOneDdr(rfi._id);
+      if (rfi.latestVersion) {
+        // Show newest addenda first.
+        rfi.latestVersion.addenda.reverse();
+      }
       let ddr: DdrResource.PublicDiscoveryDayResponse | undefined;
-      if (ddrResult.tag === 'valid') {
-        ddr = ddrResult.value;
+      if (userType === UserType.Vendor) {
+        const ddrResult = await api.readOneDdr(rfi._id);
+        if (ddrResult.tag === 'valid') {
+          ddr = ddrResult.value;
+        }
       }
       return {
         fixedBarBottom,
