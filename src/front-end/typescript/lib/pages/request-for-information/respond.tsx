@@ -1,4 +1,5 @@
 import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
+import AppRouter from 'front-end/lib/app/router';
 import { Page } from 'front-end/lib/app/types';
 import * as FileMulti from 'front-end/lib/components/input/file-multi';
 import { Component, ComponentMsg, ComponentView, Dispatch, Immutable, immutable, Init, mapComponentDispatch, newUrl, replaceUrl, Update, updateComponentChild, View } from 'front-end/lib/framework';
@@ -301,7 +302,7 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
             <h2>{version.title}</h2>
             <p>
               Please submit your response to this Request for Information by following the instructions defined
-              in its&nbsp;<Link page={viewRfiPage(rfi)} textColor='primary' buttonClassName='p-0'>description</Link>.
+              in its <a href={AppRouter.pageToUrl(viewRfiPage(rfi))}>description</a>.
             </p>
           </Col>
         </Row>
