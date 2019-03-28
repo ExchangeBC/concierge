@@ -13,11 +13,13 @@ import * as PagePrivacy from 'front-end/lib/pages/markdown/privacy';
 import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
+import * as PageNoticeRfiNonVendorResponse from 'front-end/lib/pages/notice/request-for-information/non-vendor-response';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
 import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
 import * as PageRequestForInformationEdit from 'front-end/lib/pages/request-for-information/edit';
 import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
+import * as PageRequestForInformationRespond from 'front-end/lib/pages/request-for-information/respond';
 import * as PageRequestForInformationView from 'front-end/lib/pages/request-for-information/view';
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
@@ -115,7 +117,7 @@ const update: Update<State, Msg> = (state, msg) => {
               state = state.setIn(['pages', 'signUpProgramStaff'], immutable(await PageSignUpProgramStaff.init(msg.value.page.value)));
               break;
             case 'signOut':
-              state = state.setIn(['pages', 'signOut'], immutable(await PageSignOut.init(null)));
+              state = state.setIn(['pages', 'signOut'], immutable(await PageSignOut.init(msg.value.page.value)));
               break;
             case 'changePassword':
               state = state.setIn(['pages', 'changePassword'], immutable(await PageChangePassword.init(msg.value.page.value)));
@@ -124,7 +126,7 @@ const update: Update<State, Msg> = (state, msg) => {
               state = state.setIn(['pages', 'resetPassword'], immutable(await PageResetPassword.init(msg.value.page.value)));
               break;
             case 'forgotPassword':
-              state = state.setIn(['pages', 'forgotPassword'], immutable(await PageForgotPassword.init(null)));
+              state = state.setIn(['pages', 'forgotPassword'], immutable(await PageForgotPassword.init(msg.value.page.value)));
               break;
             case 'termsAndConditions':
               state = state.setIn(['pages', 'termsAndConditions'], immutable(await PageTermsAndConditions.init(msg.value.page.value)));
@@ -143,6 +145,9 @@ const update: Update<State, Msg> = (state, msg) => {
               break;
             case 'requestForInformationView':
               state = state.setIn(['pages', 'requestForInformationView'], immutable(await PageRequestForInformationView.init(msg.value.page.value)));
+              break;
+            case 'requestForInformationRespond':
+              state = state.setIn(['pages', 'requestForInformationRespond'], immutable(await PageRequestForInformationRespond.init(msg.value.page.value)));
               break;
             case 'requestForInformationList':
               state = state.setIn(['pages', 'requestForInformationList'], immutable(await PageRequestForInformationList.init(msg.value.page.value)));
@@ -166,16 +171,19 @@ const update: Update<State, Msg> = (state, msg) => {
               state = state.setIn(['pages', 'guide'], immutable(await PageGuide.init(msg.value.page.value)));
               break;
             case 'noticeChangePassword':
-              state = state.setIn(['pages', 'noticeChangePassword'], immutable(await PageNoticeChangePassword.init(null)));
+              state = state.setIn(['pages', 'noticeChangePassword'], immutable(await PageNoticeChangePassword.init(msg.value.page.value)));
               break;
             case 'noticeResetPassword':
-              state = state.setIn(['pages', 'noticeResetPassword'], immutable(await PageNoticeResetPassword.init(null)));
+              state = state.setIn(['pages', 'noticeResetPassword'], immutable(await PageNoticeResetPassword.init(msg.value.page.value)));
+              break;
+            case 'noticeRfiNonVendorResponse':
+              state = state.setIn(['pages', 'noticeRfiNonVendorResponse'], immutable(await PageNoticeRfiNonVendorResponse.init(msg.value.page.value)));
               break;
             case 'noticeForgotPassword':
-              state = state.setIn(['pages', 'noticeForgotPassword'], immutable(await PageNoticeForgotPassword.init(null)));
+              state = state.setIn(['pages', 'noticeForgotPassword'], immutable(await PageNoticeForgotPassword.init(msg.value.page.value)));
               break;
             case 'noticeNotFound':
-              state = state.setIn(['pages', 'noticeNotFound'], immutable(await PageNoticeNotFound.init(null)));
+              state = state.setIn(['pages', 'noticeNotFound'], immutable(await PageNoticeNotFound.init(msg.value.page.value)));
               break;
           }
           // Scroll to the top-left of the page for page changes.
@@ -216,6 +224,9 @@ const update: Update<State, Msg> = (state, msg) => {
       }
       if (state.pages.requestForInformationView) {
         state = state.setIn(['pages', 'requestForInformationView'], PageRequestForInformationView.update(state.pages.requestForInformationView, msg)[0]);
+      }
+      if (state.pages.requestForInformationRespond) {
+        state = state.setIn(['pages', 'requestForInformationRespond'], PageRequestForInformationRespond.update(state.pages.requestForInformationRespond, msg)[0]);
       }
       if (state.pages.termsAndConditions) {
         state = state.setIn(['pages', 'termsAndConditions'], PageTermsAndConditions.update(state.pages.termsAndConditions, msg)[0]);
@@ -357,6 +368,15 @@ const update: Update<State, Msg> = (state, msg) => {
         childMsg: msg.value
       });
 
+    case 'pageRequestForInformationRespond':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageRequestForInformationRespond', value }),
+        childStatePath: ['pages', 'requestForInformationRespond'],
+        childUpdate: PageRequestForInformationRespond.update,
+        childMsg: msg.value
+      });
+
     case 'pageRequestForInformationList':
       return updateAppChild({
         state,
@@ -435,6 +455,15 @@ const update: Update<State, Msg> = (state, msg) => {
         mapChildMsg: value => ({ tag: 'pageNoticeResetPassword', value }),
         childStatePath: ['pages', 'noticeResetPassword'],
         childUpdate: PageNoticeResetPassword.update,
+        childMsg: msg.value
+      });
+
+    case 'pageNoticeRfiNonVendorResponse':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageNoticeRfiNonVendorResponse', value }),
+        childStatePath: ['pages', 'noticeRfiNonVendorResponse'],
+        childUpdate: PageNoticeRfiNonVendorResponse.update,
         childMsg: msg.value
       });
 

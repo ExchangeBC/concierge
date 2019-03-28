@@ -139,3 +139,9 @@ export function createDiscoveryDayResponse(session: Session): boolean {
 export function readOneDiscoveryDayResponse(session: Session): boolean {
   return isVendor(session);
 }
+
+// RFI Responses.
+
+export function createRfiResponse(session: Session): boolean {
+  return isVendor(session);
+}

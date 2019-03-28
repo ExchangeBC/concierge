@@ -31,7 +31,7 @@ const ConditionalButton: ComponentView<State, Msg> = ({ state, dispatch }) => {
     return (
       <Row>
         <Col xs='12'>
-          <Link page={state.button.page} text={state.button.text} buttonColor='secondary' />
+          <Link page={state.button.page} text={state.button.text} buttonColor='info' />
         </Col>
       </Row>
     );

@@ -1,4 +1,5 @@
 import * as FileSchema from 'back-end/lib/schemas/file';
+import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import * as mongoose from 'mongoose';
 import mongooseDefault from 'mongoose';
@@ -43,14 +44,14 @@ export function validateObjectIdString(id: string): Validation<mongoose.Types.Ob
   }
 }
 
-export function validateFileIdArray(FileModel: FileSchema.Model, raw: string[]): Promise<ArrayValidation<mongoose.Types.ObjectId[]>> {
-  return validateArrayAsync(raw, async v => {
+export function validateFileIdArray(FileModel: FileSchema.Model, raw: string[]): Promise<ArrayValidation<InstanceType<FileSchema.Model>>> {
+  return validateArrayAsync(raw, async (v: string): Promise<Validation<InstanceType<FileSchema.Model>>> => {
     const validatedObjectId = validateObjectIdString(v);
     switch (validatedObjectId.tag) {
       case 'valid':
         const file = await FileModel.findById(validatedObjectId.value);
         if (file) {
-          return valid(file._id);
+          return valid(file);
         } else {
           return invalid(['File does not exist']);
         }
@@ -66,7 +67,7 @@ export function validateFileIdArray(FileModel: FileSchema.Model, raw: string[]):
  * and/or whether or not they have accepted the T&Cs.
  */
 
-export async function validateUserId(UserModel: UserSchema.Model, id: string | mongoose.Types.ObjectId, userType?: UserType, acceptedTerms?: boolean): Promise<Validation<mongoose.Types.ObjectId>> {
+export async function validateUserId(UserModel: UserSchema.Model, id: string | mongoose.Types.ObjectId, userType?: UserType, acceptedTerms?: boolean): Promise<Validation<InstanceType<UserSchema.Model>>> {
   const validatedObjectId = typeof id === 'string' ? validateObjectIdString(id) : valid(id);
   switch (validatedObjectId.tag) {
     case 'valid':
@@ -82,7 +83,26 @@ export async function validateUserId(UserModel: UserSchema.Model, id: string | m
           return invalid(['User has already accepted terms.']);
         }
       } else {
-        return valid(user._id);
+        return valid(user);
+      }
+    case 'invalid':
+      return validatedObjectId;
+  }
+}
+
+/**
+ * Validates whether an RFI exists for a given RFI ID.
+ */
+
+export async function validateRfiId(RfiModel: RfiSchema.Model, id: string | mongoose.Types.ObjectId): Promise<Validation<InstanceType<RfiSchema.Model>>> {
+  const validatedObjectId = typeof id === 'string' ? validateObjectIdString(id) : valid(id);
+  switch (validatedObjectId.tag) {
+    case 'valid':
+      const rfi = await RfiModel.findById(validatedObjectId.value);
+      if (!rfi) {
+        return invalid(['RFI does not exist.']);
+      } else {
+        return valid(rfi);
       }
     case 'invalid':
       return validatedObjectId;

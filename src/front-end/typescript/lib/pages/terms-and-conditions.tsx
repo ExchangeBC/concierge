@@ -22,11 +22,11 @@ export interface State {
   markdownSource: string;
   userId: string;
   acceptedTermsAt?: Date;
-  redirectPage?: Page;
+  redirectOnAccept?: Page;
+  redirectOnSkip?: Page;
 };
 
-// TODO add redirectPage param like the sign-in page.
-export interface Params extends Pick<State, 'userId' | 'redirectPage'> {
+export interface Params extends Pick<State, 'userId' | 'redirectOnAccept' | 'redirectOnSkip'> {
   warnings?: string[];
   fixedBarBottom?: number;
 }
@@ -37,7 +37,7 @@ type InnerMsg
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
-export const init: Init<Params, State> = async ({ userId, redirectPage, warnings = [], fixedBarBottom = 0 }) => {
+export const init: Init<Params, State> = async ({ userId, redirectOnAccept, redirectOnSkip, warnings = [], fixedBarBottom = 0 }) => {
   const result = await api.readOneUser(userId);
   const acceptedTermsAt = result.tag === 'valid' ? result.value.acceptedTermsAt : undefined;
   const errors = result.tag === 'invalid' ? ['An error occurred while loading this page. Please refresh the page and try again.'] : []
@@ -49,15 +49,17 @@ export const init: Init<Params, State> = async ({ userId, redirectPage, warnings
     markdownSource: await markdown.getDocument('terms_and_conditions'),
     userId,
     acceptedTermsAt,
-    redirectPage
+    redirectOnAccept,
+    redirectOnSkip
   };
 };
 
 const startLoading: UpdateState<State> = makeStartLoading('loading');
 const stopLoading: UpdateState<State> = makeStopLoading('loading');
 
-function getRedirectPage(state: Immutable<State>): Page {
-  if (state.redirectPage) { return state.redirectPage; }
+function getRedirectPage(state: Immutable<State>, skip: boolean): Page {
+  if (state.redirectOnAccept && !skip) { return state.redirectOnAccept; }
+  if (state.redirectOnSkip && skip) { return state.redirectOnSkip; }
   return {
     tag: 'profile',
     value: {
@@ -82,7 +84,7 @@ export const update: Update<State, Msg> = (state, msg) => {
               state = state.set('warnings', []);
               dispatch({
                 tag: '@newUrl',
-                value: getRedirectPage(state)
+                value: getRedirectPage(state, false)
               });
               return state;
             case 'invalid':
@@ -108,12 +110,16 @@ const ConditionalAlerts: ComponentView<State, Msg> = ({ state }) => {
     return (
       <Row className='mb-3'>
         <Col xs='12'>
-          <Alert color='danger'>
-            {hasErrors ? state.errors.map((s, i) => (<div key={`terms-error-${i}`}>{s}</div>)) : null}
-          </Alert>
-          <Alert color='warn'>
-            {hasWarnings ? state.warnings.map((s, i) => (<div key={`terms-warning-${i}`}>{s}</div>)) : null}
-          </Alert>
+          {hasErrors
+            ? (<Alert color='danger'>
+                {state.errors.map((s, i) => (<div key={`terms-error-${i}`}>{s}</div>))}
+              </Alert>)
+            : null}
+          {hasWarnings
+            ? (<Alert color='warning'>
+                {state.warnings.map((s, i) => (<div key={`terms-warning-${i}`}>{s}</div>))}
+              </Alert>)
+            : null}
         </Col>
       </Row>
     );
@@ -125,7 +131,7 @@ const ConditionalAlerts: ComponentView<State, Msg> = ({ state }) => {
 const AcceptedAt: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   const fixedBarLocation = state.fixedBarBottom === 0 ? 'bottom' : undefined;
-  const skipPage: Page = state.redirectPage || { tag: 'profile', value: { profileUserId: state.userId } };
+  const skipPage: Page = getRedirectPage(state, true);
   if (state.acceptedTermsAt) {
     return (
       <FixedBar.View location={fixedBarLocation}>
@@ -160,12 +166,12 @@ export const view: ComponentView<State, Msg> = props => {
   return (
     <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>
       <Container className='mb-5 flex-grow-1'>
+        <ConditionalAlerts {...props} />
         <Row className='mb-3'>
           <Col xs='12'>
             <h1>Concierge Terms & Conditions</h1>
           </Col>
         </Row>
-        <ConditionalAlerts {...props} />
         <Row>
           <Col xs='12'>
             <Markdown source={state.markdownSource} />

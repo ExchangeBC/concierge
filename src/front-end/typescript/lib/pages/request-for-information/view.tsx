@@ -32,7 +32,6 @@ export interface Params {
 
 export type InnerMsg
   = ADT<'respondToDiscoveryDay'>
-  | ADT<'respondToRfi'>
   | ADT<'updateFixedBarBottom', number>;
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
@@ -98,17 +97,20 @@ export const update: Update<State, Msg> = (state, msg) => {
           const acceptedTerms = !!user.value.acceptedTermsAt;
           // Ask the user to accept the terms first.
           if (!acceptedTerms) {
+            const thisPage: Page = {
+              tag: 'requestForInformationView' as 'requestForInformationView',
+              value: {
+                rfiId: state.rfi._id,
+                userType: user.value.profile.type
+              }
+            };
             dispatch(newUrl({
               tag: 'termsAndConditions' as 'termsAndConditions',
               value: {
                 userId: user.value._id,
-                redirectPage: {
-                  tag: 'requestForInformationView' as 'requestForInformationView',
-                  value: {
-                    rfiId: state.rfi._id,
-                    userType: user.value.profile.type
-                  }
-                }
+                warnings: ['You must accept the terms and conditions in order to register for a Discovery Session.'],
+                redirectOnAccept: thisPage,
+                redirectOnSkip: thisPage
               }
             }));
             return finish(state);
@@ -127,8 +129,6 @@ export const update: Update<State, Msg> = (state, msg) => {
           }
         }
       ];
-    case 'respondToRfi':
-      return [state];
     case 'updateFixedBarBottom':
       return [state.set('fixedBarBottom', msg.value)];
     default:
@@ -273,9 +273,15 @@ const Buttons: ComponentView<State, Msg> = props => {
   const alreadyRespondedToDiscoveryDay = !!state.ddr;
   const respondToDiscoveryDay = () => !alreadyRespondedToDiscoveryDay && dispatch({ tag: 'respondToDiscoveryDay', value: undefined });
   const isLoading = state.respondToDiscoveryDayLoading > 0;
+  const respondToRfiPage: Page = {
+    tag: 'requestForInformationRespond',
+    value: {
+      rfiId: state.rfi._id
+    }
+  };
   return (
     <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
-      <Link buttonColor='primary' disabled={isLoading} className='text-nowrap'>
+      <Link page={respondToRfiPage} buttonColor='primary' disabled={isLoading} className='text-nowrap'>
         Respond to RFI
       </Link>
       <RespondToDiscoveryDayButton

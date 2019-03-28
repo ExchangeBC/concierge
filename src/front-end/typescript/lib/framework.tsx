@@ -90,7 +90,7 @@ export interface Component<Params, State, Msg, Props extends ComponentViewProps<
 export interface RouteAuthDefinition<Page, UserType> {
   level: AuthLevel<UserType>;
   signOut: boolean;
-  redirect(originalPage: Page): Page;
+  redirect(incomingPage: Page): Page;
 }
 
 export interface RouteDefinition<Page, UserType> {

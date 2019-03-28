@@ -6,9 +6,8 @@ import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
-import { validateFileIdArray, validateObjectIdString, validateUserId } from 'back-end/lib/validators';
+import { validateFileIdArray, validateUserId } from 'back-end/lib/validators';
 import { get, isObject } from 'lodash';
-import * as mongoose from 'mongoose';
 import { getString, getStringArray, identityAsync } from 'shared/lib';
 import { CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicRfi, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
 import { ADT, PaginatedList, UserType } from 'shared/lib/types';
@@ -36,7 +35,7 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
   const buyerContact = getString(raw, 'buyerContact');
   const programStaffContact = getString(raw, 'programStaffContact');
   // Validate individual values.
-  const validatedCreatedBy = validateObjectIdString(createdBy);
+  const validatedCreatedBy = await validateUserId(UserModel, createdBy, UserType.ProgramStaff);
   const validatedClosingDate = validateClosingDate(closingDate);
   const validatedClosingTime = validateClosingTime(closingTime, getValidValue(validatedClosingDate, ''));
   const validatedRfiNumber = validateRfiNumber(rfiNumber);
@@ -52,11 +51,11 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
   const validatedProgramStaffContact = await validateUserId(UserModel, programStaffContact, UserType.ProgramStaff);
   // Check if the payload is valid.
   if (allValid([validatedCreatedBy, validatedClosingDate, validatedClosingTime, validatedRfiNumber, validatedTitle, validatedDescription, validatedPublicSectorEntity, validatedNumCategories, validatedCategories, validatedDiscoveryDay, validatedAddenda, validatedAttachments, validatedBuyerContact, validatedProgramStaffContact])) {
-    // If everything is valid, return the model.
+    // If everything is valid, return the version.
     const createdAt = new Date();
     const version: RfiSchema.Version = {
       createdAt,
-      createdBy: validatedCreatedBy.value as mongoose.Types.ObjectId,
+      createdBy: (validatedCreatedBy.value as InstanceType<UserSchema.Model>)._id,
       closingAt: new Date(`${validatedClosingDate.value} ${validatedClosingTime.value}`),
       rfiNumber: validatedRfiNumber.value as string,
       title: validatedTitle.value as string,
@@ -71,9 +70,9 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
           description
         };
       }),
-      attachments: validatedAttachments.value as mongoose.Types.ObjectId[],
-      buyerContact: validatedBuyerContact.value as mongoose.Types.ObjectId,
-      programStaffContact: validatedProgramStaffContact.value as mongoose.Types.ObjectId
+      attachments: (validatedAttachments.value as Array<InstanceType<FileSchema.Model>>).map(file => file._id),
+      buyerContact: (validatedBuyerContact.value as InstanceType<UserSchema.Model>)._id,
+      programStaffContact: (validatedProgramStaffContact.value as InstanceType<UserSchema.Model>)._id
     };
     return valid(version);
   } else {

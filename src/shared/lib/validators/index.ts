@@ -10,7 +10,7 @@ export type ValidOrInvalid<Valid, Invalid> = ADT<'valid', Valid> | ADT<'invalid'
 
 export type Validation<Value> = ValidOrInvalid<Value, string[]>;
 
-export type ArrayValidation<Value> = ValidOrInvalid<Value, string[][]>;
+export type ArrayValidation<Value> = ValidOrInvalid<Value[], string[][]>;
 
 export function valid<Valid>(value: Valid): ValidOrInvalid<Valid, any> {
   return {
@@ -96,7 +96,7 @@ export function validateNumberString(value: string, name: string, min?: number, 
   return validateGenericString(value, name, min, max, 'numbers');
 }
 
-export function validateArray<A, B>(raw: A[], validate: (v: A) => Validation<B>): ArrayValidation<B[]> {
+export function validateArray<A, B>(raw: A[], validate: (v: A) => Validation<B>): ArrayValidation<B> {
   const validations = raw.map(v => validate(v));
   if (allValid(validations)) {
     return valid(validations.map(({ value }) => value as B));
@@ -105,7 +105,7 @@ export function validateArray<A, B>(raw: A[], validate: (v: A) => Validation<B>)
   }
 }
 
-export async function validateArrayAsync<A, B>(raw: A[], validate: (v: A) => Promise<Validation<B>>): Promise<ArrayValidation<B[]>> {
+export async function validateArrayAsync<A, B>(raw: A[], validate: (v: A) => Promise<Validation<B>>): Promise<ArrayValidation<B>> {
   const validations = await Promise.all(raw.map(v => validate(v)));
   if (allValid(validations)) {
     return valid(validations.map(({ value }) => value as B));
@@ -129,7 +129,7 @@ export function validateStringInArray(value: string, availableValues: Set<string
   }
 }
 
-export function validateStringArray(values: string[], availableValues: Set<string>, name: string, indefiniteArticle = 'a', caseSensitive = false, unique = true): ArrayValidation<string[]> {
+export function validateStringArray(values: string[], availableValues: Set<string>, name: string, indefiniteArticle = 'a', caseSensitive = false, unique = true): ArrayValidation<string> {
   const result = validateArray(values, value => {
     return validateStringInArray(value, availableValues, name, indefiniteArticle, caseSensitive);
   });
@@ -274,7 +274,7 @@ export function validatePhoneType(phoneType: string): Validation<PhoneType> {
   }
 }
 
-export function validateCategories(categories: string[], name = 'Category', indefiniteArticle = 'a'): ArrayValidation<string[]> {
+export function validateCategories(categories: string[], name = 'Category', indefiniteArticle = 'a'): ArrayValidation<string> {
   return validateStringArray(categories, AVAILABLE_CATEGORIES, name, indefiniteArticle, true, true);
 }
 
@@ -282,6 +282,6 @@ export function validatePositionTitle(positionTitle: string): Validation<string>
   return validateGenericString(positionTitle, 'Position Title');
 }
 
-export function validateIndustrySectors(industrySectors: string[]): ArrayValidation<string[]> {
+export function validateIndustrySectors(industrySectors: string[]): ArrayValidation<string> {
   return validateStringArray(industrySectors, AVAILABLE_INDUSTRY_SECTORS, 'Industry Sector', 'an', true, true);
 }

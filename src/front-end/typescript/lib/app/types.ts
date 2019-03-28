@@ -12,11 +12,13 @@ import * as PagePrivacy from 'front-end/lib/pages/markdown/privacy';
 import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
+import * as PageNoticeRfiNonVendorResponse from 'front-end/lib/pages/notice/request-for-information/non-vendor-response';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
 import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
 import * as PageRequestForInformationEdit from 'front-end/lib/pages/request-for-information/edit';
 import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
+import * as PageRequestForInformationRespond from 'front-end/lib/pages/request-for-information/respond';
 import * as PageRequestForInformationView from 'front-end/lib/pages/request-for-information/view';
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
@@ -45,6 +47,7 @@ export type Page
   | ADT<'requestForInformationCreate', PageRequestForInformationCreate.Params>
   | ADT<'requestForInformationEdit', PageRequestForInformationEdit.Params>
   | ADT<'requestForInformationView', PageRequestForInformationView.Params>
+  | ADT<'requestForInformationRespond', PageRequestForInformationRespond.Params>
   | ADT<'requestForInformationList', PageRequestForInformationList.Params>
   | ADT<'about', PageAbout.Params>
   | ADT<'accessibility', PageAccessibility.Params>
@@ -55,6 +58,7 @@ export type Page
   | ADT<'noticeNotFound', PageNoticeNotFound.Params>
   | ADT<'noticeChangePassword', PageNoticeChangePassword.Params>
   | ADT<'noticeResetPassword', PageNoticeResetPassword.Params>
+  | ADT<'noticeRfiNonVendorResponse', PageNoticeRfiNonVendorResponse.Params>
   | ADT<'noticeForgotPassword', PageNoticeForgotPassword.Params>;
 
 export interface State {
@@ -80,6 +84,7 @@ export interface State {
     requestForInformationCreate?: Immutable<PageRequestForInformationCreate.State>;
     requestForInformationEdit?: Immutable<PageRequestForInformationEdit.State>;
     requestForInformationView?: Immutable<PageRequestForInformationView.State>;
+    requestForInformationRespond?: Immutable<PageRequestForInformationRespond.State>;
     requestForInformationList?: Immutable<PageRequestForInformationList.State>;
     about?: Immutable<PageAbout.State>;
     accessibility?: Immutable<PageAccessibility.State>;
@@ -90,6 +95,7 @@ export interface State {
     noticeNotFound?: Immutable<PageNoticeNotFound.State>;
     noticeChangePassword?: Immutable<PageNoticeChangePassword.State>;
     noticeResetPassword?: Immutable<PageNoticeResetPassword.State>;
+    noticeRfiNonVendorResponse?: Immutable<PageNoticeRfiNonVendorResponse.State>;
     noticeForgotPassword?: Immutable<PageNoticeForgotPassword.State>;
   };
 }
@@ -112,6 +118,7 @@ type InnerMsg
   | ADT<'pageRequestForInformationCreate', PageRequestForInformationCreate.Msg>
   | ADT<'pageRequestForInformationEdit', PageRequestForInformationEdit.Msg>
   | ADT<'pageRequestForInformationView', PageRequestForInformationView.Msg>
+  | ADT<'pageRequestForInformationRespond', PageRequestForInformationRespond.Msg>
   | ADT<'pageRequestForInformationList', PageRequestForInformationList.Msg>
   | ADT<'pageAbout', PageAbout.Msg>
   | ADT<'pageAccessibility', PageAccessibility.Msg>
@@ -122,6 +129,7 @@ type InnerMsg
   | ADT<'pageNoticeNotFound', PageNoticeNotFound.Msg>
   | ADT<'pageNoticeChangePassword', PageNoticeChangePassword.Msg>
   | ADT<'pageNoticeResetPassword', PageNoticeResetPassword.Msg>
+  | ADT<'pageNoticeRfiNonVendorResponse', PageNoticeRfiNonVendorResponse.Msg>
   | ADT<'pageNoticeForgotPassword', PageNoticeForgotPassword.Msg>;
 
 export type Msg = AppMsg<InnerMsg, Page, UserType>;

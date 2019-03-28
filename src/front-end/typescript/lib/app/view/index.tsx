@@ -14,11 +14,13 @@ import * as PagePrivacy from 'front-end/lib/pages/markdown/privacy';
 import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
+import * as PageNoticeRfiNonVendorResponse from 'front-end/lib/pages/notice/request-for-information/non-vendor-response';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
 import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
 import * as PageRequestForInformationEdit from 'front-end/lib/pages/request-for-information/edit';
 import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
+import * as PageRequestForInformationRespond from 'front-end/lib/pages/request-for-information/respond';
 import * as PageRequestForInformationView from 'front-end/lib/pages/request-for-information/view';
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
@@ -187,6 +189,15 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           View={PageRequestForInformationView.view} />
       );
 
+    case 'requestForInformationRespond':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.requestForInformationRespond}
+          mapPageMsg={value => ({ tag: 'pageRequestForInformationRespond', value })}
+          View={PageRequestForInformationRespond.view} />
+      );
+
     case 'requestForInformationList':
       return (
         <ViewPage
@@ -275,6 +286,15 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.noticeResetPassword}
           mapPageMsg={value => ({ tag: 'pageNoticeResetPassword', value })}
           View={PageNoticeResetPassword.view} />
+      );
+
+    case 'noticeRfiNonVendorResponse':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.noticeRfiNonVendorResponse}
+          mapPageMsg={value => ({ tag: 'pageNoticeRfiNonVendorResponse', value })}
+          View={PageNoticeRfiNonVendorResponse.view} />
       );
 
     case 'noticeForgotPassword':

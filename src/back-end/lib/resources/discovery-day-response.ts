@@ -4,7 +4,7 @@ import * as permissions from 'back-end/lib/permissions';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import { AppSession } from 'back-end/lib/schemas/session';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
-import { validateObjectIdString, validateUserId } from 'back-end/lib/validators';
+import { validateObjectIdString, validateRfiId, validateUserId } from 'back-end/lib/validators';
 import * as mongoose from 'mongoose';
 import { getString, identityAsync } from 'shared/lib';
 import { CreateValidationErrors, PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
@@ -87,7 +87,8 @@ export const resource: Resource = {
           });
         }
         // Do not store duplicate responses.
-        const existingDdr = findDiscoveryDayResponse(rfi, validatedVendor.value);
+        const vendorId = validatedVendor.value._id;
+        const existingDdr = findDiscoveryDayResponse(rfi, vendorId);
         if (existingDdr) {
           return mapRequestBody(request, {
             tag: 200 as 200,
@@ -97,7 +98,7 @@ export const resource: Resource = {
         // Create the DDR.
         const ddr = {
           createdAt: now,
-          vendor: validatedVendor.value
+          vendor: vendorId
         };
         // Update the RFI with the response.
         rfi.discoveryDayResponses.push(ddr);
@@ -127,14 +128,11 @@ export const resource: Resource = {
         if (!permissions.readOneDiscoveryDayResponse(request.session) || !request.session.user) {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         }
-        const validatedRfiId = validateObjectIdString(request.params.id);
-        if (validatedRfiId.tag === 'invalid') {
-          return basicResponse(400, request.session, makeJsonResponseBody(validatedRfiId.value));
+        const validatedRfi = await validateRfiId(RfiModel, request.params.id);
+        if (validatedRfi.tag === 'invalid') {
+          return basicResponse(400, request.session, makeJsonResponseBody(validatedRfi.value));
         }
-        const rfi = await RfiModel.findById(validatedRfiId.value);
-        if (!rfi) {
-          return basicResponse(404, request.session, makeJsonResponseBody([`RFI with ID "${validatedRfiId.value}" doesn't exist`]));
-        }
+        const rfi = validatedRfi.value;
         const ddr = findDiscoveryDayResponse(rfi, request.session.user.id);
         if (!ddr) {
           return basicResponse(404, request.session, makeJsonResponseBody(['You have not responded to this Discovery Day Session.']));

@@ -1,87 +1,171 @@
+import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Init, Update, View } from 'front-end/lib/framework';
+import { Component, ComponentMsg, ComponentView, Init, replaceUrl, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
-import { publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
-import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
 import * as FixedBar from 'front-end/lib/views/fixed-bar';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
-import Icon from 'front-end/lib/views/icon';
 import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
-import Markdown from 'front-end/lib/views/markdown';
-import { default as React, ReactElement } from 'react';
-import { Alert, Col, Container, Row } from 'reactstrap';
-import { compareDates, formatDate, formatTime } from 'shared/lib';
-import * as FileResource from 'shared/lib/resources/file';
-import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
-import * as RfiResource from 'shared/lib/resources/request-for-information';
-import { Addendum, ADT, UserType } from 'shared/lib/types';
-
-const ERROR_MESSAGE = 'The Request for Information you are looking for is not available.';
-const CONTACT_EMAIL = 'Procurement.Concierge@gov.bc.ca';
-const ATTACHMENTS_ID = 'attachments';
+import { default as React } from 'react';
+import { Col, Container, Row } from 'reactstrap';
+import { PublicRfi } from 'shared/lib/resources/request-for-information';
+import { PublicUser } from 'shared/lib/resources/user';
+import { ADT, Omit, UserType } from 'shared/lib/types';
+import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
 export interface Params {
   rfiId: string;
-  userType?: UserType;
   fixedBarBottom?: number;
 }
 
 export type InnerMsg
-  = ADT<'submit'>
+  = ADT<'handleInitError'>
+  | ADT<'submit'>
   | ADT<'updateFixedBarBottom', number>;
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
+type InitError
+  = ADT<'notSignedIn', PublicRfi>
+  | ADT<'notVendor', PublicRfi>
+  | ADT<'notAcceptedTerms', [PublicRfi, PublicUser]>
+  | ADT<'invalidRfi'>;
+
 export interface State {
   fixedBarBottom: number;
-  respondToDiscoveryDayLoading: number;
-  userType?: UserType;
-  rfi?: RfiResource.PublicRfi;
+  loading: number;
+  init: ValidOrInvalid<{ rfi: PublicRfi, user: PublicUser }, InitError>;
+  handledInitError: boolean;
 };
 
-export const init: Init<Params, State> = async ({ rfiId, userType, fixedBarBottom = 0 }) => {
-  const result = await api.readOneRfi(rfiId);
-  switch (result.tag) {
+export const init: Init<Params, State> = async ({ rfiId, fixedBarBottom = 0 }) => {
+  const rfiResult = await api.readOneRfi(rfiId);
+  const baseState: Omit<State, 'init'> = {
+    fixedBarBottom,
+    loading: 0,
+    handledInitError: false
+  };
+  switch (rfiResult.tag) {
     case 'valid':
-      const rfi = result.value;
-      // Sort addenda by createdAt (i.e. publish) date.
-      if (rfi.latestVersion) {
-        rfi.latestVersion.addenda.sort((a, b) => {
-          return compareDates(a.createdAt, b.createdAt) * -1;
-        });
+      const rfi = rfiResult.value;
+      // TODO once front-end session/auth definitions have been refactored,
+      // this code can be refactored too.
+      const sessionResult = await api.getSession();
+      if (sessionResult.tag === 'invalid' || !sessionResult.value.user) {
+        return {
+          ...baseState,
+          init: invalid({
+            tag: 'notSignedIn' as 'notSignedIn',
+            value: rfi
+          })
+        };
+      }
+      const userResult = await api.readOneUser(sessionResult.value.user.id);
+      if (userResult.tag === 'invalid' || userResult.value.profile.type !== UserType.Vendor) {
+        return {
+          ...baseState,
+          init: invalid({
+            tag: 'notVendor' as 'notVendor',
+            value: rfi
+          })
+        };
+      }
+      const user = userResult.value;
+      if (!userResult.value.acceptedTermsAt) {
+        return {
+          ...baseState,
+          init: invalid({
+            tag: 'notAcceptedTerms' as 'notAcceptedTerms',
+            value: [rfi, user] as [PublicRfi, PublicUser]
+          })
+        };
       }
       return {
-        fixedBarBottom,
-        respondToDiscoveryDayLoading: 0,
-        userType,
-        rfi: result.value
+        ...baseState,
+        init: valid({ rfi, user })
       };
     case 'invalid':
       return {
-        fixedBarBottom,
-        respondToDiscoveryDayLoading: 0,
-        userType
+        ...baseState,
+        init: invalid({
+          tag: 'invalidRfi' as 'invalidRfi',
+          value: undefined
+        })
       };
   }
 };
 
-/*function startRespondToDiscoveryDayLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('respondToDiscoveryDayLoading', state.respondToDiscoveryDayLoading + 1);
-}
+const startLoading: UpdateState<State> = makeStartLoading('loading');
+const stopLoading: UpdateState<State> = makeStopLoading('loading');
 
-function stopRespondToDiscoveryDayLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('respondToDiscoveryDayLoading', state.respondToDiscoveryDayLoading - 1);
-}*/
+const respondToRfiPage = (rfi: PublicRfi): Page => ({
+  tag: 'requestForInformationRespond',
+  value: {
+    rfiId: rfi._id
+  }
+});
+
+const viewRfiPage = (rfi: PublicRfi): Page => ({
+  tag: 'requestForInformationView',
+  value: {
+    rfiId: rfi._id
+  }
+});
 
 export const update: Update<State, Msg> = (state, msg) => {
-  if (!state.rfi) { return [state]; }
   switch (msg.tag) {
-    case 'respondToDiscoveryDay':
-      return [state];
-    case 'respondToRfi':
-      return [state];
+    case 'handleInitError':
+      return [
+        state.set('handledInitError', true),
+        async (state, dispatch) => {
+          if (state.init.tag === 'valid') { return state; }
+          // Handle cases where the user should not be able to respond to this RFI.
+          const error = state.init.value;
+          switch (error.tag) {
+            case 'notSignedIn':
+              dispatch(replaceUrl({
+                tag: 'signIn' as 'signIn',
+                value: {
+                  redirectOnSuccess: respondToRfiPage(error.value)
+                }
+              }));
+              return state;
+            case 'notVendor':
+              dispatch(replaceUrl({
+                tag: 'noticeRfiNonVendorResponse' as 'noticeRfiNonVendorResponse',
+                value: { rfiId: error.value._id }
+              }));
+              return state;
+            case 'notAcceptedTerms':
+              const [rfi, user] = error.value;
+              dispatch(replaceUrl({
+                tag: 'termsAndConditions' as 'termsAndConditions',
+                value: {
+                  userId: user._id,
+                  warnings: ['You must accept the terms and conditions in order to respond to a Request for Information.'],
+                  redirectOnAccept: respondToRfiPage(rfi),
+                  redirectOnSkip: viewRfiPage(rfi)
+                }
+              }));
+              return state;
+            case 'invalidRfi':
+              dispatch(replaceUrl({
+                tag: 'noticeNotFound' as 'noticeNotFound',
+                value: null
+              }));
+              return state;
+          }
+        }
+      ];
+    case 'submit':
+      if (state.init.tag === 'invalid') { return [state]; }
+      return [
+        startLoading(state),
+        async (state, dispatch) => {
+          return stopLoading(state);
+        }
+      ];
     case 'updateFixedBarBottom':
       return [state.set('fixedBarBottom', msg.value)];
     default:
@@ -89,199 +173,72 @@ export const update: Update<State, Msg> = (state, msg) => {
   }
 };
 
-interface DetailProps {
-  title: string;
-  values: Array<string | ReactElement<any>>;
-}
-
-const Detail: View<DetailProps> = ({ title, values }) => {
-  values = values.map((v, i) => (<div key={`${title}-${i}`}>{v}</div>));
+const Attachments: ComponentView<State, Msg> = ({ state }) => {
   return (
-    <Row className='align-items-start mb-3'>
-      <Col xs='12' md='5' className='font-weight-bold text-secondary text-center text-md-right'>{title}</Col>
-      <Col xs='12' md='7' className='text-center text-md-left'>{values}</Col>
-    </Row>
-  );
-};
-
-const Details: View<{ rfi: RfiResource.PublicRfi }> = ({ rfi }) => {
-  const version = rfi.latestVersion;
-  if (!version) { return null; }
-  const contactValues = [
-    `${version.programStaffContact.firstName} ${version.programStaffContact.lastName}`,
-    version.programStaffContact.positionTitle,
-    (<a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>)
-  ];
-  const statusValues = [
-    (<StatusBadge rfi={rfi} style={{ fontSize: '0.85rem' }} />)
-  ];
-  const attachmentsValues = version.attachments.length
-    ? [(<a href={`#${ATTACHMENTS_ID}`}>View Attachments</a>)]
-    : ['No attachments'];
-  return (
-    <Row>
-      <Col xs='12' md='7'>
-        <Detail title='Commodity Code(s)' values={version.categories} />
-        <Detail title='Public Sector Entity' values={[version.publicSectorEntity]} />
-        <Detail title='Contact' values={contactValues} />
-      </Col>
-      <Col xs='12' md='5'>
-        <Detail title='Status' values={statusValues} />
-        <Detail title='Closing Date' values={[formatDate(version.closingAt)]} />
-        <Detail title='Closing Time' values={[formatTime(version.closingAt, true)]} />
-        <Detail title='Attachments' values={attachmentsValues} />
-      </Col>
-    </Row>
-  );
-}
-
-const Description: View<{ value: string }> = ({ value }) => {
-  return (
-    <Row className='mt-5 pt-5 border-top'>
-      <Col xs='12'>
-        <Markdown source={value} />
-      </Col>
-    </Row>
-  );
-}
-
-const Attachments: View<{ files: FileResource.PublicFile[] }> = ({ files }) => {
-  if (!files.length) { return null; }
-  const children = files.map((file, i) => {
-    return (
-      <div className='d-flex align-items-start mb-2' key={`view-rfi-attachment-${i}`}>
-        <Icon name='paperclip' color='secondary' className='mr-2 mt-1 flex-shrink-0' width={1.1} height={1.1} />
-        <a href={makeFileBlobPath(file._id)} className='d-block' download>
-          {file.originalName}
-        </a>
-      </div>
-    );
-  });
-  return (
-    <div className='pt-5 mt-5 border-top' id={ATTACHMENTS_ID}>
+    <div>
       <FormSectionHeading text='Attachments' />
       <Row>
         <Col xs='12'>
-          {children}
         </Col>
       </Row>
     </div>
   );
 }
 
-const Addenda: View<{ addenda: Addendum[] }> = ({ addenda }) => {
-  if (!addenda.length) { return null; }
-  const children = addenda.map((addendum, i) => {
-    return (
-      <div key={`view-rfi-addendum-${i}`} className={`pb-${i === addenda.length - 1 ? '0' : '4'} w-100`}>
-        <Col xs='12' md={{ size: 10, offset: 1 }} className={i !== 0 ? 'pt-4 border-top' : ''}>
-          <p className='mb-2'>{addendum.description}</p>
-        </Col>
-        <Col xs='12' md={{ size: 10, offset: 1 }} className='d-flex flex-column flex-md-row justify-content-between text-secondary'>
-          <small>{publishedDateToString(addendum.createdAt)}</small>
-          <small>{updatedDateToString(addendum.updatedAt)}</small>
-        </Col>
-      </div>
-    );
-  });
-  return (
-    <Row className='mt-5 pt-5 border-top'>
-      <Col xs='12'>
-        <h3 className='pb-3'>Addenda</h3>
-      </Col>
-      {children}
-    </Row>
-  );
-}
-
-interface RespondToDiscoveryDayButtonProps {
-  loading: boolean;
-  discoveryDay: boolean;
-  alreadyResponded: boolean;
-  onClick(): void;
-}
-
-const RespondToDiscoveryDayButton: View<RespondToDiscoveryDayButtonProps> = props => {
-  const { loading, discoveryDay, alreadyResponded, onClick } = props;
-  if (!discoveryDay) { return null; }
-  const disabled = alreadyResponded || loading;
-  const text = alreadyResponded ? 'Discovery Session Request Sent' : 'Attend Discovery Session';
-  return (
-    <LoadingButton color='secondary' onClick={onClick} loading={loading} disabled={disabled} className='ml-3 ml-md-0 mx-md-3 text-nowrap'>
-      {text}
-    </LoadingButton>
-  );
-};
-
-function showButtons(userType?: UserType): boolean {
-  return !userType || userType === UserType.Vendor;
-}
-
 const Buttons: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
-  // Only show these buttons for Vendors and unauthenticated users.
-  if (!showButtons(state.userType) || !state.rfi || !state.rfi.latestVersion) { return null; }
   const bottomBarIsFixed = state.fixedBarBottom === 0;
-  const version = state.rfi.latestVersion;
-  const respondToDiscoveryDay = () => dispatch({ tag: 'respondToDiscoveryDay', value: undefined });
-  const isLoading = state.respondToDiscoveryDayLoading > 0;
+  const submit = () => dispatch({ tag: 'submit', value: undefined });
+  const isLoading = state.loading > 0;
+  const isDisabled = isLoading;
   return (
     <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
+      <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled} className='text-nowrap'>
+        Submit Response
+      </LoadingButton>
       <Link buttonColor={isLoading ? 'secondary' : 'primary'} disabled={isLoading} className='text-nowrap'>
         Respond to RFI
       </Link>
-      <RespondToDiscoveryDayButton
-        discoveryDay={version.discoveryDay}
-        alreadyResponded={false}
-        onClick={respondToDiscoveryDay}
-        loading={isLoading} />
-      <div className='text-secondary font-weight-bold d-none d-md-block mr-auto'>I want to...</div>
     </FixedBar.View>
   );
 };
 
 export const view: ComponentView<State, Msg> = props => {
-  const { state } = props;
-  if (!state.rfi || !state.rfi.latestVersion) {
+  const { state, dispatch } = props;
+  // Handle cases where the user should not be able to respond to this RFI.
+  if (state.init.tag === 'invalid') {
+    if (!state.handledInitError) {
+      dispatch({ tag: 'handleInitError', value: undefined });
+    }
+    // Return a blank page.
     return (
       <PageContainer.View paddingY>
         <Row>
-          <Col xs='12'>
-            <Alert color='danger'>
-              <div>
-                {ERROR_MESSAGE}
-              </div>
-            </Alert>
-          </Col>
+          <Col xs='12'></Col>
         </Row>
       </PageContainer.View>
     );
   }
-  const buttonsAreVisible = showButtons(state.userType);
-  const bottomBarIsFixed = buttonsAreVisible && state.fixedBarBottom === 0;
-  const paddingY = !buttonsAreVisible;
-  const paddingTop = buttonsAreVisible;
-  const rfi = state.rfi;
-  const version = state.rfi.latestVersion;
+  // If the user is in the correct state, render the response form.
+  const { rfi } = state.init.value;
+  if (!rfi.latestVersion) { return null; }
+  const version = rfi.latestVersion;
+  const bottomBarIsFixed = state.fixedBarBottom === 0;
   return (
-    <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingY={paddingY} paddingTop={paddingTop} fullWidth>
+    <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>
       <Container className='mb-5 flex-grow-1'>
         <Row className='mb-5'>
           <Col xs='12' className='d-flex flex-column text-center align-items-center'>
-            <h1 className='h4'>RFI Number: {version.rfiNumber}</h1>
-            <h2 className='h1'>{version.title}</h2>
-            <div className='text-secondary small'>
-              {publishedDateToString(rfi.publishedAt)}
-            </div>
-            <div className='text-secondary small'>
-              {updatedDateToString(version.createdAt)}
-            </div>
+            <h1>Response to RFI Number: {version.rfiNumber}</h1>
+            <h2>{version.title}</h2>
+            <p>
+              Please submit your response to this RFI by following the instructions defined
+              in its
+              <Link page={viewRfiPage(rfi)} textColor='primary' buttonClassName='p-0'>description</Link>.
+            </p>
           </Col>
         </Row>
-        <Details rfi={rfi} />
-        <Description value={version.description} />
-        <Attachments files={version.attachments} />
-        <Addenda addenda={version.addenda} />
+        <Attachments {...props} />
       </Container>
       <Buttons {...props} />
     </PageContainer.View>

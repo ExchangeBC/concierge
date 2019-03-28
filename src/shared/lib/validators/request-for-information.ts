@@ -30,7 +30,7 @@ export function validateAddendumDescription(raw: string): Validation<string> {
   return validateGenericString(raw, 'Addendum', 1, 5000);
 }
 
-export function validateAddendumDescriptions(raw: string[]): ArrayValidation<string[]> {
+export function validateAddendumDescriptions(raw: string[]): ArrayValidation<string> {
   return validateArray(raw, validateAddendumDescription);
 }
 

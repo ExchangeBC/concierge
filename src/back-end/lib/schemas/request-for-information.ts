@@ -97,6 +97,15 @@ export async function makePublicRfi(UserModel: UserSchema.Model, FileModel: File
   };
 }
 
+export async function findPublicRfiByIdUnsafely(RfiModel: Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, rfiId: mongoose.Types.ObjectId, session: AppSession): Promise<PublicRfi> {
+  const rfi = await RfiModel.findById(rfiId);
+  if (!rfi) {
+    throw new Error('RFI does not exist');
+  } else {
+    return await makePublicRfi(UserModel, FileModel, rfi, session);
+  }
+}
+
 export type Model = mongoose.Model<Data & mongoose.Document>;
 
 const requiredMixedSchema = {

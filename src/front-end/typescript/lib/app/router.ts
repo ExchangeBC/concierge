@@ -34,13 +34,6 @@ const isSignedIn: RouteAuthDefinition<Page, UserType> = {
   signOut: false
 };
 
-const isVendor: RouteAuthDefinition<Page, UserType> = {
-  level: { tag: 'userType', value: [UserType.Vendor] },
-  // TODO redirect to the view RFI page.
-  redirect: page => ({ tag: 'landing', value: {} }),
-  signOut: false
-};
-
 const isBuyerOrVendor: RouteAuthDefinition<Page, UserType> = {
   level: { tag: 'userType', value: [UserType.Buyer, UserType.Vendor] },
   redirect: () => ({ tag: 'landing', value: {} }),
@@ -71,7 +64,7 @@ function deserialize<Params>(s: string): Params {
 const router: Router<State, Page, UserType> = {
 
   fallbackPage: {
-    tag: 'landing',
+    tag: 'requestForInformationList',
     value: {}
   },
 
@@ -190,8 +183,7 @@ const router: Router<State, Page, UserType> = {
     },
     {
       path: '/requests-for-information/:rfiId/respond',
-      pageId: 'requestForInformationList',
-      auth: isVendor
+      pageId: 'requestForInformationRespond'
     },
     {
       path: '/requests-for-information',
@@ -204,6 +196,10 @@ const router: Router<State, Page, UserType> = {
     {
       path: '/notice/reset-password',
       pageId: 'noticeResetPassword'
+    },
+    {
+      path: '/notice/request-for-information/:rfiId/non-vendor-response',
+      pageId: 'noticeRfiNonVendorResponse'
     },
     {
       path: '/notice/forgot-password',
@@ -344,6 +340,14 @@ const router: Router<State, Page, UserType> = {
             fixedBarBottom: state.fixedBarBottom
           }
         };
+      case 'requestForInformationRespond':
+        return {
+          tag: 'requestForInformationRespond',
+          value: {
+            rfiId: get(params, 'rfiId', ''),
+            fixedBarBottom: state.fixedBarBottom
+          }
+        };
       case 'requestForInformationList':
         return {
           tag: 'requestForInformationList',
@@ -390,6 +394,13 @@ const router: Router<State, Page, UserType> = {
         return {
           tag: 'noticeResetPassword',
           value: null
+        };
+      case 'noticeRfiNonVendorResponse':
+        return {
+          tag: 'noticeRfiNonVendorResponse',
+          value: {
+            rfiId: get(params, 'rfiId', '')
+          }
         };
       case 'noticeForgotPassword':
         return {
@@ -441,6 +452,8 @@ const router: Router<State, Page, UserType> = {
         return `/requests-for-information/${page.value.rfiId}/edit`;
       case 'requestForInformationView':
         return `/requests-for-information/${page.value.rfiId}/view`;
+      case 'requestForInformationRespond':
+        return `/requests-for-information/${page.value.rfiId}/respond`;
       case 'requestForInformationList':
         return '/requests-for-information';
       case 'about':
@@ -459,6 +472,8 @@ const router: Router<State, Page, UserType> = {
         return '/notice/change-password';
       case 'noticeResetPassword':
         return '/notice/reset-password';
+      case 'noticeRfiNonVendorResponse':
+        return `/notice/request-for-information/${page.value.rfiId}/non-vendor-response`;
       case 'noticeForgotPassword':
         return '/notice/forgot-password';
       case 'noticeNotFound':
@@ -499,9 +514,11 @@ const router: Router<State, Page, UserType> = {
       case 'requestForInformationCreate':
         return makeMetadata('Create a Request for Information');
       case 'requestForInformationEdit':
-        return makeMetadata('Editing Request for Information');
+        return makeMetadata('Edit a Request for Information');
       case 'requestForInformationView':
         return makeMetadata('Request for Information');
+      case 'requestForInformationRespond':
+        return makeMetadata('Respond to a Request for Information');
       case 'requestForInformationList':
         return makeMetadata('Requests for Information');
       case 'about':
@@ -520,6 +537,8 @@ const router: Router<State, Page, UserType> = {
         return makeMetadata('Password Change Successful');
       case 'noticeResetPassword':
         return makeMetadata('Password Reset Successful');
+      case 'noticeRfiNonVendorResponse':
+        return makeMetadata('Only Vendors Can Respond to RFIs');
       case 'noticeForgotPassword':
         return makeMetadata('Check your Inbox');
       case 'noticeNotFound':

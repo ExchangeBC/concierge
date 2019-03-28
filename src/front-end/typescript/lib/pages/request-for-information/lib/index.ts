@@ -18,7 +18,7 @@ export function updatedDateToString(date: Date): string {
  * a promise of their `_id`s.
  */
 
-export async function uploadFiles(files: FileMulti.Value[]): Promise<ArrayValidation<string[]>> {
+export async function uploadFiles(files: FileMulti.Value[]): Promise<ArrayValidation<string>> {
   return validateArrayAsync(files, async file => {
     switch (file.tag) {
       case 'existing':
