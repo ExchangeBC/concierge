@@ -123,6 +123,18 @@ export function getConfigErrors(): string[] {
   if (!FILE_STORAGE_DIR) {
     errors.push('FILE_STORAGE_DIR must be specified.');
   }
+  // Create FILE_STORAGE_DIR
+  try {
+    if (!existsSync(FILE_STORAGE_DIR)) {
+      mkdirSync(FILE_STORAGE_DIR, { recursive: true });
+    }
+  } catch (error) {
+    logger.error('error caught trying to create FILE_STORAGE_DIR', {
+      message: error.message,
+      stack: error.stack
+    });
+    errors.push('FILE_STORAGE_DIR does not exist and this process was unable to create it.');
+  }
 
   // TODO validate TMP_DIR is a directory
   // and we have correct write permissions.
