@@ -215,7 +215,6 @@ export function express<Session>(): ExpressAdapter<Session> {
           body
         };
         // Transform the request according to the route handler.
-        request.logger.debug('parsed request body', request.body);
         const transformRequest = route.handler.transformRequest;
         if (transformRequest) {
           request = assign(request, await transformRequest(request));

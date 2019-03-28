@@ -74,7 +74,6 @@ export const resource: Resource = {
             authLevel = parsedAuthLevel || authLevel;
           }
           const validatedOriginalName = validateFileName(rawFile.name);
-          request.logger.debug('originalName', validatedOriginalName);
           if (validatedOriginalName.tag === 'invalid') {
             return mapRequestBody(request, {
               tag: 400 as 400,
