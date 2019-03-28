@@ -105,9 +105,17 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       const bName = profileToName(b.profile) || FALLBACK_NAME;
       return aName.localeCompare(bName, 'en', { sensitivity: 'base' });
     };
-    // Function to filter users by type and active status.
+    // Function to filter users by type, whether they have accepted terms, and active status.
+    const isActiveAndMatchesUserType = (user: PublicUser, userType: UserType) => user.profile.type === userType && user.active;
     const predicate = (userType: UserType): ((user: PublicUser) => boolean) => {
-      return user => user.profile.type === userType && user.active;
+      switch (userType) {
+        case UserType.Buyer:
+          return user => isActiveAndMatchesUserType(user, userType) && !!user.acceptedTermsAt;
+        case UserType.ProgramStaff:
+          return user => isActiveAndMatchesUserType(user, userType);
+        case UserType.Vendor:
+          return () => false;
+      }
     };
     buyers = result.value.items.filter(predicate(UserType.Buyer)).sort(comparator);
     programStaff = result.value.items.filter(predicate(UserType.ProgramStaff)).sort(comparator);

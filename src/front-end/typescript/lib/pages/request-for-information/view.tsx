@@ -4,6 +4,7 @@ import { Component, ComponentMsg, ComponentView, Immutable, Init, newUrl, Update
 import * as api from 'front-end/lib/http/api';
 import { publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
+import { RfiStatus, rfiToRfiStatus } from 'front-end/lib/types';
 import * as FixedBar from 'front-end/lib/views/fixed-bar';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import Icon from 'front-end/lib/views/icon';
@@ -82,22 +83,32 @@ export const update: Update<State, Msg> = (state, msg) => {
         async (state, dispatch) => {
           if (!state.rfi) { return state; }
           const finish = (state: Immutable<State>) => stopRespondToDiscoveryDayLoading(state);
+          const thisPage: Page = {
+            tag: 'requestForInformationView' as 'requestForInformationView',
+            value: {
+              rfiId: state.rfi._id
+            }
+          };
           // TODO once we refactor how page's do auth and get session information,
           // we should clean up this code.
           const session = await api.getSession();
-          if (session.tag === 'invalid' || !session.value.user) { return finish(state); }
+          // Redirect the user to the sign-in form.
+          if (session.tag === 'invalid' || !session.value.user) {
+            dispatch(newUrl({
+              tag: 'signIn' as 'signIn',
+              value: {
+                redirectOnSuccess: thisPage
+              }
+            }));
+            return finish(state);
+          }
+          // Do nothing when the API fails to return the user data, as this shouldn't happen.
+          // TODO figure out what to do for UX.
           const user = await api.readOneUser(session.value.user.id);
           if (user.tag === 'invalid') { return finish(state); }
           const acceptedTerms = !!user.value.acceptedTermsAt;
           // Ask the user to accept the terms first.
           if (!acceptedTerms) {
-            const thisPage: Page = {
-              tag: 'requestForInformationView' as 'requestForInformationView',
-              value: {
-                rfiId: state.rfi._id,
-                userType: user.value.profile.type
-              }
-            };
             dispatch(newUrl({
               tag: 'termsAndConditions' as 'termsAndConditions',
               value: {
@@ -254,14 +265,16 @@ const RespondToDiscoveryDayButton: View<RespondToDiscoveryDayButtonProps> = prop
   );
 };
 
-function showButtons(userType?: UserType): boolean {
-  return !userType || userType === UserType.Vendor;
+function showButtons(rfiStatus: RfiStatus | null, userType?: UserType): boolean {
+  return (!userType || userType === UserType.Vendor) && !!rfiStatus && rfiStatus !== RfiStatus.Closed;
 }
 
 const Buttons: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   // Only show these buttons for Vendors and unauthenticated users.
-  if (!showButtons(state.userType) || !state.rfi || !state.rfi.latestVersion) { return null; }
+  if (!state.rfi || !state.rfi.latestVersion) { return null; }
+  const rfiStatus = rfiToRfiStatus(state.rfi);
+  if (!showButtons(rfiStatus, state.userType)) { return null; }
   const bottomBarIsFixed = state.fixedBarBottom === 0;
   const version = state.rfi.latestVersion;
   const alreadyRespondedToDiscoveryDay = !!state.ddr;
@@ -278,11 +291,13 @@ const Buttons: ComponentView<State, Msg> = props => {
       <Link page={respondToRfiPage} buttonColor='primary' disabled={isLoading} className='text-nowrap'>
         Respond to RFI
       </Link>
-      <RespondToDiscoveryDayButton
-        discoveryDay={version.discoveryDay}
-        alreadyResponded={alreadyRespondedToDiscoveryDay}
-        onClick={respondToDiscoveryDay}
-        loading={isLoading} />
+      {rfiStatus === RfiStatus.Open
+        ? (<RespondToDiscoveryDayButton
+             discoveryDay={version.discoveryDay}
+             alreadyResponded={alreadyRespondedToDiscoveryDay}
+             onClick={respondToDiscoveryDay}
+             loading={isLoading} />)
+        : null}
       <div className='text-secondary font-weight-bold d-none d-md-block mr-auto'>I want to...</div>
     </FixedBar.View>
   );
@@ -305,7 +320,8 @@ export const view: ComponentView<State, Msg> = props => {
       </PageContainer.View>
     );
   }
-  const buttonsAreVisible = showButtons(state.userType);
+  const rfiStatus = rfiToRfiStatus(state.rfi);
+  const buttonsAreVisible = showButtons(rfiStatus, state.userType);
   const bottomBarIsFixed = buttonsAreVisible && state.fixedBarBottom === 0;
   const paddingY = !buttonsAreVisible;
   const paddingTop = buttonsAreVisible;

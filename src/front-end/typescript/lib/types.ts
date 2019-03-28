@@ -40,7 +40,7 @@ export function rfiToRfiStatus(rfi: PublicRfi): RfiStatus | null {
     return null;
   }
   const days = diffDates(latestVersion.closingAt, new Date(), 'days');
-  if (days <= (-1 * RFI_EXPIRY_WINDOW_DAYS)) {
+  if (days >= (-1 * RFI_EXPIRY_WINDOW_DAYS) && days <= 0) {
     return RfiStatus.Expired;
   } else if (days > 0) {
     return RfiStatus.Open;

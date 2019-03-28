@@ -8,7 +8,7 @@ export interface Props {
   location?: 'top' | 'bottom';
   className?: string;
   overflowWidth?: number;
-  children: Array<ReactElement<any>> | ReactElement<any>;
+  children: Array<ReactElement<any> | null> | ReactElement<any>;
 }
 
 export const View: framework.View<Props> = ({ location, className = '', overflowWidth, children }: Props) => {

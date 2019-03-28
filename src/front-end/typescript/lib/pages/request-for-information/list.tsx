@@ -30,7 +30,7 @@ type TableCellData
   | ADT<'publicSectorEntity', string>
   | ADT<'lastUpdated', Date>
   | ADT<'closingDate', Date>
-  | ADT<'discoveryDay', boolean>;
+  | ADT<'discoveryDay', [boolean, PublicRfi]>;
 
 const Table: TableComponent.TableComponent<TableCellData> = TableComponent.component();
 
@@ -52,7 +52,8 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
     case 'closingDate':
       return wrap(formatTableDate(data.value));
     case 'discoveryDay':
-      return wrap(data.value ? (<Icon name='check' color='body' width={1.5} height={1.5} />) : null);
+      const showCheck = data.value[0] && rfiToRfiStatus(data.value[1]) === RfiStatus.Open;
+      return wrap(showCheck ? (<Icon name='check' color='body' width={1.5} height={1.5} />) : null);
   }
 }
 
@@ -231,43 +232,86 @@ export const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 const programStaffTableHeadCells: TableComponent.THSpec[] = [
   { children: 'RFI Number' },
-  { children: 'Status' },
+  {
+    children: 'Status',
+    style: {
+      width: '90px'
+    }
+  },
   {
     children: 'Project Title',
     style: {
-      minWidth: '300px'
+      minWidth: '280px'
     }
   },
   {
     children: 'Public Sector Entity',
     style: {
-      minWidth: '210px'
+      minWidth: '190px'
     }
   },
-  { children: 'Last Updated' },
-  { children: 'Closing Date' },
+  {
+    children: 'Last Updated',
+    style: {
+      width: '130px'
+    }
+  },
+  {
+    children: 'Closing Date',
+    style: {
+      width: '125px'
+    }
+  },
   {
     children: (<Icon name='calendar' color='secondary' />),
-    tooltipText: 'Discovery Day'
+    tooltipText: 'Discovery Day',
+    className: 'text-center',
+    style: {
+      width: '50px'
+    }
   }
 ];
 
 const nonProgramStaffTableHeadCells: TableComponent.THSpec[] = [
   { children: 'RFI Number' },
-  { children: 'Published Date' },
-  { children: 'Status' },
+  {
+    children: 'Published Date',
+    style: {
+      width: '140px'
+    }
+  },
+  {
+    children: 'Status',
+    style: {
+      width: '90px'
+    }
+  },
   {
     children: 'Project Title',
     style: {
-      minWidth: '300px'
+      minWidth: '280px'
     }
   },
-  { children: 'Closing Date' },
+  {
+    children: 'Closing Date',
+    style: {
+      width: '125px'
+    }
+  },
   {
     children: (<Icon name='calendar' color='secondary' />),
-    tooltipText: 'Discovery Day Available'
+    tooltipText: 'Discovery Day Available',
+    className: 'text-center',
+    style: {
+      width: '50px'
+    }
   },
-  { children: 'Last Updated' }
+  {
+    children: 'Last Updated',
+    style: {
+      width: '130px'
+    }
+  }
 ];
 
 function programStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.TDSpec<TableCellData>>> {
@@ -288,7 +332,7 @@ function programStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.TDSp
       TableComponent.makeTDSpec({ tag: 'publicSectorEntity' as 'publicSectorEntity', value: version.publicSectorEntity }),
       TableComponent.makeTDSpec({ tag: 'lastUpdated' as 'lastUpdated', value: version.createdAt }),
       TableComponent.makeTDSpec({ tag: 'closingDate' as 'closingDate', value: version.closingAt }),
-      TableComponent.makeTDSpec({ tag: 'discoveryDay' as 'discoveryDay', value: version.discoveryDay })
+      TableComponent.makeTDSpec({ tag: 'discoveryDay' as 'discoveryDay', value: [version.discoveryDay, rfi] as [boolean, PublicRfi] })
     ];
   });
 }
@@ -310,7 +354,7 @@ function nonProgramStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.T
         }
       }),
       TableComponent.makeTDSpec({ tag: 'closingDate' as 'closingDate', value: version.closingAt }),
-      TableComponent.makeTDSpec({ tag: 'discoveryDay' as 'discoveryDay', value: version.discoveryDay }),
+      TableComponent.makeTDSpec({ tag: 'discoveryDay' as 'discoveryDay', value: [version.discoveryDay, rfi] as [boolean, PublicRfi] }),
       TableComponent.makeTDSpec({ tag: 'lastUpdated' as 'lastUpdated', value: version.createdAt })
     ];
   });

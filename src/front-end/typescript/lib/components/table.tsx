@@ -67,6 +67,7 @@ const ConditionalTooltip: View<ConditionalTooltipProps> = props => {
 export interface THSpec {
   children: Children;
   style?: CSSProperties;
+  className?: string;
   tooltipText?: string;
 }
 
@@ -77,7 +78,7 @@ export interface THProps extends THSpec {
   id: string;
 }
 
-export const DefaultTHView: View<THProps> = ({ id, style, children, index, tooltipText, dispatch, tooltipIsOpen }) => {
+export const DefaultTHView: View<THProps> = ({ id, style, className, children, index, tooltipText, dispatch, tooltipIsOpen }) => {
   const tooltipData = !tooltipText
     ? undefined
     : {
@@ -87,7 +88,7 @@ export const DefaultTHView: View<THProps> = ({ id, style, children, index, toolt
         toggle: () => dispatch({ tag: 'toggleTooltip', value: index })
       };
   return (
-    <th key={id} id={id} style={style}>
+    <th key={id} id={id} style={style} className={className}>
       {children}
       <ConditionalTooltip data={tooltipData} />
     </th>

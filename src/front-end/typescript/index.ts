@@ -3,7 +3,7 @@ import { start } from 'front-end/lib/framework';
 import { debounce, set, throttle } from 'lodash';
 
 const element = document.getElementById('main') || document.body;
-const debug = true;
+const debug = false;
 start(app, element, debug)
   .then(stateManager => {
     // Store stateManager on the window in development.
