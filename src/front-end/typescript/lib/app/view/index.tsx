@@ -15,6 +15,7 @@ import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-pas
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
 import * as PageNoticeRfiNonVendorResponse from 'front-end/lib/pages/notice/request-for-information/non-vendor-response';
+import * as PageNoticeRfiResponseSubmitted from 'front-end/lib/pages/notice/request-for-information/response-submitted';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
 import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
@@ -295,6 +296,15 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.noticeRfiNonVendorResponse}
           mapPageMsg={value => ({ tag: 'pageNoticeRfiNonVendorResponse', value })}
           View={PageNoticeRfiNonVendorResponse.view} />
+      );
+
+    case 'noticeRfiResponseSubmitted':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.noticeRfiResponseSubmitted}
+          mapPageMsg={value => ({ tag: 'pageNoticeRfiResponseSubmitted', value })}
+          View={PageNoticeRfiResponseSubmitted.view} />
       );
 
     case 'noticeForgotPassword':

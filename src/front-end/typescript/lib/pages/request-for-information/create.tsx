@@ -62,9 +62,8 @@ export const update: Update<State, Msg> = (state, msg) => {
     case 'preview':
       return [state];
     case 'publish':
-      state = startPublishLoading(state);
       return [
-        state,
+        startPublishLoading(state),
         async (state, dispatch) => {
           const fail = (state: Immutable<State>, errors: RfiResource.CreateValidationErrors) => {
             state = stopPublishLoading(state);

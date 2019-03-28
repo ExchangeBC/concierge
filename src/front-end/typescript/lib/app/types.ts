@@ -13,6 +13,7 @@ import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-pas
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
 import * as PageNoticeRfiNonVendorResponse from 'front-end/lib/pages/notice/request-for-information/non-vendor-response';
+import * as PageNoticeRfiResponseSubmitted from 'front-end/lib/pages/notice/request-for-information/response-submitted';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
 import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
@@ -59,6 +60,7 @@ export type Page
   | ADT<'noticeChangePassword', PageNoticeChangePassword.Params>
   | ADT<'noticeResetPassword', PageNoticeResetPassword.Params>
   | ADT<'noticeRfiNonVendorResponse', PageNoticeRfiNonVendorResponse.Params>
+  | ADT<'noticeRfiResponseSubmitted', PageNoticeRfiResponseSubmitted.Params>
   | ADT<'noticeForgotPassword', PageNoticeForgotPassword.Params>;
 
 export interface State {
@@ -96,6 +98,7 @@ export interface State {
     noticeChangePassword?: Immutable<PageNoticeChangePassword.State>;
     noticeResetPassword?: Immutable<PageNoticeResetPassword.State>;
     noticeRfiNonVendorResponse?: Immutable<PageNoticeRfiNonVendorResponse.State>;
+    noticeRfiResponseSubmitted?: Immutable<PageNoticeRfiResponseSubmitted.State>;
     noticeForgotPassword?: Immutable<PageNoticeForgotPassword.State>;
   };
 }
@@ -130,6 +133,7 @@ type InnerMsg
   | ADT<'pageNoticeChangePassword', PageNoticeChangePassword.Msg>
   | ADT<'pageNoticeResetPassword', PageNoticeResetPassword.Msg>
   | ADT<'pageNoticeRfiNonVendorResponse', PageNoticeRfiNonVendorResponse.Msg>
+  | ADT<'pageNoticeRfiResponseSubmitted', PageNoticeRfiResponseSubmitted.Msg>
   | ADT<'pageNoticeForgotPassword', PageNoticeForgotPassword.Msg>;
 
 export type Msg = AppMsg<InnerMsg, Page, UserType>;

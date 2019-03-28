@@ -48,7 +48,7 @@ export function createModels(): AvailableModels {
     ForgotPasswordToken: mongoose.model('ForgotPasswordToken', ForgotPasswordTokenSchema.schema),
     File: mongoose.model('File', FileSchema.schema),
     Rfi: mongoose.model('Rfi', RfiSchema.schema),
-    RfiResponse: mongoose.model('RfiResponse', RfiSchema.schema)
+    RfiResponse: mongoose.model('RfiResponse', RfiResponseSchema.schema)
   };
 };
 

@@ -11,14 +11,14 @@ export type State = Notice.State;
 
 export const init: Init<Params, State> = async ({ rfiId }) => {
   const defaultState: State = {
-    title: 'Only Vendors can respond to RFIs',
-    body: 'You must be signed in as a Vendor to respond to this Request for Information.'
+    title: 'Thank you',
+    body: 'Your response to this Request for Information has been successfully submitted.'
   };
   if (rfiId) {
     return {
       ...defaultState,
       button: {
-        text: 'View the RFI\'s Details',
+        text: 'View the RFI Description',
         page: {
           tag: 'requestForInformationView' as 'requestForInformationView',
           value: { rfiId }

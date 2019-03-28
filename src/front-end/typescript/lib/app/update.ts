@@ -14,6 +14,7 @@ import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-pas
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
 import * as PageNoticeRfiNonVendorResponse from 'front-end/lib/pages/notice/request-for-information/non-vendor-response';
+import * as PageNoticeRfiResponseSubmitted from 'front-end/lib/pages/notice/request-for-information/response-submitted';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
 import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
@@ -178,6 +179,9 @@ const update: Update<State, Msg> = (state, msg) => {
               break;
             case 'noticeRfiNonVendorResponse':
               state = state.setIn(['pages', 'noticeRfiNonVendorResponse'], immutable(await PageNoticeRfiNonVendorResponse.init(msg.value.page.value)));
+              break;
+            case 'noticeRfiResponseSubmitted':
+              state = state.setIn(['pages', 'noticeRfiResponseSubmitted'], immutable(await PageNoticeRfiResponseSubmitted.init(msg.value.page.value)));
               break;
             case 'noticeForgotPassword':
               state = state.setIn(['pages', 'noticeForgotPassword'], immutable(await PageNoticeForgotPassword.init(msg.value.page.value)));
@@ -464,6 +468,15 @@ const update: Update<State, Msg> = (state, msg) => {
         mapChildMsg: value => ({ tag: 'pageNoticeRfiNonVendorResponse', value }),
         childStatePath: ['pages', 'noticeRfiNonVendorResponse'],
         childUpdate: PageNoticeRfiNonVendorResponse.update,
+        childMsg: msg.value
+      });
+
+    case 'pageNoticeRfiResponseSubmitted':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageNoticeRfiResponseSubmitted', value }),
+        childStatePath: ['pages', 'noticeRfiResponseSubmitted'],
+        childUpdate: PageNoticeRfiResponseSubmitted.update,
         childMsg: msg.value
       });
 

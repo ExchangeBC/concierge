@@ -1,9 +1,10 @@
 import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Init, replaceUrl, Update } from 'front-end/lib/framework';
+import * as FileMulti from 'front-end/lib/components/input/file-multi';
+import { Component, ComponentMsg, ComponentView, Dispatch, Immutable, immutable, Init, mapComponentDispatch, newUrl, replaceUrl, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
+import { uploadFiles } from 'front-end/lib/pages/request-for-information/lib';
 import * as FixedBar from 'front-end/lib/views/fixed-bar';
-import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
@@ -21,6 +22,7 @@ export interface Params {
 
 export type InnerMsg
   = ADT<'handleInitError'>
+  | ADT<'onChangeAttachments', FileMulti.Msg>
   | ADT<'submit'>
   | ADT<'updateFixedBarBottom', number>;
 
@@ -32,10 +34,16 @@ type InitError
   | ADT<'notAcceptedTerms', [PublicRfi, PublicUser]>
   | ADT<'invalidRfi'>;
 
+interface ValidState {
+  rfi: PublicRfi;
+  user: PublicUser;
+  attachments: Immutable<FileMulti.State>;
+}
+
 export interface State {
   fixedBarBottom: number;
   loading: number;
-  init: ValidOrInvalid<{ rfi: PublicRfi, user: PublicUser }, InitError>;
+  init: ValidOrInvalid<ValidState, InitError>;
   handledInitError: boolean;
 };
 
@@ -83,7 +91,19 @@ export const init: Init<Params, State> = async ({ rfiId, fixedBarBottom = 0 }) =
       }
       return {
         ...baseState,
-        init: valid({ rfi, user })
+        init: valid({
+          rfi,
+          user,
+          attachments: immutable(await FileMulti.init({
+            formFieldMulti: {
+              idNamespace: 'rfi-categories',
+              label: 'Attachments',
+              labelClassName: 'h3 mb-4',
+              required: false,
+              fields: []
+            }
+          }))
+        })
       };
     case 'invalid':
       return {
@@ -158,11 +178,40 @@ export const update: Update<State, Msg> = (state, msg) => {
           }
         }
       ];
+    case 'onChangeAttachments':
+      if (state.init.tag === 'invalid') { return [state]; }
+      state = updateComponentChild({
+        state,
+        mapChildMsg: value => ({ tag: 'onChangeAttachments', value }),
+        childStatePath: ['init', 'value', 'attachments'],
+        childUpdate: FileMulti.update,
+        childMsg: msg.value
+      })[0];
+      return [state];
     case 'submit':
       if (state.init.tag === 'invalid') { return [state]; }
       return [
         startLoading(state),
         async (state, dispatch) => {
+          if (state.init.tag === 'invalid') { return state; }
+          const { rfi, attachments } = state.init.value;
+          const fail = (state: Immutable<State>, errors: string[][]) => {
+            return stopLoading(state)
+              .setIn(['init', 'value', 'attachments'], FileMulti.setErrors(attachments, errors));
+          };
+          const uploadedFiles = await uploadFiles(FileMulti.getValues(attachments));
+          if (uploadedFiles.tag === 'invalid') { return fail(state, uploadedFiles.value); }
+          const result = await api.createRfiResponse({
+            rfiId: rfi._id,
+            attachments: uploadedFiles.value
+          });
+          if (result.tag === 'invalid') { return fail(state, result.value.attachments || []); }
+          dispatch(newUrl({
+            tag: 'noticeRfiResponseSubmitted' as 'noticeRfiResponseSubmitted',
+            value: {
+              rfiId: rfi._id
+            }
+          }));
           return stopLoading(state);
         }
       ];
@@ -173,38 +222,56 @@ export const update: Update<State, Msg> = (state, msg) => {
   }
 };
 
-const Attachments: ComponentView<State, Msg> = ({ state }) => {
-  return (
-    <div>
-      <FormSectionHeading text='Attachments' />
-      <Row>
-        <Col xs='12'>
-        </Col>
-      </Row>
-    </div>
-  );
+function atLeastOneAttachmentAdded(attachments: FileMulti.State): boolean {
+  return !!attachments.formFieldMulti.fields.length;
 }
 
-const Buttons: ComponentView<State, Msg> = props => {
-  const { state, dispatch } = props;
-  const bottomBarIsFixed = state.fixedBarBottom === 0;
-  const submit = () => dispatch({ tag: 'submit', value: undefined });
-  const isLoading = state.loading > 0;
-  const isDisabled = isLoading;
+function isValid(state: ValidState): boolean {
+  return atLeastOneAttachmentAdded(state.attachments) && FileMulti.isValid(state.attachments);
+}
+
+interface AttachmentsProps {
+  attachments: Immutable<FileMulti.State>;
+  dispatch: Dispatch<Msg>;
+}
+
+const Attachments: View<AttachmentsProps> = ({ attachments, dispatch }) => {
+  const dispatchAttachments: Dispatch<FileMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeAttachments' as 'onChangeAttachments', value }));
+  return (
+    <Row>
+      <Col xs='12' md='6'>
+        <FileMulti.view
+          state={attachments}
+          dispatch={dispatchAttachments} />
+      </Col>
+    </Row>
+  );
+};
+
+interface ButtonsProps {
+  dispatch: Dispatch<Msg>;
+  rfi: PublicRfi;
+  isLoading: boolean;
+  isValid: boolean;
+  bottomBarIsFixed: boolean;
+}
+
+const Buttons: View<ButtonsProps> = ({ bottomBarIsFixed, isLoading, isValid, rfi, dispatch }) => {
+  const isDisabled = isLoading || !isValid;
+  const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
     <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
       <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled} className='text-nowrap'>
         Submit Response
       </LoadingButton>
-      <Link buttonColor={isLoading ? 'secondary' : 'primary'} disabled={isLoading} className='text-nowrap'>
-        Respond to RFI
+      <Link page={viewRfiPage(rfi)} textColor='secondary' className='text-nowrap'>
+        Cancel
       </Link>
     </FixedBar.View>
   );
 };
 
-export const view: ComponentView<State, Msg> = props => {
-  const { state, dispatch } = props;
+export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   // Handle cases where the user should not be able to respond to this RFI.
   if (state.init.tag === 'invalid') {
     if (!state.handledInitError) {
@@ -220,7 +287,8 @@ export const view: ComponentView<State, Msg> = props => {
     );
   }
   // If the user is in the correct state, render the response form.
-  const { rfi } = state.init.value;
+  const validState = state.init.value;
+  const { rfi, attachments } = validState;
   if (!rfi.latestVersion) { return null; }
   const version = rfi.latestVersion;
   const bottomBarIsFixed = state.fixedBarBottom === 0;
@@ -228,19 +296,26 @@ export const view: ComponentView<State, Msg> = props => {
     <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>
       <Container className='mb-5 flex-grow-1'>
         <Row className='mb-5'>
-          <Col xs='12' className='d-flex flex-column text-center align-items-center'>
+          <Col xs='12' className='d-flex flex-column'>
             <h1>Response to RFI Number: {version.rfiNumber}</h1>
             <h2>{version.title}</h2>
             <p>
               Please submit your response to this RFI by following the instructions defined
-              in its
-              <Link page={viewRfiPage(rfi)} textColor='primary' buttonClassName='p-0'>description</Link>.
+              in its&nbsp;<Link page={viewRfiPage(rfi)} textColor='primary' buttonClassName='p-0'>description</Link>.
             </p>
           </Col>
         </Row>
-        <Attachments {...props} />
+        <Attachments attachments={attachments} dispatch={dispatch} />
+        {!atLeastOneAttachmentAdded(attachments)
+          ? (<Row><Col xs='12'>Please add at least one attachment.</Col></Row>)
+          : null}
       </Container>
-      <Buttons {...props} />
+      <Buttons
+        dispatch={dispatch}
+        rfi={rfi}
+        isLoading={state.loading > 0}
+        isValid={isValid(validState)}
+        bottomBarIsFixed={bottomBarIsFixed} />
     </PageContainer.View>
   );
 };
