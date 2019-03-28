@@ -494,7 +494,7 @@ const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <Row>
         <Col xs='12'>
           <FormSectionHeading text='Description'>
-            <p>Use <a href='https://www.markdownguide.org/cheat-sheet' target='_blank'>Markdown</a> to describe the RFI.</p>
+            <p className='mb-0'>Use <a href='https://www.markdownguide.org/cheat-sheet' target='_blank'>Markdown</a> to describe the RFI.</p>
           </FormSectionHeading>
         </Col>
       </Row>

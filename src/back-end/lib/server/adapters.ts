@@ -226,7 +226,7 @@ export function express<Session>(): ExpressAdapter<Session> {
         const response = await route.handler.respond(request);
         // Delete temporary file if it exists.
         if (body.tag === 'file' && existsSync(body.value.path)) {
-          unlinkSync(request.body.value.path);
+          unlinkSync(body.value.path);
         }
         // Run the after hook if specified.
         // Note: we run the after hook after our business logic has completed,

@@ -4,10 +4,11 @@ import * as permissions from 'back-end/lib/permissions';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import { AppSession } from 'back-end/lib/schemas/session';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
-import { renameSync, unlinkSync } from 'fs';
+import { renameSync } from 'fs';
 import { identityAsync } from 'shared/lib';
 import { PublicFile } from 'shared/lib/resources/file';
 import { ADT, AuthLevel, parseAuthLevel, parseUserType, UserType } from 'shared/lib/types';
+import { validateGenericString } from 'shared/lib/validators';
 
 const DEFAULT_AUTH_LEVEL: AuthLevel<UserType> = {
   tag: 'any',
@@ -48,7 +49,6 @@ export const resource: Resource = {
           });
         } else {
           const rawFile = request.body.value;
-          const originalName = rawFile.name;
           let authLevel: AuthLevel<UserType> = DEFAULT_AUTH_LEVEL;
           if (request.session.user && request.session.user.type !== UserType.ProgramStaff) {
             // Override the authLevel if the user is a Vendor or Buyer.
@@ -73,11 +73,18 @@ export const resource: Resource = {
             }
             authLevel = parsedAuthLevel || authLevel;
           }
+          const validatedOriginalName = validateGenericString(rawFile.name, 'File Name');
+          request.logger.debug('originalName', validatedOriginalName);
+          if (validatedOriginalName.tag === 'invalid') {
+            return mapRequestBody(request, {
+              tag: 400 as 400,
+              value: validatedOriginalName.value
+            });
+          }
+          const originalName = validatedOriginalName.value;
           const hash = await FileSchema.hashFile(originalName, rawFile.path, authLevel);
           const existingFile = await FileModel.findOne({ hash });
           if (existingFile) {
-            // Delete the temporarily-stored file.
-            unlinkSync(rawFile.path);
             return mapRequestBody(request, {
               tag: 200 as 200,
               value: FileSchema.makePublicFile(existingFile)
