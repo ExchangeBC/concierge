@@ -1,7 +1,11 @@
+import { makeDomainLogger } from 'back-end/lib/logger';
+import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
 import dotenv from 'dotenv';
-import { tmpdir } from 'os';
-import { resolve } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+import { join, resolve } from 'path';
 import url from 'url';
+
+const logger = makeDomainLogger(consoleAdapter, 'back-end:config');
 
 // export the root directory of the repository.
 export const REPOSITORY_ROOT_DIR = resolve(__dirname, '../../');
@@ -46,10 +50,10 @@ export const COOKIE_SECRET = get('COOKIE_SECRET', '');
 
 export const FRONT_END_BUILD_DIR = resolve(REPOSITORY_ROOT_DIR, 'build/front-end');
 
-export const TMP_DIR = tmpdir();
-
 const fileStorageDir = get('FILE_STORAGE_DIR', '');
 export const FILE_STORAGE_DIR = fileStorageDir && resolve(REPOSITORY_ROOT_DIR, fileStorageDir);
+
+export const TMP_DIR = join(FILE_STORAGE_DIR, '__tmp');
 
 const productionMailerConfigOptions = {
   host: get('MAILER_HOST', ''),
@@ -124,6 +128,18 @@ export function getConfigErrors(): string[] {
   // and we have correct write permissions.
   if (!TMP_DIR) {
     errors.push('TMP_DIR must be specified.');
+  }
+  // Create TMP_DIR
+  try {
+    if (!existsSync(TMP_DIR)) {
+      mkdirSync(TMP_DIR, { recursive: true });
+    }
+  } catch (error) {
+    logger.error('error caught trying to create TMP_DIR', {
+      message: error.message,
+      stack: error.stack
+    });
+    errors.push('TMP_DIR does not exist and this process was unable to create it.');
   }
 
   if (ENV === 'production' && (!productionMailerConfigOptions.host || !isPositiveInteger(productionMailerConfigOptions.port))) {
