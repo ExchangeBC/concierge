@@ -25,7 +25,7 @@ export const update: Update<State, Msg> = (state, msg) => {
   return [state];
 };
 
-const CallToActionButton: View<{ signedIn: boolean, className?: string, userType?: UserType }> = ({ className, signedIn, userType }) => {
+const CallToActionButton: View<{ signedIn: boolean, userType?: UserType }> = ({ signedIn, userType }) => {
   let page: Page = { tag: 'signUpBuyer', value: {} };
   let text = 'Get Started';
   if (signedIn) {
@@ -36,7 +36,7 @@ const CallToActionButton: View<{ signedIn: boolean, className?: string, userType
     text = 'View RFIs';
   }
   return (
-    <Link page={page} buttonSize='lg' buttonColor='primary' text={text} className={className} />
+    <Link page={page} buttonSize='lg' buttonColor='primary' text={text} />
   );
 };
 
@@ -183,8 +183,8 @@ const CallToAction: ComponentView<State, Msg> = ({ state, dispatch }) => {
               Create your account today to explore all of the benefits that the Procurement Concierge Program has to offer.
             </h4>
           </Col>
-          <Col xs='12' md='3' lg='2' className='d-flex justify-content-md-end mt-3 mt-md-0'>
-            <CallToActionButton signedIn={state.signedIn} userType={state.userType} className='d-flex align-items-center' />
+          <Col xs='12' md='3' lg='2' className='d-flex justify-content-md-end align-items-center mt-3 mt-md-0'>
+            <CallToActionButton signedIn={state.signedIn} userType={state.userType} />
           </Col>
         </Row>
       </Container>

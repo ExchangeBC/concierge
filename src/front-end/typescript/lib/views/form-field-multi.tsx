@@ -53,6 +53,7 @@ export function isValid<Value>(state: Immutable<State<Value>>): boolean {
 
 export interface ChildProps<ChildElement, Value, ExtraProps> {
   id: string;
+  index: number;
   className: string;
   field: Field<Value>;
   disabled: boolean;
@@ -204,6 +205,7 @@ function Children<ChildElement, Value, OnAddParams, ExtraChildProps>(props: Prop
         <Child
           key={`form-field-multi-child-${i}`}
           id={id}
+          index={i}
           className={childClassName}
           field={field}
           onChange={onChange(i)}

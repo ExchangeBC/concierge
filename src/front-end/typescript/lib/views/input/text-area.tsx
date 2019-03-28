@@ -90,7 +90,7 @@ export class View extends React.Component<Props> {
         placeholder={disabled ? '' : placeholder}
         disabled={disabled}
         className={className}
-        style={style}
+        style={{ whiteSpace: 'pre', ...style }}
         onChange={this.onChange.bind(this, onChange)}
         onKeyUp={onKeyUp}
         ref={ref => { this.ref = ref; }} />

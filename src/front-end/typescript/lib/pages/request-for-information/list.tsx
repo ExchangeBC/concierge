@@ -254,7 +254,7 @@ const programStaffTableHeadCells: TableComponent.THSpec[] = [
 
 const nonProgramStaffTableHeadCells: TableComponent.THSpec[] = [
   { children: 'RFI Number' },
-  { children: 'Publish Date' },
+  { children: 'Published Date' },
   { children: 'Status' },
   {
     children: 'Project Title',
@@ -262,12 +262,12 @@ const nonProgramStaffTableHeadCells: TableComponent.THSpec[] = [
       minWidth: '300px'
     }
   },
-  { children: 'Last Updated' },
+  { children: 'Closing Date' },
   {
     children: (<Icon name='calendar' color='secondary' />),
     tooltipText: 'Discovery Day Available'
   },
-  { children: 'Closing Date' }
+  { children: 'Last Updated' }
 ];
 
 function programStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.TDSpec<TableCellData>>> {
@@ -309,9 +309,9 @@ function nonProgramStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.T
           text: version.title
         }
       }),
-      TableComponent.makeTDSpec({ tag: 'lastUpdated' as 'lastUpdated', value: version.createdAt }),
+      TableComponent.makeTDSpec({ tag: 'closingDate' as 'closingDate', value: version.closingAt }),
       TableComponent.makeTDSpec({ tag: 'discoveryDay' as 'discoveryDay', value: version.discoveryDay }),
-      TableComponent.makeTDSpec({ tag: 'closingDate' as 'closingDate', value: version.closingAt })
+      TableComponent.makeTDSpec({ tag: 'lastUpdated' as 'lastUpdated', value: version.createdAt })
     ];
   });
 }

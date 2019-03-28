@@ -137,7 +137,7 @@ export function makeTBody<Data>(): View<TBodyProps<Data>> {
       );
     });
     return (
-      <tbody>
+      <tbody style={{ fontSize: '0.875rem' }}>
         {children}
       </tbody>
     );

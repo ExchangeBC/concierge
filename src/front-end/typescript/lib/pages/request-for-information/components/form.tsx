@@ -105,9 +105,9 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       const bName = profileToName(b.profile) || FALLBACK_NAME;
       return aName.localeCompare(bName, 'en', { sensitivity: 'base' });
     };
-    // Function to filter users by type.
+    // Function to filter users by type and active status.
     const predicate = (userType: UserType): ((user: PublicUser) => boolean) => {
-      return user => user.profile.type === userType;
+      return user => user.profile.type === userType && user.active;
     };
     buyers = result.value.items.filter(predicate(UserType.Buyer)).sort(comparator);
     programStaff = result.value.items.filter(predicate(UserType.ProgramStaff)).sort(comparator);

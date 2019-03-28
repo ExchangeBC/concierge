@@ -8,10 +8,13 @@ import { bytesToMegabytes } from 'shared/lib';
 import { MAX_MULTIPART_FILES_SIZE } from 'shared/lib/resources/file';
 import { PublicFile } from 'shared/lib/resources/file';
 import { ADT, Omit } from 'shared/lib/types';
+import { invalid, valid, Validation } from 'shared/lib/validators';
+import { validateFileName } from 'shared/lib/validators/file';
 
 export interface NewFile {
   file: File;
   name: string;
+  size: number;
 }
 
 export type Value
@@ -50,7 +53,7 @@ export function getValues(state: Immutable<State>): Value[] {
       const { file, name } = value.value;
       const originalExtension = getFileExtension(file.name);
       return makeNewValue({
-        file,
+        ...value.value,
         // Help the user by appending the original file extension if they
         // overrode the attachment name.
         // If no overridden name is provided, use the original file name.
@@ -83,7 +86,8 @@ export function isValid(state: Immutable<State>): boolean {
 type InnerMsg
   = ADT<'add', File>
   | ADT<'remove', number>
-  | ADT<'change', { index: number, value: string }>;
+  | ADT<'change', { index: number, value: string }>
+  | ADT<'validate', number>;
 
 export type Msg = ComponentMsg<InnerMsg, Page>;
 
@@ -97,17 +101,32 @@ export const init: Init<Params, State> = async params => {
   };
 };
 
+function validateValue(value: Value): Validation<Value> {
+  if (value.tag === 'existing') { return valid(value); }
+  let errors: string[] = [];
+  const validatedName = validateFileName(value.value.name || value.value.file.name);
+  if (validatedName.tag === 'invalid') { errors = errors.concat(validatedName.value); }
+  if (value.value.size > MAX_MULTIPART_FILES_SIZE) {
+    errors.push(`Please remove this file, and select one less than ${bytesToMegabytes(MAX_MULTIPART_FILES_SIZE)} MB in size.`);
+  }
+  return invalid(errors);
+}
+
 export const update: Update<State, Msg> = (state, msg) => {
   switch (msg.tag) {
     case 'add':
       const file = msg.value;
-      let addFields = state.formFieldMulti.fields;
-      const errors = file.size > MAX_MULTIPART_FILES_SIZE ? [`Please remove this file, and select one less than ${bytesToMegabytes(MAX_MULTIPART_FILES_SIZE)} MB in size.`] : [];
-      addFields = addFields.concat(FormFieldMulti.makeField(makeNewValue({
+      const value: Value = makeNewValue({
         file,
         // The file name's input placeholder will show the original file name.
-        name: ''
-      }), errors));
+        name: '',
+        size: file.size
+      });
+      const validatedValue = validateValue(value);
+      let errors: string[] = [];
+      if (validatedValue.tag === 'invalid') { errors = validatedValue.value; }
+      let addFields = state.formFieldMulti.fields;
+      addFields = addFields.concat(FormFieldMulti.makeField(value, errors));
       return [state.setIn(['formFieldMulti', 'fields'], addFields)];
     case 'remove':
       let removeFields = state.formFieldMulti.fields;
@@ -121,13 +140,28 @@ export const update: Update<State, Msg> = (state, msg) => {
         return field;
       });
       return [state.setIn(['formFieldMulti', 'fields'], changeFields)];
+    case 'validate':
+      const validatedFields = state.formFieldMulti.fields.map((field, i) => {
+        if (i === msg.value && field.value.tag === 'new') {
+          const validatedValue = validateValue(field.value);
+          if (validatedValue.tag === 'invalid') {
+            field.errors = validatedValue.value;
+          }
+        }
+        return field;
+      });
+      return [state.setIn(['formFieldMulti', 'fields'], validatedFields)];
     default:
       return [state];
   }
 };
 
-const Child: View<FormFieldMulti.ChildProps<HTMLInputElement, Value, void>> = props => {
-  const { id, className, field, onChange, disabled = false } = props;
+interface ExtraChildProps {
+  onChangeDebounced(index: number): void;
+}
+
+const Child: View<FormFieldMulti.ChildProps<HTMLInputElement, Value, ExtraChildProps>> = props => {
+  const { id, index, className, field, onChange, extraProps, disabled = false } = props;
   const value = field.value.tag === 'new' ? field.value.value.name : field.value.value.originalName;
   const placeholder = field.value.tag === 'new' ? field.value.value.file.name : field.value.value.originalName;
   const isExistingFile = field.value.tag === 'existing';
@@ -140,7 +174,8 @@ const Child: View<FormFieldMulti.ChildProps<HTMLInputElement, Value, void>> = pr
         value={value}
         placeholder={placeholder}
         disabled={isExistingFile || disabled}
-        onChange={onChange} />
+        onChange={onChange}
+        onChangeDebounced={() => extraProps && extraProps.onChangeDebounced(index)} />
     </FormFieldMulti.DefaultChild>
   );
 };
@@ -186,13 +221,20 @@ export const view: View<Props> = ({ state, dispatch, disabled = false }) => {
   };
   const onAdd = (file: File) => dispatch({ tag: 'add', value: file });
   const onRemove = (index: number) => () => dispatch({ tag: 'remove', value: index });
-  const formFieldProps: FormFieldMulti.Props<HTMLInputElement, Value, File, void> = {
+  const formFieldProps: FormFieldMulti.Props<HTMLInputElement, Value, File, ExtraChildProps> = {
     state: state.formFieldMulti,
     disabled,
     AddButton,
     addButtonProps: { onAdd },
     Child,
-    extraChildProps: undefined,
+    extraChildProps: {
+      onChangeDebounced(index) {
+        dispatch({
+          tag: 'validate',
+          value: index
+        });
+      }
+    },
     onChange,
     onRemove
   };

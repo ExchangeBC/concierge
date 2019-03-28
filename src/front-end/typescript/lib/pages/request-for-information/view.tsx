@@ -13,7 +13,7 @@ import LoadingButton from 'front-end/lib/views/loading-button';
 import Markdown from 'front-end/lib/views/markdown';
 import { default as React, ReactElement } from 'react';
 import { Alert, Col, Container, Row } from 'reactstrap';
-import { compareDates, formatDate, formatTime } from 'shared/lib';
+import { formatDate, formatTime } from 'shared/lib';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as FileResource from 'shared/lib/resources/file';
 import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
@@ -49,12 +49,6 @@ export const init: Init<Params, State> = async ({ rfiId, userType, fixedBarBotto
   switch (rfiResult.tag) {
     case 'valid':
       const rfi = rfiResult.value;
-      // Sort addenda by createdAt (i.e. publish) date.
-      if (rfi.latestVersion) {
-        rfi.latestVersion.addenda.sort((a, b) => {
-          return compareDates(a.createdAt, b.createdAt) * -1;
-        });
-      }
       const ddrResult = await api.readOneDdr(rfi._id);
       let ddr: DdrResource.PublicDiscoveryDayResponse | undefined;
       if (ddrResult.tag === 'valid') {

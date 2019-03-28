@@ -8,7 +8,7 @@ import { renameSync } from 'fs';
 import { identityAsync } from 'shared/lib';
 import { PublicFile } from 'shared/lib/resources/file';
 import { ADT, AuthLevel, parseAuthLevel, parseUserType, UserType } from 'shared/lib/types';
-import { validateGenericString } from 'shared/lib/validators';
+import { validateFileName } from 'shared/lib/validators/file';
 
 const DEFAULT_AUTH_LEVEL: AuthLevel<UserType> = {
   tag: 'any',
@@ -73,7 +73,7 @@ export const resource: Resource = {
             }
             authLevel = parsedAuthLevel || authLevel;
           }
-          const validatedOriginalName = validateGenericString(rawFile.name, 'File Name');
+          const validatedOriginalName = validateFileName(rawFile.name);
           request.logger.debug('originalName', validatedOriginalName);
           if (validatedOriginalName.tag === 'invalid') {
             return mapRequestBody(request, {

@@ -297,10 +297,10 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <Container className='mb-5 flex-grow-1'>
         <Row className='mb-5'>
           <Col xs='12' className='d-flex flex-column'>
-            <h1>Response to RFI Number: {version.rfiNumber}</h1>
+            <h1>Respond to RFI Number: {version.rfiNumber}</h1>
             <h2>{version.title}</h2>
             <p>
-              Please submit your response to this RFI by following the instructions defined
+              Please submit your response to this Request for Information by following the instructions defined
               in its&nbsp;<Link page={viewRfiPage(rfi)} textColor='primary' buttonClassName='p-0'>description</Link>.
             </p>
           </Col>
