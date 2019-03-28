@@ -46,7 +46,7 @@ export const COOKIE_SECRET = get('COOKIE_SECRET', '');
 
 export const FRONT_END_BUILD_DIR = resolve(REPOSITORY_ROOT_DIR, 'build/front-end');
 
-export const TMP_DIR = tmpdir();
+export const TMP_DIR = get('TMP_DIR', tmpdir());
 
 const fileStorageDir = get('FILE_STORAGE_DIR', '');
 export const FILE_STORAGE_DIR = fileStorageDir && resolve(REPOSITORY_ROOT_DIR, fileStorageDir);
@@ -118,6 +118,12 @@ export function getConfigErrors(): string[] {
   // and we have correct write permissions.
   if (!FILE_STORAGE_DIR) {
     errors.push('FILE_STORAGE_DIR must be specified.');
+  }
+
+  // TODO validate TMP_DIR is a directory
+  // and we have correct write permissions.
+  if (!TMP_DIR) {
+    errors.push('TMP_DIR must be specified.');
   }
 
   if (ENV === 'production' && (!productionMailerConfigOptions.host || !isPositiveInteger(productionMailerConfigOptions.port))) {
