@@ -233,7 +233,7 @@ function tableBodyRows(users: PublicUser[]): Array<Array<TableComponent.TDSpec<T
 }
 
 export const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (!state.visibleUsers.length) { return (<div>No users found.</div>); }
+  if (!state.visibleUsers.length) { return (<div>There are no users that match the search criteria.</div>); }
   const bodyRows = tableBodyRows(state.visibleUsers);
   const dispatchTable: Dispatch<ComponentMsg<TableComponent.Msg, Page>> = mapComponentDispatch(dispatch, value => ({ tag: 'table', value }));
   return (

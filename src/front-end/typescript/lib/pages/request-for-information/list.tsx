@@ -361,7 +361,8 @@ function nonProgramStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.T
 }
 
 export const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (!state.visibleRfis.length) { return (<div>No RFIs found.</div>); }
+  if (!state.rfis.length) { return (<div>There are no RFIs currently available.</div>); }
+  if (!state.visibleRfis.length) { return (<div>There are no RFIs that match the search criteria.</div>); }
   const isProgramStaff = state.userType === UserType.ProgramStaff;
   const headCells = isProgramStaff ? programStaffTableHeadCells : nonProgramStaffTableHeadCells;
   const bodyRows = isProgramStaff ? programStaffTableBodyRows(state.visibleRfis) : nonProgramStaffTableBodyRows(state.visibleRfis);
@@ -369,6 +370,7 @@ export const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch })
   return (
     <Table.view
       className='text-nowrap'
+      style={{ lineHeight: '1.5rem' }}
       headCells={headCells}
       bodyRows={bodyRows}
       state={state.table}
