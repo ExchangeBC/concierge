@@ -34,8 +34,8 @@ type TableCellData
 const Table: TableComponent.TableComponent<TableCellData> = TableComponent.component();
 
 const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
-  const wrap = (child: string | null | ReactElement<any>, wrapText = false) => {
-    return (<td className={wrapText ? 'text-wrap' : ''}>{child}</td>);
+  const wrap = (child: string | null | ReactElement<any>, wrapText = false, center = false) => {
+    return (<td className={`${wrapText ? 'text-wrap' : ''} ${center ? 'text-center' : ''}`}>{child}</td>);
   };
   switch (data.tag) {
     case 'rfiNumber':
@@ -52,7 +52,7 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
       return wrap(formatTableDate(data.value));
     case 'discoveryDay':
       const showCheck = data.value[0] && rfiToRfiStatus(data.value[1]) === RfiStatus.Open;
-      return wrap(showCheck ? (<Icon name='check' color='body' width={1.5} height={1.5} />) : null);
+      return wrap(showCheck ? (<Icon name='check' color='body' width={1.5} height={1.5} />) : null, false, true);
   }
 }
 

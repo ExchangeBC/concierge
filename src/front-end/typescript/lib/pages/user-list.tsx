@@ -26,8 +26,8 @@ type TableCellData
 const Table: TableComponent.TableComponent<TableCellData> = TableComponent.component();
 
 const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
-  const wrap = (child: string | null | ReactElement<any>) => {
-    return (<td>{child}</td>);
+  const wrap = (child: string | null | ReactElement<any>, center = false) => {
+    return (<td className={center ? 'text-center' : ''}>{child}</td>);
   };
   switch (data.tag) {
     case 'userType':
@@ -37,7 +37,7 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
     case 'email':
       return wrap(data.value);
     case 'acceptedTerms':
-      return wrap(data.value ? (<Icon name='check' color='body' width={1.5} height={1.5} />) : null);
+      return wrap(data.value ? (<Icon name='check' color='body' width={1.5} height={1.5} />) : null, true);
   }
 }
 
@@ -211,7 +211,10 @@ const tableHeadCells: TableComponent.THSpec[] = [
       minWidth: '210px'
     }
   },
-  { children: 'T&C' }
+  {
+    children: 'T&C',
+    className: 'text-center'
+  }
 ];
 
 function tableBodyRows(users: PublicUser[]): Array<Array<TableComponent.TDSpec<TableCellData>>> {
