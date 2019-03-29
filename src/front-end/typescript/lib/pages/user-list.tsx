@@ -218,7 +218,10 @@ const tableHeadCells: TableComponent.THSpec[] = [
   },
   {
     children: 'T&C',
-    className: 'text-center'
+    className: 'text-center',
+    style: {
+      width: '65px'
+    }
   }
 ];
 
