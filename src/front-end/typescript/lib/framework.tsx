@@ -287,13 +287,18 @@ export async function start<State, Msg extends ADT<any, any>, Page, UserType>(ap
     // Asynchronous changes should be sequenced inside
     // a promise chain.
     if (promiseState) {
-      promise = promise
-        .then(() => promiseState(state, dispatch))
-        .then(newState => {
-          // Update state with its asynchronous change.
-          state = newState;
-          notifyStateSubscriptions();
-        });
+      // We want to run async state updates after
+      // the current "tick" to ensure all
+      // sync updates are processed first.
+      setTimeout(() => {
+        promise = promise
+          .then(() => promiseState(state, dispatch))
+          .then(newState => {
+            // Update state with its asynchronous change.
+            state = newState;
+            notifyStateSubscriptions();
+          });
+      }, 0);
     }
     return promise;
   };

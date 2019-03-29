@@ -82,7 +82,7 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
     return (
       <Nav navbar className='ml-md-auto'>
         <NavItem className='d-none d-md-block'>
-          <Link nav href='' text={session.user.email} textColor='dark' onClick={onClick} buttonClassName='px-0 px-md-3' disabled />
+          <Link nav href='' text={session.user.email} textColor='dark' buttonClassName='px-0 px-md-3' disabled />
         </NavItem>
         <NavItem>
           <Link nav href='/sign-out' text='Sign Out' textColor='dark' onClick={onClick} className='pr-md-0' buttonClassName='px-0 pl-md-3' />

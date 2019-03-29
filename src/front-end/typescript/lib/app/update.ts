@@ -60,7 +60,7 @@ const update: Update<State, Msg> = (state, msg) => {
     case '@beforeIncomingPage':
       return [
         state,
-        async () => {
+        async state => {
           // Refresh the front-end's view of the current session.
           return setSession(state, await getSession());
         }

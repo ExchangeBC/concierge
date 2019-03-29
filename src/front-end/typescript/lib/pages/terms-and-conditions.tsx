@@ -169,7 +169,7 @@ export const view: ComponentView<State, Msg> = props => {
         <ConditionalAlerts {...props} />
         <Row className='mb-3'>
           <Col xs='12'>
-            <h1>Concierge Terms & Conditions</h1>
+            <h1>Concierge Web App Terms and Conditions</h1>
           </Col>
         </Row>
         <Row>
