@@ -44,13 +44,13 @@ The Concierge Web App is offered by the Province of British Columbia and on beha
 
 - **2.8.** You consent to the following use of any information contained in your Account by the Procurement Concierge Program:
 
-	- **a)** through the Concierge Web App, Registered Buyers will be able to view and search the profiles of Registered Vendors;
+  - **a)** through the Concierge Web App, Registered Buyers will be able to view and search the profiles of Registered Vendors;
 
-	- **b)** through the Concierge Web App, Registered Buyers will be able to view and search the profiles of other Registered Buyers;
+  - **b)** through the Concierge Web App, Registered Buyers will be able to view and search the profiles of other Registered Buyers;
 
-	- **c)** the Accounts of Registered Buyers or other Registered Vendors will not be visible to Registered Vendors; however, Registered Buyers who are also Registered Vendors will have access to other Registered Vendor Accounts;
+  - **c)** the Accounts of Registered Buyers or other Registered Vendors will not be visible to Registered Vendors; however, Registered Buyers who are also Registered Vendors will have access to other Registered Vendor Accounts;
 
-	- **d)** the Procurement Concierge Program may use Accounts for reporting purposes, including tracking metrics on how Registered Buyers and Registered Vendors use the Procurement Concierge Program in order to determine its success.
+  - **d)** the Procurement Concierge Program may use Accounts for reporting purposes, including tracking metrics on how Registered Buyers and Registered Vendors use the Procurement Concierge Program in order to determine its success.
 
 - **2.9.** You consent to receiving email communications from the Procurement Concierge Program, including emails relating to the Procurement Concierge Program generally or relating to the Procurement Concierge Program matching function. The objective of the matching function is to identify where the interests of Registered Buyers and Registered Vendors may be aligned.  Further details on the matching function will be provided to Registered Users. 
 
@@ -72,9 +72,9 @@ The Concierge Web App is offered by the Province of British Columbia and on beha
 
 - **3.6.** By submitting a response to any RFI, you agree that the scope of use for the information provided through the Concierge Web App includes the ability for the Registered Buyer to:
 
-	- **a)** use the information provided for any future reference, communication, in a solicitation document or any other manner that the Registered Buyer deems necessary to assist with its procurement planning; and
+  - **a)** use the information provided for any future reference, communication, in a solicitation document or any other manner that the Registered Buyer deems necessary to assist with its procurement planning; and
 
-	- **b)** incorporate any ideas, concepts, approaches, or strategies shared in that response into any planning, design, procurement, or contractual activities related to any aspect of any project without any obligation, liability, or consideration on the part of the Registered Buyer. 
+  - **b)** incorporate any ideas, concepts, approaches, or strategies shared in that response into any planning, design, procurement, or contractual activities related to any aspect of any project without any obligation, liability, or consideration on the part of the Registered Buyer. 
 
 - **3.7.** Registered Vendors are advised not to: i) disclose any information that is proprietary in nature or that is the intellectual property of the Registered Vendor; ii) disclose pricing information unless the RFI specifically requests that information for budgeting purposes; or iii) information about the qualifications or experience of their firm or individuals in their firm. However, if you submit a response to an RFI, you agree to grant to the Registered Buyers a non-exclusive, royalty free, limited license to use and reproduce any part of your response, for the purposes of procurement planning or any subsequent procurement process.
 
