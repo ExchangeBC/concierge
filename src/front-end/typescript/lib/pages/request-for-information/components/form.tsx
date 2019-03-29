@@ -535,7 +535,7 @@ const Attachments: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
     <div className='pb-4 border-bottom mb-5'>
       <Row className='mb-3'>
-        <Col xs='12' md='6'>
+        <Col xs='12' md='7' lg='6'>
           <FileMulti.view
             state={state.attachments}
             dispatch={dispatchAttachments}
