@@ -3,7 +3,6 @@ import * as TableComponent from 'front-end/lib/components/table';
 import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import { readManyRfis } from 'front-end/lib/http/api';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
-import { parseRfiStatus, RfiStatus, rfiStatusToTitleCase, rfiToRfiStatus } from 'front-end/lib/types';
 import Icon from 'front-end/lib/views/icon';
 import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
@@ -13,8 +12,8 @@ import { default as React, ReactElement } from 'react';
 import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import { compareDates, rawFormatDate } from 'shared/lib';
-import { PublicRfi } from 'shared/lib/resources/request-for-information';
-import { ADT, UserType } from 'shared/lib/types';
+import { PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
+import { ADT, parseRfiStatus, RfiStatus, rfiStatusToTitleCase, UserType } from 'shared/lib/types';
 
 function formatTableDate(date: Date): string {
   return rawFormatDate(date, 'YYYY-MM-DD', false);

@@ -4,12 +4,11 @@ import * as permissions from 'back-end/lib/permissions';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import { AppSession } from 'back-end/lib/schemas/session';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
-import { validateObjectIdString, validateRfiId, validateUserId } from 'back-end/lib/validators';
+import { validateRfiId, validateUserId } from 'back-end/lib/validators';
 import * as mongoose from 'mongoose';
 import { getString, identityAsync } from 'shared/lib';
 import { CreateValidationErrors, PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
-import { ADT, UserType } from 'shared/lib/types';
-import { getInvalidValue } from 'shared/lib/validators';
+import { ADT, RfiStatus, UserType } from 'shared/lib/types';
 
 type CreateRequestBody
   = ADT<201, PublicDiscoveryDayResponse>
@@ -63,29 +62,25 @@ export const resource: Resource = {
         }
         // Validate the RFI ID and session user ID.
         const rawRfiId = getString(request.body.value, 'rfiId');
-        const validatedRfiId = validateObjectIdString(rawRfiId);
+        const validatedRfi = await validateRfiId(RfiModel, rawRfiId, [RfiStatus.Open, RfiStatus.Closed], true);
+        if (validatedRfi.tag === 'invalid') {
+          return mapRequestBody(request, {
+            tag: 400 as 400,
+            value: {
+              rfiId: validatedRfi.value
+            }
+          });
+        }
         const validatedVendor = await validateUserId(UserModel, request.session.user.id, UserType.Vendor, true);
-        if (validatedRfiId.tag === 'invalid' || validatedVendor.tag === 'invalid') {
+        if (validatedVendor.tag === 'invalid') {
           return mapRequestBody(request, {
             tag: 400 as 400,
             value: {
-              rfiId: getInvalidValue(validatedRfiId, undefined),
-              vendor: getInvalidValue(validatedVendor, undefined)
+              vendor: validatedVendor.value
             }
           });
         }
-        // Find the relevant RFI.
-        const now = new Date();
-        const rfi = await RfiModel.findById(validatedRfiId.value);
-        // RFI doesn't exist or it isn't published yet.
-        if (!rfi || !RfiSchema.hasBeenPublished(rfi)) {
-          return mapRequestBody(request, {
-            tag: 400 as 400,
-            value: {
-              rfiId: [`RFI with ID "${validatedRfiId.value}" doesn't exist`]
-            }
-          });
-        }
+        const rfi = validatedRfi.value;
         // Do not store duplicate responses.
         const vendorId = validatedVendor.value._id;
         const existingDdr = findDiscoveryDayResponse(rfi, vendorId);
@@ -97,7 +92,7 @@ export const resource: Resource = {
         }
         // Create the DDR.
         const ddr = {
-          createdAt: now,
+          createdAt: new Date(),
           vendor: vendorId
         };
         // Update the RFI with the response.
@@ -128,7 +123,7 @@ export const resource: Resource = {
         if (!permissions.readOneDiscoveryDayResponse(request.session) || !request.session.user) {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         }
-        const validatedRfi = await validateRfiId(RfiModel, request.params.id);
+        const validatedRfi = await validateRfiId(RfiModel, request.params.id, undefined, true);
         if (validatedRfi.tag === 'invalid') {
           return basicResponse(400, request.session, makeJsonResponseBody(validatedRfi.value));
         }

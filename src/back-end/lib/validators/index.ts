@@ -1,9 +1,11 @@
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import * as UserSchema from 'back-end/lib/schemas/user';
+import { includes } from 'lodash';
 import * as mongoose from 'mongoose';
 import mongooseDefault from 'mongoose';
-import { UserType } from 'shared/lib/types';
+import { rfiClosingAtToRfiStatus } from 'shared/lib/resources/request-for-information';
+import { RfiStatus, UserType } from 'shared/lib/types';
 import { ArrayValidation, invalid, valid, validateArrayAsync, validateEmail as validateEmailShared, validatePassword as validatePasswordShared, Validation } from 'shared/lib/validators';
 
 interface HasEmail {
@@ -94,16 +96,23 @@ export async function validateUserId(UserModel: UserSchema.Model, id: string | m
  * Validates whether an RFI exists for a given RFI ID.
  */
 
-export async function validateRfiId(RfiModel: RfiSchema.Model, id: string | mongoose.Types.ObjectId): Promise<Validation<InstanceType<RfiSchema.Model>>> {
+export async function validateRfiId(RfiModel: RfiSchema.Model, id: string | mongoose.Types.ObjectId, rfiStatus?: RfiStatus[], mustBePublished?: boolean): Promise<Validation<InstanceType<RfiSchema.Model>>> {
   const validatedObjectId = typeof id === 'string' ? validateObjectIdString(id) : valid(id);
   switch (validatedObjectId.tag) {
     case 'valid':
       const rfi = await RfiModel.findById(validatedObjectId.value);
       if (!rfi) {
         return invalid(['RFI does not exist.']);
-      } else {
-        return valid(rfi);
       }
+      const latestVersion = RfiSchema.getLatestVersion(rfi);
+      const matchesRfiStatus = !!latestVersion && !!rfiStatus && includes(rfiStatus, rfiClosingAtToRfiStatus(latestVersion.closingAt));
+      if (rfiStatus && !matchesRfiStatus) {
+        return invalid([`RFI is not one of: ${rfiStatus.join(', ')}`]);
+      }
+      if (mustBePublished && !RfiSchema.hasBeenPublished(rfi)) {
+        return invalid(['RFI has not been published.']);
+      }
+      return valid(rfi);
     case 'invalid':
       return validatedObjectId;
   }

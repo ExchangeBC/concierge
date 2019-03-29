@@ -11,9 +11,9 @@ import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
 import { Col, Container, Row } from 'reactstrap';
-import { PublicRfi } from 'shared/lib/resources/request-for-information';
+import { PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
 import { PublicUser } from 'shared/lib/resources/user';
-import { ADT, Omit, UserType } from 'shared/lib/types';
+import { ADT, Omit, RfiStatus, UserType } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
 export interface Params {
@@ -33,6 +33,7 @@ type InitError
   = ADT<'notSignedIn', PublicRfi>
   | ADT<'notVendor', PublicRfi>
   | ADT<'notAcceptedTerms', [PublicRfi, PublicUser]>
+  | ADT<'expiredRfi', PublicRfi>
   | ADT<'invalidRfi'>;
 
 interface ValidState {
@@ -60,6 +61,16 @@ export const init: Init<Params, State> = async ({ rfiId, fixedBarBottom = 0 }) =
       const rfi = rfiResult.value;
       // TODO once front-end session/auth definitions have been refactored,
       // this code can be refactored too.
+      const rfiStatus = rfiToRfiStatus(rfi);
+      if (rfiStatus === RfiStatus.Expired) {
+        return {
+          ...baseState,
+          init: invalid({
+            tag: 'expiredRfi' as 'expiredRfi',
+            value: rfi
+          })
+        };
+      }
       const sessionResult = await api.getSession();
       if (sessionResult.tag === 'invalid' || !sessionResult.value.user) {
         return {
@@ -168,6 +179,12 @@ export const update: Update<State, Msg> = (state, msg) => {
                   redirectOnAccept: respondToRfiPage(rfi),
                   redirectOnSkip: viewRfiPage(rfi)
                 }
+              }));
+              return state;
+            case 'expiredRfi':
+              dispatch(replaceUrl({
+                tag: 'noticeRfiExpiredRfiResponse' as 'noticeRfiExpiredRfiResponse',
+                value: { rfiId: error.value._id }
               }));
               return state;
             case 'invalidRfi':

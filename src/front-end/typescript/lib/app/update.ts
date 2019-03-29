@@ -13,6 +13,7 @@ import * as PagePrivacy from 'front-end/lib/pages/markdown/privacy';
 import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
+import * as PageNoticeRfiExpiredRfiResponse from 'front-end/lib/pages/notice/request-for-information/expired-rfi-response';
 import * as PageNoticeRfiNonVendorResponse from 'front-end/lib/pages/notice/request-for-information/non-vendor-response';
 import * as PageNoticeRfiResponseSubmitted from 'front-end/lib/pages/notice/request-for-information/response-submitted';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
@@ -179,6 +180,9 @@ const update: Update<State, Msg> = (state, msg) => {
               break;
             case 'noticeRfiNonVendorResponse':
               state = state.setIn(['pages', 'noticeRfiNonVendorResponse'], immutable(await PageNoticeRfiNonVendorResponse.init(msg.value.page.value)));
+              break;
+            case 'noticeRfiExpiredRfiResponse':
+              state = state.setIn(['pages', 'noticeRfiExpiredRfiResponse'], immutable(await PageNoticeRfiExpiredRfiResponse.init(msg.value.page.value)));
               break;
             case 'noticeRfiResponseSubmitted':
               state = state.setIn(['pages', 'noticeRfiResponseSubmitted'], immutable(await PageNoticeRfiResponseSubmitted.init(msg.value.page.value)));
@@ -468,6 +472,15 @@ const update: Update<State, Msg> = (state, msg) => {
         mapChildMsg: value => ({ tag: 'pageNoticeRfiNonVendorResponse', value }),
         childStatePath: ['pages', 'noticeRfiNonVendorResponse'],
         childUpdate: PageNoticeRfiNonVendorResponse.update,
+        childMsg: msg.value
+      });
+
+    case 'pageNoticeRfiExpiredRfiResponse':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageNoticeRfiExpiredRfiResponse', value }),
+        childStatePath: ['pages', 'noticeRfiExpiredRfiResponse'],
+        childUpdate: PageNoticeRfiExpiredRfiResponse.update,
         childMsg: msg.value
       });
 

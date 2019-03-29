@@ -202,6 +202,10 @@ const router: Router<State, Page, UserType> = {
       pageId: 'noticeRfiNonVendorResponse'
     },
     {
+      path: '/notice/request-for-information/:rfiId/expired-rfi-response',
+      pageId: 'noticeRfiExpiredRfiResponse'
+    },
+    {
       path: '/notice/request-for-information/:rfiId/response-submitted',
       pageId: 'noticeRfiResponseSubmitted'
     },
@@ -406,6 +410,13 @@ const router: Router<State, Page, UserType> = {
             rfiId: get(params, 'rfiId', '')
           }
         };
+      case 'noticeRfiExpiredRfiResponse':
+        return {
+          tag: 'noticeRfiExpiredRfiResponse',
+          value: {
+            rfiId: get(params, 'rfiId', '')
+          }
+        };
       case 'noticeRfiResponseSubmitted':
         return {
           tag: 'noticeRfiResponseSubmitted',
@@ -485,6 +496,8 @@ const router: Router<State, Page, UserType> = {
         return '/notice/reset-password';
       case 'noticeRfiNonVendorResponse':
         return `/notice/request-for-information/${page.value.rfiId}/non-vendor-response`;
+      case 'noticeRfiExpiredRfiResponse':
+        return `/notice/request-for-information/${page.value.rfiId}/expired-rfi-response`;
       case 'noticeRfiResponseSubmitted':
         return `/notice/request-for-information/${page.value.rfiId}/response-submitted`;
       case 'noticeForgotPassword':
@@ -552,6 +565,8 @@ const router: Router<State, Page, UserType> = {
         return makeMetadata('Password Reset Successful');
       case 'noticeRfiNonVendorResponse':
         return makeMetadata('Only Vendors Can Respond to RFIs');
+      case 'noticeRfiExpiredRfiResponse':
+        return makeMetadata('RFI No Longer Accepting Responses');
       case 'noticeRfiResponseSubmitted':
         return makeMetadata('RFI Response Submitted');
       case 'noticeForgotPassword':

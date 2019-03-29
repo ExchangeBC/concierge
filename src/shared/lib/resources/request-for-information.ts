@@ -1,7 +1,8 @@
+import { diffDates } from 'shared/lib';
 import { PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
 import { PublicFile } from 'shared/lib/resources/file';
 import { PublicUser } from 'shared/lib/resources/user';
-import { Addendum } from 'shared/lib/types';
+import { Addendum, RfiStatus } from 'shared/lib/types';
 
 export interface PublicVersion {
   createdAt: Date;
@@ -59,3 +60,22 @@ export interface UpdateValidationErrors extends CreateValidationErrors {
  */
 
 export const DELETE_ADDENDUM_TOKEN = '$$__DELETE_ADDENDUM_TOKEN__$$';
+
+export const RFI_EXPIRY_WINDOW_DAYS = 2;
+
+export function rfiClosingAtToRfiStatus(closingAt: Date): RfiStatus {
+  const days = diffDates(closingAt, new Date(), 'days');
+  if (days >= (-1 * RFI_EXPIRY_WINDOW_DAYS) && days <= 0) {
+    return RfiStatus.Closed;
+  } else if (days > 0) {
+    return RfiStatus.Open;
+  } else {
+    return RfiStatus.Expired;
+  }
+}
+
+export function rfiToRfiStatus(rfi: PublicRfi): RfiStatus | null {
+  const { latestVersion } = rfi;
+  if (!latestVersion) { return null; }
+  return rfiClosingAtToRfiStatus(latestVersion.closingAt);
+}

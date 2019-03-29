@@ -1,8 +1,9 @@
 import { View } from 'front-end/lib/framework';
-import { BootstrapColor, RfiStatus, rfiStatusToTitleCase, rfiToRfiStatus } from 'front-end/lib/types';
+import { BootstrapColor } from 'front-end/lib/types';
 import { CSSProperties, default as React } from 'react';
 import { Badge as BootstrapBadge } from 'reactstrap';
-import { PublicRfi } from 'shared/lib/resources/request-for-information';
+import { PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
+import { RfiStatus, rfiStatusToTitleCase } from 'shared/lib/types';
 
 interface Props {
   rfi?: PublicRfi;

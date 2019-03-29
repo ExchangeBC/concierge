@@ -227,3 +227,32 @@ export interface Addendum {
   updatedAt: Date;
   description: string;
 }
+
+export enum RfiStatus {
+  Open = 'OPEN',
+  Closed = 'CLOSED',
+  Expired = 'EXPIRED'
+}
+
+export function parseRfiStatus(raw: string): RfiStatus | null {
+  switch (raw.toUpperCase()) {
+    case RfiStatus.Open:
+      return RfiStatus.Open;
+    case RfiStatus.Closed:
+      return RfiStatus.Closed;
+    case RfiStatus.Expired:
+      return RfiStatus.Expired;
+    default:
+      return null;
+  }
+}
+
+export function rfiStatusToTitleCase(s: RfiStatus): string {
+  switch (s) {
+    case RfiStatus.Open:
+      return 'Open';
+    case RfiStatus.Closed:
+    case RfiStatus.Expired:
+      return 'Closed';
+  }
+}

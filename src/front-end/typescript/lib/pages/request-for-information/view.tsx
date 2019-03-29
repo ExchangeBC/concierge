@@ -4,7 +4,6 @@ import { Component, ComponentMsg, ComponentView, Immutable, Init, newUrl, Update
 import * as api from 'front-end/lib/http/api';
 import { publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
-import { RfiStatus, rfiToRfiStatus } from 'front-end/lib/types';
 import * as FixedBar from 'front-end/lib/views/fixed-bar';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import Icon from 'front-end/lib/views/icon';
@@ -18,8 +17,8 @@ import { formatDate, formatTime } from 'shared/lib';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as FileResource from 'shared/lib/resources/file';
 import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
-import * as RfiResource from 'shared/lib/resources/request-for-information';
-import { Addendum, ADT, UserType } from 'shared/lib/types';
+import { PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
+import { Addendum, ADT, RfiStatus, UserType } from 'shared/lib/types';
 
 const ERROR_MESSAGE = 'The Request for Information you are looking for is not available.';
 const CONTACT_EMAIL = 'Procurement.Concierge@gov.bc.ca';
@@ -41,7 +40,7 @@ export interface State {
   fixedBarBottom: number;
   respondToDiscoveryDayLoading: number;
   userType?: UserType;
-  rfi?: RfiResource.PublicRfi;
+  rfi?: PublicRfi;
   ddr?: DdrResource.PublicDiscoveryDayResponse;
 };
 
@@ -162,7 +161,7 @@ const Detail: View<DetailProps> = ({ title, values }) => {
   );
 };
 
-const Details: View<{ rfi: RfiResource.PublicRfi }> = ({ rfi }) => {
+const Details: View<{ rfi: PublicRfi }> = ({ rfi }) => {
   const version = rfi.latestVersion;
   if (!version) { return null; }
   const contactValues = [
@@ -272,7 +271,7 @@ const RespondToDiscoveryDayButton: View<RespondToDiscoveryDayButtonProps> = prop
 };
 
 function showButtons(rfiStatus: RfiStatus | null, userType?: UserType): boolean {
-  return (!userType || userType === UserType.Vendor) && !!rfiStatus && rfiStatus !== RfiStatus.Closed;
+  return (!userType || userType === UserType.Vendor) && !!rfiStatus && rfiStatus !== RfiStatus.Expired;
 }
 
 const Buttons: ComponentView<State, Msg> = props => {

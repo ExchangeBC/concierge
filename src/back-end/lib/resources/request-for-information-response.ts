@@ -11,7 +11,7 @@ import { validateFileIdArray, validateRfiId, validateUserId } from 'back-end/lib
 import { isObject } from 'lodash';
 import { getString, getStringArray } from 'shared/lib';
 import { CreateValidationErrors, PublicRfiResponse } from 'shared/lib/resources/request-for-information-response';
-import { ADT, Omit } from 'shared/lib/types';
+import { ADT, Omit, RfiStatus } from 'shared/lib/types';
 import { getInvalidValue, invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
 type CreateRequestBody
@@ -26,7 +26,7 @@ async function validateCreateRequestBody(RfiResponseModel: RfiResponseSchema.Mod
   const attachments = getStringArray(raw, 'attachments');
   // Validate individual values.
   const validatedCreatedBy = await validateUserId(UserModel, createdBy);
-  const validatedRfi = await validateRfiId(RfiModel, rfiId);
+  const validatedRfi = await validateRfiId(RfiModel, rfiId, [RfiStatus.Open, RfiStatus.Closed], true);
   const validatedAttachments = await validateFileIdArray(FileModel, attachments);
   // Check if the payload is valid.
   if (validatedCreatedBy.tag === 'valid' && validatedRfi.tag === 'valid' && validatedAttachments.tag === 'valid') {

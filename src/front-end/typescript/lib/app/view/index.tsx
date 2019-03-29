@@ -14,6 +14,7 @@ import * as PagePrivacy from 'front-end/lib/pages/markdown/privacy';
 import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
+import * as PageNoticeRfiExpiredRfiResponse from 'front-end/lib/pages/notice/request-for-information/expired-rfi-response';
 import * as PageNoticeRfiNonVendorResponse from 'front-end/lib/pages/notice/request-for-information/non-vendor-response';
 import * as PageNoticeRfiResponseSubmitted from 'front-end/lib/pages/notice/request-for-information/response-submitted';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
@@ -296,6 +297,15 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.noticeRfiNonVendorResponse}
           mapPageMsg={value => ({ tag: 'pageNoticeRfiNonVendorResponse', value })}
           View={PageNoticeRfiNonVendorResponse.view} />
+      );
+
+    case 'noticeRfiExpiredRfiResponse':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.noticeRfiExpiredRfiResponse}
+          mapPageMsg={value => ({ tag: 'pageNoticeRfiExpiredRfiResponse', value })}
+          View={PageNoticeRfiExpiredRfiResponse.view} />
       );
 
     case 'noticeRfiResponseSubmitted':

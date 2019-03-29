@@ -12,6 +12,7 @@ import * as PagePrivacy from 'front-end/lib/pages/markdown/privacy';
 import * as PageNoticeChangePassword from 'front-end/lib/pages/notice/change-password';
 import * as PageNoticeForgotPassword from 'front-end/lib/pages/notice/forgot-password';
 import * as PageNoticeNotFound from 'front-end/lib/pages/notice/not-found';
+import * as PageNoticeRfiExpiredRfiResponse from 'front-end/lib/pages/notice/request-for-information/expired-rfi-response';
 import * as PageNoticeRfiNonVendorResponse from 'front-end/lib/pages/notice/request-for-information/non-vendor-response';
 import * as PageNoticeRfiResponseSubmitted from 'front-end/lib/pages/notice/request-for-information/response-submitted';
 import * as PageNoticeResetPassword from 'front-end/lib/pages/notice/reset-password';
@@ -60,6 +61,7 @@ export type Page
   | ADT<'noticeChangePassword', PageNoticeChangePassword.Params>
   | ADT<'noticeResetPassword', PageNoticeResetPassword.Params>
   | ADT<'noticeRfiNonVendorResponse', PageNoticeRfiNonVendorResponse.Params>
+  | ADT<'noticeRfiExpiredRfiResponse', PageNoticeRfiExpiredRfiResponse.Params>
   | ADT<'noticeRfiResponseSubmitted', PageNoticeRfiResponseSubmitted.Params>
   | ADT<'noticeForgotPassword', PageNoticeForgotPassword.Params>;
 
@@ -98,6 +100,7 @@ export interface State {
     noticeChangePassword?: Immutable<PageNoticeChangePassword.State>;
     noticeResetPassword?: Immutable<PageNoticeResetPassword.State>;
     noticeRfiNonVendorResponse?: Immutable<PageNoticeRfiNonVendorResponse.State>;
+    noticeRfiExpiredRfiResponse?: Immutable<PageNoticeRfiExpiredRfiResponse.State>;
     noticeRfiResponseSubmitted?: Immutable<PageNoticeRfiResponseSubmitted.State>;
     noticeForgotPassword?: Immutable<PageNoticeForgotPassword.State>;
   };
@@ -133,6 +136,7 @@ type InnerMsg
   | ADT<'pageNoticeChangePassword', PageNoticeChangePassword.Msg>
   | ADT<'pageNoticeResetPassword', PageNoticeResetPassword.Msg>
   | ADT<'pageNoticeRfiNonVendorResponse', PageNoticeRfiNonVendorResponse.Msg>
+  | ADT<'pageNoticeRfiExpiredRfiResponse', PageNoticeRfiExpiredRfiResponse.Msg>
   | ADT<'pageNoticeRfiResponseSubmitted', PageNoticeRfiResponseSubmitted.Msg>
   | ADT<'pageNoticeForgotPassword', PageNoticeForgotPassword.Msg>;
 
