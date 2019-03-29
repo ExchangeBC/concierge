@@ -13,11 +13,11 @@ import LoadingButton from 'front-end/lib/views/loading-button';
 import Markdown from 'front-end/lib/views/markdown';
 import { default as React, ReactElement } from 'react';
 import { Alert, Col, Container, Row } from 'reactstrap';
-import { formatDate, formatTime } from 'shared/lib';
+import { compareDates, formatDate, formatTime } from 'shared/lib';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as FileResource from 'shared/lib/resources/file';
 import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
-import { PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
+import { PublicRfi, RFI_EXPIRY_WINDOW_DAYS, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
 import { Addendum, ADT, RfiStatus, UserType } from 'shared/lib/types';
 
 const ERROR_MESSAGE = 'The Request for Information you are looking for is not available.';
@@ -39,20 +39,29 @@ export type Msg = ComponentMsg<InnerMsg, Page>;
 export interface State {
   fixedBarBottom: number;
   respondToDiscoveryDayLoading: number;
+  alerts: string[];
   userType?: UserType;
   rfi?: PublicRfi;
   ddr?: DdrResource.PublicDiscoveryDayResponse;
 };
 
 export const init: Init<Params, State> = async ({ rfiId, userType, fixedBarBottom = 0 }) => {
+  const defaultState: State = {
+    fixedBarBottom,
+    respondToDiscoveryDayLoading: 0,
+    alerts: [],
+    userType
+  };
   const rfiResult = await api.readOneRfi(rfiId);
   switch (rfiResult.tag) {
     case 'valid':
       const rfi = rfiResult.value;
+      // Show newest addenda first.
       if (rfi.latestVersion) {
-        // Show newest addenda first.
         rfi.latestVersion.addenda.reverse();
       }
+      // Determine if the user has already sent a Discovery Day Response,
+      // if they are a Vendor.
       let ddr: DdrResource.PublicDiscoveryDayResponse | undefined;
       if (userType === UserType.Vendor) {
         const ddrResult = await api.readOneDdr(rfi._id);
@@ -60,19 +69,30 @@ export const init: Init<Params, State> = async ({ rfiId, userType, fixedBarBotto
           ddr = ddrResult.value;
         }
       }
+      // Determine alerts to display on the page.
+      const alerts: string[] = [];
+      // Use `mightViewResponseButtons` to only show response-related alerts
+      // to unauthenticated users and Vendor.
+      const mightViewResponseButtons = userType === UserType.Vendor || !userType;
+      const rfiStatus = rfiToRfiStatus(rfi);
+      if (mightViewResponseButtons && rfiStatus === RfiStatus.Closed) {
+        alerts.push(`This RFI is still accepting responses up to ${RFI_EXPIRY_WINDOW_DAYS} calendar days after the closing date and time.`);
+      }
+      if (mightViewResponseButtons && rfiStatus === RfiStatus.Expired) {
+        alerts.push('This RFI is no longer accepting responses.');
+      }
+      const updatedAt = rfi.latestVersion && rfi.latestVersion.createdAt;
+      if (rfiStatus === RfiStatus.Open && updatedAt && compareDates(rfi.publishedAt, updatedAt) === -1) {
+        alerts.push(`This RFI was last updated on ${formatDate(updatedAt)}`);
+      }
       return {
-        fixedBarBottom,
-        respondToDiscoveryDayLoading: 0,
-        userType,
+        ...defaultState,
+        alerts,
         rfi,
         ddr
       };
     case 'invalid':
-      return {
-        fixedBarBottom,
-        respondToDiscoveryDayLoading: 0,
-        userType
-      };
+      return defaultState;
   }
 };
 
@@ -308,6 +328,19 @@ const Buttons: ComponentView<State, Msg> = props => {
   );
 };
 
+const ConditionalAlerts: View<Pick<State, 'alerts'>> = ({ alerts }) => {
+  if (!alerts.length) { return null; }
+  return (
+    <Row>
+      <Col xs='12'>
+        <Alert color='primary' className='mb-5'>
+          {alerts.map((text, i) => (<div key={`rfi-view-alert-${i}`}>{text}</div>))}
+        </Alert>
+      </Col>
+    </Row>
+  );
+};
+
 export const view: ComponentView<State, Msg> = props => {
   const { state } = props;
   if (!state.rfi || !state.rfi.latestVersion) {
@@ -335,6 +368,7 @@ export const view: ComponentView<State, Msg> = props => {
   return (
     <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingY={paddingY} paddingTop={paddingTop} fullWidth>
       <Container className='mb-5 flex-grow-1'>
+        <ConditionalAlerts alerts={state.alerts} />
         <Row className='mb-5'>
           <Col xs='12' className='d-flex flex-column text-center align-items-center'>
             <h1 className='h4'>RFI Number: {version.rfiNumber}</h1>
