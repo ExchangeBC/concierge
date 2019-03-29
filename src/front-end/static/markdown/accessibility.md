@@ -1,71 +1,19 @@
-## Susurra spiritus est dapes si sanguine vera
+The B.C. government is committed to creating websites, online content, and applications that are accessible to all British Columbians, regardless of their level of ability. This means striving to meet or exceed worldwide standards for developing and maintaining accessible websites—and encouraging others to do the same.
 
-Lorem markdownum giganteis membra se alto sed quae mihi tela ferro! Pictis et
-vigor, [qui velit](http://www.deprendit-dixit.com/ira-maestissimus.html),
-discite in quam Achillis derantque. Iugales mutataque olim minimus, in nova
-viribus victum mortis dolor et donec somno caeli,
-[et](http://www.cumfoedantem.io/). Est octonis huius diu domos permanet quidem
-galeae exercebat linguae tollens quidem **fonte**, fuit reperire. Hoc tale colla
-guttae: puero Pharosque nobilium ante **ibis** inornatos fortes [flammas Ulixem
-tecti](http://conprensus-captare.com/), somnia.
+The B.C. government follows the [World Wide Web Consortium (W3C) WCAG 2.0 Standard](http://www.w3.org/TR/WCAG20/) (AA), and is committed to designing, developing, and updating websites to meet or exceed this standard.
 
-## Ignes caeli amplexibus caesis
+The following tools can help ensure the standard is achieved:
 
-Felicia perque tamen: **in suumque** addita veniam excita et Erytum accusasse
-Anaphen. Vulgus stagnum referebat telis ore, nisi visus mea percussit has, facem
-iacent mora! Induroque ruunt et iuvenalis lenius.
+- [Web Accessibility Checklist](http://www.w3.org/WAI/GL/2005/06/checklist-proto.html)
+- [Techniques for WCAG 2.0](http://www.w3.org/TR/WCAG20-TECHS/)
+- [Web Accessibility Checker](http://achecker.ca/checker/index.php)
 
-    if (key_push(2 + gate_browser, -2, cdfsSpoolingPlain)) {
-        cloud_jumper.pixelLinkNat -= 3;
-    } else {
-        osd_word_virtual -= illegal_wavelength;
-    }
-    if (url_terabyte.tweet(noc, ddlBar, page)) {
-        utfChecksumWindows.switchGraphicSearch += portalFunction;
-    }
-    var double = -1;
-    if (1) {
-        twain_ipod_uml.so *= retinaPlagiarism(virus_hard_toggle,
-                word_virus_keyboard + adf_enterprise_address, pinterest);
-    } else {
-        basic_memory_fddi(vciEupToslink, standbyRuntime);
-        smbMarket = fileDvdMedia.dashboard_gbps_device(84);
-        end_password_module = mampRfid.driveCtp(cdfs_error_e) - input_tcp_push *
-                footer;
-    }
-    drive_memory(correctionLifoOrientation, address_e);
+## Accessibility 2024
 
-## Dea erat ad hostibus certe
+The B.C. government is committed to decreasing barriers and increasing accessibility for British Columbians with disabilities and is developing a roadmap to make B.C. the most progressive province in Canada for people with disabilities by 2024.
 
-Atra quem rapidus mons, studioque ipse, est undas ubi portas. Tenet condere
-contendere certo. Conclamat tetigit; arma manus novas maris innabilis;
-venerabile mortis condeturque mirum at. Relicto cui forma silvis classem. Arma
-petiit, illa Achille **quam** sed pronus percutit dubitanti mariti.
+## Connect
 
-    windows = sequenceUdpDrm;
-    if (directx(cisc(cropIphone, swappable, xhtml), rwDtdClip(4,
-            hoverWireless))) {
-        card.rdfUdpPlain += 4;
-    }
-    if (1) {
-        pebibyteWebUrl.dvd_drive = unit_cpc + contextualPupCisc;
-        ata_error_switch.exploitSessionExtension.cdSoundExif(ieee_cut_leaf,
-                framework);
-    } else {
-        networking = -1;
-        serverHertzMinicomputer = powerSwitch(serverMouseHeuristic, faviconX,
-                access * menu);
-        virtual = component_daw_mainframe;
-    }
-    fi_myspace.newline = click_compression_up;
-
-## Partim armigerae vobis nectar
-
-Illic telis commissus laticem mora totoque tardis **ponderis cladis adfuit**
-suae meruere et [fessa](http://quae-dixi.io/). Meruisse mille Crimisenque fixa
-Iovem vertentia caede in signa: de fata. Iubemur Ocyroen Tantale Chromiumque,
-vulnera frugum anxia putat numero levi! Rhodon et atque Orithyia.
-
-Patiente quisquis **videt invictos**, et cetera tectis, alter deque est. Herba
-inscius monstrum aliqua esse: Opem e nurus *medeatur submoverat* maneant, nant
-in qui. Sonitu colitur Busirin, ultoris Ciconumque quo nec sunt signaverat.
+- Web & Online Accessibility: [WebmanagerOnLineChannelOffice@gov.bc.ca](mailto:WebmanagerOnLineChannelOffice@gov.bc.ca)
+- Accessibility 2024: [Accessibility@gov.bc.ca](mailto:Accessibility@gov.bc.ca)
+- Procurement Concierge Program: [Procurement.Concierge@gov.bc.ca](mailto:Procurement.Concierge@gov.bc.ca) 

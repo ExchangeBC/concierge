@@ -1,6 +1,6 @@
 import * as Markdown from 'front-end/lib/pages/markdown/components/markdown';
 
-export const component = Markdown.component('Accessibility', 'accessibility');
+export const component = Markdown.component('Web Accessibility', 'accessibility');
 
 export type Params = Markdown.Params;
 

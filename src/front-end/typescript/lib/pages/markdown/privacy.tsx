@@ -1,6 +1,6 @@
 import * as Markdown from 'front-end/lib/pages/markdown/components/markdown';
 
-export const component = Markdown.component('Privacy', 'privacy');
+export const component = Markdown.component('B.C. Government Website Privacy Statement', 'privacy');
 
 export type Params = Markdown.Params;
 
