@@ -198,7 +198,12 @@ export const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
 };
 
 const tableHeadCells: TableComponent.THSpec[] = [
-  { children: 'Type' },
+  {
+    children: 'Type',
+    style: {
+      width: '180px'
+    }
+  },
   {
     children: 'Name',
     style: {
