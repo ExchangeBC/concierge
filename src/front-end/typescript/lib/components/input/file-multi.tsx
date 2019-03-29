@@ -198,7 +198,7 @@ function AddButton(props: FormFieldMulti.AddButtonProps<File>) {
         style={{ top: '0px', left: '0px', opacity: 0 }}
         value={''}
         onChange={onChange} />
-      <Button color='secondary' size='sm' className='mb-2'>
+      <Button color='info' size='sm' className='mb-2'>
         Add Attachment
       </Button>
     </div>
