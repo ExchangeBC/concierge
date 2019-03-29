@@ -83,7 +83,7 @@ export const init: Init<Params, State> = async ({ rfiId, userType, fixedBarBotto
       }
       const updatedAt = rfi.latestVersion && rfi.latestVersion.createdAt;
       if (rfiStatus === RfiStatus.Open && updatedAt && compareDates(rfi.publishedAt, updatedAt) === -1) {
-        alerts.push(`This RFI was last updated on ${formatDate(updatedAt)}`);
+        alerts.push(`This RFI was last updated on ${formatDate(updatedAt)}.`);
       }
       return {
         ...defaultState,
