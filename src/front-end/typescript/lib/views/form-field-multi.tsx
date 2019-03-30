@@ -96,7 +96,7 @@ const ConditionalLabel: View<Props<any, any, any, any>> = (props) => {
   const { label, required } = props.state;
   if (label) {
     return (
-      <Label className={`mb-0 mr-3 mb-2 ${required ? 'font-weight-bold' : ''}`}>
+      <Label className={`mb-0 mr-3 ${required ? 'font-weight-bold' : ''}`}>
         {label}
         <span className='text-info'>{required ? '*' : ''}</span>
         <ConditionHelpToggle {...props} />
@@ -110,7 +110,7 @@ const ConditionalLabel: View<Props<any, any, any, any>> = (props) => {
 export function makeDefaultAddButton(text = 'Add'): View<AddButtonProps<void>> {
   return props => {
     return (
-      <Button color='info' size='sm' className='mb-2' onClick={() => props.onAdd()}>
+      <Button color='info' size='sm' onClick={() => props.onAdd()}>
         {text}
       </Button>
     );
