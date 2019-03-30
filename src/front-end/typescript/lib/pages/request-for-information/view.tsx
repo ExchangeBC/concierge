@@ -79,7 +79,7 @@ export const init: Init<Params, State> = async ({ rfiId, userType, fixedBarBotto
       // Determine alerts to display on the page.
       const alerts: string[] = [];
       if (preview) {
-        alerts.push('This is a preview. All "Published" and "Last Updated" dates on this page are only relevant to the preview, and do not relfect the dates associated with the original RFI.');
+        alerts.push('This is a preview. All "Published" and "Last Updated" dates on this page are only relevant to the preview, and do not relfect the dates associated with the original RFI. Previews are automatically deleted after 7 calendar days.');
       } else {
         // Use `mightViewResponseButtons` to only show response-related alerts
         // to unauthenticated users and Vendor.

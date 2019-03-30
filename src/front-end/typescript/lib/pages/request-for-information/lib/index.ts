@@ -1,4 +1,8 @@
+import { UpdateState } from 'front-end/lib';
+import AppRouter from 'front-end/lib/app/router';
+import { Page } from 'front-end/lib/app/types';
 import * as FileMulti from 'front-end/lib/components/input/file-multi';
+import { ComponentMsg, Dispatch, Immutable, UpdateReturnValue } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as RfiForm from 'front-end/lib/pages/request-for-information/components/form';
 import { formatDateAndTime } from 'shared/lib';
@@ -54,4 +58,51 @@ export async function makeRequestBody(state: RfiForm.State): Promise<ValidOrInva
         attachments: uploadedFiles.value
       });
   }
+}
+
+interface CreateAndShowPreviewParams<State> {
+  state: Immutable<State>;
+  startLoading: UpdateState<State>;
+  stopLoading: UpdateState<State>;
+  getRfiForm(state: Immutable<State>): Immutable<RfiForm.State> | undefined;
+  setRfiForm(state: Immutable<State>, rfiForm: Immutable<RfiForm.State>): Immutable<State>;
+}
+
+export function createAndShowPreview<State, InnerMsg>(params: CreateAndShowPreviewParams<State>): UpdateReturnValue<State, ComponentMsg<InnerMsg, Page>> {
+  const { state, startLoading, stopLoading, getRfiForm, setRfiForm } = params;
+  return [
+    startLoading(state),
+    async (state: Immutable<State>, dispatch: Dispatch<ComponentMsg<InnerMsg, Page>>) => {
+      const rfiForm = getRfiForm(state);
+      if (!rfiForm) { return state; }
+      const fail = (state: Immutable<State>, errors: RfiResource.CreateValidationErrors) => {
+        state = stopLoading(state);
+        return setRfiForm(state, RfiForm.setErrors(rfiForm, errors));
+      };
+      const requestBody = await makeRequestBody(rfiForm);
+      switch (requestBody.tag) {
+        case 'valid':
+          const result = await api.createRfiPreview(requestBody.value);
+          switch (result.tag) {
+            case 'valid':
+              window.open(AppRouter.pageToUrl({
+                tag: 'requestForInformationPreview',
+                value: {
+                  rfiId: result.value._id
+                }
+              }));
+              state = stopLoading(state);
+              break;
+            case 'invalid':
+              state = fail(state, result.value);
+              break;
+          }
+          break;
+        case 'invalid':
+          state = fail(state, requestBody.value);
+          break;
+      }
+      return state;
+    }
+  ];
 }

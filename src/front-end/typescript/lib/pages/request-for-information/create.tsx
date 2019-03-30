@@ -1,10 +1,9 @@
 import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
-import AppRouter from 'front-end/lib/app/router';
 import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Dispatch, Immutable, immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as RfiForm from 'front-end/lib/pages/request-for-information/components/form';
-import { makeRequestBody } from 'front-end/lib/pages/request-for-information/lib';
+import { createAndShowPreview, makeRequestBody } from 'front-end/lib/pages/request-for-information/lib';
 import * as FixedBar from 'front-end/lib/views/fixed-bar';
 import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
@@ -61,39 +60,17 @@ export const update: Update<State, Msg> = (state, msg) => {
       })[0];
       return [state];
     case 'preview':
-      return [
-        startPreviewLoading(state),
-        async (state, dispatch) => {
-          const fail = (state: Immutable<State>, errors: RfiResource.CreateValidationErrors) => {
-            state = stopPreviewLoading(state);
-            return state.set('rfiForm', RfiForm.setErrors(state.rfiForm, errors));
-          };
-          const requestBody = await makeRequestBody(state.rfiForm);
-          switch (requestBody.tag) {
-            case 'valid':
-              const result = await api.createRfiPreview(requestBody.value);
-              switch (result.tag) {
-                case 'valid':
-                  window.open(AppRouter.pageToUrl({
-                    tag: 'requestForInformationPreview',
-                    value: {
-                      rfiId: result.value._id
-                    }
-                  }));
-                  state = stopPreviewLoading(state);
-                  break;
-                case 'invalid':
-                  state = fail(state, result.value);
-                  break;
-              }
-              break;
-            case 'invalid':
-              state = fail(state, requestBody.value);
-              break;
-          }
-          return state;
+      return createAndShowPreview({
+        state,
+        startLoading: startPreviewLoading,
+        stopLoading: stopPreviewLoading,
+        getRfiForm(state) {
+          return state.rfiForm;
+        },
+        setRfiForm(state, rfiForm) {
+          return state.set('rfiForm', rfiForm);
         }
-      ];
+      });
     case 'publish':
       return [
         startPublishLoading(state),

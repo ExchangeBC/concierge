@@ -14,7 +14,7 @@ export function immutable<State>(state: State): Immutable<State> {
 export type Init<Params, State> = (params: Params) => Promise<State>;
 
 // Update returns a tuple representing sync and async state mutations.
-type UpdateReturnValue<State, Msg> = [Immutable<State>, ((state: Immutable<State>, dispatch: Dispatch<Msg>) => Promise<Immutable<State>>)?];
+export type UpdateReturnValue<State, Msg> = [Immutable<State>, ((state: Immutable<State>, dispatch: Dispatch<Msg>) => Promise<Immutable<State>>)?];
 
 export type Update<State, Msg> = (state: Immutable<State>, msg: Msg) => UpdateReturnValue<State, Msg>;
 

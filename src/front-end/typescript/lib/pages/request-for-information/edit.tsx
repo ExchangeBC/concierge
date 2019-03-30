@@ -3,7 +3,7 @@ import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Dispatch, Immutable, immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as RfiForm from 'front-end/lib/pages/request-for-information/components/form';
-import { makeRequestBody, publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
+import { createAndShowPreview, makeRequestBody, publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
 import * as FixedBar from 'front-end/lib/views/fixed-bar';
 import * as PageContainer from 'front-end/lib/views/layout/page-container';
@@ -73,8 +73,8 @@ export const init: Init<Params, State> = async ({ rfiId, fixedBarBottom = 0 }) =
   }
 };
 
-/*const startPreviewLoading: UpdateState<State> = makeStartLoading('previewLoading');
-const stopPreviewLoading: UpdateState<State>  = makeStopLoading('previewLoading');*/
+const startPreviewLoading: UpdateState<State> = makeStartLoading('previewLoading');
+const stopPreviewLoading: UpdateState<State>  = makeStopLoading('previewLoading');
 const startPublishLoading: UpdateState<State> = makeStartLoading('publishLoading');
 const stopPublishLoading: UpdateState<State>  = makeStopLoading('publishLoading');
 
@@ -112,7 +112,17 @@ export const update: Update<State, Msg> = (state, msg) => {
         }
       ];
     case 'preview':
-      return [state];
+      return createAndShowPreview({
+        state,
+        startLoading: startPreviewLoading,
+        stopLoading: stopPreviewLoading,
+        getRfiForm(state) {
+          return state.valid && state.valid.rfiForm;
+        },
+        setRfiForm(state, rfiForm) {
+          return state.setIn(['valid', 'rfiForm'], rfiForm);
+        }
+      });
     case 'publish':
       state = startPublishLoading(state);
       return [
