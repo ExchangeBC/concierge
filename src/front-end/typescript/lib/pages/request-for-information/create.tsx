@@ -1,4 +1,5 @@
 import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
+import AppRouter from 'front-end/lib/app/router';
 import { Page } from 'front-end/lib/app/types';
 import { Component, ComponentMsg, ComponentView, Dispatch, Immutable, immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
@@ -43,8 +44,8 @@ export const init: Init<Params, State> = async ({ fixedBarBottom = 0 }) => {
   };
 };
 
-/*const startPreviewLoading: UpdateState<State> = makeStartLoading('previewLoading');
-const stopPreviewLoading: UpdateState<State>  = makeStopLoading('previewLoading');*/
+const startPreviewLoading: UpdateState<State> = makeStartLoading('previewLoading');
+const stopPreviewLoading: UpdateState<State>  = makeStopLoading('previewLoading');
 const startPublishLoading: UpdateState<State> = makeStartLoading('publishLoading');
 const stopPublishLoading: UpdateState<State>  = makeStopLoading('publishLoading');
 
@@ -60,7 +61,39 @@ export const update: Update<State, Msg> = (state, msg) => {
       })[0];
       return [state];
     case 'preview':
-      return [state];
+      return [
+        startPreviewLoading(state),
+        async (state, dispatch) => {
+          const fail = (state: Immutable<State>, errors: RfiResource.CreateValidationErrors) => {
+            state = stopPreviewLoading(state);
+            return state.set('rfiForm', RfiForm.setErrors(state.rfiForm, errors));
+          };
+          const requestBody = await makeRequestBody(state.rfiForm);
+          switch (requestBody.tag) {
+            case 'valid':
+              const result = await api.createRfiPreview(requestBody.value);
+              switch (result.tag) {
+                case 'valid':
+                  window.open(AppRouter.pageToUrl({
+                    tag: 'requestForInformationPreview',
+                    value: {
+                      rfiId: result.value._id
+                    }
+                  }));
+                  state = stopPreviewLoading(state);
+                  break;
+                case 'invalid':
+                  state = fail(state, result.value);
+                  break;
+              }
+              break;
+            case 'invalid':
+              state = fail(state, requestBody.value);
+              break;
+          }
+          return state;
+        }
+      ];
     case 'publish':
       return [
         startPublishLoading(state),

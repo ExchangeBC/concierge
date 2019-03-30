@@ -409,6 +409,42 @@ export async function readManyRfis(): Promise<ValidOrInvalid<ReadManyRfiResponse
   }
 }
 
+export async function createRfiPreview(rfi: CreateRfiRequestBody): Promise<ValidOrInvalid<RfiResource.PublicRfi, RfiResource.CreateValidationErrors>> {
+  try {
+    const response = await request(HttpMethod.Post, 'requestForInformationPreviews', rfi);
+    switch (response.status) {
+      case 201:
+        const rawRfi = response.data as RawRfi;
+        return valid(rawRfiToPublicRfi(rawRfi));
+      case 400:
+        return invalid(response.data as RfiResource.CreateValidationErrors);
+      default:
+        return invalid({});
+    }
+  } catch (error) {
+    // tslint:disable:next-line no-console
+    console.error(error);
+    return invalid({});
+  }
+}
+
+export async function readOneRfiPreview(rfiId: string): Promise<ValidOrInvalid<RfiResource.PublicRfi, null>> {
+  try {
+    const response = await request(HttpMethod.Get, `requestForInformationPreviews/${rfiId}`);
+    switch (response.status) {
+      case 200:
+        const rawRfi = response.data as RawRfi;
+        return valid(rawRfiToPublicRfi(rawRfi));
+      default:
+        return invalid(null);
+    }
+  } catch (error) {
+    // tslint:disable:next-line no-console
+    console.error(error);
+    return invalid(null);
+  }
+}
+
 interface RawDdr extends Omit<DdrResource.PublicDiscoveryDayResponse, 'createdAt'> {
   createdAt: string;
 }

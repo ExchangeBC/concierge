@@ -88,6 +88,14 @@ function isPositiveInteger(n: number): boolean {
   return !isNaN(n) && !!n && n >= 0 && Math.abs(n % 1) === 0;
 }
 
+function errorToJson(error: Error): object {
+  return {
+    message: error.message,
+    stack: error.stack,
+    raw: error.toString()
+  };
+}
+
 export function getConfigErrors(): string[] {
   let errors: string[] = [];
 
@@ -129,10 +137,7 @@ export function getConfigErrors(): string[] {
       mkdirSync(FILE_STORAGE_DIR, { recursive: true });
     }
   } catch (error) {
-    logger.error('error caught trying to create FILE_STORAGE_DIR', {
-      message: error.message,
-      stack: error.stack
-    });
+    logger.error('error caught trying to create FILE_STORAGE_DIR', errorToJson(error));
     errors.push('FILE_STORAGE_DIR does not exist and this process was unable to create it.');
   }
 
@@ -147,10 +152,7 @@ export function getConfigErrors(): string[] {
       mkdirSync(TMP_DIR, { recursive: true });
     }
   } catch (error) {
-    logger.error('error caught trying to create TMP_DIR', {
-      message: error.message,
-      stack: error.stack
-    });
+    logger.error('error caught trying to create TMP_DIR', errorToJson(error));
     errors.push('TMP_DIR does not exist and this process was unable to create it.');
   }
 

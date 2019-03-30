@@ -207,12 +207,22 @@ export function mapFileResponse<Session>(response: Response<string, Session>): R
   };
 }
 
-export type ErrorResponseBody = ADT<'error', Error>;
+export interface ErrorValue {
+  message: string;
+  stack?: string;
+  raw: string;
+}
 
-export function makeErrorResponseBody(value: Error): ErrorResponseBody {
+export type ErrorResponseBody = ADT<'error', ErrorValue>;
+
+export function makeErrorResponseBody(error: Error): ErrorResponseBody {
   return {
     tag: 'error',
-    value
+    value: {
+      message: error.message,
+      stack: error.stack,
+      raw: error.toString()
+    }
   };
 }
 

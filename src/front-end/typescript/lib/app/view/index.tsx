@@ -191,6 +191,15 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
           View={PageRequestForInformationView.view} />
       );
 
+    case 'requestForInformationPreview':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.requestForInformationPreview}
+          mapPageMsg={value => ({ tag: 'pageRequestForInformationPreview', value })}
+          View={PageRequestForInformationView.view} />
+      );
+
     case 'requestForInformationRespond':
       return (
         <ViewPage

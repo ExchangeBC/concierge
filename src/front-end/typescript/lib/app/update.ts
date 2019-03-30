@@ -148,6 +148,9 @@ const update: Update<State, Msg> = (state, msg) => {
             case 'requestForInformationView':
               state = state.setIn(['pages', 'requestForInformationView'], immutable(await PageRequestForInformationView.init(msg.value.page.value)));
               break;
+            case 'requestForInformationPreview':
+              state = state.setIn(['pages', 'requestForInformationPreview'], immutable(await PageRequestForInformationView.init(msg.value.page.value)));
+              break;
             case 'requestForInformationRespond':
               state = state.setIn(['pages', 'requestForInformationRespond'], immutable(await PageRequestForInformationRespond.init(msg.value.page.value)));
               break;
@@ -372,6 +375,15 @@ const update: Update<State, Msg> = (state, msg) => {
         state,
         mapChildMsg: value => ({ tag: 'pageRequestForInformationView', value }),
         childStatePath: ['pages', 'requestForInformationView'],
+        childUpdate: PageRequestForInformationView.update,
+        childMsg: msg.value
+      });
+
+    case 'pageRequestForInformationPreview':
+      return updateAppChild({
+        state,
+        mapChildMsg: value => ({ tag: 'pageRequestForInformationPreview', value }),
+        childStatePath: ['pages', 'requestForInformationPreview'],
         childUpdate: PageRequestForInformationView.update,
         childMsg: msg.value
       });

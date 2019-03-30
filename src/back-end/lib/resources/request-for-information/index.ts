@@ -5,7 +5,7 @@ import * as FileSchema from 'back-end/lib/schemas/file';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
+import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
 import { validateFileIdArray, validateUserId } from 'back-end/lib/validators';
 import { get, isObject } from 'lodash';
 import { getString, getStringArray, identityAsync } from 'shared/lib';
@@ -184,7 +184,12 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
           if (!globalPermissions(request.session) || !permissions.readOneRfi()) {
             return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
           } else {
-            const rfi = await RfiModel.findById(request.params.id);
+            let rfi: InstanceType<RfiSchema.Model> | null = null;
+            try {
+              rfi = await RfiModel.findById(request.params.id);
+            } catch (error) {
+              request.logger.error('unable to find RFI', makeErrorResponseBody(error).value);
+            }
             if (!rfi || (!permissions.isProgramStaff(request.session) && !RfiSchema.hasBeenPublished(rfi))) {
               return basicResponse(404, request.session, makeJsonResponseBody(['RFI not found']));
             } else {

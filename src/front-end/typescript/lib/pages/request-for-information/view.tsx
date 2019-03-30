@@ -28,6 +28,7 @@ export interface Params {
   rfiId: string;
   userType?: UserType;
   fixedBarBottom?: number;
+  preview?: boolean;
 }
 
 export type InnerMsg
@@ -40,19 +41,25 @@ export interface State {
   fixedBarBottom: number;
   respondToDiscoveryDayLoading: number;
   alerts: string[];
+  preview: boolean;
+  // TODO refactor how userType, rfi and ddr exist on state
+  // once we have better session retrieval in the front-end.
+  // See pages/request-for-information/request.tsx for a good example
+  // of handling valid/invalid state initialization for pages.
   userType?: UserType;
   rfi?: PublicRfi;
   ddr?: DdrResource.PublicDiscoveryDayResponse;
 };
 
-export const init: Init<Params, State> = async ({ rfiId, userType, fixedBarBottom = 0 }) => {
+export const init: Init<Params, State> = async ({ rfiId, userType, fixedBarBottom = 0, preview = false }) => {
   const defaultState: State = {
     fixedBarBottom,
     respondToDiscoveryDayLoading: 0,
     alerts: [],
+    preview,
     userType
   };
-  const rfiResult = await api.readOneRfi(rfiId);
+  const rfiResult = preview ? await api.readOneRfiPreview(rfiId) : await api.readOneRfi(rfiId);
   switch (rfiResult.tag) {
     case 'valid':
       const rfi = rfiResult.value;
@@ -71,19 +78,23 @@ export const init: Init<Params, State> = async ({ rfiId, userType, fixedBarBotto
       }
       // Determine alerts to display on the page.
       const alerts: string[] = [];
-      // Use `mightViewResponseButtons` to only show response-related alerts
-      // to unauthenticated users and Vendor.
-      const mightViewResponseButtons = userType === UserType.Vendor || !userType;
-      const rfiStatus = rfiToRfiStatus(rfi);
-      if (mightViewResponseButtons && rfiStatus === RfiStatus.Closed) {
-        alerts.push(`This RFI is still accepting responses up to ${RFI_EXPIRY_WINDOW_DAYS} calendar days after the closing date and time.`);
-      }
-      if (mightViewResponseButtons && rfiStatus === RfiStatus.Expired) {
-        alerts.push('This RFI is no longer accepting responses.');
-      }
-      const updatedAt = rfi.latestVersion && rfi.latestVersion.createdAt;
-      if (rfiStatus === RfiStatus.Open && updatedAt && compareDates(rfi.publishedAt, updatedAt) === -1) {
-        alerts.push(`This RFI was last updated on ${formatDate(updatedAt)}.`);
+      if (preview) {
+        alerts.push('This is a preview. All "Published" and "Last Updated" dates on this page are only relevant to the preview, and do not relfect the dates associated with the original RFI.');
+      } else {
+        // Use `mightViewResponseButtons` to only show response-related alerts
+        // to unauthenticated users and Vendor.
+        const mightViewResponseButtons = userType === UserType.Vendor || !userType;
+        const rfiStatus = rfiToRfiStatus(rfi);
+        if (mightViewResponseButtons && rfiStatus === RfiStatus.Closed) {
+          alerts.push(`This RFI is still accepting responses up to ${RFI_EXPIRY_WINDOW_DAYS} calendar days after the closing date and time.`);
+        }
+        if (mightViewResponseButtons && rfiStatus === RfiStatus.Expired) {
+          alerts.push('This RFI is no longer accepting responses.');
+        }
+        const updatedAt = rfi.latestVersion && rfi.latestVersion.createdAt;
+        if (rfiStatus === RfiStatus.Open && updatedAt && compareDates(rfi.publishedAt, updatedAt) === -1) {
+          alerts.push(`This RFI was last updated on ${formatDate(updatedAt)}.`);
+        }
       }
       return {
         ...defaultState,
@@ -296,8 +307,9 @@ function showButtons(rfiStatus: RfiStatus | null, userType?: UserType): boolean 
 
 const Buttons: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
+  // Do not show buttons for previews.
+  if (state.preview || !state.rfi || !state.rfi.latestVersion) { return null; }
   // Only show these buttons for Vendors and unauthenticated users.
-  if (!state.rfi || !state.rfi.latestVersion) { return null; }
   const rfiStatus = rfiToRfiStatus(state.rfi);
   if (!showButtons(rfiStatus, state.userType)) { return null; }
   const bottomBarIsFixed = state.fixedBarBottom === 0;

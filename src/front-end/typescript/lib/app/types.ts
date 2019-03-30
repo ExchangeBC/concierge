@@ -49,6 +49,7 @@ export type Page
   | ADT<'requestForInformationCreate', PageRequestForInformationCreate.Params>
   | ADT<'requestForInformationEdit', PageRequestForInformationEdit.Params>
   | ADT<'requestForInformationView', PageRequestForInformationView.Params>
+  | ADT<'requestForInformationPreview', PageRequestForInformationView.Params>
   | ADT<'requestForInformationRespond', PageRequestForInformationRespond.Params>
   | ADT<'requestForInformationList', PageRequestForInformationList.Params>
   | ADT<'about', PageAbout.Params>
@@ -88,6 +89,7 @@ export interface State {
     requestForInformationCreate?: Immutable<PageRequestForInformationCreate.State>;
     requestForInformationEdit?: Immutable<PageRequestForInformationEdit.State>;
     requestForInformationView?: Immutable<PageRequestForInformationView.State>;
+    requestForInformationPreview?: Immutable<PageRequestForInformationView.State>;
     requestForInformationRespond?: Immutable<PageRequestForInformationRespond.State>;
     requestForInformationList?: Immutable<PageRequestForInformationList.State>;
     about?: Immutable<PageAbout.State>;
@@ -124,6 +126,7 @@ type InnerMsg
   | ADT<'pageRequestForInformationCreate', PageRequestForInformationCreate.Msg>
   | ADT<'pageRequestForInformationEdit', PageRequestForInformationEdit.Msg>
   | ADT<'pageRequestForInformationView', PageRequestForInformationView.Msg>
+  | ADT<'pageRequestForInformationPreview', PageRequestForInformationView.Msg>
   | ADT<'pageRequestForInformationRespond', PageRequestForInformationRespond.Msg>
   | ADT<'pageRequestForInformationList', PageRequestForInformationList.Msg>
   | ADT<'pageAbout', PageAbout.Msg>

@@ -1,7 +1,7 @@
 import { COOKIE_SECRET, ENV, TMP_DIR } from 'back-end/config';
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
-import { ErrorResponseBody, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, makeFileRequestBody, makeJsonRequestBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
+import { ErrorResponseBody, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, makeErrorResponseBody, makeFileRequestBody, makeJsonRequestBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import expressLib from 'express';
@@ -138,6 +138,7 @@ export function express<Session>(): ExpressAdapter<Session> {
       const sessionId = sessionToSessionId(response.session)
       setSessionId(sessionId.toString());
       switch (response.body.tag) {
+        case 'error':
         case 'json':
           expressRes.json(response.body.value);
           break;
@@ -157,13 +158,6 @@ export function express<Session>(): ExpressAdapter<Session> {
             .set('Content-Type', 'text/plain')
             .send(response.body.value);
           break;
-        case 'error':
-          expressRes.json({
-            message: response.body.value.message,
-            stack: response.body.value.stack,
-            raw: response.body.value.toString()
-          });
-          break;
       }
     }
 
@@ -171,16 +165,13 @@ export function express<Session>(): ExpressAdapter<Session> {
       function asyncHandler(fn: (request: expressLib.Request, expressRes: expressLib.Response, next: expressLib.NextFunction) => Promise<void>): expressLib.RequestHandler {
         return (expressReq, expressRes, next) => {
           fn(expressReq, expressRes, next)
-            .catch(err => {
+            .catch(error => {
+              const jsonError = makeErrorResponseBody(error).value;
               // Respond with a 500 if an error occurs.
-              logger.error(err);
+              logger.error('unhandled error', jsonError);
               expressRes
                 .status(500)
-                .json({
-                  message: err.message,
-                  stack: err.stack,
-                  raw: err.toString()
-                });
+                .json(jsonError);
             });
         };
       }
