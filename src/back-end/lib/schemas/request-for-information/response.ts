@@ -4,7 +4,7 @@ import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import * as mongoose from 'mongoose';
-import { PublicRfiResponse } from 'shared/lib/resources/request-for-information-response';
+import { PublicRfiResponse } from 'shared/lib/resources/request-for-information/response';
 
 export interface Data {
   _id: mongoose.Types.ObjectId;

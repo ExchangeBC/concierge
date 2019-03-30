@@ -3,14 +3,14 @@ import * as crud from 'back-end/lib/crud';
 import * as permissions from 'back-end/lib/permissions';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
-import * as RfiResponseSchema from 'back-end/lib/schemas/request-for-information-response';
+import * as RfiResponseSchema from 'back-end/lib/schemas/request-for-information/response';
 import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
 import { validateFileIdArray, validateRfiId, validateUserId } from 'back-end/lib/validators';
 import { isObject } from 'lodash';
 import { getString, getStringArray } from 'shared/lib';
-import { CreateValidationErrors, PublicRfiResponse } from 'shared/lib/resources/request-for-information-response';
+import { CreateValidationErrors, PublicRfiResponse } from 'shared/lib/resources/request-for-information/response';
 import { ADT, Omit, RfiStatus } from 'shared/lib/types';
 import { getInvalidValue, invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 

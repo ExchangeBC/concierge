@@ -4,7 +4,7 @@ import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as FileResource from 'shared/lib/resources/file';
 import * as ForgotPasswordTokenResource from 'shared/lib/resources/forgot-password-token';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
-import * as RfiResponseResource from 'shared/lib/resources/request-for-information-response';
+import * as RfiResponseResource from 'shared/lib/resources/request-for-information/response';
 import * as UserResource from 'shared/lib/resources/user';
 import { HttpMethod, Omit, PaginatedList, Profile, UserType } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';

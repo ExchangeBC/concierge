@@ -5,14 +5,15 @@ import FileResource from 'back-end/lib/resources/file';
 import FileBlobResource from 'back-end/lib/resources/file-blob';
 import ForgotPasswordTokenResource from 'back-end/lib/resources/forgot-password-token';
 import RfiResource from 'back-end/lib/resources/request-for-information';
-import RfiResponseResource from 'back-end/lib/resources/request-for-information-response';
+import RfiPreviewResource from 'back-end/lib/resources/request-for-information/preview';
+import RfiResponseResource from 'back-end/lib/resources/request-for-information/response';
 import SessionResource from 'back-end/lib/resources/session';
 import UserResource from 'back-end/lib/resources/user';
 import FrontEndRouter from 'back-end/lib/routers/front-end';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
-import * as RfiResponseSchema from 'back-end/lib/schemas/request-for-information-response';
+import * as RfiResponseSchema from 'back-end/lib/schemas/request-for-information/response';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { addHooksToRoute, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route, Router, TextResponseBody } from 'back-end/lib/server';
@@ -37,6 +38,8 @@ export interface AvailableModels {
   ForgotPasswordToken: ForgotPasswordTokenSchema.Model;
   File: FileSchema.Model;
   Rfi: RfiSchema.Model;
+  // Use the same code as RFIs for RFI Previews.
+  RfiPreview: RfiSchema.Model;
   RfiResponse: RfiResponseSchema.Model;
 }
 
@@ -48,6 +51,7 @@ export function createModels(): AvailableModels {
     ForgotPasswordToken: mongoose.model('ForgotPasswordToken', ForgotPasswordTokenSchema.schema),
     File: mongoose.model('File', FileSchema.schema),
     Rfi: mongoose.model('Rfi', RfiSchema.schema),
+    RfiPreview: mongoose.model('RfiPreview', RfiSchema.schema),
     RfiResponse: mongoose.model('RfiResponse', RfiResponseSchema.schema)
   };
 };
@@ -69,6 +73,7 @@ export function createRouter(Models: AvailableModels): Router<SupportedRequestBo
     FileResource,
     FileBlobResource,
     RfiResource,
+    RfiPreviewResource,
     DiscoveryDayResponseResource,
     RfiResponseResource
   ];
