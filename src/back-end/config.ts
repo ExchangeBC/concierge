@@ -82,6 +82,8 @@ export const MAILER_CONFIG = ENV === 'development' ? developmentMailerConfigOpti
 
 export const MAILER_FROM = get('MAILER_FROM', 'Procurement Concierge Program <noreply@procurementconcierge.gov.bc.ca>');
 
+export const MAILER_NOREPLY = 'noreply@procurementconcierge.gov.bc.ca';
+
 export const MAILER_ROOT_URL = get('MAILER_ROOT_URL', 'https://procurementconcierge.gov.bc.ca').replace(/\/*$/, '');
 
 function isPositiveInteger(n: number): boolean {

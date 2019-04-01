@@ -1,12 +1,13 @@
 import { AvailableModels, SupportedRequestBodies } from 'back-end/lib/app';
 import * as crud from 'back-end/lib/crud';
+import * as notifications from 'back-end/lib/mailer/notifications';
 import * as permissions from 'back-end/lib/permissions';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import * as RfiResponseSchema from 'back-end/lib/schemas/request-for-information/response';
 import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
+import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
 import { validateFileIdArray, validateRfiId, validateUserId } from 'back-end/lib/validators';
 import { isObject } from 'lodash';
 import { getString, getStringArray } from 'shared/lib';
@@ -87,9 +88,25 @@ export const resource: Resource = {
           case 'valid':
             const rfiResponse = validatedVersion.value;
             await rfiResponse.save();
+            const publicRfiResponse = await RfiResponseSchema.makePublicRfiResponse(RfiModel, UserModel, FileModel, rfiResponse, request.session);
+            // notify program staff
+            try {
+              const programStaffUsers = await UserSchema.findProgramStaff(UserModel);
+              const programStaffEmails = programStaffUsers.map(user => user.email);
+              await notifications.createRfiResponseProgramStaff({
+                programStaffEmails,
+                rfiResponse: publicRfiResponse
+              });
+            } catch (error) {
+              request.logger.error('unable to send notification email to program staff for RFI response', {
+                ...makeErrorResponseBody(error),
+                rfiId: rfiResponse.rfi,
+                rfiResponseId: rfiResponse._id
+              });
+            }
             return mapRequestBody(request, {
               tag: 201 as 201,
-              value: await RfiResponseSchema.makePublicRfiResponse(RfiModel, UserModel, FileModel, rfiResponse, request.session)
+              value: publicRfiResponse
             });
           case 'invalid':
             return mapRequestBody(request, {

@@ -2,7 +2,7 @@ import { dateSchema, userIdSchema } from 'back-end/lib/schemas';
 import bcrypt from 'bcrypt';
 import * as mongoose from 'mongoose';
 import { PublicUser } from 'shared/lib/resources/user';
-import { Profile } from 'shared/lib/types';
+import { Profile, UserType } from 'shared/lib/types';
 
 export interface Data {
   _id: mongoose.Types.ObjectId;
@@ -50,6 +50,11 @@ export async function findPublicUserByIdUnsafely(UserModel: Model, userId: mongo
   } else {
     return makePublicUser(user);
   }
+}
+
+export async function findProgramStaff(UserModel: Model): Promise<Array<InstanceType<Model>>> {
+  const result = await UserModel.find({ 'profile.type': UserType.ProgramStaff, active: true });
+  return result || [];
 }
 
 export type Model = mongoose.Model<Data & mongoose.Document>;

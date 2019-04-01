@@ -1,13 +1,16 @@
 import { AvailableModels, SupportedRequestBodies } from 'back-end/lib/app';
 import * as crud from 'back-end/lib/crud';
+import * as notifications from 'back-end/lib/mailer/notifications';
 import * as permissions from 'back-end/lib/permissions';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import { AppSession } from 'back-end/lib/schemas/session';
-import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
+import * as UserSchema from 'back-end/lib/schemas/user';
+import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
 import { validateRfiId, validateUserId } from 'back-end/lib/validators';
 import * as mongoose from 'mongoose';
 import { getString, identityAsync } from 'shared/lib';
 import { CreateValidationErrors, PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
+import { profileToName } from 'shared/lib/types';
 import { ADT, RfiStatus, UserType } from 'shared/lib/types';
 
 type CreateRequestBody
@@ -82,7 +85,8 @@ export const resource: Resource = {
         }
         const rfi = validatedRfi.value;
         // Do not store duplicate responses.
-        const vendorId = validatedVendor.value._id;
+        const vendor = validatedVendor.value;
+        const vendorId = vendor._id;
         const existingDdr = findDiscoveryDayResponse(rfi, vendorId);
         if (existingDdr) {
           return mapRequestBody(request, {
@@ -97,10 +101,32 @@ export const resource: Resource = {
         };
         // Update the RFI with the response.
         rfi.discoveryDayResponses.push(ddr);
+        const publicDdr = RfiSchema.makePublicDiscoveryDayResponse(ddr)
         await rfi.save();
+        // notify program staff
+        try {
+          const programStaffUsers = await UserSchema.findProgramStaff(UserModel);
+          const programStaffEmails = programStaffUsers.map(user => user.email);
+          const latestVersion = RfiSchema.getLatestVersion(rfi);
+          await notifications.createDdrProgramStaff({
+            programStaffEmails,
+            // TODO make these default string values constants somewhere
+            // to stay DRY.
+            rfiName: latestVersion ? latestVersion.rfiNumber : '[Undefined RFI Number]',
+            rfiId: rfi._id,
+            vendorName: profileToName(vendor.profile) || '[Undefined Vendor Name]',
+            vendorId
+          });
+        } catch (error) {
+          request.logger.error('unable to send notification email to program staff for discovery day response', {
+            ...makeErrorResponseBody(error),
+            rfiId: rfi._id,
+            vendorId
+          });
+        }
         return mapRequestBody(request, {
           tag: 201 as 201,
-          value: RfiSchema.makePublicDiscoveryDayResponse(ddr)
+          value: publicDdr
         });
       },
       async respond(request): Promise<Response<CreateResponseBody, AppSession>> {

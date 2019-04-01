@@ -5,20 +5,18 @@ import nodemailer from 'nodemailer';
 const transport = nodemailer.createTransport(MAILER_CONFIG);
 
 export interface SendParams {
-  to: string;
+  to: string | string[];
+  bcc?: string | string[];
   subject: string;
   html: string;
 }
 
 export function send(params: SendParams): Promise<void> {
-  const { to, subject, html } = params;
   return new Promise((resolve, reject) => {
     transport.sendMail({
-      to,
+      ...params,
       from: MAILER_FROM,
-      subject,
-      html,
-      text: fromString(html, { wordwrap: 130 })
+      text: fromString(params.html, { wordwrap: 130 })
     }, error => {
       if (error) {
         reject(error);
