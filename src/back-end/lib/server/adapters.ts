@@ -137,6 +137,7 @@ export function express<Session>(): ExpressAdapter<Session> {
       });
       const sessionId = sessionToSessionId(response.session)
       setSessionId(sessionId.toString());
+      // TODO make switch statement more type-safe.
       switch (response.body.tag) {
         case 'error':
         case 'json':
