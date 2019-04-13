@@ -326,6 +326,7 @@ export function combineHooks<Session>(hooks: Array<RouteHook<any, any, any, any,
 export interface Route<IncomingReqBody, TransformedReqParams, TransformedReqQuery, TransformedReqBody, ResBody, HookState, Session> {
   method: HttpMethod;
   path: string;
+  // Sat Apr 13 13:22:53 PDT 2019 TODO change object -> Record<string, string>
   handler: Handler<object, object, IncomingReqBody, TransformedReqParams, TransformedReqQuery, TransformedReqBody, ResBody, Session>;
   hook?: RouteHook<TransformedReqParams, TransformedReqQuery, TransformedReqBody, ResBody, HookState, Session>;
 }
@@ -348,22 +349,3 @@ export const notFoundJsonRoute: Route<any, any, any, any, JsonResponseBody, any,
 }
 
 export type Router<ReqB, ResB, Session> = Array<Route<ReqB, any, any, any, ResB, any, Session>>;
-
-export type AuthenticationState<Value, Session> = ADT<'authenticated', { session: Session, body: Value }> | ADT<'unauthenticated', { body: Value }>;
-
-export function authenticated<Value, Session>(body: Value, session: Session): AuthenticationState<Value, Session> {
-  return {
-    tag: 'authenticated',
-    value: {
-      session,
-      body
-    }
-  };
-}
-
-export function unauthenticated<Value, Session>(body: Value): AuthenticationState<Value, Session> {
-  return {
-    tag: 'unauthenticated',
-    value: { body }
-  };
-}
