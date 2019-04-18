@@ -1,7 +1,8 @@
+import { LIVE_SITE_DOMAIN } from 'front-end/config';
 import { Msg, Page, State } from 'front-end/lib/app/types';
 import Footer from 'front-end/lib/app/view/footer';
 import Nav from 'front-end/lib/app/view/nav';
-import { AppMsg, ComponentMsg, ComponentView, Dispatch, Immutable, mapAppDispatch, newUrl } from 'front-end/lib/framework';
+import { AppMsg, ComponentMsg, ComponentView, Dispatch, Immutable, mapAppDispatch, newUrl, View } from 'front-end/lib/framework';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
@@ -337,6 +338,16 @@ const ViewActivePage: ComponentView<State, Msg> = ({ state, dispatch }) => {
   }
 }
 
+const TestEnvironmentBanner: View<{}> = () => (
+  <a href={`https://${LIVE_SITE_DOMAIN}`} className='bg-danger text-white text-center p-2'>
+    You are in a test environment. Click here to go to the live site.
+  </a>
+);
+
+function isLiveSite(): boolean {
+  return window.location.origin.indexOf(LIVE_SITE_DOMAIN) !== -1;
+}
+
 const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (!state.ready) {
     return null;
@@ -344,6 +355,7 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
     const toggleIsNavOpen = (value?: boolean) => dispatch({ tag: 'toggleIsNavOpen', value });
     return (
       <div className={`page-${state.activePage.tag} ${state.inTransition ? 'in-transition' : ''} d-flex flex-column`} style={{ minHeight: '100vh' }}>
+        {isLiveSite() ? null : <TestEnvironmentBanner />}
         <Nav session={state.session} activePage={state.activePage} isOpen={state.isNavOpen} toggleIsOpen={toggleIsNavOpen} />
         <ViewActivePage state={state} dispatch={dispatch} />
         <Footer />
