@@ -22,7 +22,7 @@ async function start() {
   const Models = app.createModels();
   const router = app.createRouter({
     Models,
-    basicAuth: ENV === 'development' && BASIC_AUTH_USERNAME && BASIC_AUTH_PASSWORD_HASH
+    basicAuth: BASIC_AUTH_USERNAME && BASIC_AUTH_PASSWORD_HASH
       ? { username: BASIC_AUTH_USERNAME, passwordHash: BASIC_AUTH_PASSWORD_HASH }
       : undefined
   });
