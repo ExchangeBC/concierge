@@ -120,7 +120,13 @@ export const update: Update<State, Msg> = (state, msg) => {
     case 'change':
       const changeFields = state.formFieldMulti.fields.map((field, i) => {
         if (i === msg.value.index && (field.value.tag === 'new' || field.value.tag === 'existing')) {
-          field.value.value = msg.value.value;
+          return {
+            ...field,
+            value: {
+              ...field.value,
+              value: msg.value.value
+            }
+          };
         }
         return field;
       });
