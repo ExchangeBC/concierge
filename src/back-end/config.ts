@@ -117,12 +117,12 @@ export function getConfigErrors(): string[] {
     errors.push('SERVER_PORT must be a positive integer.');
   }
 
-  if (ENV === 'development' && BASIC_AUTH_USERNAME && !BASIC_AUTH_PASSWORD_HASH) {
-    errors.push('BASIC_AUTH_PASSWORD_HASH must be specified if ENV is "development" and BASIC_AUTH_USERNAME is non-empty.');
+  if (BASIC_AUTH_USERNAME && !BASIC_AUTH_PASSWORD_HASH) {
+    errors.push('BASIC_AUTH_PASSWORD_HASH must be specified if BASIC_AUTH_USERNAME is non-empty.');
   }
 
-  if (ENV === 'development' && !BASIC_AUTH_USERNAME && BASIC_AUTH_PASSWORD_HASH) {
-    errors.push('BASIC_AUTH_USERNAME must be specified if ENV is "development" and BASIC_AUTH_PASSWORD_HASH is non-empty.');
+  if (!BASIC_AUTH_USERNAME && BASIC_AUTH_PASSWORD_HASH) {
+    errors.push('BASIC_AUTH_USERNAME must be specified if BASIC_AUTH_PASSWORD_HASH is non-empty.');
   }
 
   if (!MONGO_URL) {
