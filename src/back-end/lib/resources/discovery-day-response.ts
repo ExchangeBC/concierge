@@ -5,10 +5,10 @@ import * as permissions from 'back-end/lib/permissions';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
+import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateRfiId, validateUserId } from 'back-end/lib/validators';
 import * as mongoose from 'mongoose';
-import { getString, identityAsync } from 'shared/lib';
+import { getString } from 'shared/lib';
 import { CreateValidationErrors, PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
 import { profileToName } from 'shared/lib/types';
 import { ADT, RfiStatus, UserType } from 'shared/lib/types';
@@ -48,40 +48,40 @@ export const resource: Resource = {
     return {
       async transformRequest(request) {
         if (!permissions.createDiscoveryDayResponse(request.session) || !request.session.user) {
-          return mapRequestBody(request, {
+          return {
             tag: 401 as 401,
             value: {
               permissions: [permissions.ERROR_MESSAGE]
             }
-          });
+          };
         }
         if (request.body.tag !== 'json') {
-          return mapRequestBody(request, {
+          return {
             tag: 400 as 400,
             value: {
               contentType: ['Discovery Day Responses must be created with a JSON request.']
             }
-          });
+          };
         }
         // Validate the RFI ID and session user ID.
         const rawRfiId = getString(request.body.value, 'rfiId');
         const validatedRfi = await validateRfiId(RfiModel, rawRfiId, [RfiStatus.Open, RfiStatus.Closed], true);
         if (validatedRfi.tag === 'invalid') {
-          return mapRequestBody(request, {
+          return {
             tag: 400 as 400,
             value: {
               rfiId: validatedRfi.value
             }
-          });
+          };
         }
         const validatedVendor = await validateUserId(UserModel, request.session.user.id, UserType.Vendor, true);
         if (validatedVendor.tag === 'invalid') {
-          return mapRequestBody(request, {
+          return {
             tag: 400 as 400,
             value: {
               vendor: validatedVendor.value
             }
-          });
+          };
         }
         const rfi = validatedRfi.value;
         // Do not store duplicate responses.
@@ -89,10 +89,10 @@ export const resource: Resource = {
         const vendorId = vendor._id;
         const existingDdr = findDiscoveryDayResponse(rfi, vendorId);
         if (existingDdr) {
-          return mapRequestBody(request, {
+          return {
             tag: 200 as 200,
             value: RfiSchema.makePublicDiscoveryDayResponse(existingDdr)
-          });
+          };
         }
         // Create the DDR.
         const ddr = {
@@ -124,10 +124,10 @@ export const resource: Resource = {
             vendorId
           });
         }
-        return mapRequestBody(request, {
+        return {
           tag: 201 as 201,
           value: publicDdr
-        });
+        };
       },
       async respond(request): Promise<Response<CreateResponseBody, AppSession>> {
         return basicResponse(request.body.tag, request.session, makeJsonResponseBody(request.body.value));
@@ -144,7 +144,9 @@ export const resource: Resource = {
   readOne(Models) {
     const RfiModel = Models.Rfi;
     return {
-      transformRequest: identityAsync,
+      async transformRequest(request) {
+        return request.body;
+      },
       async respond(request): Promise<Response<ReadOneResponseBody, AppSession>> {
         if (!permissions.readOneDiscoveryDayResponse(request.session) || !request.session.user) {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));

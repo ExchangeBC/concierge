@@ -16,14 +16,14 @@ export function valid<Valid>(value: Valid): ValidOrInvalid<Valid, any> {
   return {
     tag: 'valid',
     value
-  };
+  } as ADT<'valid', Valid>;
 }
 
 export function invalid<Invalid>(value: Invalid): ValidOrInvalid<any, Invalid> {
   return {
     tag: 'invalid',
     value
-  };
+  } as ADT<'invalid', Invalid>;
 }
 
 export function allValid(results: Array<ValidOrInvalid<any, any>>): boolean {

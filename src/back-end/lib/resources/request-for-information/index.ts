@@ -5,10 +5,10 @@ import * as FileSchema from 'back-end/lib/schemas/file';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
+import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateFileIdArray, validateUserId } from 'back-end/lib/validators';
 import { get, isObject } from 'lodash';
-import { getString, getStringArray, identityAsync } from 'shared/lib';
+import { getString, getStringArray } from 'shared/lib';
 import { CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicRfi, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
 import { ADT, PaginatedList, UserType } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, valid, validateBoolean, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
@@ -129,20 +129,20 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
       return {
         async transformRequest(request) {
           if (!globalPermissions(request.session) || !permissions.createRfi(request.session)) {
-            return mapRequestBody(request, {
+            return {
               tag: 401 as 401,
               value: {
                 permissions: [permissions.ERROR_MESSAGE]
               }
-            });
+            };
           }
           if (request.body.tag !== 'json') {
-            return mapRequestBody(request, {
+            return {
               tag: 400 as 400,
               value: {
                 contentType: ['Requests for Information must be created with a JSON request.']
               }
-            });
+            };
           }
           const rawBody = isObject(request.body.value) ? request.body.value : {};
           const validatedVersion = await validateCreateRequestBody(RfiModel, UserModel, FileModel, rawBody, request.session);
@@ -157,15 +157,15 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
                 discoveryDayResponses: []
               });
               await rfi.save();
-              return mapRequestBody(request, {
+              return {
                 tag: 201 as 201,
                 value: await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session)
-              });
+              };
             case 'invalid':
-              return mapRequestBody(request, {
+              return {
                 tag: 400 as 400,
                 value: validatedVersion.value
-              });
+              };
           }
         },
         async respond(request): Promise<Response<CreateResponseBody, AppSession>> {
@@ -179,7 +179,9 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
       const FileModel = Models.File;
       const UserModel = Models.User;
       return {
-        transformRequest: identityAsync,
+        async transformRequest({ body }) {
+          return body;
+        },
         async respond(request): Promise<Response<ReadOneResponseBody, AppSession>> {
           if (!globalPermissions(request.session) || !permissions.readOneRfi()) {
             return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
@@ -207,7 +209,9 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
       const FileModel = Models.File;
       const UserModel = Models.User;
       return {
-        transformRequest: identityAsync,
+        async transformRequest({ body }) {
+          return body;
+        },
         async respond(request): Promise<Response<ReadManyResponseBody, AppSession>> {
           if (!globalPermissions(request.session) || !permissions.readManyRfis()) {
             return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
@@ -237,29 +241,29 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
       return {
         async transformRequest(request) {
           if (!globalPermissions(request.session) || !permissions.updateRfi(request.session)) {
-            return mapRequestBody(request, {
+            return {
               tag: 401 as 401,
               value: {
                 permissions: [permissions.ERROR_MESSAGE]
               }
-            });
+            };
           }
           if (request.body.tag !== 'json') {
-            return mapRequestBody(request, {
+            return {
               tag: 400 as 400,
               value: {
                 contentType: ['Requests for Information must be updated with a JSON request.']
               }
-            });
+            };
           }
           const rfi = await RfiModel.findById(request.params.id);
           if (!rfi) {
-            return mapRequestBody(request, {
+            return {
               tag: 404 as 404,
               value: {
                 rfiId: ['RFI not found']
               }
-            });
+            };
           }
           const rawBody = isObject(request.body.value) ? request.body.value : {};
           const validatedVersion = await validateCreateRequestBody(RfiModel, UserModel, FileModel, rawBody, request.session);
@@ -300,15 +304,15 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
               // Persist the new version.
               rfi.versions.push(newVersion);
               await rfi.save();
-              return mapRequestBody(request, {
+              return {
                 tag: 200 as 200,
                 value: await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session)
-              });
+              };
             case 'invalid':
-              return mapRequestBody(request, {
+              return {
                 tag: 400 as 400,
                 value: validatedVersion.value
-              });
+              };
           }
         },
         async respond(request): Promise<Response<UpdateResponseBody, AppSession>> {

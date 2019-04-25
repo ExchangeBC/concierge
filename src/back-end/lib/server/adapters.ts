@@ -7,7 +7,7 @@ import cookieParser from 'cookie-parser';
 import expressLib from 'express';
 import { createWriteStream, existsSync, unlinkSync } from 'fs';
 import { IncomingHttpHeaders } from 'http';
-import { assign, castArray } from 'lodash';
+import { castArray } from 'lodash';
 import mongoose from 'mongoose';
 import multiparty from 'multiparty';
 import * as path from 'path';
@@ -15,8 +15,6 @@ import { parseJsonSafely } from 'shared/lib';
 import { HttpMethod } from 'shared/lib/types';
 
 const SESSION_COOKIE_NAME = 'sid';
-
-export type InitialRequest<Body, Session> = Request<object, object, Body, Session>;
 
 export interface AdapterRunParams<SupportedRequestBodies, SupportedResponseBodies, Session> {
   router: Router<SupportedRequestBodies, SupportedResponseBodies, Session>;
@@ -162,7 +160,7 @@ export function express<Session>(): ExpressAdapter<Session> {
       }
     }
 
-    function makeExpressRequestHandler(route: Route<ExpressRequestBodies, any, any, any, ExpressResponseBodies, any, Session>): expressLib.RequestHandler {
+    function makeExpressRequestHandler(route: Route<ExpressRequestBodies, any, ExpressResponseBodies, any, Session>): expressLib.RequestHandler {
       function asyncHandler(fn: (request: expressLib.Request, expressRes: expressLib.Response, next: expressLib.NextFunction) => Promise<void>): expressLib.RequestHandler {
         return (expressReq, expressRes, next) => {
           fn(expressReq, expressRes, next)
@@ -195,7 +193,7 @@ export function express<Session>(): ExpressAdapter<Session> {
         }
         // Create the initial request.
         const requestId = new mongoose.Types.ObjectId();
-        let request: InitialRequest<ExpressRequestBodies, Session> = {
+        let request: Request<ExpressRequestBodies, Session> = {
           id: requestId,
           path: expressReq.path,
           method,
@@ -209,7 +207,10 @@ export function express<Session>(): ExpressAdapter<Session> {
         // Transform the request according to the route handler.
         const transformRequest = route.handler.transformRequest;
         if (transformRequest) {
-          request = assign(request, await transformRequest(request));
+          request = {
+            ...request,
+            body: await transformRequest(request)
+          };
         }
         // Run the before hook if specified.
         const hookState = route.hook ? await route.hook.before(request) : null;

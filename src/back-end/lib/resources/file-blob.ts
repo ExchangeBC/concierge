@@ -4,7 +4,6 @@ import * as permissions from 'back-end/lib/permissions';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import { AppSession } from 'back-end/lib/schemas/session';
 import { basicResponse, FileResponseBody, JsonResponseBody, makeJsonResponseBody, Response, tryMakeFileResponseBody } from 'back-end/lib/server';
-import { identityAsync } from 'shared/lib';
 
 type ReadOneResponseBody = FileResponseBody | JsonResponseBody<string[]>;
 
@@ -19,7 +18,9 @@ export const resource: Resource = {
   readOne(Models) {
     const FileModel = Models.File;
     return {
-      transformRequest: identityAsync,
+      async transformRequest({ body }) {
+        return body;
+      },
       async respond(request): Promise<Response<ReadOneResponseBody, AppSession>> {
         const notFound = () => basicResponse(404, request.session, makeJsonResponseBody(['File not found']));
         const file = await FileModel.findById(request.params.id);

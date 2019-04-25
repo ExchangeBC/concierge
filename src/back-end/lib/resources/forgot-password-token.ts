@@ -5,7 +5,7 @@ import * as permissions from 'back-end/lib/permissions';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
 import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
+import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateObjectIdString, validatePassword } from 'back-end/lib/validators';
 import { getString } from 'shared/lib';
 import { UpdateValidationErrors } from 'shared/lib/resources/forgot-password-token';
@@ -38,13 +38,13 @@ export const resource: Resource = {
     return {
       async transformRequest(request) {
         if (!permissions.createForgotPasswordToken(request.session)) {
-          return mapRequestBody(request, null);
+          return null;
         } else {
           // TODO bad request response if body is not json
           const body = request.body.tag === 'json' ? request.body.value : {};
           const email = getString(body, 'email');
           const user = await UserModel.findOne({ email, active: true }).exec();
-          return mapRequestBody(request, user || null);
+          return user || null;
         }
       },
       async respond(request): Promise<Response<CreateResponseBody, AppSession>> {
@@ -76,49 +76,49 @@ export const resource: Resource = {
     return {
       async transformRequest(request) {
         if (!permissions.createForgotPasswordToken(request.session)) {
-          return mapRequestBody(request, invalid({
+          return invalid({
             permissions: [permissions.ERROR_MESSAGE]
-          }));
+          });
         } else {
           const forgotPasswordToken = await ForgotPasswordTokenModel.findOne({ token: request.params.id }).exec();
           if (!forgotPasswordToken) {
-            return mapRequestBody(request, invalid({
+            return invalid({
               forgotPasswordToken: ['Your link has expired, please try requesting a new one.']
-            }));
+            });
           }
           // TODO bad request response if body is not json
           const body = request.body.tag === 'json' ? request.body.value : {};
           const userId = getString(body, 'userId');
           const validatedUserId = validateObjectIdString(userId);
           if (validatedUserId.tag === 'invalid') {
-            return mapRequestBody(request, invalid({
+            return invalid({
               userId: validatedUserId.value
-            }));
+            });
           }
           const password = getString(body, 'password');
           const validatedPassword = await validatePassword(password);
           if (validatedPassword.tag === 'invalid') {
-            return mapRequestBody(request, invalid({
+            return invalid({
               password: validatedPassword.value
-            }));
+            });
           }
           const user = await UserModel.findOne({ _id: validatedUserId.value, active: true }).exec();
           if (!user) {
-            return mapRequestBody(request, invalid({
+            return invalid({
               userId: ['Your user account is no longer active.']
-            }));
+            });
           }
           const correctForgotPasswordToken = await ForgotPasswordTokenSchema.authenticateToken(forgotPasswordToken.token, validatedUserId.value);
           if (!correctForgotPasswordToken) {
-            return mapRequestBody(request, invalid({
+            return invalid({
               forgotPasswordToken: ['Your link has expired, please try requesting a new one.']
-            }));
+            });
           }
           user.passwordHash = validatedPassword.value;
-          return mapRequestBody(request, valid({
+          return valid({
             user,
             forgotPasswordToken
-          }));
+          });
         }
       },
       async respond(request): Promise<Response<UpdateResponseBody, AppSession>> {

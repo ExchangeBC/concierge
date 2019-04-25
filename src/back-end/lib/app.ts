@@ -1,5 +1,6 @@
 import * as crud from 'back-end/lib/crud';
 import loggerHook from 'back-end/lib/hooks/logger';
+import basicAuth from 'back-end/lib/map-routes/basic-auth';
 import DiscoveryDayResponseResource from 'back-end/lib/resources/discovery-day-response';
 import FileResource from 'back-end/lib/resources/file';
 import FileBlobResource from 'back-end/lib/resources/file-blob';
@@ -16,7 +17,7 @@ import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import * as RfiResponseSchema from 'back-end/lib/schemas/request-for-information/response';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { addHooksToRoute, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route, Router, TextResponseBody } from 'back-end/lib/server';
+import { addHooksToRoute, ErrorResponseBody, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route, Router, TextResponseBody } from 'back-end/lib/server';
 import { concat, flatten, flow, map } from 'lodash/fp';
 import * as mongoose from 'mongoose';
 import mongooseDefault from 'mongoose';
@@ -58,9 +59,17 @@ export function createModels(): AvailableModels {
 
 export type SupportedRequestBodies = JsonRequestBody | FileRequestBody;
 
-export type SupportedResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody;
+export type SupportedResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody | ErrorResponseBody;
 
-export function createRouter(Models: AvailableModels): Router<SupportedRequestBodies, SupportedResponseBodies, Session> {
+interface CreateRouterParams {
+  Models: AvailableModels;
+  basicAuth?: {
+    username: string;
+    passwordHash: string;
+  };
+}
+
+export function createRouter(params: CreateRouterParams): Router<SupportedRequestBodies, SupportedResponseBodies, Session> {
   const hooks = [
     loggerHook
   ];
@@ -84,23 +93,33 @@ export function createRouter(Models: AvailableModels): Router<SupportedRequestBo
   const crudRoutes = flow([
     // Create routers from resources.
     map((resource: crud.Resource<SupportedRequestBodies, SupportedResponseBodies, AvailableModels, any, any, any, Session>) => {
-      return crud.makeRouter(resource)(Models);
+      return crud.makeRouter(resource)(params.Models);
     }),
     // Make a flat list of routes.
     flatten,
     // Respond with a standard 404 JSON response if API route is not handled.
     flippedConcat(notFoundJsonRoute),
     // Namespace all CRUD routes with '/api'.
-    map((route: Route<SupportedRequestBodies, any, any, any, SupportedResponseBodies, any, Session>) => namespaceRoute('/api', route))
+    map((route: Route<SupportedRequestBodies, any, SupportedResponseBodies, any, Session>) => namespaceRoute('/api', route))
   ])(resources);
 
-  // Return all routes.
-  return flow([
+  // Collect all routes.
+  let allRoutes = flow([
     // API routes.
     flippedConcat(crudRoutes),
     // Front-end router.
     flippedConcat(FrontEndRouter),
     // Add global hooks to all routes.
-    map((route: Route<SupportedRequestBodies, any, any, any, SupportedResponseBodies, any, Session>) => addHooksToRoute(hooks, route))
+    map((route: Route<SupportedRequestBodies, any, SupportedResponseBodies, any, Session>) => addHooksToRoute(hooks, route))
   ])([]);
+
+  // Add basic auth if required.
+  if (params.basicAuth) {
+    allRoutes = allRoutes.map(basicAuth({
+      ...params.basicAuth,
+      mapHook: a => a
+    }));
+  }
+
+  return allRoutes;
 }

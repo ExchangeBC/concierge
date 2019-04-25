@@ -39,35 +39,16 @@ export type SessionIdToSession<Session> = (sessionId: SessionId) => Promise<Sess
 
 export type SessionToSessionId<Session> = (session: Session) => SessionId;
 
-export interface ConfigurableRequest<Params, Query, Body> {
-  params: Params;
-  query: Query;
-  body: Body;
-}
-
-export function nullConfigurableRequest(): ConfigurableRequest<null, null, null> {
-  return {
-    params: null,
-    query: null,
-    body: null
-  };
-}
-
-export interface Request<Params, Query, Body, Session> extends ConfigurableRequest<Params, Query, Body> {
-  id: mongoose.Types.ObjectId;
-  path: string,
-  headers: IncomingHttpHeaders;
-  logger: DomainLogger;
-  method: HttpMethod;
-  session: Session;
-}
-
-export function mapRequestBody<P, Q, BodyA, BodyB, Session>(request: Request<P, Q, BodyA, Session>, body: BodyB): ConfigurableRequest<P, Q, BodyB> {
-  return {
-    params: request.params,
-    query: request.query,
-    body
-  };
+export interface Request<Body, Session>        {
+  readonly id: mongoose.Types.ObjectId;
+  readonly path: string,
+  readonly headers: IncomingHttpHeaders;
+  readonly logger: DomainLogger;
+  readonly method: HttpMethod;
+  readonly session: Session;
+  readonly params: Record<string, string>;
+  readonly query: Record<string, string>;
+  readonly body: Body;
 }
 
 export type TextRequestBody = ADT<'text', string>;
@@ -89,9 +70,9 @@ export function makeJsonRequestBody(value: any): JsonRequestBody {
 }
 
 export interface FileUpload {
-  name: string;
-  path: string;
-  authLevel?: object;
+  readonly name: string;
+  readonly path: string;
+  readonly authLevel?: object;
 }
 
 export type FileRequestBody = ADT<'file', FileUpload>;
@@ -104,10 +85,10 @@ export function makeFileRequestBody(value: FileUpload): FileRequestBody {
 }
 
 export interface Response<Body, Session> {
-  code: number;
-  headers: OutgoingHttpHeaders;
-  session: Session;
-  body: Body;
+  readonly code: number;
+  readonly headers: OutgoingHttpHeaders;
+  readonly session: Session;
+  readonly body: Body;
 }
 
 export function basicResponse<Body, Session>(code: number, session: Session, body: Body): Response<Body, Session> {
@@ -143,7 +124,7 @@ export function makeJsonResponseBody<Value = any>(value: Value): JsonResponseBod
   return {
     tag: 'json',
     value
-  };
+  } as JsonResponseBody<Value>;
 }
 
 export function mapJsonResponse<Session, Value = any>(response: Response<Value, Session>): Response<JsonResponseBody<Value>, Session> {
@@ -156,10 +137,10 @@ export function mapJsonResponse<Session, Value = any>(response: Response<Value, 
 }
 
 export interface ResponseFile {
-  buffer: Buffer;
-  contentType: string;
-  contentEncoding?: string;
-  contentDisposition?: string;
+  readonly buffer: Buffer;
+  readonly contentType: string;
+  readonly contentEncoding?: string;
+  readonly contentDisposition?: string;
 }
 
 export type FileResponseBody = ADT<'file', ResponseFile>;
@@ -208,9 +189,9 @@ export function mapFileResponse<Session>(response: Response<string, Session>): R
 }
 
 export interface ErrorValue {
-  message: string;
-  stack?: string;
-  raw: string;
+  readonly message: string;
+  readonly stack?: string;
+  readonly raw: string;
 }
 
 export type ErrorResponseBody = ADT<'error', ErrorValue>;
@@ -235,51 +216,33 @@ export function mapErrorResponse<Session>(response: Response<Error, Session>): R
   };
 }
 
-export type TransformRequest<RPA, RQA, RBA, RPB, RQB, RBB, Session> = (request: Request<RPA, RQA, RBA, Session>) => Promise<ConfigurableRequest<RPB, RQB, RBB>>;
+export type TransformRequest<RBA, RBB, Session> = (request: Request<RBA, Session>) => Promise<RBB>;
 
-export function composeTransformRequest<RPA, RQA, RBA, RPB, RQB, RBB, RPC, RQC, RBC, Session>(a: TransformRequest<RPA, RQA, RBA, RPB, RQB, RBB, Session>, b: TransformRequest<RPB, RQB, RBB, RPC, RQC, RBC, Session>): TransformRequest<RPA, RQA, RBA, RPC, RQC, RBC, Session> {
+export function composeTransformRequest<RBA, RBB, RBC, Session>(a: TransformRequest<RBA, RBB, Session>, b: TransformRequest<RBB, RBC, Session>): TransformRequest<RBA, RBC, Session> {
   return async request => {
-    const newConfigurableRequestA = await a(request);
-    const newConfigurableRequestB = await b({
-      id: request.id,
-      path: request.path,
-      headers: request.headers,
-      logger: request.logger,
-      method: request.method,
-      session: request.session,
-      params: newConfigurableRequestA.params,
-      query: newConfigurableRequestA.query,
-      body: newConfigurableRequestA.body
+    const bodyA = await a(request);
+    return await b({
+      ...request,
+      body: bodyA
     });
-    return {
-      id: request.id,
-      path: request.path,
-      headers: request.headers,
-      logger: request.logger,
-      method: request.method,
-      session: request.session,
-      params: newConfigurableRequestB.params,
-      query: newConfigurableRequestB.query,
-      body: newConfigurableRequestB.body
-    };
   };
 }
 
-export type Respond<RP, RQ, ReqB, ResB, Session> = (request: Request<RP, RQ, ReqB, Session>) => Promise<Response<ResB, Session>>;
+export type Respond<ReqB, ResB, Session> = (request: Request<ReqB, Session>) => Promise<Response<ResB, Session>>;
 
-export function mapRespond<RP, RQ, ReqB, ResBA, ResBB, Session>(respond: Respond<RP, RQ, ReqB, ResBA, Session>, fn: (response: Response<ResBA, Session>) => Response<ResBB, Session>): Respond<RP, RQ, ReqB, ResBB, Session> {
+export function mapRespond<ReqB, ResBA, ResBB, Session>(respond: Respond<ReqB, ResBA, Session>, fn: (response: Response<ResBA, Session>) => Response<ResBB, Session>): Respond<ReqB, ResBB, Session> {
   return async request => {
     const response = await respond(request);
     return fn(response);
   };
 }
 
-export interface Handler<RPA, RQA, ReqBA, RPB, RQB, ReqBB, ResB, Session> {
-  transformRequest: TransformRequest<RPA, RQA, ReqBA, RPB, RQB, ReqBB, Session>;
-  respond: Respond<RPB, RQB, ReqBB, ResB, Session>;
+export interface Handler<ReqBA, ReqBB, ResB, Session> {
+  readonly transformRequest: TransformRequest<ReqBA, ReqBB, Session>;
+  readonly respond: Respond<ReqBB, ResB, Session>;
 }
 
-export const notFoundJsonHandler: Handler<any, any, any, any, any, any, JsonResponseBody, any> = {
+export const notFoundJsonHandler: Handler<any, any, JsonResponseBody, any> = {
 
   async transformRequest(request) {
     return request;
@@ -296,12 +259,16 @@ export const notFoundJsonHandler: Handler<any, any, any, any, any, any, JsonResp
 
 };
 
-export interface RouteHook<RP, RQ, ReqB, ResB, State, Session> {
-  before(request: Request<RP, RQ, ReqB, Session>): Promise<State>;
-  after?(state: State, request: Request<RP, RQ, ReqB, Session>, response: Response<ResB, Session>): Promise<void>;
+type BeforeHook<ReqB, State, Session> = (request: Request<ReqB, Session>) => Promise<State>;
+
+type AfterHook<ReqB, ResB, State, Session> = (state: State, request: Request<ReqB, Session>, response: Response<ResB, Session>) => Promise<void>;
+
+export interface RouteHook<ReqB, ResB, State, Session> {
+  readonly before: BeforeHook<ReqB, State, Session>;
+  readonly after?: AfterHook<ReqB, ResB, State, Session>;
 }
 
-export function combineHooks<Session>(hooks: Array<RouteHook<any, any, any, any, any, Session>>): RouteHook<any, any, any, any, any, Session> {
+export function combineHooks<Session>(hooks: Array<RouteHook<any, any, any, Session>>): RouteHook<any, any, any, Session> {
   return {
     async before(request) {
       const results = [];
@@ -323,29 +290,49 @@ export function combineHooks<Session>(hooks: Array<RouteHook<any, any, any, any,
   };
 }
 
-export interface Route<IncomingReqBody, TransformedReqParams, TransformedReqQuery, TransformedReqBody, ResBody, HookState, Session> {
-  method: HttpMethod;
-  path: string;
-  // Sat Apr 13 13:22:53 PDT 2019 TODO change object -> Record<string, string>
-  handler: Handler<object, object, IncomingReqBody, TransformedReqParams, TransformedReqQuery, TransformedReqBody, ResBody, Session>;
-  hook?: RouteHook<TransformedReqParams, TransformedReqQuery, TransformedReqBody, ResBody, HookState, Session>;
+export interface Route<IncomingReqBody, TransformedReqBody, ResBody, HookState, Session> {
+  readonly method: HttpMethod;
+  readonly path: string;
+  readonly handler: Handler<IncomingReqBody, TransformedReqBody, ResBody, Session>;
+  readonly hook?: RouteHook<TransformedReqBody, ResBody, HookState, Session>;
 }
 
-export function namespaceRoute(prefix: string, route: Route<any, any, any, any, any, any, any>) {
+export function namespaceRoute(prefix: string, route: Route<any, any, any, any, any>) {
   const path = `${prefix.replace(/\/*$/, '')}/${route.path.replace(/^\/*/, '')}`;
   return assign(route, { path });
 }
 
-export function addHooksToRoute<Session>(hooks: Array<RouteHook<any, any, any, any, any, Session>>, route: Route<any, any, any, any, any, any, Session>): Route<any, any, any, any, any, any, Session> {
+export function addHooksToRoute<Session>(hooks: Array<RouteHook<any, any, any, Session>>, route: Route<any, any, any, any, Session>): Route<any, any, any, any, Session> {
   const newHook = combineHooks(hooks);
-  route.hook = route.hook ? combineHooks([newHook, route.hook]) : newHook;
-  return route;
+  return {
+    ...route,
+    hook: route.hook ? combineHooks([newHook, route.hook]) : newHook
+  };
 }
 
-export const notFoundJsonRoute: Route<any, any, any, any, JsonResponseBody, any, any> = {
+export type MapHandler<ReqBA, ReqBB, ReqBC, ResBA, ResBB, Session> = (oldHandler: Handler<ReqBA, ReqBB, ResBA, Session>) => Handler<ReqBA, ReqBC, ResBB, Session>;
+
+export type MapHook<ReqBA, ReqBB, ResBA, ResBB, StateA, StateB, Session> = (oldHook: RouteHook<ReqBA, ResBA, StateA, Session>) => RouteHook<ReqBB, ResBB, StateB, Session>;
+
+export type MapRoute<ReqBA, ReqBB, ReqBC, ResBA, ResBB, HookStateA, HookStateB, Session> = (oldRoute: Route<ReqBA, ReqBB, ResBA, HookStateA, Session>) => Route<ReqBA, ReqBC, ResBB, HookStateB, Session>;
+
+/**
+ * Create a function that transforms a route's handler and hook
+ * in a type-safe way.
+ */
+
+export function createMapRoute<ReqBA, ReqBB, ReqBC, ResBA, ResBB, HookStateA, HookStateB, Session>(mapHandler: MapHandler<ReqBA, ReqBB, ReqBC, ResBA, ResBB, Session>, mapHook: MapHook<ReqBB, ReqBC, ResBA, ResBB, HookStateA, HookStateB, Session>): MapRoute<ReqBA, ReqBB, ReqBC, ResBA, ResBB, HookStateA, HookStateB, Session> {
+  return route => ({
+    ...route,
+    handler: mapHandler(route.handler),
+    hook: route.hook && mapHook(route.hook)
+  });
+}
+
+export const notFoundJsonRoute: Route<any, any, JsonResponseBody, any, any> = {
   method: HttpMethod.Any,
   path: '*',
   handler: notFoundJsonHandler
 }
 
-export type Router<ReqB, ResB, Session> = Array<Route<ReqB, any, any, any, ResB, any, Session>>;
+export type Router<ReqB, ResB, Session> = Array<Route<ReqB, any, ResB, any, Session>>;

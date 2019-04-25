@@ -5,11 +5,11 @@ import * as permissions from 'back-end/lib/permissions';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
+import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateEmail, validatePassword } from 'back-end/lib/validators';
 import { get, isBoolean, isObject } from 'lodash';
 import * as mongoose from 'mongoose';
-import { getBoolean, getString, identityAsync } from 'shared/lib';
+import { getBoolean, getString } from 'shared/lib';
 import { CreateValidationErrors, PublicUser, UpdateValidationErrors } from 'shared/lib/resources/user';
 import { PaginatedList } from 'shared/lib/types';
 import { allValid, getInvalidValue, invalid, valid, validateUserType, ValidOrInvalid } from 'shared/lib/validators';
@@ -140,16 +140,16 @@ const resource: Resource = {
         const profile = isObject(body.profile) ? body.profile : {};
         const validatedUserType = validateUserType(getString(profile, 'type'));
         if (validatedUserType.tag === 'invalid' || !permissions.createUser(request.session, validatedUserType.value)) {
-          return mapRequestBody(request, invalid({
+          return invalid({
             permissions: [permissions.ERROR_MESSAGE]
-          }));
+          });
         }
         const email = getString(body, 'email');
         const password = getString(body, 'password');
         const acceptedTerms = getBoolean(body, 'acceptedTerms');
         const createdBy = get(request.session.user, 'id');
         const validatedBody = await validateCreateRequestBody(UserModel, email, password, acceptedTerms, profile, createdBy);
-        return mapRequestBody(request, validatedBody);
+        return validatedBody;
       },
       async respond(request): Promise<Response<CreateResponseBody, AppSession>> {
         switch (request.body.tag) {
@@ -181,7 +181,9 @@ const resource: Resource = {
   readOne(Models) {
     const UserModel = Models.User as UserSchema.Model;
     return {
-      transformRequest: identityAsync,
+      async transformRequest({ body }) {
+        return body;
+      },
       async respond(request): Promise<Response<ReadOneResponseBody, AppSession>> {
         if (!permissions.readOneUser(request.session, request.params.id)) {
           return basicResponse(401, request.session, makeJsonResponseBody(null));
@@ -200,7 +202,9 @@ const resource: Resource = {
   readMany(Models) {
     const UserModel = Models.User as UserSchema.Model;
     return {
-      transformRequest: identityAsync,
+      async transformRequest({ body }) {
+        return body;
+      },
       async respond(request): Promise<Response<ReadManyResponseBody, AppSession>> {
         if (!permissions.readManyUsers(request.session)) {
           return basicResponse(401, request.session, makeJsonResponseBody(null));
@@ -225,9 +229,9 @@ const resource: Resource = {
       async transformRequest(request) {
         const id = request.params.id;
         if (!permissions.updateUser(request.session, id)) {
-          return mapRequestBody(request, invalid({
+          return invalid({
             permissions: [permissions.ERROR_MESSAGE]
-          }));
+          });
         }
         // TODO bad request response if body is not json
         const body = request.body.tag === 'json' ? request.body.value : {};
@@ -237,7 +241,7 @@ const resource: Resource = {
         const newPassword = getString(body, 'newPassword') || undefined;
         const currentPassword = getString(body, 'currentPassword') || undefined;
         const validatedBody = await validateUpdateRequestBody(UserModel, id, email, profile, acceptedTerms, newPassword, currentPassword);
-        return mapRequestBody(request, validatedBody);
+        return validatedBody;
       },
       async respond(request): Promise<Response<UpdateResponseBody, AppSession>> {
         switch (request.body.tag) {
@@ -257,7 +261,9 @@ const resource: Resource = {
     const UserModel = Models.User as UserSchema.Model;
     const SessionModel = Models.Session as SessionSchema.Model;
     return {
-      transformRequest: identityAsync,
+      async transformRequest({ body }) {
+        return body;
+      },
       async respond(request): Promise<Response<DeleteResponseBody, AppSession>> {
         const user = await UserModel.findOne({ _id: request.params.id, active: true });
         if (!user) {

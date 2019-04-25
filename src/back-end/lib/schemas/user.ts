@@ -1,5 +1,5 @@
 import { dateSchema, userIdSchema } from 'back-end/lib/schemas';
-import bcrypt from 'bcrypt';
+import * as security from 'back-end/lib/security';
 import * as mongoose from 'mongoose';
 import { PublicUser } from 'shared/lib/resources/user';
 import { Profile, UserType } from 'shared/lib/types';
@@ -87,9 +87,9 @@ export const schema: mongoose.Schema = new mongoose.Schema({
 });
 
 export async function authenticate(user: InstanceType<Model>, password: string): Promise<boolean> {
-  return await bcrypt.compare(password, user.passwordHash);
+  return await security.authenticatePassword(password, user.passwordHash);
 };
 
 export async function hashPassword(password: string): Promise<string> {
-  return await bcrypt.hash(password, 10);
+  return await security.hashPassword(password);
 };

@@ -42,6 +42,10 @@ export const SERVER_HOST = get('SERVER_HOST', '127.0.0.1');
 
 export const SERVER_PORT = parseInt(get('SERVER_PORT', '3000'), 10);
 
+export const BASIC_AUTH_USERNAME = get('BASIC_AUTH_USERNAME', '');
+
+export const BASIC_AUTH_PASSWORD_HASH = get('BASIC_AUTH_PASSWORD_HASH', '');
+
 export const MONGO_URL = getMongoUrl();
 
 export const TOKEN_SECRET = get('TOKEN_SECRET', '');
@@ -111,6 +115,14 @@ export function getConfigErrors(): string[] {
 
   if (!isPositiveInteger(SERVER_PORT)) {
     errors.push('SERVER_PORT must be a positive integer.');
+  }
+
+  if (ENV === 'development' && BASIC_AUTH_USERNAME && !BASIC_AUTH_PASSWORD_HASH) {
+    errors.push('BASIC_AUTH_PASSWORD_HASH must be specified if ENV is "development" and BASIC_AUTH_USERNAME is non-empty.');
+  }
+
+  if (ENV === 'development' && !BASIC_AUTH_USERNAME && BASIC_AUTH_PASSWORD_HASH) {
+    errors.push('BASIC_AUTH_USERNAME must be specified if ENV is "development" and BASIC_AUTH_PASSWORD_HASH is non-empty.');
   }
 
   if (!MONGO_URL) {

@@ -1,4 +1,4 @@
-import { getConfigErrors, MONGO_URL, SERVER_HOST, SERVER_PORT } from 'back-end/config';
+import { BASIC_AUTH_PASSWORD_HASH, BASIC_AUTH_USERNAME, ENV, getConfigErrors, MONGO_URL, SERVER_HOST, SERVER_PORT } from 'back-end/config';
 import * as app from 'back-end/lib/app';
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
@@ -20,7 +20,12 @@ async function start() {
   await app.connectToDatabase(MONGO_URL);
   logger.info('connected to MongoDB');
   const Models = app.createModels();
-  const router = app.createRouter(Models);
+  const router = app.createRouter({
+    Models,
+    basicAuth: ENV === 'development' && BASIC_AUTH_USERNAME && BASIC_AUTH_PASSWORD_HASH
+      ? { username: BASIC_AUTH_USERNAME, passwordHash: BASIC_AUTH_PASSWORD_HASH }
+      : undefined
+  });
   // Bind the server to a port and listen for incoming connections.
   // Need to lock-in Session type here.
   const adapter: ExpressAdapter<app.Session> = express();

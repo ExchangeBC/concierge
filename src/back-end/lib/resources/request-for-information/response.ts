@@ -7,7 +7,7 @@ import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import * as RfiResponseSchema from 'back-end/lib/schemas/request-for-information/response';
 import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
+import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateFileIdArray, validateRfiId, validateUserId } from 'back-end/lib/validators';
 import { isObject } from 'lodash';
 import { getString, getStringArray } from 'shared/lib';
@@ -67,20 +67,20 @@ export const resource: Resource = {
     return {
       async transformRequest(request) {
         if (!permissions.createRfiResponse(request.session)) {
-          return mapRequestBody(request, {
+          return {
             tag: 401 as 401,
             value: {
               permissions: [permissions.ERROR_MESSAGE]
             }
-          });
+          };
         }
         if (request.body.tag !== 'json') {
-          return mapRequestBody(request, {
+          return {
             tag: 400 as 400,
             value: {
               contentType: ['Requests for Information must be created with a JSON request.']
             }
-          });
+          };
         }
         const rawBody = isObject(request.body.value) ? request.body.value : {};
         const validatedVersion = await validateCreateRequestBody(RfiResponseModel, RfiModel, UserModel, FileModel, rawBody, request.session);
@@ -104,15 +104,15 @@ export const resource: Resource = {
                 rfiResponseId: rfiResponse._id
               });
             }
-            return mapRequestBody(request, {
+            return {
               tag: 201 as 201,
               value: publicRfiResponse
-            });
+            };
           case 'invalid':
-            return mapRequestBody(request, {
+            return {
               tag: 400 as 400,
               value: validatedVersion.value
-            });
+            };
         }
       },
       async respond(request): Promise<Response<CreateResponseBody, AppSession>> {

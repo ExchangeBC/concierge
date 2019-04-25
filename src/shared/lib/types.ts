@@ -1,17 +1,32 @@
 import { get, isArray } from 'lodash';
 
+/**
+ * "ADT" stands for "Algebraic Data Type".
+ *
+ * ```
+ * type Color
+ *   = ADT<'red'>
+ *   | ADT<'blue'>
+ *   | ADT<'green'>
+ *   | ADT<'rgb', [number, number, number]>;
+ *
+ * const red: Color = { tag: 'red', value: undefined };
+ * const rgb: Color = { tag: 'rgb', value: [123, 255, 7] };
+ * ```
+ */
+
 export interface ADT<Tag, Value = undefined> {
-  tag: Tag;
-  value: Value;
+  readonly tag: Tag;
+  readonly value: Value;
 }
 
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
 export interface PaginatedList<Item> {
-  total: number;
-  offset: number;
-  count: number;
-  items: Item[];
+  readonly total: number;
+  readonly offset: number;
+  readonly count: number;
+  readonly items: Item[];
 }
 
 export enum HttpMethod {

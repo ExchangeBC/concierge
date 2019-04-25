@@ -3,8 +3,8 @@ import * as crud from 'back-end/lib/crud';
 import * as permissions from 'back-end/lib/permissions';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { basicResponse, JsonResponseBody, makeJsonResponseBody, mapRequestBody, Response } from 'back-end/lib/server';
-import { getString, identityAsync } from 'shared/lib';
+import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
+import { getString } from 'shared/lib';
 
 type CreateRequestBody = InstanceType<UserSchema.Model> | null;
 
@@ -28,18 +28,14 @@ export const resource: Resource = {
     const UserModel = Models.User as UserSchema.Model;
     return {
       async transformRequest(request) {
-        if (!permissions.createSession(request.session)) {
-          return mapRequestBody(request, null);
-        } else {
-          // TODO bad request response if body is not json
-          const body = request.body.tag === 'json' ? request.body.value : {};
-          const email = getString(body, 'email');
-          const password = getString(body, 'password');
-          const user = await UserModel.findOne({ email, active: true }).exec();
-          const authenticated = user ? await UserSchema.authenticate(user, password) : false;
-          const finalBody = authenticated ? user : null;
-          return mapRequestBody(request, finalBody);
-        }
+        if (!permissions.createSession(request.session)) { return null; }
+        // TODO bad request response if body is not json
+        const body = request.body.tag === 'json' ? request.body.value : {};
+        const email = getString(body, 'email');
+        const password = getString(body, 'password');
+        const user = await UserModel.findOne({ email, active: true }).exec();
+        const authenticated = user ? await UserSchema.authenticate(user, password) : false;
+        return authenticated ? user : null;
       },
       async respond(request): Promise<Response<CreateResponseBody, SessionSchema.AppSession>> {
         if (request.body) {
@@ -54,7 +50,9 @@ export const resource: Resource = {
 
   readOne() {
     return {
-      transformRequest: identityAsync,
+      async transformRequest({ body }) {
+        return body;
+      },
       async respond(request): Promise<Response<ReadOneResponseBody, SessionSchema.AppSession>> {
         if (!permissions.readOneSession(request.session, request.params.id)) {
           return basicResponse(401, request.session, makeJsonResponseBody(null));
@@ -69,7 +67,9 @@ export const resource: Resource = {
   delete(Models) {
     const SessionModel = Models.Session as SessionSchema.Model;
     return {
-      transformRequest: identityAsync,
+      async transformRequest({ body }) {
+        return body;
+      },
       async respond(request): Promise<Response<DeleteResponseBody, SessionSchema.AppSession>> {
         if (!permissions.deleteSession(request.session, request.params.id)) {
           return basicResponse(401, request.session, makeJsonResponseBody(null));
