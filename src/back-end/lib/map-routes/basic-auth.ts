@@ -38,7 +38,9 @@ function addBasicAuth<ReqBA, ReqBB, ResB, Session>(username: string, passwordHas
         case 'unauthorized':
           return {
             code: 401,
-            headers: {},
+            headers: {
+              'www-authenticate': 'Basic realm="Restricted website."'
+            },
             session: request.session,
             body: makeJsonResponseBody(['Unauthorized'] as ['Unauthorized'])
           };
