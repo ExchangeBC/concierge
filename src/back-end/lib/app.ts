@@ -11,6 +11,7 @@ import RfiResponseResource from 'back-end/lib/resources/request-for-information/
 import SessionResource from 'back-end/lib/resources/session';
 import UserResource from 'back-end/lib/resources/user';
 import FrontEndRouter from 'back-end/lib/routers/front-end';
+import StatusRouter from 'back-end/lib/routers/status';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
@@ -120,6 +121,10 @@ export function createRouter(params: CreateRouterParams): Router<SupportedReques
       mapHook: a => a
     }));
   }
+
+  // Add the status router.
+  // This should not be behind basic auth.
+  allRoutes = StatusRouter.concat(allRoutes);
 
   return allRoutes;
 }
