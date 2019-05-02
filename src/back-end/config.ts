@@ -22,8 +22,9 @@ function get(name: string , fallback: string): string {
 
 function getMongoUrl(): string | null {
   // *SERVICE* variables are set automatically by OpenShift.
-  const host = get('MONGODB_SERVICE_HOST', '');
-  const port = get('MONGODB_SERVICE_PORT', '');
+  const databaseServiceName = (process.env.DATABASE_SERVICE_NAME || 'mongodb').toUpperCase().replace(/-/g, '_');
+  const host = get(`${databaseServiceName}_SERVICE_HOST`, '');
+  const port = get(`${databaseServiceName}_SERVICE_PORT`, '');
   const user = get('MONGODB_USER', '');
   const password = get('MONGODB_PASSWORD', '');
   const databaseName = get('MONGODB_DATABASE_NAME', '');
