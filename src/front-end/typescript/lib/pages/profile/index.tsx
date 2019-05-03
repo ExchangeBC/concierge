@@ -1,11 +1,13 @@
-import { Page } from 'front-end/lib/app/types';
+import { makePageMetadata } from 'front-end/lib';
+import { isSignedIn } from 'front-end/lib/access-control';
+import router from 'front-end/lib/app/router';
+import { Route, SharedState } from 'front-end/lib/app/types';
 import { ViewerUser } from 'front-end/lib/components/profiles/types';
-import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, PageComponent, PageInit, replaceRoute, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as BuyerProfile from 'front-end/lib/pages/profile/components/buyer';
 import * as ProgramStaffProfile from 'front-end/lib/pages/profile/components/program-staff';
 import * as VendorProfile from 'front-end/lib/pages/profile/components/vendor';
-import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import { default as React, ReactElement } from 'react';
 import { Alert, Col, Row } from 'reactstrap';
 import { PublicUser } from 'shared/lib/resources/user';
@@ -13,9 +15,8 @@ import { ADT, UserType } from 'shared/lib/types';
 
 const ERROR_MESSAGE = 'You do not have sufficient privileges to view this profile.';
 
-export interface Params {
+export interface RouteParams {
   profileUserId: string;
-  viewerUser?: ViewerUser
 }
 
 export interface State {
@@ -30,7 +31,7 @@ type InnerMsg
   | ADT<'vendor', VendorProfile.Msg>
   | ADT<'programStaff', ProgramStaffProfile.Msg>;
 
-export type Msg = ComponentMsg<InnerMsg, Page>;
+export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 async function userToState(profileUser: PublicUser, viewerUser?: ViewerUser): Promise<State> {
   switch (profileUser.profile.type) {
@@ -58,32 +59,48 @@ async function userToState(profileUser: PublicUser, viewerUser?: ViewerUser): Pr
           viewerUser
         }))
       };
-    default:
-      return {
-        errors: [ERROR_MESSAGE]
-      };
   }
 }
 
-export const init: Init<Params, State> = async ({ profileUserId, viewerUser }) => {
-  const result = await api.readOneUser(profileUserId);
-  switch (result.tag) {
-    case 'valid':
-      return await userToState(result.value, viewerUser);
-    case 'invalid':
-      return {
-        errors: [ERROR_MESSAGE]
-      };
-  }
-};
+const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedIn({
 
-export const update: Update<State, Msg> = (state, msg) => {
+  async success({ routeParams, shared }) {
+    const { profileUserId } = routeParams;
+    const viewerUser = shared.sessionUser;
+    const result = await api.readOneUser(profileUserId);
+    switch (result.tag) {
+      case 'valid':
+        return await userToState(result.value, viewerUser);
+      case 'invalid':
+        return {
+          errors: [ERROR_MESSAGE]
+        };
+    }
+  },
+
+  async fail({ routeParams, dispatch }) {
+    dispatch(replaceRoute({
+      tag: 'signIn' as 'signIn',
+      value: {
+        redirectOnSuccess: router.routeToUrl({
+          tag: 'profile',
+          value: routeParams
+        })
+      }
+    }));
+    // Use Buyer as an arbitrary choice for the first argument.
+    return { errors: [] };
+  }
+
+});
+
+const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
 
     case 'buyer':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'buyer', value }),
+        mapChildMsg: value => ({ tag: 'buyer' as 'buyer', value }),
         childStatePath: ['buyer'],
         childUpdate: BuyerProfile.update,
         childMsg: msg.value
@@ -92,7 +109,7 @@ export const update: Update<State, Msg> = (state, msg) => {
     case 'vendor':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'vendor', value }),
+        mapChildMsg: value => ({ tag: 'vendor' as 'vendor', value }),
         childStatePath: ['vendor'],
         childUpdate: VendorProfile.update,
         childMsg: msg.value
@@ -101,7 +118,7 @@ export const update: Update<State, Msg> = (state, msg) => {
     case 'programStaff':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'programStaff', value }),
+        mapChildMsg: value => ({ tag: 'programStaff' as 'programStaff', value }),
         childStatePath: ['programStaff'],
         childUpdate: ProgramStaffProfile.update,
         childMsg: msg.value
@@ -113,34 +130,32 @@ export const update: Update<State, Msg> = (state, msg) => {
 };
 
 interface ViewProfileProps<ProfileState, ProfileMsg> {
-  dispatch: Dispatch<ComponentMsg<Msg, Page>>;
+  dispatch: Dispatch<GlobalComponentMsg<Msg, Route>>;
   profileState?: Immutable<ProfileState>;
-  View: ComponentView<ProfileState, ComponentMsg<ProfileMsg, Page>>;
-  mapProfileMsg(msg: ComponentMsg<ProfileMsg, Page>): Msg;
+  View: ComponentView<ProfileState, GlobalComponentMsg<ProfileMsg, Route>>;
+  mapProfileMsg(msg: GlobalComponentMsg<ProfileMsg, Route>): Msg;
 }
 
 function ViewProfile<ProfileState, ProfileMsg>(props: ViewProfileProps<ProfileState, ProfileMsg>): ReactElement<ViewProfileProps<ProfileState, ProfileMsg>> | null {
   const { dispatch, profileState, mapProfileMsg, View } = props;
   if (profileState !== undefined) {
-    const dispatchProfile: Dispatch<ComponentMsg<ProfileMsg, Page>> = mapComponentDispatch(dispatch, mapProfileMsg);
+    const dispatchProfile: Dispatch<GlobalComponentMsg<ProfileMsg, Route>> = mapComponentDispatch(dispatch, mapProfileMsg);
     return (<View dispatch={dispatchProfile} state={profileState} />);
   } else {
     return null;
   }
 }
 
-export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
+const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (state.errors.length) {
     return (
-      <PageContainer.View paddingY>
-        <Row>
-          <Col xs='12'>
-            <Alert color='danger'>
-              {state.errors.map((e, i) => (<div key={`profile-error-${i}`}>{e}</div>))}
-            </Alert>
-          </Col>
-        </Row>
-      </PageContainer.View>
+      <Row>
+        <Col xs='12'>
+          <Alert color='danger'>
+            {state.errors.map((e, i) => (<div key={`profile-error-${i}`}>{e}</div>))}
+          </Alert>
+        </Col>
+      </Row>
     );
   } else if (state.buyer) {
     return (
@@ -171,8 +186,13 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   }
 };
 
-export const component: Component<Params, State, Msg> = {
+export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   init,
   update,
-  view
+  view,
+  getAlerts: emptyPageAlerts,
+  getMetadata() {
+    // TODO Show user's name in the title.
+    return makePageMetadata('User Profile');
+  }
 };

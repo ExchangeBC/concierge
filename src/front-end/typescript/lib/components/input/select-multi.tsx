@@ -1,5 +1,5 @@
-import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentViewProps, immutable, Immutable, Init, Update, View } from 'front-end/lib/framework';
+import { Route } from 'front-end/lib/app/types';
+import { Component, ComponentViewProps, GlobalComponentMsg, immutable, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import * as FormFieldMulti from 'front-end/lib/views/form-field-multi';
 import { Option } from 'front-end/lib/views/input/select';
 import { cloneDeep } from 'lodash';
@@ -41,7 +41,7 @@ type InnerMsg
   | ADT<'remove', number>
   | ADT<'change', { index: number, value: string }>;
 
-export type Msg = ComponentMsg<InnerMsg, Page>;
+export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export interface Params extends Omit<State, 'formFieldMulti'> {
   formFieldMulti: FormFieldMulti.State<string>;
@@ -61,7 +61,7 @@ export const init: Init<Params, State> = async params => {
   };
 };
 
-export const update: Update<State, Msg> = (state, msg) => {
+export const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'add':
       let addFields = state.formFieldMulti.fields;

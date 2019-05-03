@@ -1,37 +1,45 @@
-import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Init, Update, View } from 'front-end/lib/framework';
+import { makePageMetadata } from 'front-end/lib';
+import { Route, SharedState } from 'front-end/lib/app/types';
+import { ComponentView, emptyPageAlerts, GlobalComponentMsg, PageComponent, PageInit, Update, View } from 'front-end/lib/framework';
 import Icon from 'front-end/lib/views/icon';
-import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import React from 'react';
 import { Col, Container, Row } from 'reactstrap';
-import { UserType, userTypeToTitleCase } from 'shared/lib/types';
+import { ADT, UserType, userTypeToTitleCase } from 'shared/lib/types';
 
 export interface State {
   signedIn: boolean;
   userType?: UserType;
 };
 
-export type Params = Partial<State>;
+export type RouteParams = null;
 
-export type Msg = ComponentMsg<null, Page>;
+export type Msg = GlobalComponentMsg<ADT<'noop'>, Route>;
 
-export const init: Init<Params, State> = async params => ({
-  signedIn: !!params.signedIn,
-  userType: params.userType
-});
+const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) => {
+  if (shared.session && shared.session.user) {
+    return {
+      signedIn: true,
+      userType: shared.session.user.type
+    };
+  } else {
+    return {
+      signedIn: false
+    };
+  }
+};
 
-export const update: Update<State, Msg> = (state, msg) => {
+const update: Update<State, Msg> = ({ state, msg }) => {
   return [state];
 };
 
 const CallToActionButton: View<{ signedIn: boolean, userType?: UserType }> = ({ signedIn, userType }) => {
-  let page: Page = { tag: 'signUpBuyer', value: {} };
+  let page: Route = { tag: 'signUpBuyer', value: {} };
   let text = 'Get Started';
   if (signedIn) {
     page = {
       tag: 'requestForInformationList',
-      value: { userType }
+      value: null
     };
     text = 'View RFIs';
   }
@@ -192,20 +200,29 @@ const CallToAction: ComponentView<State, Msg> = ({ state, dispatch }) => {
   );
 };
 
-export const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = props => {
   return (
-    <PageContainer.View fullWidth>
+    <div>
       <Hero {...props} />
       <LeadingText {...props} />
       <UserPersonas {...props} />
       <Features {...props} />
       <CallToAction {...props} />
-    </PageContainer.View>
+    </div>
   );
 };
 
-export const component: Component<Params, State, Msg> = {
+export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   init,
   update,
-  view
+  view,
+  containerOptions: {
+    fullWidth: true,
+    paddingTop: false,
+    paddingBottom: false
+  },
+  getMetadata() {
+    return makePageMetadata('Welcome');
+  },
+  getAlerts: emptyPageAlerts
 };

@@ -1,4 +1,4 @@
-import { Immutable } from 'front-end/lib/framework';
+import { Immutable, PageMetadata } from 'front-end/lib/framework';
 
 export type UpdateState<State> = (state: Immutable<State>) => Immutable<State>;
 
@@ -25,5 +25,11 @@ export function makeStopLoading<State, Key extends keyof State>(key: Key): Updat
     } else {
       return state;
     }
+  };
+}
+
+export function makePageMetadata(title: string): PageMetadata {
+  return {
+    title: `${title} - Procurement Concierge Program`
   };
 }

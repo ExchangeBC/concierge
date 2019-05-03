@@ -1,5 +1,5 @@
-import AppRouter from 'front-end/lib/app/router';
-import { Page } from 'front-end/lib/app/types';
+import router from 'front-end/lib/app/router';
+import { Route } from 'front-end/lib/app/types';
 import { default as React, MouseEvent, ReactElement } from 'react';
 import { Button } from 'reactstrap';
 
@@ -7,7 +7,7 @@ import { Button } from 'reactstrap';
 
 interface Props {
   href?: string;
-  page?: Page;
+  page?: Route;
   text?: string;
   buttonColor?: string;
   buttonSize?: 'sm' | 'md' | 'lg';
@@ -35,7 +35,7 @@ function Link(props: Props) {
     children,
     onClick
   } = props;
-  const href = props.page ? AppRouter.pageToUrl(props.page) : (props.href || undefined);
+  const href = props.page ? router.routeToUrl(props.page) : (props.href || undefined);
   const aProps = {
     onClick: (e: MouseEvent<HTMLAnchorElement>) => {
       if (disabled) { e.preventDefault(); }

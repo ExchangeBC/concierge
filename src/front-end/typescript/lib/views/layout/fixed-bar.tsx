@@ -2,18 +2,14 @@ import * as framework from 'front-end/lib/framework';
 import { default as React, ReactElement } from 'react';
 import { Col, Container, Row } from 'reactstrap';
 
-export const HEIGHT = 71;
-
 export interface Props {
-  location?: 'top' | 'bottom';
   className?: string;
-  overflowWidth?: number;
   children: Array<ReactElement<any> | null> | ReactElement<any>;
 }
 
-export const View: framework.View<Props> = ({ location, className = '', overflowWidth, children }: Props) => {
+export const view: framework.View<Props> = ({ className = '', children }: Props) => {
   return (
-    <div className={`${location ? `fixed-${location}` : ''} bg-light border-top transition-hide fixed-bar ${className}`}>
+    <div className={`bg-light border-top transition-hide fixed-bar position-sticky ${className}`} style={{ bottom: '0px' }}>
       <Container className='h-100'>
         <Row className='h-100' style={{ overflowX: 'auto' }}>
           <Col
@@ -29,4 +25,4 @@ export const View: framework.View<Props> = ({ location, className = '', overflow
   );
 };
 
-export default View;
+export default view;

@@ -1,5 +1,5 @@
-import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Immutable, Init, Update, View } from 'front-end/lib/framework';
+import { Route } from 'front-end/lib/app/types';
+import { Component, ComponentView, GlobalComponentMsg, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import { validateConfirmPassword } from 'front-end/lib/validators';
 import { updateField, validateField } from 'front-end/lib/views/form-field';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
@@ -55,7 +55,7 @@ type InnerMsg
   | ADT<'validatePassword'>
   | ADT<'validateConfirmPassword'>;
 
-export type Msg = ComponentMsg<InnerMsg, Page>;
+export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export interface Params {
   userType: UserType;
@@ -91,7 +91,7 @@ export const init: Init<Params, State> = async ({ userType }) => {
   };
 };
 
-export const update: Update<State, Msg> = (state, msg) => {
+export const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'onChangeEmail':
       return [updateField(state, 'email', msg.value)];
