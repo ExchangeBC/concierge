@@ -1,63 +1,83 @@
-import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
-import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
+import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
+import { isUserType } from 'front-end/lib/access-control';
+import { Route, SharedState } from 'front-end/lib/app/types';
+import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newRoute, PageComponent, PageInit, replaceRoute, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as markdown from 'front-end/lib/http/markdown';
-import * as FixedBar from 'front-end/lib/views/fixed-bar';
 import Icon from 'front-end/lib/views/icon';
-import * as PageContainer from 'front-end/lib/views/layout/page-container';
+import FixedBar from 'front-end/lib/views/layout/fixed-bar';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import Markdown from 'front-end/lib/views/markdown';
 import React from 'react';
 import { Alert, Col, Container, Row } from 'reactstrap';
 import { formatTermsAndConditionsAgreementDate } from 'shared/lib';
-import { ADT } from 'shared/lib/types';
+import { ADT, UserType } from 'shared/lib/types';
 
 export interface State {
   loading: number;
-  fixedBarBottom: number;
   errors: string[];
   warnings: string[];
   markdownSource: string;
   userId: string;
   acceptedTermsAt?: Date;
-  redirectOnAccept?: Page;
-  redirectOnSkip?: Page;
+  redirectOnAccept?: Route;
+  redirectOnSkip?: Route;
 };
 
-export interface Params extends Pick<State, 'userId' | 'redirectOnAccept' | 'redirectOnSkip'> {
+export interface RouteParams extends Pick<State, 'redirectOnAccept' | 'redirectOnSkip'> {
   warnings?: string[];
-  fixedBarBottom?: number;
 }
 
 type InnerMsg
-  = ADT<'acceptTerms'>
-  | ADT<'updateFixedBarBottom', number>;
+  = ADT<'acceptTerms'>;
 
-export type Msg = ComponentMsg<InnerMsg, Page>;
+export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
-export const init: Init<Params, State> = async ({ userId, redirectOnAccept, redirectOnSkip, warnings = [], fixedBarBottom = 0 }) => {
-  const result = await api.readOneUser(userId);
-  const acceptedTermsAt = result.tag === 'valid' ? result.value.acceptedTermsAt : undefined;
-  const errors = result.tag === 'invalid' ? ['An error occurred while loading this page. Please refresh the page and try again.'] : []
-  return {
-    loading: 0,
-    fixedBarBottom,
-    errors,
-    warnings,
-    markdownSource: await markdown.getDocument('terms_and_conditions'),
-    userId,
-    acceptedTermsAt,
-    redirectOnAccept,
-    redirectOnSkip
-  };
+const initState: State = {
+  loading: 0,
+  errors: [],
+  warnings: [],
+  markdownSource: '',
+  userId: ''
 };
+
+const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
+
+  userTypes: [UserType.Buyer, UserType.Vendor],
+
+  async success({ routeParams, shared }) {
+    const { redirectOnAccept, redirectOnSkip, warnings = [] } = routeParams;
+    const userId = shared.sessionUser.id;
+    const result = await api.readOneUser(userId);
+    const acceptedTermsAt = result.tag === 'valid' ? result.value.acceptedTermsAt : undefined;
+    const errors = result.tag === 'invalid' ? ['An error occurred while loading this page. Please refresh the page and try again.'] : []
+    return {
+      ...initState,
+      errors,
+      warnings,
+      markdownSource: await markdown.getDocument('terms_and_conditions'),
+      userId,
+      acceptedTermsAt,
+      redirectOnAccept,
+      redirectOnSkip
+    };
+  },
+
+  async fail({ dispatch }) {
+    dispatch(replaceRoute({
+      tag: 'requestForInformationList' as 'requestForInformationList',
+      value: null
+    }));
+    return initState;
+  }
+
+});
 
 const startLoading: UpdateState<State> = makeStartLoading('loading');
 const stopLoading: UpdateState<State> = makeStopLoading('loading');
 
-function getRedirectPage(state: Immutable<State>, skip: boolean): Page {
+function getRedirectRoute(state: Immutable<State>, skip: boolean): Route {
   if (state.redirectOnAccept && !skip) { return state.redirectOnAccept; }
   if (state.redirectOnSkip && skip) { return state.redirectOnSkip; }
   return {
@@ -68,7 +88,7 @@ function getRedirectPage(state: Immutable<State>, skip: boolean): Page {
   };
 };
 
-export const update: Update<State, Msg> = (state, msg) => {
+const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'acceptTerms':
       state = startLoading(state);
@@ -82,18 +102,13 @@ export const update: Update<State, Msg> = (state, msg) => {
           switch (result.tag) {
             case 'valid':
               state = state.set('warnings', []);
-              dispatch({
-                tag: '@newUrl',
-                value: getRedirectPage(state, false)
-              });
+              dispatch(newRoute(getRedirectRoute(state, false)));
               return state;
             case 'invalid':
               return stopLoading(state).set('errors', result.value.acceptedTerms || []);
           }
         }
       ];
-    case 'updateFixedBarBottom':
-      return [state.set('fixedBarBottom', msg.value)];
     default:
       return [state];
   }
@@ -128,21 +143,20 @@ const ConditionalAlerts: ComponentView<State, Msg> = ({ state }) => {
   }
 };
 
-const AcceptedAt: ComponentView<State, Msg> = props => {
+const viewBottomBar: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
-  const fixedBarLocation = state.fixedBarBottom === 0 ? 'bottom' : undefined;
-  const skipPage: Page = getRedirectPage(state, true);
+  const skipRoute: Route = getRedirectRoute(state, true);
   if (state.acceptedTermsAt) {
     return (
-      <FixedBar.View location={fixedBarLocation}>
+      <FixedBar>
         <p className='text-align-right mb-0'>
           {formatTermsAndConditionsAgreementDate(state.acceptedTermsAt)}
         </p>
-        <Link page={skipPage} text='Skip' className='mr-auto d-none d-md-block' buttonClassName='p-0 d-flex align-items-center' textColor='secondary'>
+        <Link page={skipRoute} text='Skip' className='mr-auto d-none d-md-block' buttonClassName='p-0 d-flex align-items-center' textColor='secondary'>
           <Icon name='chevron-left' color='secondary' className='mr-1' />
           My Profile
         </Link>
-      </FixedBar.View>
+      </FixedBar>
     );
   } else {
     const isLoading = state.loading > 0;
@@ -150,41 +164,42 @@ const AcceptedAt: ComponentView<State, Msg> = props => {
     const acceptTerms = () => !isDisabled && !state.acceptedTermsAt && dispatch({ tag: 'acceptTerms', value: undefined });
     // We only want the Accept/Skip buttons to appear on the bottom of the page.
     return (
-      <FixedBar.View>
+      <FixedBar>
         <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={acceptTerms} loading={isLoading} disabled={isDisabled}>
           I Accept
         </LoadingButton>
-        <Link page={skipPage} text='Skip' textColor='secondary' />
-      </FixedBar.View>
+        <Link page={skipRoute} text='Skip' textColor='secondary' />
+      </FixedBar>
     );
   }
 };
 
-export const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = props => {
   const { state } = props;
-  const bottomBarIsFixed = state.fixedBarBottom === 0 && !!state.acceptedTermsAt;
   return (
-    <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>
-      <Container className='mb-5 flex-grow-1'>
-        <ConditionalAlerts {...props} />
-        <Row className='mb-3'>
-          <Col xs='12'>
-            <h1>Concierge Web App Terms and Conditions</h1>
-          </Col>
-        </Row>
-        <Row>
-          <Col xs='12'>
-            <Markdown source={state.markdownSource} />
-          </Col>
-        </Row>
-      </Container>
-      <AcceptedAt {...props} />
-    </PageContainer.View>
+    <Container className='mb-5 flex-grow-1'>
+      <ConditionalAlerts {...props} />
+      <Row className='mb-3'>
+        <Col xs='12'>
+          <h1>Concierge Web App Terms and Conditions</h1>
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12'>
+          <Markdown source={state.markdownSource} />
+        </Col>
+      </Row>
+    </Container>
   );
 };
 
-export const component: Component<Params, State, Msg> = {
+export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   init,
   update,
-  view
+  view,
+  viewBottomBar,
+  getAlerts: emptyPageAlerts,
+  getMetadata() {
+    return makePageMetadata('Terms and Conditions');
+  }
 };

@@ -1,11 +1,11 @@
 import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
-import router from 'front-end/lib/app/router';
-import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/lib/framework';
+import { makePageMetadata } from 'front-end/lib';
+import { isSignedOut } from 'front-end/lib/access-control';
+import { Route, SharedState } from 'front-end/lib/app/types';
+import { ComponentView, emptyPageAlerts, GlobalComponentMsg, PageComponent, PageInit, replaceRoute, replaceUrl, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { updateField, validateField } from 'front-end/lib/views/form-field';
 import * as ShortText from 'front-end/lib/views/input/short-text';
-import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
@@ -16,7 +16,7 @@ import { validateEmail, validatePassword } from 'shared/lib/validators';
 export interface State {
   loading: number;
   errors: string[];
-  redirectOnSuccess?: Page;
+  redirectOnSuccess?: string;
   email: ShortText.State;
   password: ShortText.State;
 }
@@ -28,38 +28,55 @@ type InnerMsg
   | ADT<'validatePassword'>
   | ADT<'submit'>;
 
-export type Msg = ComponentMsg<InnerMsg, Page>;
+export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
-export interface Params {
-  redirectOnSuccess?: Page;
+export interface RouteParams {
+  redirectOnSuccess?: string;
 };
 
-export const init: Init<Params, State> = async ({ redirectOnSuccess }) => {
-  return {
-    loading: 0,
-    errors: [],
-    redirectOnSuccess,
-    email: ShortText.init({
-      id: 'sign-in-email',
-      required: true,
-      type: 'email',
-      label: 'Email Address',
-      placeholder: 'Email Address'
-    }),
-    password: ShortText.init({
-      id: 'sign-in-password',
-      required: true,
-      type: 'password',
-      label: 'Password',
-      placeholder: 'Password'
-    })
-  };
+const initState: State = {
+  loading: 0,
+  errors: [],
+  email: ShortText.init({
+    id: 'sign-in-email',
+    required: true,
+    type: 'email',
+    label: 'Email Address',
+    placeholder: 'Email Address'
+  }),
+  password: ShortText.init({
+    id: 'sign-in-password',
+    required: true,
+    type: 'password',
+    label: 'Password',
+    placeholder: 'Password'
+  })
 };
+
+const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedOut({
+
+  async success({ routeParams }) {
+    const { redirectOnSuccess } = routeParams;
+    return {
+      ...initState,
+      redirectOnSuccess
+    }
+  },
+
+  async fail({ dispatch }) {
+    dispatch(replaceRoute({
+      tag: 'requestForInformationList' as 'requestForInformationList',
+      value: null
+    }));
+    return initState;
+  }
+
+});
 
 const startLoading: UpdateState<State> = makeStartLoading('loading');
 const stopLoading: UpdateState<State> = makeStopLoading('loading');
 
-export const update: Update<State, Msg> = (state, msg) => {
+const update: Update<State, Msg> = ({ state, msg }) => {
   // Reset errors every time state updates.
   state = state.set('errors', []);
   switch (msg.tag) {
@@ -79,21 +96,14 @@ export const update: Update<State, Msg> = (state, msg) => {
           const result = await api.createSession(state.email.value, state.password.value);
           switch (result.tag) {
             case 'valid':
-              let fallbackRedirectOnSuccess: Page = router.fallbackPage;
-              if (result.value.user) {
-                fallbackRedirectOnSuccess = {
-                  tag: 'requestForInformationList',
-                  value: {
-                    userType: result.value.user.type
-                  }
-                }
+              if (state.redirectOnSuccess) {
+                dispatch(replaceUrl(state.redirectOnSuccess));
+              } else {
+                dispatch(replaceRoute({
+                  tag: 'requestForInformationList' as 'requestForInformationList',
+                  value: null
+                }));
               }
-              // Give precendence to already-defined redirect page.
-              const redirectOnSuccess = state.redirectOnSuccess || fallbackRedirectOnSuccess;
-              dispatch({
-                tag: '@newUrl',
-                value: redirectOnSuccess
-              });
               return state;
             case 'invalid':
               return stopLoading(state).set('errors', result.value);
@@ -130,14 +140,14 @@ const ConditionalErrors: ComponentView<State, Msg> = ({ state }) => {
   }
 };
 
-export const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   const onChange = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const isLoading = state.loading > 0;
   const isDisabled = isLoading || !isValid(state);
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
-    <PageContainer.View paddingY>
+    <div>
       <Row>
         <Col xs='12'>
           <h1>Sign In</h1>
@@ -182,17 +192,21 @@ export const view: ComponentView<State, Msg> = props => {
               <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled}>
                 Sign In
               </LoadingButton>
-              <Link page={{ tag: 'landing', value: {} }} text='Cancel' textColor='secondary' />
+              <Link page={{ tag: 'landing', value: null }} text='Cancel' textColor='secondary' />
             </Col>
           </Row>
         </Col>
       </Row>
-    </PageContainer.View>
+    </div>
   );
 };
 
-export const component: Component<Params, State, Msg> = {
+export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   init,
   update,
-  view
+  view,
+  getAlerts: emptyPageAlerts,
+  getMetadata() {
+    return makePageMetadata('Sign In');
+  }
 };

@@ -1,6 +1,6 @@
-import { Page } from 'front-end/lib/app/types';
+import { Route } from 'front-end/lib/app/types';
 import { ProfileComponent, ProfileParams, ProfileView } from 'front-end/lib/components/profiles/types';
-import { ComponentMsg, immutable, Immutable, Init, Update } from 'front-end/lib/framework';
+import { GlobalComponentMsg, immutable, Immutable, Init, Update } from 'front-end/lib/framework';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
@@ -101,7 +101,7 @@ export type InnerMsg
   | ADT<'contactPhoneType', string>
   | ADT<'validate'>;
 
-export type Msg = ComponentMsg<InnerMsg, Page>;
+export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export type Params = ProfileParams<ProgramStaffProfile>;
 
@@ -197,7 +197,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
   }
 };
 
-export const update: Update<State, Msg> = (state, msg) => {
+export const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'firstName':
       return [updateValue(state, 'firstName', msg.value)];

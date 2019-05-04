@@ -1,11 +1,13 @@
-import { Page } from 'front-end/lib/app/types';
+import { makePageMetadata } from 'front-end/lib';
+import { isUserType } from 'front-end/lib/access-control';
+import router from 'front-end/lib/app/router';
+import { Route, SharedState } from 'front-end/lib/app/types';
 import * as TableComponent from 'front-end/lib/components/table';
-import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, immutable, Immutable, mapComponentDispatch, PageComponent, PageInit, replaceRoute, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import { readManyUsers } from 'front-end/lib/http/api';
 import Icon from 'front-end/lib/views/icon';
 import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
-import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import { default as React, ReactElement } from 'react';
 import { Col, Row } from 'reactstrap';
@@ -50,7 +52,7 @@ export interface State {
   table: Immutable<TableComponent.State<TableCellData>>;
 };
 
-export type Params = null;
+export type RouteParams = null;
 
 type InnerMsg
   = ADT<'userTypeFilter', string>
@@ -58,26 +60,12 @@ type InnerMsg
   | ADT<'searchFilter', string>
   | ADT<'table', TableComponent.Msg>;
 
-export type Msg = ComponentMsg<InnerMsg, Page>;
+export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
-export const init: Init<Params, State> = async () => {
-  const result = await readManyUsers();
-  let users: PublicUser[] = [];
-  if (result.tag === 'valid') {
-    // Sort users by user type first, then name.
-    users = result.value.items.sort((a, b) => {
-      if (a.profile.type === b.profile.type) {
-        const aName = profileToName(a.profile) || FALLBACK_NAME;
-        const bName = profileToName(b.profile) || FALLBACK_NAME;
-        return aName.localeCompare(bName, 'en', { sensitivity: 'base' });
-      } else {
-        return a.profile.type.localeCompare(b.profile.type, 'en');
-      }
-    });
-  }
+async function makeInitState(): Promise<State> {
   return {
-    users,
-    visibleUsers: users,
+    users: [],
+    visibleUsers: [],
     userTypeFilter: Select.init({
       id: 'user-list-filter-user-type',
       value: '',
@@ -110,7 +98,49 @@ export const init: Init<Params, State> = async () => {
       TDView
     }))
   };
-};
+}
+
+const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
+
+  userTypes: [UserType.ProgramStaff],
+
+  async success() {
+    const result = await readManyUsers();
+    let users: PublicUser[] = [];
+    if (result.tag === 'valid') {
+      // Sort users by user type first, then name.
+      users = result.value.items.sort((a, b) => {
+        if (a.profile.type === b.profile.type) {
+          const aName = profileToName(a.profile) || FALLBACK_NAME;
+          const bName = profileToName(b.profile) || FALLBACK_NAME;
+          return aName.localeCompare(bName, 'en', { sensitivity: 'base' });
+        } else {
+          return a.profile.type.localeCompare(b.profile.type, 'en');
+        }
+      });
+    }
+    const initState = await makeInitState();
+    return {
+      ...initState,
+      users,
+      visibleUsers: users
+    };
+  },
+
+  async fail({ routeParams, dispatch }) {
+    dispatch(replaceRoute({
+      tag: 'signIn' as 'signIn',
+      value: {
+        redirectOnSuccess: router.routeToUrl({
+          tag: 'userList',
+          value: routeParams
+        })
+      }
+    }));
+    return await makeInitState();
+  }
+
+});
 
 function userMatchesUserType(user: PublicUser, userType: UserType | null): boolean {
   return !!userType && user.profile.type === userType;
@@ -152,7 +182,7 @@ function updateAndQuery(state: Immutable<State>, key?: string, value?: string): 
   return state.set('visibleUsers', users); ;
 }
 
-export const update: Update<State, Msg> = (state, msg) => {
+const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'userTypeFilter':
       return [updateAndQuery(state, 'userTypeFilter', msg.value)];
@@ -163,7 +193,7 @@ export const update: Update<State, Msg> = (state, msg) => {
     case 'table':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'table', value }),
+        mapChildMsg: value => ({ tag: 'table' as 'table', value }),
         childStatePath: ['table'],
         childUpdate: Table.update,
         childMsg: msg.value
@@ -173,7 +203,7 @@ export const update: Update<State, Msg> = (state, msg) => {
   }
 };
 
-export const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
+const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
@@ -243,10 +273,10 @@ function tableBodyRows(users: PublicUser[]): Array<Array<TableComponent.TDSpec<T
   });
 }
 
-export const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
+const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (!state.visibleUsers.length) { return (<div>There are no users that match the search criteria.</div>); }
   const bodyRows = tableBodyRows(state.visibleUsers);
-  const dispatchTable: Dispatch<ComponentMsg<TableComponent.Msg, Page>> = mapComponentDispatch(dispatch, value => ({ tag: 'table', value }));
+  const dispatchTable: Dispatch<GlobalComponentMsg<TableComponent.Msg, Route>> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as 'table', value }));
   return (
     <Table.view
       className='text-nowrap'
@@ -257,9 +287,9 @@ export const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch })
   );
 }
 
-export const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = props => {
   return (
-    <PageContainer.View paddingY>
+    <div>
       <Row className='mb-5 mb-md-2 justify-content-md-between'>
         <Col xs='12' md='auto'>
           <h1 className='mb-3 mb-md-0'>Concierge Users</h1>
@@ -277,12 +307,16 @@ export const view: ComponentView<State, Msg> = props => {
       </Row>
       <Filters {...props} />
       <ConditionalTable {...props} />
-    </PageContainer.View>
+    </div>
   );
 };
 
-export const component: Component<Params, State, Msg> = {
+export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   init,
   update,
-  view
+  view,
+  getAlerts: emptyPageAlerts,
+  getMetadata() {
+    return makePageMetadata('Users');
+  }
 };

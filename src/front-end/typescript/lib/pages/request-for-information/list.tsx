@@ -1,12 +1,12 @@
-import { Page } from 'front-end/lib/app/types';
+import { makePageMetadata } from 'front-end/lib';
+import { Route, SharedState } from 'front-end/lib/app/types';
 import * as TableComponent from 'front-end/lib/components/table';
-import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, PageComponent, PageInit, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import { readManyRfis } from 'front-end/lib/http/api';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
 import Icon from 'front-end/lib/views/icon';
 import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
-import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import { default as React, ReactElement } from 'react';
 import { Col, Row } from 'reactstrap';
@@ -72,7 +72,7 @@ export interface State {
   table: Immutable<TableComponent.State<TableCellData>>;
 };
 
-export type Params = Pick<State, 'userType'>;
+export type RouteParams = null;
 
 type InnerMsg
   = ADT<'statusFilter', string>
@@ -80,9 +80,11 @@ type InnerMsg
   | ADT<'searchFilter', string>
   | ADT<'table', TableComponent.Msg>;
 
-export type Msg = ComponentMsg<InnerMsg, Page>;
+export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
-export const init: Init<Params, State> = async ({ userType }) => {
+const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) => {
+  const { session } = shared;
+  const userType = session && session.user && session.user.type;
   const result = await readManyRfis();
   let rfis: Rfi[] = [];
   if (result.tag === 'valid') {
@@ -179,7 +181,7 @@ function updateAndQuery(state: Immutable<State>, key?: string, value?: string): 
   return state.set('visibleRfis', rfis); ;
 }
 
-export const update: Update<State, Msg> = (state, msg) => {
+const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'statusFilter':
       return [updateAndQuery(state, 'statusFilter', msg.value)];
@@ -190,7 +192,7 @@ export const update: Update<State, Msg> = (state, msg) => {
     case 'table':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'table', value }),
+        mapChildMsg: value => ({ tag: 'table' as 'table', value }),
         childStatePath: ['table'],
         childUpdate: Table.update,
         childMsg: msg.value
@@ -200,7 +202,7 @@ export const update: Update<State, Msg> = (state, msg) => {
   }
 };
 
-export const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
+const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const categoryFilterElement = state.userType !== UserType.ProgramStaff
@@ -359,13 +361,13 @@ function nonProgramStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.T
   });
 }
 
-export const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
+const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (!state.rfis.length) { return (<div>There are no RFIs currently available.</div>); }
   if (!state.visibleRfis.length) { return (<div>There are no RFIs that match the search criteria.</div>); }
   const isProgramStaff = state.userType === UserType.ProgramStaff;
   const headCells = isProgramStaff ? programStaffTableHeadCells : nonProgramStaffTableHeadCells;
   const bodyRows = isProgramStaff ? programStaffTableBodyRows(state.visibleRfis) : nonProgramStaffTableBodyRows(state.visibleRfis);
-  const dispatchTable: Dispatch<ComponentMsg<TableComponent.Msg, Page>> = mapComponentDispatch(dispatch, value => ({ tag: 'table', value }));
+  const dispatchTable: Dispatch<GlobalComponentMsg<TableComponent.Msg, Route>> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as 'table', value }));
   return (
     <Table.view
       className='text-nowrap'
@@ -377,18 +379,18 @@ export const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch })
   );
 }
 
-export const ConditionalCreateButton: ComponentView<State, Msg> = ({ state, dispatch }) => {
+const ConditionalCreateButton: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (state.userType !== UserType.ProgramStaff) { return null; }
   return (
     <Col xs='12' md='auto'>
-      <Link page={{ tag: 'requestForInformationCreate', value: {} }} buttonColor='info' text='Create an RFI' />
+      <Link page={{ tag: 'requestForInformationCreate', value: null }} buttonColor='info' text='Create an RFI' />
     </Col>
   );
 }
 
-export const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = props => {
   return (
-    <PageContainer.View paddingY>
+    <div>
       <Row className='mb-5 mb-md-2 justify-content-md-between'>
         <Col xs='12' md='auto'>
           <h1 className='mb-3 mb-md-0'>Requests for Information (RFIs)</h1>
@@ -404,12 +406,16 @@ export const view: ComponentView<State, Msg> = props => {
       </Row>
       <Filters {...props} />
       <ConditionalTable {...props} />
-    </PageContainer.View>
+    </div>
   );
 };
 
-export const component: Component<Params, State, Msg> = {
+export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   init,
   update,
-  view
+  view,
+  getAlerts: emptyPageAlerts,
+  getMetadata() {
+    return makePageMetadata('Requests for Information');
+  }
 };

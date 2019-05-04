@@ -1,468 +1,380 @@
-import { Page, State } from 'front-end/lib/app/types';
-import { RouteAuthDefinition, Router } from 'front-end/lib/framework';
-import * as PageSignIn from 'front-end/lib/pages/sign-in';
-import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
-import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
-import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
-import { get } from 'lodash';
-import { getString } from 'shared/lib';
-import { UserType, userTypeToTitleCase } from 'shared/lib/types';
+import { Route } from 'front-end/lib/app/types';
+import { Router } from 'front-end/lib/framework';
 
-// TODO we can remove `pageId` strings from the routes array
-// by adding a function to each routes definition instead.
-// The function would take in params and state,
-// and return a value of type `Page`.
-
-const PAGE_TITLE_SUFFIX = 'Procurement Concierge Program';
-
-const isSignedOut: RouteAuthDefinition<Page, UserType> = {
-  level: { tag: 'signedOut', value: undefined },
-  redirect: () => ({ tag: 'landing', value: {} }),
-  signOut: false
-};
-
-const isSignedIn: RouteAuthDefinition<Page, UserType> = {
-  level: { tag: 'signedIn', value: undefined },
-  redirect: page => {
-    return {
-      tag: 'signIn',
-      value: {
-        redirectOnSuccess: page
-      }
-    };
-  },
-  signOut: false
-};
-
-const isBuyerOrVendor: RouteAuthDefinition<Page, UserType> = {
-  level: { tag: 'userType', value: [UserType.Buyer, UserType.Vendor] },
-  redirect: () => ({ tag: 'landing', value: {} }),
-  signOut: false
-};
-
-const isProgramStaff: RouteAuthDefinition<Page, UserType> = {
-  level: { tag: 'userType', value: [UserType.ProgramStaff] },
-  redirect: page => {
-    return {
-      tag: 'signIn',
-      value: {
-        redirectOnSuccess: page
-      }
-    };
-  },
-  signOut: false
-};
-
-function serialize<Params>(params: Params): string {
-  return btoa(JSON.stringify(params));
-}
-
-function deserialize<Params>(s: string): Params {
-  return JSON.parse(atob(s)) as Params;
-}
-
-const router: Router<State, Page, UserType> = {
-
-  fallbackPage: {
-    tag: 'requestForInformationList',
-    value: {}
-  },
+const router: Router<Route> = {
 
   routes: [
     {
       path: '/',
-      pageId: 'landing'
+      makeRoute() {
+        return {
+          tag: 'landing',
+          value: null
+        };
+      }
     },
     {
       path: '/sign-in',
-      pageId: 'signIn',
-      auth: isSignedOut
-    },
-    {
-      path: '/sign-in/:params',
-      pageId: 'signIn',
-      auth: isSignedOut
+      makeRoute({ query }) {
+        let redirectOnSuccess;
+        if (query.redirectOnSuccess && query.redirectOnSuccess instanceof Array) {
+          redirectOnSuccess = query.redirectOnSuccess[0];
+        } else {
+          redirectOnSuccess = query.redirectOnSuccess;
+        }
+        return {
+          tag: 'signIn',
+          value: { redirectOnSuccess }
+        };
+      }
     },
     {
       // Alias the buyer sign-up page.
       path: '/sign-up',
-      pageId: 'signUpBuyer',
-      auth: isSignedOut
-    },
-    {
-      path: '/sign-up/buyer',
-      pageId: 'signUpBuyer',
-      auth: isSignedOut
-    },
-    {
-      path: '/sign-up/vendor',
-      pageId: 'signUpVendor',
-      auth: isSignedOut
-    },
-    {
-      path: '/sign-up/program-staff',
-      pageId: 'signUpProgramStaff',
-      auth: isProgramStaff
-    },
-    {
-      path: '/sign-out',
-      pageId: 'signOut',
-      auth: {
-        level: { tag: 'signedOut', value: undefined },
-        redirect: () => ({ tag: 'signOut', value: null }),
-        // signOut must be true, or this will trigger an infinite loop.
-        signOut: true
+      makeRoute() {
+        return {
+          tag: 'signUpBuyer',
+          value: {}
+        };
       }
     },
     {
-      path: '/change-password',
-      pageId: 'changePassword',
-      auth: isSignedIn
-    },
-    {
-      path: '/reset-password/:forgotPasswordToken/:userId',
-      pageId: 'resetPassword'
-    },
-    {
-      path: '/forgot-password',
-      pageId: 'forgotPassword',
-      auth: isSignedOut
-    },
-    {
-      path: '/terms-and-conditions/:params',
-      pageId: 'termsAndConditions',
-      auth: isBuyerOrVendor
-    },
-    {
-      path: '/profiles/:userId',
-      pageId: 'profile',
-      auth: isSignedIn
-    },
-    {
-      path: '/users',
-      pageId: 'userList',
-      auth: isProgramStaff
-    },
-    {
-      path: '/about',
-      pageId: 'about'
-    },
-    {
-      path: '/accessibility',
-      pageId: 'accessibility'
-    },
-    {
-      path: '/copyright',
-      pageId: 'copyright'
-    },
-    {
-      path: '/disclaimer',
-      pageId: 'disclaimer'
-    },
-    {
-      path: '/privacy',
-      pageId: 'privacy'
-    },
-    {
-      path: '/guide',
-      pageId: 'guide'
-    },
-    {
-      path: '/requests-for-information/create',
-      pageId: 'requestForInformationCreate',
-      auth: isProgramStaff
-    },
-    {
-      path: '/requests-for-information/:rfiId/edit',
-      pageId: 'requestForInformationEdit',
-      auth: isProgramStaff
-    },
-    {
-      path: '/requests-for-information/:rfiId/view',
-      pageId: 'requestForInformationView'
-    },
-    {
-      path: '/requests-for-information/:rfiId/preview',
-      pageId: 'requestForInformationPreview',
-      auth: isProgramStaff
-    },
-    {
-      path: '/requests-for-information/:rfiId/respond',
-      pageId: 'requestForInformationRespond'
-    },
-    {
-      path: '/requests-for-information',
-      pageId: 'requestForInformationList'
-    },
-    {
-      path: '/notice/change-password',
-      pageId: 'noticeChangePassword'
-    },
-    {
-      path: '/notice/reset-password',
-      pageId: 'noticeResetPassword'
-    },
-    {
-      path: '/notice/request-for-information/:rfiId/non-vendor-response',
-      pageId: 'noticeRfiNonVendorResponse'
-    },
-    {
-      path: '/notice/request-for-information/:rfiId/expired-rfi-response',
-      pageId: 'noticeRfiExpiredRfiResponse'
-    },
-    {
-      path: '/notice/request-for-information/:rfiId/response-submitted',
-      pageId: 'noticeRfiResponseSubmitted'
-    },
-    {
-      path: '/notice/forgot-password',
-      pageId: 'noticeForgotPassword'
-    },
-    {
-      path: '*',
-      pageId: 'noticeNotFound'
-    }
-  ],
-
-  locationToPage(pageId, params, state) {
-    const outgoingPage = state.activePage;
-    switch (pageId) {
-      case 'landing':
-        return {
-          tag: 'landing',
-          value: {
-            signedIn: !!(state.session && state.session.user),
-            userType: get(state.session, ['user', 'type'])
-          }
-        };
-      case 'signIn':
-        const signInSerializedParams = get(params, 'params');
-        let signInValue = {} as PageSignIn.Params;
-        if (signInSerializedParams) {
-          signInValue = deserialize(signInSerializedParams);
-        }
-        return {
-          tag: 'signIn',
-          value: signInValue
-        };
-      case 'signUpBuyer':
-        const signUpBuyerParams: PageSignUpBuyer.Params = {
-          fixedBarBottom: state.fixedBarBottom
-        };
-        // Persist the email, password, confirmPassword fields when switching sign-up forms.
-        if (outgoingPage.tag === 'signUpVendor' && state.pages.signUpVendor) {
-          signUpBuyerParams.accountInformation = state.pages.signUpVendor.accountInformation.set('userType', UserType.Buyer);
-        }
+      path: '/sign-up/buyer',
+      makeRoute() {
         return {
           tag: 'signUpBuyer',
-          value: signUpBuyerParams
+          value: {}
         };
-      case 'signUpVendor':
-        const signUpVendorParams: PageSignUpVendor.Params = {
-          fixedBarBottom: state.fixedBarBottom
-        };
-        // Persist the email, password, confirmPassword fields when switching sign-up forms.
-        if (outgoingPage.tag === 'signUpBuyer' && state.pages.signUpBuyer) {
-          signUpVendorParams.accountInformation = state.pages.signUpBuyer.accountInformation.set('userType', UserType.Vendor);
-        }
+      }
+    },
+    {
+      path: '/sign-up/vendor',
+      makeRoute() {
         return {
           tag: 'signUpVendor',
-          value: signUpVendorParams
+          value: {}
         };
-      case 'signUpProgramStaff':
+      }
+    },
+    {
+      path: '/sign-up/program-staff',
+      makeRoute() {
         return {
           tag: 'signUpProgramStaff',
-          value: {
-            fixedBarBottom: state.fixedBarBottom
-          }
+          value: {}
         };
-      case 'signOut':
+      }
+    },
+    {
+      path: '/sign-out',
+      makeRoute() {
         return {
           tag: 'signOut',
           value: null
         };
-      case 'changePassword':
+      }
+    },
+    {
+      path: '/change-password',
+      makeRoute() {
         return {
           tag: 'changePassword',
-          value: {
-            userId: getString(state.session, ['user', 'id'])
-          }
+          value: null
         };
-      case 'resetPassword':
+      }
+    },
+    {
+      path: '/reset-password/:forgotPasswordToken/:userId',
+      makeRoute({ params }) {
         return {
           tag: 'resetPassword',
           value: {
-            forgotPasswordToken: getString(params, 'forgotPasswordToken'),
-            userId: getString(params, 'userId')
+            forgotPasswordToken: params.forgotPasswordToken,
+            userId: params.userId
           }
         };
-      case 'forgotPassword':
+      }
+    },
+    {
+      path: '/forgot-password',
+      makeRoute() {
         return {
           tag: 'forgotPassword',
           value: null
         };
-      case 'termsAndConditions':
-        const termsSerializedParams = get(params, 'params');
-        let termsValue: PageTermsAndConditions.Params = {
-          userId: get(state.session, ['user', 'id'], '')
-        };
-        if (termsSerializedParams) {
-          termsValue = {
-            ...deserialize(termsSerializedParams),
-            ...termsValue
-          };
-        }
+      }
+    },
+    {
+      path: '/terms-and-conditions',
+      makeRoute({ query }) {
+        /*let redirectOnSuccess;
+        if (query.redirectOnSuccess && query.redirectOnSuccess instanceof Array) {
+          redirectOnSuccess = query.redirectOnSuccess[0];
+        } else {
+          redirectOnSuccess = query.redirectOnSuccess;
+        }*/
+        // TODO add redirectOnAccept redirectOnSkip
         return {
           tag: 'termsAndConditions',
-          value: termsValue
+          value: {}
         };
-      case 'profile':
+      }
+    },
+    {
+      path: '/profiles/:userId',
+      makeRoute({ params }) {
         return {
           tag: 'profile',
           value: {
-            profileUserId: getString(params, 'userId'),
-            viewerUser: state.getIn(['session', 'user'])
+            profileUserId: params.userId
           }
         };
-      case 'userList':
+      }
+    },
+    {
+      path: '/users',
+      makeRoute() {
         return {
           tag: 'userList',
           value: null
         };
-      case 'requestForInformationCreate':
+      }
+    },
+    {
+      path: '/about',
+      makeRoute() {
         return {
-          tag: 'requestForInformationCreate',
+          tag: 'markdown',
           value: {
-            fixedBarBottom: state.fixedBarBottom
+            documentId: 'about'
           }
         };
-      case 'requestForInformationEdit':
+      }
+    },
+    {
+      path: '/accessibility',
+      makeRoute() {
+        return {
+          tag: 'markdown',
+          value: {
+            documentId: 'accessibility'
+          }
+        };
+      }
+    },
+    {
+      path: '/copyright',
+      makeRoute() {
+        return {
+          tag: 'markdown',
+          value: {
+            documentId: 'copyright'
+          }
+        };
+      }
+    },
+    {
+      path: '/disclaimer',
+      makeRoute() {
+        return {
+          tag: 'markdown',
+          value: {
+            documentId: 'disclaimer'
+          }
+        };
+      }
+    },
+    {
+      path: '/privacy',
+      makeRoute() {
+        return {
+          tag: 'markdown',
+          value: {
+            documentId: 'privacy'
+          }
+        };
+      }
+    },
+    {
+      path: '/guide',
+      makeRoute() {
+        return {
+          tag: 'markdown',
+          value: {
+            documentId: 'guide'
+          }
+        };
+      }
+    },
+    {
+      path: '/requests-for-information/create',
+      makeRoute() {
+        return {
+          tag: 'requestForInformationCreate',
+          value: null
+        };
+      }
+    },
+    {
+      path: '/requests-for-information/:rfiId/edit',
+      makeRoute({ params }) {
         return {
           tag: 'requestForInformationEdit',
           value: {
-            rfiId: get(params, 'rfiId', ''),
-            fixedBarBottom: state.fixedBarBottom
+            rfiId: params.rfiId
           }
         };
-      case 'requestForInformationView':
+      }
+    },
+    {
+      path: '/requests-for-information/:rfiId/view',
+      makeRoute({ params }) {
         return {
           tag: 'requestForInformationView',
           value: {
-            rfiId: get(params, 'rfiId', ''),
-            userType: get(state.session, ['user', 'type']),
-            fixedBarBottom: state.fixedBarBottom
+            rfiId: params.rfiId
           }
         };
-      case 'requestForInformationPreview':
+      }
+    },
+    {
+      path: '/requests-for-information/:rfiId/preview',
+      makeRoute({ params }) {
         return {
           tag: 'requestForInformationPreview',
           value: {
-            rfiId: get(params, 'rfiId', ''),
-            userType: get(state.session, ['user', 'type']),
-            fixedBarBottom: state.fixedBarBottom,
+            rfiId: params.rfiId,
             preview: true
           }
         };
-      case 'requestForInformationRespond':
+      }
+    },
+    {
+      path: '/requests-for-information/:rfiId/respond',
+      makeRoute({ params }) {
         return {
           tag: 'requestForInformationRespond',
           value: {
-            rfiId: get(params, 'rfiId', ''),
-            fixedBarBottom: state.fixedBarBottom
+            rfiId: params.rfiId
           }
         };
-      case 'requestForInformationList':
+      }
+    },
+    {
+      path: '/requests-for-information',
+      makeRoute() {
         return {
           tag: 'requestForInformationList',
+          value: null
+        };
+      }
+    },
+    {
+      path: '/notice/change-password',
+      makeRoute() {
+        return {
+          tag: 'notice',
           value: {
-            userType: get(state.session, ['user', 'type'])
+            noticeId: {
+              tag: 'changePassword',
+              value: undefined
+            }
           }
         };
-      case 'about':
+      }
+    },
+    {
+      path: '/notice/reset-password',
+      makeRoute() {
         return {
-          tag: 'about',
-          value: null
-        };
-      case 'accessibility':
-        return {
-          tag: 'accessibility',
-          value: null
-        };
-      case 'copyright':
-        return {
-          tag: 'copyright',
-          value: null
-        };
-      case 'disclaimer':
-        return {
-          tag: 'disclaimer',
-          value: null
-        };
-      case 'privacy':
-        return {
-          tag: 'privacy',
-          value: null
-        };
-      case 'guide':
-        return {
-          tag: 'guide',
-          value: null
-        };
-      case 'noticeChangePassword':
-        return {
-          tag: 'noticeChangePassword',
-          value: null
-        };
-      case 'noticeResetPassword':
-        return {
-          tag: 'noticeResetPassword',
-          value: null
-        };
-      case 'noticeRfiNonVendorResponse':
-        return {
-          tag: 'noticeRfiNonVendorResponse',
+          tag: 'notice',
           value: {
-            rfiId: get(params, 'rfiId', '')
+            noticeId: {
+              tag: 'resetPassword',
+              value: undefined
+            }
           }
         };
-      case 'noticeRfiExpiredRfiResponse':
+      }
+    },
+    {
+      path: '/notice/request-for-information/:rfiId/non-vendor-response',
+      makeRoute({ params }) {
         return {
-          tag: 'noticeRfiExpiredRfiResponse',
+          tag: 'notice',
           value: {
-            rfiId: get(params, 'rfiId', '')
+            noticeId: {
+              tag: 'rfiNonVendorResponse',
+              value: params.rfiId
+            }
           }
         };
-      case 'noticeRfiResponseSubmitted':
+      }
+    },
+    {
+      path: '/notice/request-for-information/:rfiId/expired-rfi-response',
+      makeRoute({ params }) {
         return {
-          tag: 'noticeRfiResponseSubmitted',
+          tag: 'notice',
           value: {
-            rfiId: get(params, 'rfiId', '')
+            noticeId: {
+              tag: 'rfiExpiredResponse',
+              value: params.rfiId
+            }
           }
         };
-      case 'noticeForgotPassword':
+      }
+    },
+    {
+      path: '/notice/request-for-information/:rfiId/response-submitted',
+      makeRoute({ params }) {
         return {
-          tag: 'noticeForgotPassword',
-          value: null
+          tag: 'notice',
+          value: {
+            noticeId: {
+              tag: 'rfiResponseSubmitted',
+              value: params.rfiId
+            }
+          }
         };
-      case 'noticeNotFound':
+      }
+    },
+    {
+      path: '/notice/forgot-password',
+      makeRoute() {
         return {
-          tag: 'noticeNotFound',
-          value: null
+          tag: 'notice',
+          value: {
+            noticeId: {
+              tag: 'forgotPassword',
+              value: undefined
+            }
+          }
         };
-      default:
+      }
+    },
+    {
+      path: '*',
+      makeRoute() {
         return {
-          tag: 'noticeNotFound',
-          value: null
+          tag: 'notice',
+          value: {
+            noticeId: {
+              tag: 'notFound',
+              value: undefined
+            }
+          }
         };
+      }
     }
-  },
+  ],
 
-  pageToUrl(page) {
-    switch (page.tag) {
+  routeToUrl(route) {
+    switch (route.tag) {
       case 'landing':
         return '/';
       case 'signIn':
-        return `/sign-in/${serialize(page.value)}`;
+        return `/sign-in?redirectOnSuccess=${route.value.redirectOnSuccess}`;
       case 'signUpBuyer':
         return '/sign-up/buyer';
       case 'signUpVendor':
@@ -474,124 +386,64 @@ const router: Router<State, Page, UserType> = {
       case 'changePassword':
         return '/change-password';
       case 'resetPassword':
-        return `/reset-password/${page.value.forgotPasswordToken}/${page.value.userId}`;
+        return `/reset-password/${route.value.forgotPasswordToken}/${route.value.userId}`;
       case 'forgotPassword':
         return '/forgot-password';
       case 'termsAndConditions':
-        return `/terms-and-conditions/${serialize(page.value)}`;
+        // TODO add redirectOnAccept redirectOnSkip
+        return `/terms-and-conditions`;
       case 'profile':
-        return `/profiles/${page.value.profileUserId}`;
+        return `/profiles/${route.value.profileUserId}`;
       case 'userList':
         return '/users';
       case 'requestForInformationCreate':
         return '/requests-for-information/create';
       case 'requestForInformationEdit':
-        return `/requests-for-information/${page.value.rfiId}/edit`;
+        return `/requests-for-information/${route.value.rfiId}/edit`;
       case 'requestForInformationView':
-        return `/requests-for-information/${page.value.rfiId}/view`;
+        return `/requests-for-information/${route.value.rfiId}/view`;
       case 'requestForInformationPreview':
-        return `/requests-for-information/${page.value.rfiId}/preview`;
+        return `/requests-for-information/${route.value.rfiId}/preview`;
       case 'requestForInformationRespond':
-        return `/requests-for-information/${page.value.rfiId}/respond`;
+        return `/requests-for-information/${route.value.rfiId}/respond`;
       case 'requestForInformationList':
         return '/requests-for-information';
-      case 'about':
-        return '/about';
-      case 'accessibility':
-        return '/accessibility';
-      case 'copyright':
-        return '/copyright';
-      case 'disclaimer':
-        return '/disclaimer';
-      case 'privacy':
-        return '/privacy';
-      case 'guide':
-        return '/guide';
-      case 'noticeChangePassword':
-        return '/notice/change-password';
-      case 'noticeResetPassword':
-        return '/notice/reset-password';
-      case 'noticeRfiNonVendorResponse':
-        return `/notice/request-for-information/${page.value.rfiId}/non-vendor-response`;
-      case 'noticeRfiExpiredRfiResponse':
-        return `/notice/request-for-information/${page.value.rfiId}/expired-rfi-response`;
-      case 'noticeRfiResponseSubmitted':
-        return `/notice/request-for-information/${page.value.rfiId}/response-submitted`;
-      case 'noticeForgotPassword':
-        return '/notice/forgot-password';
-      case 'noticeNotFound':
-        return '/not-found';
-    }
-  },
-
-  pageToMetadata(page) {
-    const makeMetadata = (title?: string) => ({
-      title: title ? `${title} — ${PAGE_TITLE_SUFFIX}` : PAGE_TITLE_SUFFIX
-    });
-    switch (page.tag) {
-      case 'landing':
-        return makeMetadata('Welcome');
-      case 'signIn':
-        return makeMetadata('Sign In');
-      case 'signUpBuyer':
-        return makeMetadata(`Create a ${userTypeToTitleCase(UserType.Buyer)} Account`);
-      case 'signUpVendor':
-        return makeMetadata(`Create a ${userTypeToTitleCase(UserType.Vendor)} Account`);
-      case 'signUpProgramStaff':
-        return makeMetadata(`Create a ${userTypeToTitleCase(UserType.ProgramStaff)} Account`);
-      case 'signOut':
-        return makeMetadata('Signed Out');
-      case 'changePassword':
-        return makeMetadata('Change your Password');
-      case 'resetPassword':
-        return makeMetadata('Reset your Password');
-      case 'forgotPassword':
-        return makeMetadata('Forgotten your Password?');
-      case 'termsAndConditions':
-        return makeMetadata('Terms and Conditions');
-      case 'profile':
-        // TODO add user's name to the title
-        return makeMetadata('Profile');
-      case 'userList':
-        return makeMetadata('Users');
-      case 'requestForInformationCreate':
-        return makeMetadata('Create a Request for Information');
-      case 'requestForInformationEdit':
-        return makeMetadata('Edit a Request for Information');
-      case 'requestForInformationView':
-        return makeMetadata('Request for Information');
-      case 'requestForInformationPreview':
-        return makeMetadata('Request for Information Preview');
-      case 'requestForInformationRespond':
-        return makeMetadata('Respond to a Request for Information');
-      case 'requestForInformationList':
-        return makeMetadata('Requests for Information');
-      case 'about':
-        return makeMetadata('About');
-      case 'accessibility':
-        return makeMetadata('Accessibility');
-      case 'copyright':
-        return makeMetadata('Copyright');
-      case 'disclaimer':
-        return makeMetadata('Disclaimer');
-      case 'privacy':
-        return makeMetadata('Privacy');
-      case 'guide':
-        return makeMetadata('How to Use the Procurement Concierge Program\'s Web Application');
-      case 'noticeChangePassword':
-        return makeMetadata('Password Change Successful');
-      case 'noticeResetPassword':
-        return makeMetadata('Password Reset Successful');
-      case 'noticeRfiNonVendorResponse':
-        return makeMetadata('Only Vendors Can Respond to RFIs');
-      case 'noticeRfiExpiredRfiResponse':
-        return makeMetadata('RFI No Longer Accepting Responses');
-      case 'noticeRfiResponseSubmitted':
-        return makeMetadata('RFI Response Submitted');
-      case 'noticeForgotPassword':
-        return makeMetadata('Check your Inbox');
-      case 'noticeNotFound':
-        return makeMetadata('Not Found');
+      case 'markdown':
+        return (() => {
+          switch (route.value.documentId) {
+            case 'about':
+              return '/about';
+            case 'accessibility':
+              return '/accessibility';
+            case 'copyright':
+              return '/copyright';
+            case 'disclaimer':
+              return '/disclaimer';
+            case 'privacy':
+              return '/privacy';
+            case 'guide':
+              return '/guide';
+          }
+        })();
+      case 'notice':
+        return (() => {
+          switch (route.value.noticeId.tag) {
+            case 'changePassword':
+              return '/notice/change-password';
+            case 'resetPassword':
+              return '/notice/reset-password';
+            case 'rfiNonVendorResponse':
+              return `/notice/request-for-information/${route.value.noticeId.value}/non-vendor-response`;
+            case 'rfiExpiredResponse':
+              return `/notice/request-for-information/${route.value.noticeId.value}/expired-rfi-response`;
+            case 'rfiResponseSubmitted':
+              return `/notice/request-for-information/${route.value.noticeId.value}/response-submitted`;
+            case 'forgotPassword':
+              return '/notice/forgot-password';
+            case 'notFound':
+              return '/not-found';
+          }
+        })();
     }
   }
 

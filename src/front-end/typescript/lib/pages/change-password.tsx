@@ -1,10 +1,12 @@
-import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
+import { makePageMetadata } from 'front-end/lib';
+import { isSignedIn } from 'front-end/lib/access-control';
+import router from 'front-end/lib/app/router';
+import { Route, SharedState } from 'front-end/lib/app/types';
+import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newRoute, PageComponent, PageInit, replaceRoute, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { validateConfirmPassword } from 'front-end/lib/validators';
 import { updateField, validateField } from 'front-end/lib/views/form-field';
 import * as ShortText from 'front-end/lib/views/input/short-text';
-import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
@@ -29,39 +31,59 @@ type InnerMsg
   | ADT<'validateConfirmNewPassword'>
   | ADT<'submit'>;
 
-export type Msg = ComponentMsg<InnerMsg, Page>;
+export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
-export interface Params {
-  userId: string;
-}
+export type RouteParams = null;
 
-export const init: Init<Params, State> = async ({ userId }) => {
-  return {
-    loading: 0,
-    userId,
-    currentPassword: ShortText.init({
-      id: 'change-password-password',
-      required: true,
-      type: 'password',
-      label: 'Current Password',
-      placeholder: 'Current Password'
-    }),
-    newPassword: ShortText.init({
-      id: 'change-password-new-password',
-      required: true,
-      type: 'password',
-      label: 'New Password',
-      placeholder: 'New Password'
-    }),
-    confirmNewPassword: ShortText.init({
-      id: 'change-password-confirm-new-password',
-      required: true,
-      type: 'password',
-      label: 'Confirm New Password',
-      placeholder: 'Confirm New Password'
-    })
-  };
+const initState: State = {
+  loading: 0,
+  userId: '',
+  currentPassword: ShortText.init({
+    id: 'change-password-password',
+    required: true,
+    type: 'password',
+    label: 'Current Password',
+    placeholder: 'Current Password'
+  }),
+  newPassword: ShortText.init({
+    id: 'change-password-new-password',
+    required: true,
+    type: 'password',
+    label: 'New Password',
+    placeholder: 'New Password'
+  }),
+  confirmNewPassword: ShortText.init({
+    id: 'change-password-confirm-new-password',
+    required: true,
+    type: 'password',
+    label: 'Confirm New Password',
+    placeholder: 'Confirm New Password'
+  })
 };
+
+const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedIn({
+
+  async success({ shared }) {
+    return {
+      ...initState,
+      userId: shared.sessionUser.id
+    };
+  },
+
+  async fail({ routeParams, dispatch }) {
+    dispatch(replaceRoute({
+      tag: 'signIn' as 'signIn',
+      value: {
+        redirectOnSuccess: router.routeToUrl({
+          tag: 'changePassword',
+          value: routeParams
+        })
+      }
+    }));
+    return initState;
+  }
+
+});
 
 function startLoading(state: Immutable<State>): Immutable<State> {
   return state.set('loading', state.loading + 1);
@@ -71,7 +93,7 @@ function stopLoading(state: Immutable<State>): Immutable<State> {
   return state.set('loading', Math.max(state.loading - 1, 0));
 }
 
-export const update: Update<State, Msg> = (state, msg) => {
+const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'onChangeCurrentPassword':
       return [updateField(state, 'currentPassword', msg.value)];
@@ -97,10 +119,15 @@ export const update: Update<State, Msg> = (state, msg) => {
           });
           switch (result.tag) {
             case 'valid':
-              dispatch({
-                tag: '@newUrl',
-                value: { tag: 'noticeChangePassword', value: null }
-              });
+              dispatch(newRoute({
+                tag: 'notice' as 'notice',
+                value: {
+                  noticeId: {
+                    tag: 'changePassword' as 'changePassword',
+                    value: undefined
+                  }
+                }
+              }));
               return state;
             case 'invalid':
               return stopLoading(state)
@@ -122,14 +149,14 @@ function isValid(state: State): boolean {
   return providedRequiredFields && !isInvalid(state);
 }
 
-export const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   const onChange = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const isLoading = state.loading > 0;
   const isDisabled = isLoading || !isValid(state);
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
-    <PageContainer.View paddingY>
+    <div>
       <Row className='mb-3'>
         <Col xs='12'>
           <h1>Change Password</h1>
@@ -174,12 +201,16 @@ export const view: ComponentView<State, Msg> = props => {
           </Row>
         </Col>
       </Row>
-    </PageContainer.View>
+    </div>
   );
 };
 
-export const component: Component<Params, State, Msg> = {
+export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   init,
   update,
-  view
+  view,
+  getMetadata() {
+    return makePageMetadata('Change your Password')
+  },
+  getAlerts: emptyPageAlerts
 };

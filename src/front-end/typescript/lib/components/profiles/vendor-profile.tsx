@@ -1,7 +1,7 @@
-import { Page } from 'front-end/lib/app/types';
+import { Route } from 'front-end/lib/app/types';
 import * as SelectMulti from 'front-end/lib/components/input/select-multi';
 import { ProfileComponent, ProfileParams, ProfileView } from 'front-end/lib/components/profiles/types';
-import { ComponentMsg, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
+import { Dispatch, GlobalComponentMsg, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
@@ -129,7 +129,7 @@ export type InnerMsg
   | ADT<'categories', SelectMulti.Msg>
   | ADT<'validate'>;
 
-export type Msg = ComponentMsg<InnerMsg, Page>;
+export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export type Params = ProfileParams<VendorProfile>;
 
@@ -274,7 +274,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
   }
 };
 
-export const update: Update<State, Msg> = (state, msg) => {
+export const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'businessName':
       return [updateValue(state, 'businessName', msg.value)];

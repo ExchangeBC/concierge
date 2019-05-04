@@ -1,12 +1,11 @@
-import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
-import AppRouter from 'front-end/lib/app/router';
-import { Page } from 'front-end/lib/app/types';
+import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
+import router from 'front-end/lib/app/router';
+import { Route, SharedState } from 'front-end/lib/app/types';
 import * as FileMulti from 'front-end/lib/components/input/file-multi';
-import { Component, ComponentMsg, ComponentView, Dispatch, Immutable, immutable, Init, mapComponentDispatch, newUrl, replaceUrl, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, replaceRoute, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { uploadFiles } from 'front-end/lib/pages/request-for-information/lib';
-import * as FixedBar from 'front-end/lib/views/fixed-bar';
-import * as PageContainer from 'front-end/lib/views/layout/page-container';
+import FixedBar from 'front-end/lib/views/layout/fixed-bar';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
@@ -16,20 +15,18 @@ import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, Omit, RfiStatus, UserType } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
-export interface Params {
+export interface RouteParams {
   rfiId: string;
-  fixedBarBottom?: number;
 }
 
 export type InnerMsg
-  = ADT<'handleInitError'>
+  = ADT<'handlePageInitError'>
   | ADT<'onChangeAttachments', FileMulti.Msg>
-  | ADT<'submit'>
-  | ADT<'updateFixedBarBottom', number>;
+  | ADT<'submit'>;
 
-export type Msg = ComponentMsg<InnerMsg, Page>;
+export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
-type InitError
+type PageInitError
   = ADT<'notSignedIn', PublicRfi>
   | ADT<'notVendor', PublicRfi>
   | ADT<'notAcceptedTerms', [PublicRfi, PublicUser]>
@@ -43,18 +40,17 @@ interface ValidState {
 }
 
 export interface State {
-  fixedBarBottom: number;
   loading: number;
-  init: ValidOrInvalid<ValidState, InitError>;
-  handledInitError: boolean;
+  init: ValidOrInvalid<ValidState, PageInitError>;
+  handledPageInitError: boolean;
 };
 
-export const init: Init<Params, State> = async ({ rfiId, fixedBarBottom = 0 }) => {
+const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParams }) => {
+  const { rfiId } = routeParams;
   const rfiResult = await api.readOneRfi(rfiId);
   const baseState: Omit<State, 'init'> = {
-    fixedBarBottom,
     loading: 0,
-    handledInitError: false
+    handledPageInitError: false
   };
   switch (rfiResult.tag) {
     case 'valid':
@@ -131,66 +127,83 @@ export const init: Init<Params, State> = async ({ rfiId, fixedBarBottom = 0 }) =
 const startLoading: UpdateState<State> = makeStartLoading('loading');
 const stopLoading: UpdateState<State> = makeStopLoading('loading');
 
-const respondToRfiPage = (rfi: PublicRfi): Page => ({
+const respondToRfiRoute = (rfi: PublicRfi): Route => ({
   tag: 'requestForInformationRespond',
   value: {
     rfiId: rfi._id
   }
 });
 
-const viewRfiPage = (rfi: PublicRfi): Page => ({
+const respondToRfiUrl = (rfi: PublicRfi): string => router.routeToUrl(respondToRfiRoute(rfi));
+
+const viewRfiRoute = (rfi: PublicRfi): Route => ({
   tag: 'requestForInformationView',
   value: {
     rfiId: rfi._id
   }
 });
 
-export const update: Update<State, Msg> = (state, msg) => {
+const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
-    case 'handleInitError':
+    case 'handlePageInitError':
       return [
-        state.set('handledInitError', true),
+        state.set('handledPageInitError', true),
         async (state, dispatch) => {
           if (state.init.tag === 'valid') { return state; }
           // Handle cases where the user should not be able to respond to this RFI.
           const error = state.init.value;
           switch (error.tag) {
             case 'notSignedIn':
-              dispatch(replaceUrl({
+              dispatch(replaceRoute({
                 tag: 'signIn' as 'signIn',
                 value: {
-                  redirectOnSuccess: respondToRfiPage(error.value)
+                  redirectOnSuccess: respondToRfiUrl(error.value)
                 }
               }));
               return state;
             case 'notVendor':
-              dispatch(replaceUrl({
-                tag: 'noticeRfiNonVendorResponse' as 'noticeRfiNonVendorResponse',
-                value: { rfiId: error.value._id }
+              dispatch(replaceRoute({
+                tag: 'notice' as 'notice',
+                value: {
+                  noticeId: {
+                    tag: 'rfiNonVendorResponse' as 'rfiNonVendorResponse',
+                    value: error.value._id
+                  }
+                }
               }));
               return state;
             case 'notAcceptedTerms':
               const [rfi, user] = error.value;
-              dispatch(replaceUrl({
+              dispatch(replaceRoute({
                 tag: 'termsAndConditions' as 'termsAndConditions',
                 value: {
                   userId: user._id,
                   warnings: ['You must accept the terms and conditions in order to respond to a Request for Information.'],
-                  redirectOnAccept: respondToRfiPage(rfi),
-                  redirectOnSkip: viewRfiPage(rfi)
+                  redirectOnAccept: respondToRfiRoute(rfi),
+                  redirectOnSkip: viewRfiRoute(rfi)
                 }
               }));
               return state;
             case 'expiredRfi':
-              dispatch(replaceUrl({
-                tag: 'noticeRfiExpiredRfiResponse' as 'noticeRfiExpiredRfiResponse',
-                value: { rfiId: error.value._id }
+              dispatch(replaceRoute({
+                tag: 'notice' as 'notice',
+                value: {
+                  noticeId: {
+                    tag: 'rfiExpiredResponse' as 'rfiExpiredResponse',
+                    value: error.value._id
+                  }
+                }
               }));
               return state;
             case 'invalidRfi':
-              dispatch(replaceUrl({
-                tag: 'noticeNotFound' as 'noticeNotFound',
-                value: null
+              dispatch(replaceRoute({
+                tag: 'notice' as 'notice',
+                value: {
+                  noticeId: {
+                    tag: 'notFound' as 'notFound',
+                    value: undefined
+                  }
+                }
               }));
               return state;
           }
@@ -224,17 +237,18 @@ export const update: Update<State, Msg> = (state, msg) => {
             attachments: uploadedFiles.value
           });
           if (result.tag === 'invalid') { return fail(state, result.value.attachments || []); }
-          dispatch(newUrl({
-            tag: 'noticeRfiResponseSubmitted' as 'noticeRfiResponseSubmitted',
+          dispatch(newRoute({
+            tag: 'notice' as 'notice',
             value: {
-              rfiId: rfi._id
+              noticeId: {
+                tag: 'rfiResponseSubmitted' as 'rfiResponseSubmitted',
+                value: rfi._id
+              }
             }
           }));
           return stopLoading(state);
         }
       ];
-    case 'updateFixedBarBottom':
-      return [state.set('fixedBarBottom', msg.value)];
     default:
       return [state];
   }
@@ -266,80 +280,67 @@ const Attachments: View<AttachmentsProps> = ({ attachments, dispatch }) => {
   );
 };
 
-interface ButtonsProps {
-  dispatch: Dispatch<Msg>;
-  rfi: PublicRfi;
-  isLoading: boolean;
-  isValid: boolean;
-  bottomBarIsFixed: boolean;
-}
-
-const Buttons: View<ButtonsProps> = ({ bottomBarIsFixed, isLoading, isValid, rfi, dispatch }) => {
-  const isDisabled = isLoading || !isValid;
+const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  if (state.init.tag === 'invalid') {
+    return null;
+  }
+  const validState = state.init.value;
+  const { rfi } = validState;
+  const isLoading = state.loading > 0;
+  const isDisabled = isLoading || !isValid(validState);
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
-    <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
+    <FixedBar>
       <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled} className='text-nowrap'>
         Submit Response
       </LoadingButton>
-      <Link page={viewRfiPage(rfi)} textColor='secondary' className='text-nowrap'>
+      <Link page={viewRfiRoute(rfi)} textColor='secondary' className='text-nowrap'>
         Cancel
       </Link>
-    </FixedBar.View>
+    </FixedBar>
   );
 };
 
-export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
+const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   // Handle cases where the user should not be able to respond to this RFI.
   if (state.init.tag === 'invalid') {
-    if (!state.handledInitError) {
-      dispatch({ tag: 'handleInitError', value: undefined });
+    if (!state.handledPageInitError) {
+      dispatch({ tag: 'handlePageInitError', value: undefined });
     }
-    // Return a blank page.
-    return (
-      <PageContainer.View paddingY>
-        <Row>
-          <Col xs='12'></Col>
-        </Row>
-      </PageContainer.View>
-    );
+    return null;
   }
   // If the user is in the correct state, render the response form.
   const validState = state.init.value;
   const { rfi, attachments } = validState;
   if (!rfi.latestVersion) { return null; }
   const version = rfi.latestVersion;
-  const bottomBarIsFixed = state.fixedBarBottom === 0;
   return (
-    <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>
-      <Container className='mb-5 flex-grow-1'>
-        <Row className='mb-5'>
-          <Col xs='12' className='d-flex flex-column'>
-            <h1>Respond to RFI Number: {version.rfiNumber}</h1>
-            <h2>{version.title}</h2>
-            <p>
-              Please submit your response to this Request for Information by following the instructions defined
-              in its <a href={AppRouter.pageToUrl(viewRfiPage(rfi))}>description</a>.
-            </p>
-          </Col>
-        </Row>
-        <Attachments attachments={attachments} dispatch={dispatch} />
-        {!atLeastOneAttachmentAdded(attachments)
-          ? (<Row><Col xs='12'>Please add at least one attachment.</Col></Row>)
-          : null}
-      </Container>
-      <Buttons
-        dispatch={dispatch}
-        rfi={rfi}
-        isLoading={state.loading > 0}
-        isValid={isValid(validState)}
-        bottomBarIsFixed={bottomBarIsFixed} />
-    </PageContainer.View>
+    <Container className='flex-grow-1'>
+      <Row className='mb-5'>
+        <Col xs='12' className='d-flex flex-column'>
+          <h1>Respond to RFI Number: {version.rfiNumber}</h1>
+          <h2>{version.title}</h2>
+          <p>
+            Please submit your response to this Request for Information by following the instructions defined
+            in its <a href={router.routeToUrl(viewRfiRoute(rfi))}>description</a>.
+          </p>
+        </Col>
+      </Row>
+      <Attachments attachments={attachments} dispatch={dispatch} />
+      {!atLeastOneAttachmentAdded(attachments)
+        ? (<Row><Col xs='12'>Please add at least one attachment.</Col></Row>)
+        : null}
+    </Container>
   );
 };
 
-export const component: Component<Params, State, Msg> = {
+export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   init,
   update,
-  view
+  view,
+  viewBottomBar,
+  getAlerts: emptyPageAlerts,
+  getMetadata() {
+    return makePageMetadata('Respond to a Request for Information');
+  }
 };

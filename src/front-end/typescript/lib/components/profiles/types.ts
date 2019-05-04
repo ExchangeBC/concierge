@@ -1,5 +1,5 @@
-import { Page } from 'front-end/lib/app/types';
-import { ComponentMsg, ComponentViewProps, Immutable, Init, Update, View } from 'front-end/lib/framework';
+import { Route } from 'front-end/lib/app/types';
+import { ComponentViewProps, GlobalComponentMsg, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import { Profile as ProfileType, UserType } from 'shared/lib/types';
 import { ProfileValidationErrors } from 'shared/lib/validators/profile';
 
@@ -8,7 +8,7 @@ export interface ProfileParams<Profile extends ProfileType> {
   disabled?: boolean;
 }
 
-export type ProfileMsg<InnerMsg> = ComponentMsg<InnerMsg, Page>;
+export type ProfileMsg<InnerMsg> = GlobalComponentMsg<InnerMsg, Route>;
 
 export interface ProfileViewProps<State, InnerMsg> extends ComponentViewProps<State, ProfileMsg<InnerMsg>> {
   disabled?: boolean;

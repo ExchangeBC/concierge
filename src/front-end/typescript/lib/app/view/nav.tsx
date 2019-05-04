@@ -1,4 +1,4 @@
-import { Page } from 'front-end/lib/app/types';
+import { Route } from 'front-end/lib/app/types';
 import { View } from 'front-end/lib/framework';
 import { Session } from 'front-end/lib/http/api';
 import Link from 'front-end/lib/views/link';
@@ -9,15 +9,15 @@ import { UserType } from 'shared/lib/types';
 
 interface Props {
   isOpen: boolean;
-  activePage: Page;
+  activeRoute: Route;
   session?: Session;
   toggleIsOpen(open?: boolean): void;
 }
 
-const ContextualLinks: View<Props> = ({ activePage, session, toggleIsOpen }) => {
-  const isMyProfilePage = activePage.tag === 'profile' && activePage.value.profileUserId === get(session, ['user', 'id']);
-  const isUserListPage = activePage.tag === 'userList';
-  const isRequestForInformationListPage = activePage.tag === 'requestForInformationList';
+const ContextualLinks: View<Props> = ({ activeRoute, session, toggleIsOpen }) => {
+  const isMyProfileRoute = activeRoute.tag === 'profile' && activeRoute.value.profileUserId === get(session, ['user', 'id']);
+  const isUserListRoute = activeRoute.tag === 'userList';
+  const isRequestForInformationListRoute = activeRoute.tag === 'requestForInformationList';
   const activeClass = (active: boolean) => active ? 'font-weight-bold text-body' : 'text-dark';
   const onClick = () => toggleIsOpen(false);
   const buttonClassName = (isActive: boolean) => `${activeClass(isActive)} px-0 px-md-3`;
@@ -25,12 +25,12 @@ const ContextualLinks: View<Props> = ({ activePage, session, toggleIsOpen }) => 
     return (
       <Nav navbar>
         <NavItem>
-          <Link nav href='/requests-for-information' text='RFIs' buttonClassName={buttonClassName(isRequestForInformationListPage)} onClick={onClick} />
+          <Link nav href='/requests-for-information' text='RFIs' buttonClassName={buttonClassName(isRequestForInformationListRoute)} onClick={onClick} />
         </NavItem>
       </Nav>
     );
   }
-  const myProfilePage: Page = {
+  const myProfileRoute: Route = {
     tag: 'profile',
     value: {
       profileUserId: session.user.id
@@ -41,10 +41,10 @@ const ContextualLinks: View<Props> = ({ activePage, session, toggleIsOpen }) => 
       return (
         <Nav navbar>
           <NavItem>
-            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={buttonClassName(isRequestForInformationListPage)} onClick={onClick} />
+            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={buttonClassName(isRequestForInformationListRoute)} onClick={onClick} />
           </NavItem>
           <NavItem>
-            <Link nav page={myProfilePage} text='My Profile' buttonClassName={buttonClassName(isMyProfilePage)} onClick={onClick} />
+            <Link nav page={myProfileRoute} text='My Profile' buttonClassName={buttonClassName(isMyProfileRoute)} onClick={onClick} />
           </NavItem>
         </Nav>
       );
@@ -52,10 +52,10 @@ const ContextualLinks: View<Props> = ({ activePage, session, toggleIsOpen }) => 
       return (
         <Nav navbar>
           <NavItem>
-            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={buttonClassName(isRequestForInformationListPage)} onClick={onClick} />
+            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={buttonClassName(isRequestForInformationListRoute)} onClick={onClick} />
           </NavItem>
           <NavItem>
-            <Link nav page={myProfilePage} text='My Profile' buttonClassName={buttonClassName(isMyProfilePage)} onClick={onClick} />
+            <Link nav page={myProfileRoute} text='My Profile' buttonClassName={buttonClassName(isMyProfileRoute)} onClick={onClick} />
           </NavItem>
         </Nav>
       );
@@ -63,13 +63,13 @@ const ContextualLinks: View<Props> = ({ activePage, session, toggleIsOpen }) => 
       return (
         <Nav navbar>
           <NavItem>
-            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={buttonClassName(isRequestForInformationListPage)} onClick={onClick} />
+            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={buttonClassName(isRequestForInformationListRoute)} onClick={onClick} />
           </NavItem>
           <NavItem>
-            <Link nav href='/users' text='Users' buttonClassName={buttonClassName(isUserListPage)} onClick={onClick} />
+            <Link nav href='/users' text='Users' buttonClassName={buttonClassName(isUserListRoute)} onClick={onClick} />
           </NavItem>
           <NavItem>
-            <Link nav page={myProfilePage} text='My Profile' buttonClassName={buttonClassName(isMyProfilePage)} onClick={onClick} />
+            <Link nav page={myProfileRoute} text='My Profile' buttonClassName={buttonClassName(isMyProfileRoute)} onClick={onClick} />
           </NavItem>
         </Nav>
       );

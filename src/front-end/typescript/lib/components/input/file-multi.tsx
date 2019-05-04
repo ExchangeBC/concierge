@@ -1,5 +1,5 @@
-import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentViewProps, immutable, Immutable, Init, Update, View } from 'front-end/lib/framework';
+import { Route } from 'front-end/lib/app/types';
+import { Component, ComponentViewProps, GlobalComponentMsg, immutable, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import * as FormFieldMulti from 'front-end/lib/views/form-field-multi';
 import * as Input from 'front-end/lib/views/input/input';
 import { ChangeEvent, ChangeEventHandler, default as React } from 'react';
@@ -89,7 +89,7 @@ type InnerMsg
   | ADT<'change', { index: number, value: string }>
   | ADT<'validate', number>;
 
-export type Msg = ComponentMsg<InnerMsg, Page>;
+export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export interface Params extends Omit<State, 'formFieldMulti'> {
   formFieldMulti: FormFieldMulti.State<Value>;
@@ -112,7 +112,7 @@ function validateValue(value: Value): Validation<Value> {
   return invalid(errors);
 }
 
-export const update: Update<State, Msg> = (state, msg) => {
+export const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'add':
       const file = msg.value;

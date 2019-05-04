@@ -1,10 +1,12 @@
-import { Page } from 'front-end/lib/app/types';
+import { makePageMetadata } from 'front-end/lib';
+import { AccessControlParams, isSignedOut, isUserType, SharedStateWithGuaranteedSessionUser } from 'front-end/lib/access-control';
+import router from 'front-end/lib/app/router';
+import { Route, SharedState } from 'front-end/lib/app/types';
 import { ProfileComponent } from 'front-end/lib/components/profiles/types';
-import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, immutable, Immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, replaceRoute, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as AccountInformation from 'front-end/lib/pages/sign-up/components/account-information';
-import * as FixedBar from 'front-end/lib/views/fixed-bar';
-import * as PageContainer from 'front-end/lib/views/layout/page-container';
+import FixedBar from 'front-end/lib/views/layout/fixed-bar';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { isArray } from 'lodash';
@@ -14,34 +16,73 @@ import { ADT, Profile as ProfileType, UserType, userTypeToTitleCase } from 'shar
 
 export interface State<ProfileState> {
   loading: number;
-  fixedBarBottom: number;
   accountInformation: Immutable<AccountInformation.State>;
   profile: Immutable<ProfileState>;
 }
 
 type InnerMsg<ProfileMsg>
   = ADT<'accountInformation', AccountInformation.Msg>
-  | ADT<'profile', ComponentMsg<ProfileMsg, Page>>
-  | ADT<'createAccount'>
-  | ADT<'updateFixedBarBottom', number>;
+  | ADT<'profile', GlobalComponentMsg<ProfileMsg, Route>>
+  | ADT<'createAccount'>;
 
-export type Msg<ProfileMsg> = ComponentMsg<InnerMsg<ProfileMsg>, Page>;
+export type Msg<ProfileMsg> = GlobalComponentMsg<InnerMsg<ProfileMsg>, Route>;
 
-export interface Params {
+export interface RouteParams {
   accountInformation?: Immutable<AccountInformation.State>;
-  fixedBarBottom?: number;
 }
 
-function init<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Init<Params, State<PS>> {
-  return async ({ accountInformation, fixedBarBottom = 0 }) => {
+function init<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): PageInit<RouteParams, SharedState, State<PS>, Msg<PM>> {
+
+  async function makeInitState(): Promise<State<PS>> {
     return {
       loading: 0,
-      fixedBarBottom,
-      accountInformation: accountInformation || immutable(await AccountInformation.init({
+      accountInformation: immutable(await AccountInformation.init({
         userType: Profile.userType
       })),
       profile: immutable(await Profile.init({}))
     };
+  }
+
+  const accessControlParams: AccessControlParams<RouteParams, State<PS>, Msg<PM>, SharedStateWithGuaranteedSessionUser | SharedState> = {
+
+    async success({ routeParams }) {
+      const { accountInformation } = routeParams;
+      const initState = await makeInitState();
+      return {
+        ...initState,
+        accountInformation: accountInformation || initState.accountInformation
+      };
+    },
+
+    async fail({ dispatch }) {
+      dispatch(replaceRoute({
+        tag: 'requestForInformationList' as 'requestForInformationList',
+        value: null
+      }));
+      return await makeInitState();
+    }
+
+  };
+
+  if (Profile.userType === UserType.ProgramStaff) {
+    return isUserType({
+      ...accessControlParams,
+      userTypes: [UserType.ProgramStaff],
+      async fail({ routeParams, dispatch }) {
+        dispatch(replaceRoute({
+          tag: 'signIn' as 'signIn',
+          value: {
+            redirectOnSuccess: router.routeToUrl({
+              tag: 'signUpProgramStaff',
+              value: routeParams
+            })
+          }
+        }));
+        return await makeInitState();
+      }
+    });
+  } else {
+    return isSignedOut(accessControlParams);
   }
 };
 
@@ -54,12 +95,12 @@ function stopLoading<PS>(state: Immutable<State<PS>>): Immutable<State<PS>> {
 }
 
 export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Update<State<PS>, Msg<PM>> {
-  return (state, msg) => {
+  return ({ state, msg }) => {
     switch (msg.tag) {
       case 'accountInformation':
         return updateComponentChild({
           state,
-          mapChildMsg: value => ({ tag: 'accountInformation', value }),
+          mapChildMsg: value => ({ tag: 'accountInformation' as 'accountInformation', value }),
           childStatePath: ['accountInformation'],
           childUpdate: AccountInformation.update,
           childMsg: msg.value
@@ -67,7 +108,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
       case 'profile':
         return updateComponentChild({
           state,
-          mapChildMsg: (value: PM) => ({ tag: 'profile', value }),
+          mapChildMsg: (value: PM) => ({ tag: 'profile' as 'profile', value }),
           childStatePath: ['profile'],
           childUpdate: Profile.update,
           childMsg: msg.value
@@ -89,25 +130,20 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
               case 'valid':
                 // Redirect Program Staff to the created user's profile.
                 if (result.value.profile.type === UserType.ProgramStaff) {
-                  dispatch({
-                    tag: '@newUrl',
+                  dispatch(newRoute({
+                    tag: 'profile' as 'profile',
                     value: {
-                      tag: 'profile',
-                      value: {
-                        profileUserId: result.value._id
-                      }
+                      profileUserId: result.value._id
                     }
-                  });
+                  }));
                 } else {
                   // All other users who are creating their own accounts,
                   // should be prompted to accept the terms and conditions.
-                  dispatch({
-                    tag: '@newUrl',
-                    value: {
-                      tag: 'termsAndConditions',
-                      value: { userId: result.value._id }
-                    }
-                  });
+                  // TODO may need to provide redirect params.
+                  dispatch(newRoute({
+                    tag: 'termsAndConditions' as 'termsAndConditions',
+                    value: {}
+                  }));
                 }
                 return state;
               case 'invalid':
@@ -120,8 +156,6 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
             }
           }
         ];
-      case 'updateFixedBarBottom':
-        return [state.set('fixedBarBottom', msg.value)];
       default:
         return [state];
     }
@@ -159,55 +193,63 @@ function Subtitle(props: { userType: UserType }) {
   }
 }
 
-function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
-  return props => {
-    const { state, dispatch } = props;
-    const dispatchAccountInformation: Dispatch<AccountInformation.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'accountInformation' as 'accountInformation', value }));
-    const dispatchProfile: Dispatch<ComponentMsg<PM, Page>> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'profile' as 'profile', value }));
+function viewBottomBar<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
+  return ({ state, dispatch }) => {
     const isLoading = state.loading > 0;
     const isDisabled = isLoading || !isValid(state, Profile);
-    const createAccount = () => !isDisabled && dispatch({ tag: 'createAccount', value: undefined });
     const isProgramStaff = Profile.userType === UserType.ProgramStaff;
-    const cancelPage: Page = isProgramStaff ? { tag: 'userList', value: null } : { tag: 'landing', value: {} };
-    const bottomBarIsFixed = state.fixedBarBottom === 0;
+    const createAccount = () => !isDisabled && dispatch({ tag: 'createAccount', value: undefined });
+    const cancelRoute: Route = isProgramStaff ? { tag: 'userList' as 'userList', value: null } : { tag: 'landing' as 'landing', value: null };
     return (
-      <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingTop fullWidth>
-        <Container className='mb-5 flex-grow-1'>
-          <Row>
-            <Col xs='12'>
-              <h1>Create a {userTypeToTitleCase(Profile.userType)} Account</h1>
-            </Col>
-          </Row>
-          <Row>
-            <Col xs='12' md='8'>
-              <Subtitle userType={Profile.userType} />
-            </Col>
-          </Row>
-          <Row className='mt-3 no-gutters'>
-            <Col xs='12' md='4'>
-              <AccountInformation.view state={state.accountInformation} dispatch={dispatchAccountInformation} />
-            </Col>
-            <Col md='1' className='vertical-line'></Col>
-            <Col xs='12' md='7'>
-              <Profile.view state={state.profile} dispatch={dispatchProfile} />
-            </Col>
-          </Row>
-        </Container>
-        <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
-          <LoadingButton color='primary' onClick={createAccount} loading={isLoading} disabled={isDisabled}>
-            Create Account
-          </LoadingButton>
-          <Link page={cancelPage} text='Cancel' textColor='secondary' disabled={isLoading} />
-        </FixedBar.View>
-      </PageContainer.View>
+      <FixedBar>
+        <LoadingButton color='primary' onClick={createAccount} loading={isLoading} disabled={isDisabled}>
+          Create Account
+        </LoadingButton>
+        <Link page={cancelRoute} text='Cancel' textColor='secondary' disabled={isLoading} />
+      </FixedBar>
+    );
+  };
+}
+
+function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
+  return ({ state, dispatch }) => {
+    const dispatchAccountInformation: Dispatch<AccountInformation.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'accountInformation' as 'accountInformation', value }));
+    const dispatchProfile: Dispatch<GlobalComponentMsg<PM, Route>> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'profile' as 'profile', value }));
+    return (
+      <Container className='mb-5 flex-grow-1'>
+        <Row>
+          <Col xs='12'>
+            <h1>Create a {userTypeToTitleCase(Profile.userType)} Account</h1>
+          </Col>
+        </Row>
+        <Row>
+          <Col xs='12' md='8'>
+            <Subtitle userType={Profile.userType} />
+          </Col>
+        </Row>
+        <Row className='mt-3 no-gutters'>
+          <Col xs='12' md='4'>
+            <AccountInformation.view state={state.accountInformation} dispatch={dispatchAccountInformation} />
+          </Col>
+          <Col md='1' className='vertical-line'></Col>
+          <Col xs='12' md='7'>
+            <Profile.view state={state.profile} dispatch={dispatchProfile} />
+          </Col>
+        </Row>
+      </Container>
     );
   };
 };
 
-export function component<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Component<Params, State<PS>, Msg<PM>> {
+export function component<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): PageComponent<RouteParams, SharedState, State<PS>, Msg<PM>> {
   return {
     init: init(Profile),
     update: update(Profile),
-    view: view(Profile)
+    view: view(Profile),
+    viewBottomBar: viewBottomBar(Profile),
+    getAlerts: emptyPageAlerts,
+    getMetadata() {
+      return makePageMetadata('Terms and Conditions');
+    }
   };
 };

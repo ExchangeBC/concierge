@@ -1,18 +1,18 @@
-import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
-import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Immutable, Init, newUrl, Update, View } from 'front-end/lib/framework';
+import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
+import router from 'front-end/lib/app/router';
+import { Route, SharedState } from 'front-end/lib/app/types';
+import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newRoute, PageComponent, PageInit, Update, View } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
-import * as FixedBar from 'front-end/lib/views/fixed-bar';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import Icon from 'front-end/lib/views/icon';
-import * as PageContainer from 'front-end/lib/views/layout/page-container';
+import FixedBar from 'front-end/lib/views/layout/fixed-bar';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import Markdown from 'front-end/lib/views/markdown';
 import { default as React, ReactElement } from 'react';
-import { Alert, Col, Container, Row } from 'reactstrap';
+import { Alert, Col, Row } from 'reactstrap';
 import { compareDates, formatDate, formatTime } from 'shared/lib';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as FileResource from 'shared/lib/resources/file';
@@ -24,21 +24,17 @@ const ERROR_MESSAGE = 'The Request for Information you are looking for is not av
 const CONTACT_EMAIL = 'Procurement.Concierge@gov.bc.ca';
 const ATTACHMENTS_ID = 'attachments';
 
-export interface Params {
+export interface RouteParams {
   rfiId: string;
-  userType?: UserType;
-  fixedBarBottom?: number;
   preview?: boolean;
 }
 
 export type InnerMsg
-  = ADT<'respondToDiscoveryDay'>
-  | ADT<'updateFixedBarBottom', number>;
+  = ADT<'respondToDiscoveryDay'>;
 
-export type Msg = ComponentMsg<InnerMsg, Page>;
+export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export interface State {
-  fixedBarBottom: number;
   respondToDiscoveryDayLoading: number;
   alerts: string[];
   preview: boolean;
@@ -51,9 +47,11 @@ export interface State {
   ddr?: DdrResource.PublicDiscoveryDayResponse;
 };
 
-export const init: Init<Params, State> = async ({ rfiId, userType, fixedBarBottom = 0, preview = false }) => {
+const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParams, shared }) => {
+  const { rfiId, preview = false } = routeParams;
+  const { session } = shared;
+  const userType = session && session.user && session.user.type;
   const defaultState: State = {
-    fixedBarBottom,
     respondToDiscoveryDayLoading: 0,
     alerts: [],
     preview,
@@ -110,7 +108,7 @@ export const init: Init<Params, State> = async ({ rfiId, userType, fixedBarBotto
 const startRespondToDiscoveryDayLoading: UpdateState<State> = makeStartLoading('respondToDiscoveryDayLoading');
 const stopRespondToDiscoveryDayLoading: UpdateState<State> = makeStopLoading('respondToDiscoveryDayLoading');
 
-export const update: Update<State, Msg> = (state, msg) => {
+const update: Update<State, Msg> = ({ state, msg }) => {
   if (!state.rfi) { return [state]; }
   switch (msg.tag) {
     case 'respondToDiscoveryDay':
@@ -119,7 +117,7 @@ export const update: Update<State, Msg> = (state, msg) => {
         async (state, dispatch) => {
           if (!state.rfi) { return state; }
           const finish = (state: Immutable<State>) => stopRespondToDiscoveryDayLoading(state);
-          const thisPage: Page = {
+          const thisRoute: Route = {
             tag: 'requestForInformationView' as 'requestForInformationView',
             value: {
               rfiId: state.rfi._id
@@ -130,10 +128,10 @@ export const update: Update<State, Msg> = (state, msg) => {
           const session = await api.getSession();
           // Redirect the user to the sign-in form.
           if (session.tag === 'invalid' || !session.value.user) {
-            dispatch(newUrl({
+            dispatch(newRoute({
               tag: 'signIn' as 'signIn',
               value: {
-                redirectOnSuccess: thisPage
+                redirectOnSuccess: router.routeToUrl(thisRoute)
               }
             }));
             return finish(state);
@@ -145,13 +143,13 @@ export const update: Update<State, Msg> = (state, msg) => {
           const acceptedTerms = !!user.value.acceptedTermsAt;
           // Ask the user to accept the terms first.
           if (!acceptedTerms) {
-            dispatch(newUrl({
+            dispatch(newRoute({
               tag: 'termsAndConditions' as 'termsAndConditions',
               value: {
                 userId: user.value._id,
                 warnings: ['You must accept the terms and conditions in order to register for a Discovery Session.'],
-                redirectOnAccept: thisPage,
-                redirectOnSkip: thisPage
+                redirectOnAccept: thisRoute,
+                redirectOnSkip: thisRoute
               }
             }));
             return finish(state);
@@ -170,8 +168,6 @@ export const update: Update<State, Msg> = (state, msg) => {
           }
         }
       ];
-    case 'updateFixedBarBottom':
-      return [state.set('fixedBarBottom', msg.value)];
     default:
       return [state];
   }
@@ -305,27 +301,26 @@ function showButtons(rfiStatus: RfiStatus | null, userType?: UserType): boolean 
   return (!userType || userType === UserType.Vendor) && !!rfiStatus && rfiStatus !== RfiStatus.Expired;
 }
 
-const Buttons: ComponentView<State, Msg> = props => {
+const viewBottomBar: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   // Do not show buttons for previews.
   if (state.preview || !state.rfi || !state.rfi.latestVersion) { return null; }
   // Only show these buttons for Vendors and unauthenticated users.
   const rfiStatus = rfiToRfiStatus(state.rfi);
   if (!showButtons(rfiStatus, state.userType)) { return null; }
-  const bottomBarIsFixed = state.fixedBarBottom === 0;
   const version = state.rfi.latestVersion;
   const alreadyRespondedToDiscoveryDay = !!state.ddr;
   const respondToDiscoveryDay = () => !alreadyRespondedToDiscoveryDay && dispatch({ tag: 'respondToDiscoveryDay', value: undefined });
   const isLoading = state.respondToDiscoveryDayLoading > 0;
-  const respondToRfiPage: Page = {
+  const respondToRfiRoute: Route = {
     tag: 'requestForInformationRespond',
     value: {
       rfiId: state.rfi._id
     }
   };
   return (
-    <FixedBar.View location={bottomBarIsFixed ? 'bottom' : undefined}>
-      <Link page={respondToRfiPage} buttonColor='primary' disabled={isLoading} className='text-nowrap'>
+    <FixedBar>
+      <Link page={respondToRfiRoute} buttonColor='primary' disabled={isLoading} className='text-nowrap'>
         Respond to RFI
       </Link>
       {rfiStatus === RfiStatus.Open
@@ -336,7 +331,7 @@ const Buttons: ComponentView<State, Msg> = props => {
              loading={isLoading} />)
         : null}
       <div className='text-secondary font-weight-bold d-none d-md-block mr-auto'>I want to...</div>
-    </FixedBar.View>
+    </FixedBar>
   );
 };
 
@@ -353,11 +348,11 @@ const ConditionalAlerts: View<Pick<State, 'alerts'>> = ({ alerts }) => {
   );
 };
 
-export const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = props => {
   const { state } = props;
   if (!state.rfi || !state.rfi.latestVersion) {
     return (
-      <PageContainer.View paddingY>
+      <div>
         <Row>
           <Col xs='12'>
             <Alert color='danger'>
@@ -367,44 +362,45 @@ export const view: ComponentView<State, Msg> = props => {
             </Alert>
           </Col>
         </Row>
-      </PageContainer.View>
+      </div>
     );
   }
-  const rfiStatus = rfiToRfiStatus(state.rfi);
-  const buttonsAreVisible = showButtons(rfiStatus, state.userType);
-  const bottomBarIsFixed = buttonsAreVisible && state.fixedBarBottom === 0;
-  const paddingY = !buttonsAreVisible;
-  const paddingTop = buttonsAreVisible;
   const rfi = state.rfi;
   const version = state.rfi.latestVersion;
   return (
-    <PageContainer.View marginFixedBar={bottomBarIsFixed} paddingY={paddingY} paddingTop={paddingTop} fullWidth>
-      <Container className='mb-5 flex-grow-1'>
-        <ConditionalAlerts alerts={state.alerts} />
-        <Row className='mb-5'>
-          <Col xs='12' className='d-flex flex-column text-center align-items-center'>
-            <h1 className='h4'>RFI Number: {version.rfiNumber}</h1>
-            <h2 className='h1'>{version.title}</h2>
-            <div className='text-secondary small'>
-              {publishedDateToString(rfi.publishedAt)}
-            </div>
-            <div className='text-secondary small'>
-              {updatedDateToString(version.createdAt)}
-            </div>
-          </Col>
-        </Row>
-        <Details rfi={rfi} />
-        <Description value={version.description} />
-        <Attachments files={version.attachments} />
-        <Addenda addenda={version.addenda} />
-      </Container>
-      <Buttons {...props} />
-    </PageContainer.View>
+    <div>
+      <ConditionalAlerts alerts={state.alerts} />
+      <Row className='mb-5'>
+        <Col xs='12' className='d-flex flex-column text-center align-items-center'>
+          <h1 className='h4'>RFI Number: {version.rfiNumber}</h1>
+          <h2 className='h1'>{version.title}</h2>
+          <div className='text-secondary small'>
+            {publishedDateToString(rfi.publishedAt)}
+          </div>
+          <div className='text-secondary small'>
+            {updatedDateToString(version.createdAt)}
+          </div>
+        </Col>
+      </Row>
+      <Details rfi={rfi} />
+      <Description value={version.description} />
+      <Attachments files={version.attachments} />
+      <Addenda addenda={version.addenda} />
+    </div>
   );
 };
 
-export const component: Component<Params, State, Msg> = {
+export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   init,
   update,
-  view
+  view,
+  viewBottomBar,
+  getAlerts: emptyPageAlerts,
+  getMetadata(state) {
+    const title
+      = state.preview
+      ? 'Request for Information Preview'
+      : 'Request for Information';
+    return makePageMetadata(title);
+  }
 };

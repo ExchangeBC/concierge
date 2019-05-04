@@ -1,8 +1,8 @@
-import { Page } from 'front-end/lib/app/types';
+import { Route } from 'front-end/lib/app/types';
 import * as FileMulti from 'front-end/lib/components/input/file-multi';
 import * as LongTextMulti from 'front-end/lib/components/input/long-text-multi';
 import * as SelectMulti from 'front-end/lib/components/input/select-multi';
-import { Component, ComponentMsg, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
+import { Component, ComponentView, Dispatch, GlobalComponentMsg, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as DateTime from 'front-end/lib/views/input/datetime';
@@ -52,7 +52,7 @@ export type InnerMsg
   | ADT<'validateClosingDate'>
   | ADT<'validateClosingTime'>;
 
-export type Msg = ComponentMsg<InnerMsg, Page>;
+export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export interface State {
   loading: number;
@@ -268,7 +268,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
   };
 };
 
-export const update: Update<State, Msg> = (state, msg) => {
+export const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'onChangeRfiNumber':
       return [updateStringValue(state, 'rfiNumber', msg.value)];

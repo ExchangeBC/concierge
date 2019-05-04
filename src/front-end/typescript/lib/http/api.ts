@@ -142,16 +142,18 @@ export async function deleteUser(userId: string): Promise<ValidOrInvalid<null, n
   }
 }
 
+export interface SessionUser {
+  id: string;
+  type: UserType;
+  email: string;
+}
+
 export interface Session {
   _id: string;
   createdAt: Date;
   updatedAt: Date;
   sessionId: string;
-  user?: {
-    id: string;
-    type: UserType;
-    email: string;
-  }
+  user?: SessionUser;
 }
 
 export interface RawSession extends Omit<Session, 'createdAt' | 'updatedAt'> {

@@ -1,7 +1,7 @@
-import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Init, Update } from 'front-end/lib/framework';
+import { makePageMetadata } from 'front-end/lib';
+import { Route, SharedState } from 'front-end/lib/app/types';
+import { ComponentView, emptyPageAlerts, GlobalComponentMsg, PageComponent, PageInit, Update } from 'front-end/lib/framework';
 import { deleteSession } from 'front-end/lib/http/api';
-import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import { get } from 'lodash';
 import React from 'react';
@@ -12,11 +12,11 @@ export interface State {
   message: string;
 };
 
-export type Msg = ComponentMsg<ADT<'noop'>, Page>;
+export type Msg = GlobalComponentMsg<ADT<'noop'>, Route>;
 
-export type Params = null;
+export type RouteParams = null;
 
-export const init: Init<Params, State> = async () => {
+const init: PageInit<RouteParams, SharedState, State, Msg> = async () => {
   const session = await deleteSession();
   if (!get(session, 'user')) {
     return { message: 'You have successfully signed out. Thank you for using the Procurement Concierge Program.' };
@@ -25,13 +25,13 @@ export const init: Init<Params, State> = async () => {
   }
 };
 
-export const update: Update<State, Msg> = (state, msg) => {
+const update: Update<State, Msg> = ({ state, msg }) => {
   return [state];
 };
 
-export const view: ComponentView<State, Msg> = ({ state }) => {
+const view: ComponentView<State, Msg> = ({ state }) => {
   return (
-    <PageContainer.View paddingY>
+    <div>
       <Row className='mb-3 pb-3'>
         <Col xs='12'>
           {state.message}
@@ -39,15 +39,19 @@ export const view: ComponentView<State, Msg> = ({ state }) => {
       </Row>
       <Row>
         <Col xs='12'>
-          <Link href='/' text='Return to the Home Page' buttonColor='secondary' />
+          <Link href='/' text='Return to the Home Route' buttonColor='secondary' />
         </Col>
       </Row>
-    </PageContainer.View>
+    </div>
   );
 };
 
-export const component: Component<Params, State, Msg> = {
+export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   init,
   update,
-  view
+  view,
+  getAlerts: emptyPageAlerts,
+  getMetadata() {
+    return makePageMetadata('Signed Out');
+  }
 };

@@ -1,22 +1,35 @@
-import { Record, RecordOf } from 'immutable';
-import { defaults, get, remove } from 'lodash';
+import * as Immutable from 'immutable';
+import { get, remove } from 'lodash';
 import page from 'page';
+import qs from 'querystring';
 import { default as React, ReactElement } from 'react';
 import ReactDom from 'react-dom';
-import { ADT, AuthLevel } from 'shared/lib/types';
+import { ADT } from 'shared/lib/types';
 
-export type Immutable<State> = RecordOf<State>;
+// Base logic.
+
+// TODO replace Immutable with TypeScript's built-in Readonly
+export type Immutable<State> = Immutable.RecordOf<State>;
 
 export function immutable<State>(state: State): Immutable<State> {
-  return Record(state)();
+  return Immutable.Record(state)();
 }
+
+export type Dispatch<Msg> = (msg: Msg) => Promise<any>;
+
+// Standard Components.
 
 export type Init<Params, State> = (params: Params) => Promise<State>;
 
 // Update returns a tuple representing sync and async state mutations.
 export type UpdateReturnValue<State, Msg> = [Immutable<State>, ((state: Immutable<State>, dispatch: Dispatch<Msg>) => Promise<Immutable<State>>)?];
 
-export type Update<State, Msg> = (state: Immutable<State>, msg: Msg) => UpdateReturnValue<State, Msg>;
+export interface UpdateParams<State, Msg> {
+  state: Immutable<State>;
+  msg: Msg;
+}
+
+export type Update<State, Msg> = (params: UpdateParams<State, Msg>) => UpdateReturnValue<State, Msg>;
 
 interface UpdateChildParams<ParentState, ParentMsg, ChildState, ChildMsg> {
   state: Immutable<ParentState>;
@@ -24,46 +37,6 @@ interface UpdateChildParams<ParentState, ParentMsg, ChildState, ChildMsg> {
   childUpdate: Update<ChildState, ChildMsg>;
   childMsg: ChildMsg;
   mapChildMsg(msg: ChildMsg): ParentMsg,
-}
-
-export function updateAppChild<PS, PM, CS, CM, Page, UserType>(params: UpdateChildParams<PS, AppMsg<PM, Page, UserType>, CS, ComponentMsg<CM, Page>>): UpdateReturnValue<PS, AppMsg<PM, Page, UserType>> {
-  const { childStatePath, childUpdate, childMsg, mapChildMsg } = params;
-  let { state } = params;
-  const childState = state.getIn(childStatePath);
-  if (!childState) { return [state]; }
-  const [newChildState, newAsyncChildState] = childUpdate(childState, childMsg);
-  state = state.setIn(childStatePath, newChildState);
-  let asyncStateUpdate;
-  if (newAsyncChildState) {
-    asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<AppMsg<PM, Page, UserType>>) => {
-      const mappedDispatch = mapAppDispatch(dispatch, mapChildMsg);
-      return state.setIn(childStatePath, await newAsyncChildState(state.getIn(childStatePath), mappedDispatch));
-    }
-  }
-  return [
-    state,
-    asyncStateUpdate
-  ];
-}
-
-export function updateComponentChild<PS, PM, CS, CM, Page>(params: UpdateChildParams<PS, ComponentMsg<PM, Page>, CS, ComponentMsg<CM, Page>>): UpdateReturnValue<PS, ComponentMsg<PM, Page>> {
-  const { childStatePath, childUpdate, childMsg, mapChildMsg } = params;
-  let { state } = params;
-  const childState = state.getIn(childStatePath);
-  if (!childState) { return [state]; }
-  const [newChildState, newAsyncChildState] = childUpdate(childState, childMsg);
-  state = state.setIn(childStatePath, newChildState);
-  let asyncStateUpdate;
-  if (newAsyncChildState) {
-    asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<ComponentMsg<PM, Page>>) => {
-      const mappedDispatch = mapComponentDispatch(dispatch, mapChildMsg);
-      return state.setIn(childStatePath, await newAsyncChildState(state.getIn(childStatePath), mappedDispatch));
-    }
-  }
-  return [
-    state,
-    asyncStateUpdate
-  ];
 }
 
 export type View<Props> = (props: Props) => ReactElement<Props> | null;
@@ -87,97 +60,323 @@ export interface Component<Params, State, Msg, Props extends ComponentViewProps<
   view: View<Props>;
 }
 
-export interface RouteAuthDefinition<Page, UserType> {
-  level: AuthLevel<UserType>;
-  signOut: boolean;
-  redirect(incomingPage: Page): Page;
+export function mapComponentDispatch<ParentMsg, ChildMsg>(dispatch: Dispatch<ParentMsg>, fn: (childMsg: ChildMsg) => ParentMsg): Dispatch<ChildMsg> {
+  return childMsg => {
+    return dispatch(fn(childMsg));
+  };
 }
 
-export interface RouteDefinition<Page, UserType> {
-  path: string;
-  pageId: string;
-  auth?: RouteAuthDefinition<Page, UserType>;
+export function updateComponentChild<PS, PM, CS, CM>(params: UpdateChildParams<PS, PM, CS, CM>): UpdateReturnValue<PS, PM> {
+  const { childStatePath, childUpdate, childMsg, mapChildMsg } = params;
+  let { state } = params;
+  const childState = state.getIn(childStatePath);
+  if (!childState) { return [state]; }
+  const [newChildState, newAsyncChildState] = childUpdate({
+    state: childState,
+    msg: childMsg
+  });
+  state = state.setIn(childStatePath, newChildState);
+  let asyncStateUpdate;
+  if (newAsyncChildState) {
+    asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<PM>) => {
+      const mappedDispatch = mapComponentDispatch(dispatch, mapChildMsg);
+      return state.setIn(childStatePath, await newAsyncChildState(state.getIn(childStatePath), mappedDispatch));
+    }
+  }
+  return [
+    state,
+    asyncStateUpdate
+  ];
 }
+
+// Global Components.
+
+export type IncomingRouteMsg<Route> = ADT<'@incomingRoute', Route>;
+
+export type NewUrlMsg = ADT<'@newUrl', string>;
+
+export function newUrl(path: string): NewUrlMsg {
+  return {
+    tag: '@newUrl',
+    value: path
+  };
+}
+
+export type ReplaceUrlMsg = ADT<'@replaceUrl', string>;
+
+export function replaceUrl(path: string): ReplaceUrlMsg {
+  return {
+    tag: '@replaceUrl',
+    value: path
+  };
+}
+
+export type NewRouteMsg<Route> = ADT<'@newRoute', Route>;
+
+export function newRoute<Route>(route: Route): NewRouteMsg<Route> {
+  return {
+    tag: '@newRoute',
+    value: route
+  };
+}
+
+export type ReplaceRouteMsg<Route> = ADT<'@replaceRoute', Route>;
+
+export function replaceRoute<Route>(route: Route): ReplaceRouteMsg<Route> {
+  return {
+    tag: '@replaceRoute',
+    value: route
+  };
+}
+
+export type GlobalMsg<Route>
+  = NewRouteMsg<Route>
+  | ReplaceRouteMsg<Route>
+  | NewUrlMsg
+  | ReplaceUrlMsg;
+
+export type GlobalComponentMsg<Msg, Route> = Msg | GlobalMsg<Route>;
+
+export function mapGlobalComponentDispatch<ParentMsg, ChildMsg, Route>(dispatch: Dispatch<GlobalComponentMsg<ParentMsg, Route>>, fn: (childMsg: GlobalComponentMsg<ChildMsg, Route>) => GlobalComponentMsg<ParentMsg, Route>): Dispatch<GlobalComponentMsg<ChildMsg, Route>> {
+  return childMsg => {
+    if ((childMsg as GlobalMsg<Route>).tag === '@newRoute' || (childMsg as GlobalMsg<Route>).tag === '@replaceRoute') {
+      return dispatch(childMsg as GlobalMsg<Route>);
+    } else {
+      return dispatch(fn(childMsg));
+    }
+  };
+}
+
+export function updateGlobalComponentChild<PS, PM, CS, CM, Route>(params: UpdateChildParams<PS, GlobalComponentMsg<PM, Route>, CS, GlobalComponentMsg<CM, Route>>): UpdateReturnValue<PS, GlobalComponentMsg<PM, Route>> {
+  const { childStatePath, childUpdate, childMsg, mapChildMsg } = params;
+  let { state } = params;
+  const childState = state.getIn(childStatePath);
+  if (!childState) { return [state]; }
+  const [newChildState, newAsyncChildState] = childUpdate({
+    state: childState,
+    msg: childMsg
+  });
+  state = state.setIn(childStatePath, newChildState);
+  let asyncStateUpdate;
+  if (newAsyncChildState) {
+    asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<GlobalComponentMsg<PM, Route>>) => {
+      const mappedDispatch = mapGlobalComponentDispatch(dispatch, mapChildMsg);
+      return state.setIn(childStatePath, await newAsyncChildState(state.getIn(childStatePath), mappedDispatch));
+    }
+  }
+  return [
+    state,
+    asyncStateUpdate
+  ];
+}
+
+// Page components.
+
+export interface PageInitParams<RouteParams, SharedState, Msg> {
+  routeParams: Readonly<RouteParams>;
+  shared: Readonly<SharedState>;
+  dispatch: Dispatch<Msg>;
+}
+
+export type PageInit<RouteParams, SharedState, State, Msg> = Init<PageInitParams<RouteParams, SharedState, Msg>, State>;
 
 export interface PageMetadata {
   title: string;
 }
 
-export interface Router<State, Page, UserType> {
-  fallbackPage: Page;
-  routes: Array<RouteDefinition<Page, UserType>>;
-  locationToPage(pageId: string, params: object, state: Immutable<State>): Page;
-  pageToUrl(page: Page): string;
-  pageToMetadata(page: Page): PageMetadata;
+export interface PageAlerts {
+  info: string[];
+  warn: string[];
+  danger: string[];
 }
 
-export interface IncomingPageMsgValue<Page, UserType> {
-  page: Page;
-  auth: RouteAuthDefinition<Page, UserType>;
+export interface PageContainerOptions {
+  fullWidth?: boolean;
+  paddingTop?: boolean;
+  paddingBottom?: boolean;
 }
 
-export type BeforeIncomingPageMsg = ADT<'@beforeIncomingPage'>;
+export type PageGetMetadata<State> = (state: Immutable<State>) => PageMetadata;
 
-export type IncomingPageMsg<Page, UserType> = ADT<'@incomingPage', IncomingPageMsgValue<Page, UserType>>;
+export type PageGetAlerts<State> = (state: Immutable<State>) => PageAlerts;
 
-export type RedirectMsg = ADT<'@redirect', string>;
-
-export function redirect(path: string): RedirectMsg {
+export function emptyPageAlerts(): PageAlerts {
   return {
-    tag: '@redirect',
-    value: path
+    info: [],
+    warn: [],
+    danger: []
   };
 }
 
-export type NewUrlMsg<Page> = ADT<'@newUrl', Page>;
-
-export function newUrl<Page>(page: Page): NewUrlMsg<Page> {
-  return {
-    tag: '@newUrl',
-    value: page
-  };
+export interface PageComponent<RouteParams, SharedState, State, Msg, Props extends ComponentViewProps<State, Msg> = ComponentViewProps<State, Msg>> {
+  init: PageInit<RouteParams, SharedState, State, Msg>;
+  update: Update<State, Msg>;
+  view: View<Props>;
+  viewBottomBar?: View<Props>;
+  containerOptions?: PageContainerOptions;
+  getMetadata: PageGetMetadata<State>;
+  getAlerts: PageGetAlerts<State>;
 }
 
-export type ReplaceUrlMsg<Page> = ADT<'@replaceUrl', Page>;
-
-export function replaceUrl<Page>(page: Page): ReplaceUrlMsg<Page> {
-  return {
-    tag: '@replaceUrl',
-    value: page
-  };
+export function setPageMetadata(metadata: PageMetadata): void {
+  document.title = metadata.title;
 }
 
-export type GlobalMsg<Page> = NewUrlMsg<Page> | ReplaceUrlMsg<Page> | RedirectMsg;
+// Router.
 
-export type ComponentMsg<Msg, Page> = Msg | GlobalMsg<Page>;
-
-export type AppMsg<Msg, Page, UserType> = ComponentMsg<Msg, Page> | BeforeIncomingPageMsg | IncomingPageMsg<Page, UserType>;
-
-export interface App<State, Msg, Page, UserType> extends Component<null, State, AppMsg<Msg, Page, UserType>> {
-  router: Router<State, Page, UserType>;
+export interface RouteDefinitionParams {
+  params: Record<string, string>;
+  query: Record<string, string | string[]>;
 }
 
-export type Dispatch<Msg> = (msg: Msg) => Promise<any>;
+export interface RouteDefinition<Route> {
+  path: string;
+  makeRoute(params: RouteDefinitionParams): Route;
+}
 
-export function mapAppDispatch<ParentMsg, ChildMsg, Page, UserType>(dispatch: Dispatch<AppMsg<ParentMsg, Page, UserType>>, fn: (childMsg: ComponentMsg<ChildMsg, Page>) => AppMsg<ParentMsg, Page, UserType>): Dispatch<ComponentMsg<ChildMsg, Page>> {
+export interface Router<Route> {
+  routes: Array<RouteDefinition<Route>>;
+  routeToUrl(route: Route): string;
+}
+
+export function startRouter<State, Msg, Route>(router: Router<Route>, stateManager: StateManager<State, AppMsg<Msg, Route>>): void {
+  // Parse the query string.
+  page((ctx, next) => {
+    ctx.query = qs.parse(window.location.search.replace(/^\??/, ''));
+    next();
+  });
+  // Bind all routes for pushState.
+  router.routes.forEach(({ path, makeRoute }) => {
+    page(path, ctx => {
+      // Do nothing if a hash is present in the path
+      // only if it isn't the initial load.
+      if (!ctx.init && ctx.hash) { return; }
+      const parsedRoute = makeRoute({
+        params: get(ctx, 'params', {}),
+        query: ctx.query || {}
+      });
+      return stateManager
+        .dispatch({
+          tag: '@incomingRoute',
+          value: parsedRoute
+        });
+    });
+  });
+  // Start the router.
+  page();
+}
+
+export function runNewUrl(url: string): void {
+  page(url);
+}
+
+export function runReplaceUrl(url: string): void {
+  page.redirect(url);
+}
+
+// App.
+
+export type AppMsg<Msg, Route> = GlobalComponentMsg<Msg, Route> | IncomingRouteMsg<Route>;
+
+export interface AppComponent<State, Msg, Route> extends Component<null, State, AppMsg<Msg, Route>> {
+  router: Router<Route>;
+}
+
+export function mapAppDispatch<ParentMsg, ChildMsg, Route>(dispatch: Dispatch<AppMsg<ParentMsg, Route>>, fn: (childMsg: GlobalComponentMsg<ChildMsg, Route>) => AppMsg<ParentMsg, Route>): Dispatch<GlobalComponentMsg<ChildMsg, Route>> {
   return childMsg => {
-    if ((childMsg as GlobalMsg<Page>).tag === '@newUrl' || (childMsg as GlobalMsg<Page>).tag === '@replaceUrl') {
-      return dispatch(childMsg as GlobalMsg<Page>);
+    const globalMsg = childMsg as GlobalMsg<Route>;
+    if (globalMsg.tag === '@newRoute' || globalMsg.tag === '@replaceRoute' || globalMsg.tag === '@newUrl' || globalMsg.tag === '@replaceUrl') {
+      return dispatch(childMsg as GlobalMsg<Route>);
     } else {
       return dispatch(fn(childMsg));
     }
   };
 }
 
-export function mapComponentDispatch<ParentMsg, ChildMsg, Page>(dispatch: Dispatch<ComponentMsg<ParentMsg, Page>>, fn: (childMsg: ComponentMsg<ChildMsg, Page>) => ComponentMsg<ParentMsg, Page>): Dispatch<ComponentMsg<ChildMsg, Page>> {
-  return childMsg => {
-    if ((childMsg as GlobalMsg<Page>).tag === '@newUrl' || (childMsg as GlobalMsg<Page>).tag === '@replaceUrl') {
-      return dispatch(childMsg as GlobalMsg<Page>);
-    } else {
-      return dispatch(fn(childMsg));
-    }
-  };
+interface InitAppChildPageParams<ParentState, ParentMsg, ChildRouteParams, ChildState, ChildMsg, SharedState, Route> {
+  state: Immutable<ParentState>;
+  dispatch: Dispatch<AppMsg<ParentMsg, Route>>;
+  childStatePath: string[];
+  childRouteParams: ChildRouteParams;
+  childInit: PageInit<ChildRouteParams, SharedState, ChildState, GlobalComponentMsg<ChildMsg, Route>>;
+  getSharedState(state: Immutable<ParentState>): SharedState;
+  mapChildMsg(msg: GlobalComponentMsg<ChildMsg, Route>): ParentMsg;
 }
+
+/**
+ * Use this function to initialize a PageComponent's state
+ * in an AppComponent's update function.
+ */
+
+export async function initAppChildPage<ParentState, ParentMsg, ChildRouteParams, ChildState, ChildMsg, SharedState, Route>(params: InitAppChildPageParams<ParentState, ParentMsg, ChildRouteParams, ChildState, ChildMsg, SharedState, Route>): Promise<Immutable<ParentState>> {
+  const childState = immutable(await params.childInit({
+    routeParams: params.childRouteParams,
+    shared: params.getSharedState(params.state),
+    dispatch: mapAppDispatch(params.dispatch, params.mapChildMsg)
+  }));
+  return params.state.setIn(params.childStatePath, childState);
+}
+
+/**
+ * Use this function to update a standard Component's state
+ * in an AppComponent's update function.
+ */
+
+export function updateAppChild<PS, PM, CS, CM, Route>(params: UpdateChildParams<PS, AppMsg<PM, Route>, CS, GlobalComponentMsg<CM, Route>>): UpdateReturnValue<PS, AppMsg<PM, Route>> {
+  const { childStatePath, childUpdate, childMsg, mapChildMsg } = params;
+  let { state } = params;
+  const childState = state.getIn(childStatePath);
+  if (!childState) { return [state]; }
+  const [newChildState, newAsyncChildState] = childUpdate({
+    state: childState,
+    msg: childMsg
+  });
+  state = state.setIn(childStatePath, newChildState);
+  let asyncStateUpdate;
+  if (newAsyncChildState) {
+    asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<AppMsg<PM, Route>>) => {
+      const mappedDispatch = mapAppDispatch(dispatch, mapChildMsg);
+      return state.setIn(childStatePath, await newAsyncChildState(state.getIn(childStatePath), mappedDispatch));
+    }
+  }
+  return [
+    state,
+    asyncStateUpdate
+  ];
+}
+
+export interface UpdateChildPageParams<PS, PM, CS, CM> extends UpdateChildParams<PS, PM, CS, CM> {
+  childGetMetadata: PageGetMetadata<CS>;
+}
+
+/**
+ * Use this function to update a PageComponent's state
+ * in an AppComponent's update function.
+ */
+
+export function updateAppChildPage<PS, PM, CS, CM, Route>(params: UpdateChildPageParams<PS, AppMsg<PM, Route>, CS, GlobalComponentMsg<CM, Route>>): UpdateReturnValue<PS, AppMsg<PM, Route>> {
+  const [newState, newAsyncState] = updateAppChild(params);
+  const setMetadata = (state: PS) => {
+    const pageState = newState.getIn(params.childStatePath);
+    const metadata = params.childGetMetadata(pageState);
+    setPageMetadata(metadata);
+  };
+  setMetadata(newState);
+  let asyncStateUpdate;
+  if (newAsyncState) {
+    asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<AppMsg<PM, Route>>) => {
+      const newState = await newAsyncState(state, dispatch);
+      setMetadata(newState);
+      return newState;
+    };
+  }
+  return [
+    newState,
+    asyncStateUpdate
+  ];
+}
+
+// State Manager.
 
 export type StateSubscription<State, Msg> = (state: Immutable<State>, dispatch: Dispatch<Msg>) => void;
 
@@ -200,88 +399,45 @@ export interface StateManager<State, Msg> {
   getState(): Immutable<State>;
 }
 
-export function initializeRouter<State, Msg, Page, UserType>(router: Router<State, Page, UserType>, stateManager: StateManager<State, AppMsg<Msg, Page, UserType>>): void {
-  // Bind all routes for pushState.
-  router.routes.forEach(({ path, pageId, auth }) => {
-    const authDefinition = defaults(auth, {
-      level: { tag: 'any', value: undefined },
-      redirect: () => router.fallbackPage,
-      signOut: false
-    });
-    page(path, ctx => {
-      // Do nothing if a hash is present in the path
-      // only if it isn't the initial load.
-      if (!ctx.init && ctx.hash) { return; }
-      // We need to determine the page via locationToPage
-      // after running beforeIncomingPage since state updates
-      // can be asynchronous.
-      stateManager.dispatch({
-        tag: '@beforeIncomingPage',
-        value: undefined
-      }).then(() => {
-        const parsedPage = router.locationToPage(pageId, get(ctx, 'params', {}), stateManager.getState());
-        return stateManager
-          .dispatch({
-            tag: '@incomingPage',
-            value: {
-              auth: authDefinition,
-              page: parsedPage
-            }
-          })
-          .then(() => setPageMetadata(router.pageToMetadata(parsedPage)));
-      });
-    });
-  });
-  // Start the router.
-  page();
-}
+// Start.
 
-export function runNewUrl(path: string): void {
-  page(path);
-}
-
-export function runReplaceUrl(path: string): void {
-  page.redirect(path);
-}
-
-export function setPageMetadata(metadata: PageMetadata): void {
-  document.title = metadata.title;
-}
-
-export async function start<State, Msg extends ADT<any, any>, Page, UserType>(app: App<State, Msg, Page, UserType>, element: HTMLElement, debug: boolean): Promise<StateManager<State, AppMsg<Msg, Page, UserType>>> {
+export async function start<State, Msg extends ADT<any, any>, Route>(app: AppComponent<State, Msg, Route>, element: HTMLElement, debug: boolean): Promise<StateManager<State, AppMsg<Msg, Route>>> {
   // Initialize state.
   // We do not need the RecordFactory, so we create the Record immediately.
-  let state = Record(await app.init(null))({});
+  let state = Immutable.Record(await app.init(null))({});
   // Set up subscription state.
-  const stateSubscriptions: Array<StateSubscription<State, AppMsg<Msg, Page, UserType>>> = [];
-  const msgSubscriptions: Array<MsgSubscription<AppMsg<Msg, Page, UserType>>> = [];
-  const stateSubscribe: StateSubscribe<State, AppMsg<Msg, Page, UserType>> = fn => (stateSubscriptions.push(fn) && true) || false;
-  const stateUnsubscribe: StateUnsubscribe<State, AppMsg<Msg, Page, UserType>> = fn => (remove(stateSubscriptions, a => a === fn) && true) || false;
-  const msgSubscribe: MsgSubscribe<AppMsg<Msg, Page, UserType>> = fn => (msgSubscriptions.push(fn) && true) || false;
-  const msgUnsubscribe: MsgUnsubscribe<AppMsg<Msg, Page, UserType>> = fn => (remove(msgSubscriptions, a => a === fn) && true) || false;
+  const stateSubscriptions: Array<StateSubscription<State, AppMsg<Msg, Route>>> = [];
+  const msgSubscriptions: Array<MsgSubscription<AppMsg<Msg, Route>>> = [];
+  const stateSubscribe: StateSubscribe<State, AppMsg<Msg, Route>> = fn => (stateSubscriptions.push(fn) && true) || false;
+  const stateUnsubscribe: StateUnsubscribe<State, AppMsg<Msg, Route>> = fn => (remove(stateSubscriptions, a => a === fn) && true) || false;
+  const msgSubscribe: MsgSubscribe<AppMsg<Msg, Route>> = fn => (msgSubscriptions.push(fn) && true) || false;
+  const msgUnsubscribe: MsgUnsubscribe<AppMsg<Msg, Route>> = fn => (remove(msgSubscriptions, a => a === fn) && true) || false;
   // Set up state accessor function.
   const getState = () => state;
   // Initialize state mutation promise chain.
   // i.e. Mutate state sequentially in a single thread.
   let promise = Promise.resolve();
   // Set up dispatch function to queue state mutations.
-  const dispatch: Dispatch<AppMsg<Msg, Page, UserType>> = msg => {
+  const dispatch: Dispatch<AppMsg<Msg, Route>> = msg => {
     // Synchronous state changes should happen outside a promise chain
     // in the main thread. Otherwise real-time UI changes don't happen
     // (e.g. form input) causing a bad UX.
     notifyMsgSubscriptions(msg);
     switch (msg.tag) {
-      case '@redirect':
-        runReplaceUrl(msg.value);
-        break;
       case '@newUrl':
-        runNewUrl(app.router.pageToUrl(msg.value));
+        runNewUrl(msg.value);
         break;
       case '@replaceUrl':
-        runReplaceUrl(app.router.pageToUrl(msg.value));
+        runReplaceUrl(msg.value);
+        break;
+      case '@newRoute':
+        runNewUrl(app.router.routeToUrl(msg.value));
+        break;
+      case '@replaceRoute':
+        runReplaceUrl(app.router.routeToUrl(msg.value));
         break;
     }
-    const [newState, promiseState] = app.update(state, msg);
+    const [newState, promiseState] = app.update({ state, msg });
     state = newState;
     notifyStateSubscriptions();
     // Asynchronous changes should be sequenced inside
@@ -307,7 +463,7 @@ export async function start<State, Msg extends ADT<any, any>, Page, UserType>(ap
     return promise;
   };
   // Render the view whenever state changes.
-  const render = (state: Immutable<State>, dispatch: Dispatch<AppMsg<Msg, Page, UserType>>): void => {
+  const render = (state: Immutable<State>, dispatch: Dispatch<AppMsg<Msg, Route>>): void => {
     ReactDom.render(
       <app.view state={state} dispatch={dispatch} />,
       element
@@ -315,7 +471,7 @@ export async function start<State, Msg extends ADT<any, any>, Page, UserType>(ap
   };
   stateSubscribe(render);
   // Set up function to notify msg subscriptions.
-  function notifyMsgSubscriptions(msg: AppMsg<Msg, Page, UserType>): void {
+  function notifyMsgSubscriptions(msg: AppMsg<Msg, Route>): void {
     msgSubscriptions.forEach(fn => fn(msg));
     // tslint:disable:next-line no-console
     if (debug) { console.log('msg dispatched', msg); }
@@ -337,8 +493,8 @@ export async function start<State, Msg extends ADT<any, any>, Page, UserType>(ap
     msgUnsubscribe,
     getState
   };
-  // Initialize the router.
-  initializeRouter(app.router, stateManager);
+  // Start handling routes in the app.
+  startRouter(app.router, stateManager);
   // Return StateManager.
   return stateManager;
 };

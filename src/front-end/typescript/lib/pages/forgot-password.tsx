@@ -1,9 +1,10 @@
-import { Page } from 'front-end/lib/app/types';
-import { Component, ComponentMsg, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
+import { makePageMetadata } from 'front-end/lib';
+import { isSignedOut } from 'front-end/lib/access-control';
+import { Route, SharedState } from 'front-end/lib/app/types';
+import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newRoute, PageComponent, PageInit, replaceRoute, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { updateField, validateField } from 'front-end/lib/views/form-field';
 import * as ShortText from 'front-end/lib/views/input/short-text';
-import * as PageContainer from 'front-end/lib/views/layout/page-container';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
@@ -21,22 +22,36 @@ type InnerMsg
   | ADT<'validateEmail'>
   | ADT<'submit'>;
 
-export type Msg = ComponentMsg<InnerMsg, Page>;
+export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
-export type Params = null;
+export type RouteParams = null;
 
-export const init: Init<Params, State> = async () => {
-  return {
-    loading: 0,
-    email: ShortText.init({
-      id: 'forgot-password-email',
-      required: true,
-      type: 'email',
-      label: 'Email',
-      placeholder: 'Email'
-    })
-  };
+const initState: State = {
+  loading: 0,
+  email: ShortText.init({
+    id: 'forgot-password-email',
+    required: true,
+    type: 'email',
+    label: 'Email',
+    placeholder: 'Email'
+  })
 };
+
+const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedOut({
+
+  async success() {
+    return initState;
+  },
+
+  async fail({ dispatch }) {
+    dispatch(replaceRoute({
+      tag: 'requestForInformationList' as 'requestForInformationList',
+      value: null
+    }));
+    return initState;
+  }
+
+});
 
 function startLoading(state: Immutable<State>): Immutable<State> {
   return state.set('loading', state.loading + 1);
@@ -46,7 +61,7 @@ function stopLoading(state: Immutable<State>): Immutable<State> {
   return state.set('loading', Math.max(state.loading - 1, 0));
 }
 
-export const update: Update<State, Msg> = (state, msg) => {
+const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'onChangeEmail':
       return [updateField(state, 'email', msg.value)];
@@ -61,10 +76,15 @@ export const update: Update<State, Msg> = (state, msg) => {
           // Always redirect user to the confirmation page,
           // so we don't give away any information about which users
           // have accounts and which ones don't.
-          dispatch({
-            tag: '@newUrl',
-            value: { tag: 'noticeForgotPassword', value: null }
-          });
+          dispatch(newRoute({
+            tag: 'notice' as 'notice',
+            value: {
+              noticeId: {
+                tag: 'forgotPassword' as 'forgotPassword',
+                value: undefined
+              }
+            }
+          }));
           return stopLoading(state)
         }
       ];
@@ -82,14 +102,14 @@ function isValid(state: State): boolean {
   return providedRequiredFields && !isInvalid(state);
 }
 
-export const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   const onChange = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const isLoading = state.loading > 0;
   const isDisabled = isLoading || !isValid(state);
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
-    <PageContainer.View paddingY>
+    <div>
       <Row>
         <Col xs='12'>
           <h1>Forgotten Your Password?</h1>
@@ -123,12 +143,16 @@ export const view: ComponentView<State, Msg> = props => {
           </Row>
         </Col>
       </Row>
-    </PageContainer.View>
+    </div>
   );
 };
 
-export const component: Component<Params, State, Msg> = {
+export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   init,
   update,
-  view
+  view,
+  getMetadata() {
+    return makePageMetadata('Forgotten your Password?');
+  },
+  getAlerts: emptyPageAlerts
 };
