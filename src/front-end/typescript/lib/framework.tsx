@@ -253,7 +253,7 @@ export function startRouter<State, Msg, Route>(router: Router<Route>, stateManag
       if (!ctx.init && ctx.hash) { return; }
       const parsedRoute = makeRoute({
         params: get(ctx, 'params', {}),
-        query: ctx.query || {}
+        query: get(ctx, 'query', {})
       });
       return stateManager
         .dispatch({

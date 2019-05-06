@@ -27,7 +27,7 @@ const router: Router<Route> = {
         return {
           tag: 'signIn',
           value: {
-            redirectOnSuccess: getQueryParamString(query, 'redirectOnSuccess')
+            redirectOnSuccess: getQueryParamString(query, 'redirectOnSuccess') || undefined
           }
         };
       }
