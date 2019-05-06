@@ -65,7 +65,7 @@ const view: ComponentView<State, Msg> = props => {
       </Row>
       <Row className='mb-5'>
         <Col xs='12'>
-          <Markdown source={state.markdownSource} />
+          <Markdown source={state.markdownSource} escapeHtml={false} />
         </Col>
       </Row>
     </div>
