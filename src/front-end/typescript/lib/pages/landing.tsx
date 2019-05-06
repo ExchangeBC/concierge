@@ -106,7 +106,6 @@ const UserPersonas: ComponentView<State, Msg> = ({ state, dispatch }) => {
               </li>
             </ul>
           </Col>
-          <Col md='1' className='d-none d-md-block'></Col>
           <Col xs='12' md='4' className='py-6 px-4'>
             <h4 className='mb-3 font-weight-bold'>
               {userTypeToTitleCase(UserType.Vendor)}s
@@ -123,22 +122,20 @@ const UserPersonas: ComponentView<State, Msg> = ({ state, dispatch }) => {
               </li>
             </ul>
           </Col>
+          <Col xs='12' md='4' className='bg-info py-6 px-4 text-light mt-md-m3 mb-md-3 d-flex flex-column'>
+            <h4 className='mb-3'>
+              Want to learn more?
+            </h4>
+            <p>
+              Learn how to use the Procurement Concierge Program's Web Application.
+            </p>
+            <Link page={{ tag: 'markdown', value: { documentId: 'guide' } }} buttonColor='primary' text='Read the Guide' className='mt-4 d-block mt-auto' />
+          </Col>
         </Row>
       </Container>
     </div>
   );
 };
-
-// TODO use this code for the guide call-to-action.
-/*<Col xs='12' md='4' className='bg-dark py-6 px-4 text-light mt-md-m3 mb-md-3'>
-  <h4 className='mb-3'>
-    Want to learn more about the Program?
-  </h4>
-  <p>
-    Learn how to use the Program's Web Application.
-  </p>
-  <Link page={{ tag: 'guide', value: null }} buttonColor='info' text='Read the Guide' className='mt-4 d-block' />
-</Col>*/
 
 const Features: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
