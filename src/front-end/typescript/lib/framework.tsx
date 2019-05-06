@@ -242,7 +242,7 @@ export interface Router<Route> {
 export function startRouter<State, Msg, Route>(router: Router<Route>, stateManager: StateManager<State, AppMsg<Msg, Route>>): void {
   // Parse the query string.
   page((ctx, next) => {
-    ctx.query = qs.parse(window.location.search.replace(/^\??/, ''));
+    ctx.query = qs.parse(ctx.querystring);
     next();
   });
   // Bind all routes for pushState.

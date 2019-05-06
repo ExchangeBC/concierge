@@ -143,6 +143,8 @@ const viewRfiRoute = (rfi: PublicRfi): Route => ({
   }
 });
 
+const viewRfiUrl = (rfi: PublicRfi): string => router.routeToUrl(viewRfiRoute(rfi));
+
 const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'handlePageInitError':
@@ -179,8 +181,8 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                 value: {
                   userId: user._id,
                   warnings: ['You must accept the terms and conditions in order to respond to a Request for Information.'],
-                  redirectOnAccept: respondToRfiRoute(rfi),
-                  redirectOnSkip: viewRfiRoute(rfi)
+                  redirectOnAccept: respondToRfiUrl(rfi),
+                  redirectOnSkip: viewRfiUrl(rfi)
                 }
               }));
               return state;

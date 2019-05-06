@@ -31,6 +31,11 @@ export interface RouteParams {
   accountInformation?: Immutable<AccountInformation.State>;
 }
 
+const rfiListRoute: Route = {
+  tag: 'requestForInformationList' as 'requestForInformationList',
+  value: null
+};
+
 function init<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): PageInit<RouteParams, SharedState, State<PS>, Msg<PM>> {
 
   async function makeInitState(): Promise<State<PS>> {
@@ -55,10 +60,7 @@ function init<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
     },
 
     async fail({ dispatch }) {
-      dispatch(replaceRoute({
-        tag: 'requestForInformationList' as 'requestForInformationList',
-        value: null
-      }));
+      dispatch(replaceRoute(rfiListRoute));
       return await makeInitState();
     }
 
@@ -139,10 +141,13 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
                 } else {
                   // All other users who are creating their own accounts,
                   // should be prompted to accept the terms and conditions.
-                  // TODO may need to provide redirect params.
+                  const rfiListUrl = router.routeToUrl(rfiListRoute);
                   dispatch(newRoute({
                     tag: 'termsAndConditions' as 'termsAndConditions',
-                    value: {}
+                    value: {
+                      redirectOnAccept: rfiListUrl,
+                      redirectOnSkip: rfiListUrl
+                    }
                   }));
                 }
                 return state;

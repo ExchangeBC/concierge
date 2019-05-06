@@ -1,6 +1,14 @@
 import { Route } from 'front-end/lib/app/types';
 import { Router } from 'front-end/lib/framework';
 
+function getQueryParamString(query: Record<string, string | string[]>, key: string): string {
+  let value = query[key];
+  if (value && value instanceof Array) {
+    value = value[0];
+  }
+  return value;
+}
+
 const router: Router<Route> = {
 
   routes: [
@@ -16,15 +24,11 @@ const router: Router<Route> = {
     {
       path: '/sign-in',
       makeRoute({ query }) {
-        let redirectOnSuccess;
-        if (query.redirectOnSuccess && query.redirectOnSuccess instanceof Array) {
-          redirectOnSuccess = query.redirectOnSuccess[0];
-        } else {
-          redirectOnSuccess = query.redirectOnSuccess;
-        }
         return {
           tag: 'signIn',
-          value: { redirectOnSuccess }
+          value: {
+            redirectOnSuccess: getQueryParamString(query, 'redirectOnSuccess')
+          }
         };
       }
     },
@@ -107,16 +111,12 @@ const router: Router<Route> = {
     {
       path: '/terms-and-conditions',
       makeRoute({ query }) {
-        /*let redirectOnSuccess;
-        if (query.redirectOnSuccess && query.redirectOnSuccess instanceof Array) {
-          redirectOnSuccess = query.redirectOnSuccess[0];
-        } else {
-          redirectOnSuccess = query.redirectOnSuccess;
-        }*/
-        // TODO add redirectOnAccept redirectOnSkip
         return {
           tag: 'termsAndConditions',
-          value: {}
+          value: {
+            redirectOnAccept: getQueryParamString(query, 'redirectOnAccept') || undefined,
+            redirectOnSkip: getQueryParamString(query, 'redirectOnSkip') || undefined
+          }
         };
       }
     },
@@ -390,8 +390,13 @@ const router: Router<Route> = {
       case 'forgotPassword':
         return '/forgot-password';
       case 'termsAndConditions':
-        // TODO add redirectOnAccept redirectOnSkip
-        return `/terms-and-conditions`;
+        const tcRedirectOnAccept = route.value.redirectOnAccept;
+        const tcRedirectOnSkip = route.value.redirectOnSkip;
+        const tcQueryParams: string[] = [];
+        if (tcRedirectOnAccept) { tcQueryParams.push(`redirectOnAccept=${tcRedirectOnAccept}`); }
+        if (tcRedirectOnSkip) { tcQueryParams.push(`redirectOnSkip=${tcRedirectOnSkip}`); }
+        const tcQueryString = tcQueryParams.join('&');
+        return `/terms-and-conditions?${tcQueryString}`;
       case 'profile':
         return `/profiles/${route.value.profileUserId}`;
       case 'userList':

@@ -123,6 +123,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               rfiId: state.rfi._id
             }
           };
+          const thisUrl = router.routeToUrl(thisRoute);
           // TODO once we refactor how page's do auth and get session information,
           // we should clean up this code.
           const session = await api.getSession();
@@ -131,7 +132,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
             dispatch(newRoute({
               tag: 'signIn' as 'signIn',
               value: {
-                redirectOnSuccess: router.routeToUrl(thisRoute)
+                redirectOnSuccess: thisUrl
               }
             }));
             return finish(state);
@@ -148,8 +149,8 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               value: {
                 userId: user.value._id,
                 warnings: ['You must accept the terms and conditions in order to register for a Discovery Session.'],
-                redirectOnAccept: thisRoute,
-                redirectOnSkip: thisRoute
+                redirectOnAccept: thisUrl,
+                redirectOnSkip: thisUrl
               }
             }));
             return finish(state);

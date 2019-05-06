@@ -44,7 +44,7 @@ function ViewPage<PageState, PageMsg>(props: ViewPageProps<PageState, PageMsg>):
     };
     const bottomBar = viewBottomBar ? viewBottomBar(viewProps) : null;
     return (
-      <div className='flex-grow-1'>
+      <div className='d-flex flex-column flex-grow-1'>
         <PageContainer {...containerOptions}>
           <component.view dispatch={dispatchPage} state={pageState} />
         </PageContainer>

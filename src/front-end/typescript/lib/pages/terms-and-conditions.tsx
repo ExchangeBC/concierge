@@ -1,7 +1,8 @@
 import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { isUserType } from 'front-end/lib/access-control';
+import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newRoute, PageComponent, PageInit, replaceRoute, Update } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newUrl, PageComponent, PageInit, replaceRoute, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as markdown from 'front-end/lib/http/markdown';
 import Icon from 'front-end/lib/views/icon';
@@ -21,8 +22,8 @@ export interface State {
   markdownSource: string;
   userId: string;
   acceptedTermsAt?: Date;
-  redirectOnAccept?: Route;
-  redirectOnSkip?: Route;
+  redirectOnAccept?: string;
+  redirectOnSkip?: string;
 };
 
 export interface RouteParams extends Pick<State, 'redirectOnAccept' | 'redirectOnSkip'> {
@@ -77,15 +78,15 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
 const startLoading: UpdateState<State> = makeStartLoading('loading');
 const stopLoading: UpdateState<State> = makeStopLoading('loading');
 
-function getRedirectRoute(state: Immutable<State>, skip: boolean): Route {
+function getRedirectUrl(state: Immutable<State>, skip: boolean): string {
   if (state.redirectOnAccept && !skip) { return state.redirectOnAccept; }
   if (state.redirectOnSkip && skip) { return state.redirectOnSkip; }
-  return {
+  return router.routeToUrl({
     tag: 'profile',
     value: {
       profileUserId: state.userId
     }
-  };
+  });
 };
 
 const update: Update<State, Msg> = ({ state, msg }) => {
@@ -102,7 +103,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           switch (result.tag) {
             case 'valid':
               state = state.set('warnings', []);
-              dispatch(newRoute(getRedirectRoute(state, false)));
+              dispatch(newUrl(getRedirectUrl(state, false)));
               return state;
             case 'invalid':
               return stopLoading(state).set('errors', result.value.acceptedTerms || []);
@@ -145,14 +146,14 @@ const ConditionalAlerts: ComponentView<State, Msg> = ({ state }) => {
 
 const viewBottomBar: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
-  const skipRoute: Route = getRedirectRoute(state, true);
+  const skipUrl = getRedirectUrl(state, true);
   if (state.acceptedTermsAt) {
     return (
       <FixedBar>
         <p className='text-align-right mb-0'>
           {formatTermsAndConditionsAgreementDate(state.acceptedTermsAt)}
         </p>
-        <Link page={skipRoute} text='Skip' className='mr-auto d-none d-md-block' buttonClassName='p-0 d-flex align-items-center' textColor='secondary'>
+        <Link href={skipUrl} text='Skip' className='mr-auto d-none d-md-block' buttonClassName='p-0 d-flex align-items-center' textColor='secondary'>
           <Icon name='chevron-left' color='secondary' className='mr-1' />
           My Profile
         </Link>
@@ -168,7 +169,7 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
         <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={acceptTerms} loading={isLoading} disabled={isDisabled}>
           I Accept
         </LoadingButton>
-        <Link page={skipRoute} text='Skip' textColor='secondary' />
+        <Link href={skipUrl} text='Skip' textColor='secondary' />
       </FixedBar>
     );
   }
