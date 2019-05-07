@@ -8,7 +8,7 @@ import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { isArray } from 'lodash';
 import { default as React } from 'react';
-import { Col, Row } from 'reactstrap';
+import { Button, Col, Row } from 'reactstrap';
 import { formatTermsAndConditionsAgreementDate } from 'shared/lib';
 import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, Profile as ProfileType, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
@@ -33,7 +33,7 @@ export interface State<ProfileState> {
 
 type InnerMsg<ProfileMsg>
   = ADT<'onChangeEmail', string>
-  | ADT<'onChangeProfile', GlobalComponentMsg<ProfileMsg, Route>>
+  | ADT<'onChangeProfile', ProfileMsg>
   | ADT<'validateEmail'>
   | ADT<'deactivateAccount'>
   | ADT<'cancelDeactivateAccount'>
@@ -265,7 +265,7 @@ function conditionalTopProfileButtons<PS, PM, P extends ProfileType>(Profile: Pr
     if (!state.isEditingProfile) {
       return (
         <div className='d-flex pl-3'>
-          <Link buttonColor='info' buttonSize='sm' text='Edit Profile' onClick={startEditingProfile} />
+          <Button color='info' size='sm' onClick={startEditingProfile}>Edit Profile</Button>
         </div>
       );
     } else {
@@ -274,7 +274,7 @@ function conditionalTopProfileButtons<PS, PM, P extends ProfileType>(Profile: Pr
           <LoadingButton color='primary' size='sm' onClick={saveProfile} loading={isLoading} disabled={isDisabled}>
             Save Changes
           </LoadingButton>
-          <Link textColor='secondary' buttonSize='sm' text='Cancel' onClick={cancelEditingProfile} />
+          <Button color='link' size='sm' className='text-secondary' onClick={cancelEditingProfile}>Cancel</Button>
         </div>
       );
     }
@@ -297,7 +297,7 @@ function conditionalBottomProfileButtons<PS, PM, P extends ProfileType>(Profile:
           <LoadingButton color='primary' onClick={saveProfile} loading={isLoading} disabled={isDisabled}>
             Save Changes
           </LoadingButton>
-          <Link textColor='secondary' text='Cancel' onClick={cancelEditingProfile} />
+          <Button color='link' className='text-secondary' onClick={cancelEditingProfile}>Cancel</Button>
         </Col>
       </Row>
     );
@@ -311,7 +311,7 @@ function conditionalProfile<PS, PM, P extends ProfileType>(Profile: ProfileCompo
   return props => {
     const { state, dispatch } = props;
     const isDisabled = !state.isEditingProfile;
-    const dispatchProfile: Dispatch<GlobalComponentMsg<PM, Route>> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'onChangeProfile' as 'onChangeProfile', value }));
+    const dispatchProfile: Dispatch<PM> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'onChangeProfile' as 'onChangeProfile', value }));
     return (
       <div className='pb-5'>
         <Row className='mb-4'>
@@ -351,7 +351,7 @@ function conditionalChangePassword<PS, PM, P extends ProfileType>(Profile: Profi
         </Row>
         <Row>
           <Col xs='12'>
-            <Link page={{ tag: 'changePassword', value: null }} buttonColor='info' text='Change Password' />
+            <Link route={{ tag: 'changePassword', value: null }} button color='info'>Change Password</Link>
           </Col>
         </Row>
       </div>
@@ -369,11 +369,9 @@ function conditionalTermsAndConditions<PS, PM, P extends ProfileType>(Profile: P
       conditionalLink = (
         <Row>
           <Col xs='12'>
-            <Link
-              page={{ tag: 'termsAndConditions', value: {} }}
-              textColor='secondary'
-              text="Review the Concierge's Terms & Conditions"
-              buttonClassName='p-0' />
+            <Link route={{ tag: 'termsAndConditions', value: {} }} color='secondary'>
+              Review the Concierge's Terms & Conditions
+            </Link>
           </Col>
         </Row>
       );
@@ -422,7 +420,7 @@ function conditionalDeactivateAccount<PS, PM, P extends ProfileType>(Profile: Pr
             <LoadingButton onClick={deactivateAccount} color={showPrompt ? 'danger' : 'info'} loading={isLoading} disabled={isLoading}>
               {showPrompt ? 'Click Again to Confirm' : 'Deactivate Account'}
             </LoadingButton>
-            {showPrompt ? (<Link onClick={cancelDeactivateAccount} text='Cancel' textColor='secondary' />) : null}
+            {showPrompt ? (<Button color='link' className='text-secondary' onClick={cancelDeactivateAccount}>Cancel</Button>) : null}
           </Col>
         </Row>
       </div>

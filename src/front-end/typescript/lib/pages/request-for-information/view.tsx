@@ -322,7 +322,7 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
   };
   return (
     <FixedBar>
-      <Link page={respondToRfiRoute} buttonColor='primary' disabled={isLoading} className='text-nowrap'>
+      <Link route={respondToRfiRoute} button color='primary' disabled={isLoading} className='text-nowrap'>
         Respond to RFI
       </Link>
       {rfiStatus === RfiStatus.Open

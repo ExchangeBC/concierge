@@ -1,5 +1,4 @@
-import { Route } from 'front-end/lib/app/types';
-import { ComponentViewProps, GlobalComponentMsg, Immutable, Init, Update, View } from 'front-end/lib/framework';
+import { ComponentViewProps, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import { Profile as ProfileType, UserType } from 'shared/lib/types';
 import { ProfileValidationErrors } from 'shared/lib/validators/profile';
 
@@ -8,18 +7,16 @@ export interface ProfileParams<Profile extends ProfileType> {
   disabled?: boolean;
 }
 
-export type ProfileMsg<InnerMsg> = GlobalComponentMsg<InnerMsg, Route>;
-
-export interface ProfileViewProps<State, InnerMsg> extends ComponentViewProps<State, ProfileMsg<InnerMsg>> {
+export interface ProfileViewProps<State, Msg> extends ComponentViewProps<State, Msg> {
   disabled?: boolean;
 }
 
-export type ProfileView<State, InnerMsg> = View<ProfileViewProps<State, InnerMsg>>;
+export type ProfileView<State, Msg> = View<ProfileViewProps<State, Msg>>;
 
-export interface ProfileComponent<State, InnerMsg, Profile extends ProfileType> {
+export interface ProfileComponent<State, Msg, Profile extends ProfileType> {
   init: Init<ProfileParams<Profile>, State>;
-  update: Update<State, ProfileMsg<InnerMsg>>;
-  view: ProfileView<State, InnerMsg>;
+  update: Update<State, Msg>;
+  view: ProfileView<State, Msg>;
   userType: UserType;
   getValues(state: Immutable<State>): Profile;
   setValues(state: Immutable<State>, profile: Profile): Immutable<State>;

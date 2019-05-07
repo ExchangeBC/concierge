@@ -139,7 +139,8 @@ export type GlobalComponentMsg<Msg, Route> = Msg | GlobalMsg<Route>;
 
 export function mapGlobalComponentDispatch<ParentMsg, ChildMsg, Route>(dispatch: Dispatch<GlobalComponentMsg<ParentMsg, Route>>, fn: (childMsg: GlobalComponentMsg<ChildMsg, Route>) => GlobalComponentMsg<ParentMsg, Route>): Dispatch<GlobalComponentMsg<ChildMsg, Route>> {
   return childMsg => {
-    if ((childMsg as GlobalMsg<Route>).tag === '@newRoute' || (childMsg as GlobalMsg<Route>).tag === '@replaceRoute') {
+    const globalMsg = childMsg as GlobalMsg<Route>;
+    if (globalMsg.tag === '@newRoute' || globalMsg.tag === '@replaceRoute' || globalMsg.tag === '@newUrl' || globalMsg.tag === '@replaceUrl') {
       return dispatch(childMsg as GlobalMsg<Route>);
     } else {
       return dispatch(fn(childMsg));
@@ -224,9 +225,13 @@ export function setPageMetadata(metadata: PageMetadata): void {
 
 // Router.
 
+export type RouteParams = Record<string, string | undefined>;
+
+export type RouteQuery = Record<string, string | string[] | undefined>;
+
 export interface RouteDefinitionParams {
-  params: Record<string, string>;
-  query: Record<string, string | string[]>;
+  params: RouteParams;
+  query: RouteQuery;
 }
 
 export interface RouteDefinition<Route> {

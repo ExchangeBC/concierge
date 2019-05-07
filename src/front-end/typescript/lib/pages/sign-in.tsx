@@ -168,7 +168,7 @@ const view: ComponentView<State, Msg> = props => {
           </Row>
           <Row className='mb-3 pb-3'>
             <Col xs='12'>
-              <Link href='/forgot-password' text='Forgotten your password?' textColor='secondary' buttonClassName='p-0' />
+              <Link route={{ tag: 'forgotPassword', value: null }} color='secondary'>Forgotten your password?</Link>
             </Col>
           </Row>
           <Row>
@@ -176,7 +176,7 @@ const view: ComponentView<State, Msg> = props => {
               <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled}>
                 Sign In
               </LoadingButton>
-              <Link page={{ tag: 'landing', value: null }} text='Cancel' textColor='secondary' />
+              <Link route={{ tag: 'landing', value: null }} color='secondary' className='ml-3'>Cancel</Link>
             </Col>
           </Row>
         </Col>

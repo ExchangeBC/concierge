@@ -90,6 +90,10 @@ button {
   }
 }
 
+a.disabled {
+  opacity: $btn-disabled-opacity;
+}
+
 // Custom utilities.
 
 // Create classes for each of the text colors

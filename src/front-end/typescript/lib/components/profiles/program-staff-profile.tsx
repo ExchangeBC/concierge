@@ -1,6 +1,5 @@
-import { Route } from 'front-end/lib/app/types';
 import { ProfileComponent, ProfileParams, ProfileView } from 'front-end/lib/components/profiles/types';
-import { GlobalComponentMsg, immutable, Immutable, Init, Update } from 'front-end/lib/framework';
+import { immutable, Immutable, Init, Update } from 'front-end/lib/framework';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
@@ -87,7 +86,7 @@ export function isValid(state: Immutable<State>): boolean {
   return providedRequiredFields && noValidationErrors;
 }
 
-export type InnerMsg
+export type Msg
   = ADT<'firstName', string>
   | ADT<'lastName', string>
   | ADT<'positionTitle', string>
@@ -100,8 +99,6 @@ export type InnerMsg
   | ADT<'contactPhoneCountryCode', string>
   | ADT<'contactPhoneType', string>
   | ADT<'validate'>;
-
-export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export type Params = ProfileParams<ProgramStaffProfile>;
 
@@ -248,7 +245,7 @@ function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<
   }
 }
 
-export const ProgramStaffInformation: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
+export const ProgramStaffInformation: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const validate = () => dispatch({ tag: 'validate', value: undefined });
   return (
@@ -283,7 +280,7 @@ export const ProgramStaffInformation: ProfileView<State, InnerMsg> = ({ state, d
   );
 };
 
-export const ContactInformation: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
+export const ContactInformation: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const validate = () => dispatch({ tag: 'validate', value: undefined });
@@ -357,7 +354,7 @@ export const ContactInformation: ProfileView<State, InnerMsg> = ({ state, dispat
   );
 };
 
-export const view: ProfileView<State, InnerMsg> = props => {
+export const view: ProfileView<State, Msg> = props => {
   return (
     <div>
       <ProgramStaffInformation {...props} />
@@ -366,7 +363,7 @@ export const view: ProfileView<State, InnerMsg> = props => {
   );
 };
 
-export const component: ProfileComponent<State, InnerMsg, ProgramStaffProfile> = {
+export const component: ProfileComponent<State, Msg, ProgramStaffProfile> = {
   init,
   update,
   view,

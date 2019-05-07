@@ -276,7 +276,7 @@ function tableBodyRows(users: PublicUser[]): Array<Array<TableComponent.TDSpec<T
 const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (!state.visibleUsers.length) { return (<div>There are no users that match the search criteria.</div>); }
   const bodyRows = tableBodyRows(state.visibleUsers);
-  const dispatchTable: Dispatch<GlobalComponentMsg<TableComponent.Msg, Route>> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as 'table', value }));
+  const dispatchTable: Dispatch<TableComponent.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as 'table', value }));
   return (
     <Table.view
       className='text-nowrap'
@@ -295,7 +295,7 @@ const view: ComponentView<State, Msg> = props => {
           <h1 className='mb-3 mb-md-0'>Concierge Users</h1>
         </Col>
         <Col xs='12' md='auto'>
-          <Link page={{ tag: 'signUpProgramStaff', value: {} }} buttonColor='info' text='Create a Program Staff Account' />
+          <Link route={{ tag: 'signUpProgramStaff', value: {} }} button color='info'>Create a Program Staff Account</Link>
         </Col>
       </Row>
       <Row className='mb-3 d-none d-md-flex'>

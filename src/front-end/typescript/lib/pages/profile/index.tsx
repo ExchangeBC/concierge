@@ -3,7 +3,7 @@ import { isSignedIn } from 'front-end/lib/access-control';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import { ViewerUser } from 'front-end/lib/components/profiles/types';
-import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, PageComponent, PageInit, replaceRoute, Update, updateComponentChild } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapGlobalComponentDispatch, PageComponent, PageInit, replaceRoute, Update, updateGlobalComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as BuyerProfile from 'front-end/lib/pages/profile/components/buyer';
 import * as ProgramStaffProfile from 'front-end/lib/pages/profile/components/program-staff';
@@ -97,7 +97,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
 
     case 'buyer':
-      return updateComponentChild({
+      return updateGlobalComponentChild({
         state,
         mapChildMsg: value => ({ tag: 'buyer' as 'buyer', value }),
         childStatePath: ['buyer'],
@@ -106,7 +106,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       });
 
     case 'vendor':
-      return updateComponentChild({
+      return updateGlobalComponentChild({
         state,
         mapChildMsg: value => ({ tag: 'vendor' as 'vendor', value }),
         childStatePath: ['vendor'],
@@ -115,7 +115,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       });
 
     case 'programStaff':
-      return updateComponentChild({
+      return updateGlobalComponentChild({
         state,
         mapChildMsg: value => ({ tag: 'programStaff' as 'programStaff', value }),
         childStatePath: ['programStaff'],
@@ -138,7 +138,7 @@ interface ViewProfileProps<ProfileState, ProfileMsg> {
 function ViewProfile<ProfileState, ProfileMsg>(props: ViewProfileProps<ProfileState, ProfileMsg>): ReactElement<ViewProfileProps<ProfileState, ProfileMsg>> | null {
   const { dispatch, profileState, mapProfileMsg, View } = props;
   if (profileState !== undefined) {
-    const dispatchProfile: Dispatch<GlobalComponentMsg<ProfileMsg, Route>> = mapComponentDispatch(dispatch, mapProfileMsg);
+    const dispatchProfile: Dispatch<GlobalComponentMsg<ProfileMsg, Route>> = mapGlobalComponentDispatch(dispatch, mapProfileMsg);
     return (<View dispatch={dispatchProfile} state={profileState} />);
   } else {
     return null;

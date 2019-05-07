@@ -26,7 +26,7 @@ function noticeIdToState(noticeId: NoticeId): State {
         body: 'The page you are looking for does not exist.',
         button: {
           text: 'Return to the Home Page',
-          page: {
+          route: {
             tag: 'landing',
             value: null
           }
@@ -45,7 +45,7 @@ function noticeIdToState(noticeId: NoticeId): State {
         body: 'Your password has been successfully reset.',
         button: {
           text: 'Sign In',
-          page: {
+          route: {
             tag: 'signIn',
             value: {}
           }
@@ -58,7 +58,7 @@ function noticeIdToState(noticeId: NoticeId): State {
         body: 'We have sent you an email with instructions on how to reset your password.',
         button: {
           text: 'Return to the Home Page',
-          page: {
+          route: {
             tag: 'landing',
             value: null
           }
@@ -71,7 +71,7 @@ function noticeIdToState(noticeId: NoticeId): State {
         body: 'Your response to this Request for Information has been successfully submitted.',
         button: {
           text: 'View the RFI Description',
-          page: {
+          route: {
             tag: 'requestForInformationView' as 'requestForInformationView',
             value: {
               rfiId: noticeId.value
@@ -86,7 +86,7 @@ function noticeIdToState(noticeId: NoticeId): State {
         body: 'You must be signed in as a Vendor to respond to this Request for Information.',
         button: {
           text: 'View the RFI Description',
-          page: {
+          route: {
             tag: 'requestForInformationView' as 'requestForInformationView',
             value: {
               rfiId: noticeId.value
@@ -101,7 +101,7 @@ function noticeIdToState(noticeId: NoticeId): State {
         body: 'This RFI is no longer accepting responses from Vendors.',
         button: {
           text: 'View the RFI Description',
-          page: {
+          route: {
             tag: 'requestForInformationView' as 'requestForInformationView',
             value: {
               rfiId: noticeId.value
@@ -122,7 +122,7 @@ export interface State {
   body: string;
   button?: {
     text: string;
-    page: Route;
+    route: Route;
   }
 }
 
@@ -141,7 +141,7 @@ const ConditionalButton: ComponentView<State, Msg> = ({ state, dispatch }) => {
     return (
       <Row>
         <Col xs='12'>
-          <Link page={state.button.page} text={state.button.text} buttonColor='info' />
+          <Link route={state.button.route} button color='info'>{state.button.text}</Link>
         </Col>
       </Row>
     );

@@ -115,7 +115,7 @@ const UserTypeRadio: View<{ state: State, userType: UserType }> = ({ state, user
   const isChecked = state.userType === userType;
   const style = { cursor: 'pointer' };
   return (
-    <Link href={`/sign-up/${userType.toLowerCase().replace('_', '-')}`} className='custom-radio custom-control pl-0 pr-3' buttonClassName='p-0 d-flex align-items-center' textColor='body'>
+    <Link href={`/sign-up/${userType.toLowerCase().replace('_', '-')}`} className='custom-radio custom-control pl-0 pr-3 d-flex align-items-center' color='body'>
       <input
         id={id}
         type='radio'

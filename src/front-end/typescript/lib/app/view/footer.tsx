@@ -11,11 +11,11 @@ const Links: View<{}> = () => {
   return (
     <Row className='mb-3'>
       <Col xs='12' className='d-flex flex-column flex-md-row justify-content-center align-items-center'>
-        <Link href='/about' text='About' textColor='secondary' />
-        <Link href='/copyright' text='Copyright' textColor='secondary' />
-        <Link href='/disclaimer' text='Disclaimer' textColor='secondary' />
-        <Link href='/privacy' text='Privacy' textColor='secondary' />
-        <Link href='/accessibility' text='Accessibility' textColor='secondary' />
+        <Link href='/about' color='secondary' className='pr-md-3'>About</Link>
+        <Link href='/copyright' color='secondary' className='pr-md-3'>Copyright</Link>
+        <Link href='/disclaimer' color='secondary' className='pr-md-3'>Disclaimer</Link>
+        <Link href='/privacy' color='secondary' className='pr-md-3'>Privacy</Link>
+        <Link href='/accessibility' color='secondary'>Accessibility</Link>
       </Col>
     </Row>
   );

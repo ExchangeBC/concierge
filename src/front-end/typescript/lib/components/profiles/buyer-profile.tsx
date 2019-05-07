@@ -1,7 +1,6 @@
-import { Route } from 'front-end/lib/app/types';
 import * as SelectMulti from 'front-end/lib/components/input/select-multi';
 import { ProfileComponent, ProfileParams, ProfileView } from 'front-end/lib/components/profiles/types';
-import { Dispatch, GlobalComponentMsg, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
+import { Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as Select from 'front-end/lib/views/input/select';
 import * as ShortText from 'front-end/lib/views/input/short-text';
@@ -106,7 +105,7 @@ export function isValid(state: Immutable<State>): boolean {
   return providedRequiredFields && noValidationErrors;
 }
 
-export type InnerMsg
+export type Msg
   = ADT<'firstName', string>
   | ADT<'lastName', string>
   | ADT<'positionTitle', string>
@@ -123,8 +122,6 @@ export type InnerMsg
   | ADT<'industrySectors', SelectMulti.Msg>
   | ADT<'categories', SelectMulti.Msg>
   | ADT<'validate'>;
-
-export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export type Params = ProfileParams<BuyerProfile>;
 
@@ -329,7 +326,7 @@ function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<
   }
 }
 
-export const BuyerInformation: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
+export const BuyerInformation: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const validate = () => dispatch({ tag: 'validate', value: undefined });
   return (
@@ -380,7 +377,7 @@ export const BuyerInformation: ProfileView<State, InnerMsg> = ({ state, dispatch
   );
 };
 
-export const ContactInformation: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
+export const ContactInformation: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const validate = () => dispatch({ tag: 'validate', value: undefined });
@@ -454,7 +451,7 @@ export const ContactInformation: ProfileView<State, InnerMsg> = ({ state, dispat
   );
 };
 
-export const IndustrySectors: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
+export const IndustrySectors: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
   const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'industrySectors' as 'industrySectors', value }));
   return (
     <Row className='mt-3'>
@@ -465,7 +462,7 @@ export const IndustrySectors: ProfileView<State, InnerMsg> = ({ state, dispatch,
   );
 };
 
-export const Categories: ProfileView<State, InnerMsg> = ({ state, dispatch, disabled = false }) => {
+export const Categories: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
   const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'categories' as 'categories', value }));
   return (
     <Row className='mt-3'>
@@ -476,7 +473,7 @@ export const Categories: ProfileView<State, InnerMsg> = ({ state, dispatch, disa
   );
 };
 
-export const view: ProfileView<State, InnerMsg> = props => {
+export const view: ProfileView<State, Msg> = props => {
   return (
     <div>
       <BuyerInformation {...props} />
@@ -487,7 +484,7 @@ export const view: ProfileView<State, InnerMsg> = props => {
   );
 };
 
-export const component: ProfileComponent<State, InnerMsg, BuyerProfile> = {
+export const component: ProfileComponent<State, Msg, BuyerProfile> = {
   init,
   update,
   view,

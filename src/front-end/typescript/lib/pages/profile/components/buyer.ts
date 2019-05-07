@@ -5,7 +5,7 @@ export const component = Profile.component(BuyerProfile.component);
 
 export type Params = Profile.Params;
 
-export type Msg = Profile.Msg<BuyerProfile.InnerMsg>;
+export type Msg = Profile.Msg<BuyerProfile.Msg>;
 
 export type State = Profile.State<BuyerProfile.State>;
 

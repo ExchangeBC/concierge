@@ -5,7 +5,7 @@ export const component = Profile.component(ProgramStaffProfile.component);
 
 export type Params = Profile.Params;
 
-export type Msg = Profile.Msg<ProgramStaffProfile.InnerMsg>;
+export type Msg = Profile.Msg<ProgramStaffProfile.Msg>;
 
 export type State = Profile.State<ProgramStaffProfile.State>;
 

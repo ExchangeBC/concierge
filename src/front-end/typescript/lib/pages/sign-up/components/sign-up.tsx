@@ -3,7 +3,7 @@ import { AccessControlParams, isSignedOut, isUserType, SharedStateWithGuaranteed
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import { ProfileComponent } from 'front-end/lib/components/profiles/types';
-import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, immutable, Immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, replaceRoute, Update, updateComponentChild } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, immutable, Immutable, mapComponentDispatch, mapGlobalComponentDispatch, newRoute, PageComponent, PageInit, replaceRoute, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as AccountInformation from 'front-end/lib/pages/sign-up/components/account-information';
 import FixedBar from 'front-end/lib/views/layout/fixed-bar';
@@ -11,7 +11,7 @@ import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { isArray } from 'lodash';
 import { default as React } from 'react';
-import { Col, Container, Row } from 'reactstrap';
+import { Col, Row } from 'reactstrap';
 import { ADT, Profile as ProfileType, UserType, userTypeToTitleCase } from 'shared/lib/types';
 
 export interface State<ProfileState> {
@@ -22,7 +22,7 @@ export interface State<ProfileState> {
 
 type InnerMsg<ProfileMsg>
   = ADT<'accountInformation', AccountInformation.Msg>
-  | ADT<'profile', GlobalComponentMsg<ProfileMsg, Route>>
+  | ADT<'profile', ProfileMsg>
   | ADT<'createAccount'>;
 
 export type Msg<ProfileMsg> = GlobalComponentMsg<InnerMsg<ProfileMsg>, Route>;
@@ -210,7 +210,7 @@ function viewBottomBar<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
         <LoadingButton color='primary' onClick={createAccount} loading={isLoading} disabled={isDisabled}>
           Create Account
         </LoadingButton>
-        <Link page={cancelRoute} text='Cancel' textColor='secondary' disabled={isLoading} />
+        <Link route={cancelRoute} color='secondary' disabled={isLoading} className='mx-3'>Cancel</Link>
       </FixedBar>
     );
   };
@@ -218,10 +218,10 @@ function viewBottomBar<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
 
 function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
   return ({ state, dispatch }) => {
-    const dispatchAccountInformation: Dispatch<AccountInformation.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'accountInformation' as 'accountInformation', value }));
-    const dispatchProfile: Dispatch<GlobalComponentMsg<PM, Route>> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'profile' as 'profile', value }));
+    const dispatchAccountInformation: Dispatch<AccountInformation.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'accountInformation' as 'accountInformation', value }));
+    const dispatchProfile: Dispatch<PM> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'profile' as 'profile', value }));
     return (
-      <Container className='mb-5 flex-grow-1'>
+      <div>
         <Row>
           <Col xs='12'>
             <h1>Create a {userTypeToTitleCase(Profile.userType)} Account</h1>
@@ -241,7 +241,7 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
             <Profile.view state={state.profile} dispatch={dispatchProfile} />
           </Col>
         </Row>
-      </Container>
+      </div>
     );
   };
 };

@@ -5,6 +5,6 @@ export const component = SignUp.component(BuyerProfile.component);
 
 export type RouteParams = SignUp.RouteParams;
 
-export type Msg = SignUp.Msg<BuyerProfile.InnerMsg>;
+export type Msg = SignUp.Msg<BuyerProfile.Msg>;
 
 export type State = SignUp.State<BuyerProfile.State>;

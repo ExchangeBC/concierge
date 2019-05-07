@@ -20,12 +20,20 @@ const ContextualLinks: View<Props> = ({ activeRoute, session, toggleIsOpen }) =>
   const isRequestForInformationListRoute = activeRoute.tag === 'requestForInformationList';
   const activeClass = (active: boolean) => active ? 'font-weight-bold text-body' : 'text-dark';
   const onClick = () => toggleIsOpen(false);
-  const buttonClassName = (isActive: boolean) => `${activeClass(isActive)} px-0 px-md-3`;
+  const linkClassName = (isActive: boolean) => `${activeClass(isActive)} px-0 px-md-3`;
+  const rfiListRoute: Route = {
+    tag: 'requestForInformationList',
+    value: null
+  };
+  const userListRoute: Route = {
+    tag: 'userList',
+    value: null
+  };
   if (!session || !session.user) {
     return (
       <Nav navbar>
         <NavItem>
-          <Link nav href='/requests-for-information' text='RFIs' buttonClassName={buttonClassName(isRequestForInformationListRoute)} onClick={onClick} />
+          <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
         </NavItem>
       </Nav>
     );
@@ -41,10 +49,10 @@ const ContextualLinks: View<Props> = ({ activeRoute, session, toggleIsOpen }) =>
       return (
         <Nav navbar>
           <NavItem>
-            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={buttonClassName(isRequestForInformationListRoute)} onClick={onClick} />
+            <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
           </NavItem>
           <NavItem>
-            <Link nav page={myProfileRoute} text='My Profile' buttonClassName={buttonClassName(isMyProfileRoute)} onClick={onClick} />
+            <Link nav route={myProfileRoute} className={linkClassName(isMyProfileRoute)} onClick={onClick}>My Profile</Link>
           </NavItem>
         </Nav>
       );
@@ -52,10 +60,10 @@ const ContextualLinks: View<Props> = ({ activeRoute, session, toggleIsOpen }) =>
       return (
         <Nav navbar>
           <NavItem>
-            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={buttonClassName(isRequestForInformationListRoute)} onClick={onClick} />
+            <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
           </NavItem>
           <NavItem>
-            <Link nav page={myProfileRoute} text='My Profile' buttonClassName={buttonClassName(isMyProfileRoute)} onClick={onClick} />
+            <Link nav route={myProfileRoute} className={linkClassName(isMyProfileRoute)} onClick={onClick}>My Profile</Link>
           </NavItem>
         </Nav>
       );
@@ -63,13 +71,13 @@ const ContextualLinks: View<Props> = ({ activeRoute, session, toggleIsOpen }) =>
       return (
         <Nav navbar>
           <NavItem>
-            <Link nav href='/requests-for-information' text='RFIs' buttonClassName={buttonClassName(isRequestForInformationListRoute)} onClick={onClick} />
+            <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
           </NavItem>
           <NavItem>
-            <Link nav href='/users' text='Users' buttonClassName={buttonClassName(isUserListRoute)} onClick={onClick} />
+            <Link nav route={userListRoute} className={linkClassName(isUserListRoute)} onClick={onClick}>Users</Link>
           </NavItem>
           <NavItem>
-            <Link nav page={myProfileRoute} text='My Profile' buttonClassName={buttonClassName(isMyProfileRoute)} onClick={onClick} />
+            <Link nav route={myProfileRoute} className={linkClassName(isMyProfileRoute)} onClick={onClick}>My Profile</Link>
           </NavItem>
         </Nav>
       );
@@ -79,24 +87,30 @@ const ContextualLinks: View<Props> = ({ activeRoute, session, toggleIsOpen }) =>
 const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
   const onClick = () => toggleIsOpen(false);
   if (session && session.user) {
+    const signOutRoute: Route = {
+      tag: 'signOut',
+      value: null
+    };
     return (
       <Nav navbar className='ml-md-auto'>
         <NavItem className='d-none d-md-block'>
-          <Link nav href='' text={session.user.email} textColor='dark' buttonClassName='px-0 px-md-3' disabled />
+          <Link nav color='dark' className='px-0 px-md-3' disabled>{session.user.email}</Link>
         </NavItem>
         <NavItem>
-          <Link nav href='/sign-out' text='Sign Out' textColor='dark' onClick={onClick} className='pr-md-0' buttonClassName='px-0 pl-md-3' />
+          <Link nav route={signOutRoute} color='dark' onClick={onClick} className='px-0 pl-md-3'>Sign Out</Link>
         </NavItem>
       </Nav>
     );
   } else {
+    const signInRoute: Route = { tag: 'signIn', value: {} };
+    const signUpRoute: Route = { tag: 'signUpBuyer', value: {} };
     return (
       <Nav navbar className='ml-md-auto'>
         <NavItem>
-          <Link nav href='/sign-in' text='Sign In' textColor='dark' onClick={onClick} buttonClassName='px-0 px-md-3' />
+          <Link nav route={signInRoute} color='dark' onClick={onClick} className='px-0 px-md-3'>Sign In</Link>
         </NavItem>
         <NavItem>
-          <Link nav href='/sign-up/buyer' text='Sign Up' buttonColor='info' onClick={onClick} className='pr-0 mt-2 mt-md-0' />
+          <Link button route={signUpRoute} color='info' onClick={onClick} className='mt-2 mt-md-0'>Sign Up</Link>
         </NavItem>
       </Nav>
     );

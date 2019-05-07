@@ -367,7 +367,7 @@ const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isProgramStaff = state.userType === UserType.ProgramStaff;
   const headCells = isProgramStaff ? programStaffTableHeadCells : nonProgramStaffTableHeadCells;
   const bodyRows = isProgramStaff ? programStaffTableBodyRows(state.visibleRfis) : nonProgramStaffTableBodyRows(state.visibleRfis);
-  const dispatchTable: Dispatch<GlobalComponentMsg<TableComponent.Msg, Route>> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as 'table', value }));
+  const dispatchTable: Dispatch<TableComponent.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as 'table', value }));
   return (
     <Table.view
       className='text-nowrap'
@@ -383,7 +383,7 @@ const ConditionalCreateButton: ComponentView<State, Msg> = ({ state, dispatch })
   if (state.userType !== UserType.ProgramStaff) { return null; }
   return (
     <Col xs='12' md='auto'>
-      <Link page={{ tag: 'requestForInformationCreate', value: null }} buttonColor='info' text='Create an RFI' />
+      <Link route={{ tag: 'requestForInformationCreate', value: null }} button color='info'>Create an RFI</Link>
     </Col>
   );
 }

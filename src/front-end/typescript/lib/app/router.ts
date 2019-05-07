@@ -1,13 +1,17 @@
 import { Route } from 'front-end/lib/app/types';
-import { Router } from 'front-end/lib/framework';
+import { RouteParams, RouteQuery, Router } from 'front-end/lib/framework';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
 
-function getQueryParamString(query: Record<string, string | string[]>, key: string): string {
+function getParamString(params: RouteParams, key: string): string {
+  return params[key] || '';
+}
+
+function getQueryParamString(query: RouteQuery, key: string): string {
   let value = query[key];
   if (value && value instanceof Array) {
     value = value[0];
   }
-  return value;
+  return value || '';
 }
 
 const router: Router<Route> = {
@@ -94,8 +98,8 @@ const router: Router<Route> = {
         return {
           tag: 'resetPassword',
           value: {
-            forgotPasswordToken: params.forgotPasswordToken,
-            userId: params.userId
+            forgotPasswordToken: getParamString(params, 'forgotPasswordToken'),
+            userId: getParamString(params, 'userId')
           }
         };
       }
@@ -129,7 +133,7 @@ const router: Router<Route> = {
         return {
           tag: 'profile',
           value: {
-            profileUserId: params.userId
+            profileUserId: getParamString(params, 'userId')
           }
         };
       }
@@ -224,7 +228,7 @@ const router: Router<Route> = {
         return {
           tag: 'requestForInformationEdit',
           value: {
-            rfiId: params.rfiId
+            rfiId: getParamString(params, 'rfiId')
           }
         };
       }
@@ -235,7 +239,7 @@ const router: Router<Route> = {
         return {
           tag: 'requestForInformationView',
           value: {
-            rfiId: params.rfiId
+            rfiId: getParamString(params, 'rfiId')
           }
         };
       }
@@ -246,7 +250,7 @@ const router: Router<Route> = {
         return {
           tag: 'requestForInformationPreview',
           value: {
-            rfiId: params.rfiId,
+            rfiId: getParamString(params, 'rfiId'),
             preview: true
           }
         };
@@ -258,7 +262,7 @@ const router: Router<Route> = {
         return {
           tag: 'requestForInformationRespond',
           value: {
-            rfiId: params.rfiId
+            rfiId: getParamString(params, 'rfiId')
           }
         };
       }
@@ -308,7 +312,7 @@ const router: Router<Route> = {
           value: {
             noticeId: {
               tag: 'rfiNonVendorResponse',
-              value: params.rfiId
+              value: getParamString(params, 'rfiId')
             }
           }
         };
@@ -322,7 +326,7 @@ const router: Router<Route> = {
           value: {
             noticeId: {
               tag: 'rfiExpiredResponse',
-              value: params.rfiId
+              value: getParamString(params, 'rfiId')
             }
           }
         };
@@ -336,7 +340,7 @@ const router: Router<Route> = {
           value: {
             noticeId: {
               tag: 'rfiResponseSubmitted',
-              value: params.rfiId
+              value: getParamString(params, 'rfiId')
             }
           }
         };
@@ -377,7 +381,11 @@ const router: Router<Route> = {
       case 'landing':
         return '/';
       case 'signIn':
-        return `/sign-in?redirectOnSuccess=${route.value.redirectOnSuccess}`;
+        const siRedirectOnSuccess = route.value.redirectOnSuccess;
+        const siQueryParams: string[] = [];
+        if (siRedirectOnSuccess) { siQueryParams.push(`redirectOnSuccess=${encodeURIComponent(siRedirectOnSuccess)}`); }
+        const siQueryString = siQueryParams.join('&');
+        return `/sign-in?${siQueryString}`;
       case 'signUpBuyer':
         return '/sign-up/buyer';
       case 'signUpVendor':
@@ -397,9 +405,9 @@ const router: Router<Route> = {
         const tcRedirectOnSkip = route.value.redirectOnSkip;
         const tcWarningId = route.value.warningId;
         const tcQueryParams: string[] = [];
-        if (tcRedirectOnAccept) { tcQueryParams.push(`redirectOnAccept=${tcRedirectOnAccept}`); }
-        if (tcRedirectOnSkip) { tcQueryParams.push(`redirectOnSkip=${tcRedirectOnSkip}`); }
-        if (tcWarningId) { tcQueryParams.push(`warningId=${tcWarningId}`); }
+        if (tcRedirectOnAccept) { tcQueryParams.push(`redirectOnAccept=${encodeURIComponent(tcRedirectOnAccept)}`); }
+        if (tcRedirectOnSkip) { tcQueryParams.push(`redirectOnSkip=${encodeURIComponent(tcRedirectOnSkip)}`); }
+        if (tcWarningId) { tcQueryParams.push(`warningId=${encodeURIComponent(tcWarningId)}`); }
         const tcQueryString = tcQueryParams.join('&');
         return `/terms-and-conditions?${tcQueryString}`;
       case 'profile':

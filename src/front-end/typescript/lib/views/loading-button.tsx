@@ -1,11 +1,12 @@
 import { View } from 'front-end/lib/framework';
+import { ButtonColor } from 'front-end/lib/types';
 import { noop } from 'lodash';
 import { default as React, MouseEventHandler, ReactElement } from 'react';
 import { Button, Spinner } from 'reactstrap';
 
 export interface Props {
   children: Array<ReactElement<any>> | string;
-  color: string;
+  color: ButtonColor;
   size?: 'sm' | 'md' | 'lg';
   spinnerColor?: string;
   loading: boolean;

@@ -1,8 +1,7 @@
-import { Route } from 'front-end/lib/app/types';
 import * as FileMulti from 'front-end/lib/components/input/file-multi';
 import * as LongTextMulti from 'front-end/lib/components/input/long-text-multi';
 import * as SelectMulti from 'front-end/lib/components/input/select-multi';
-import { Component, ComponentView, Dispatch, GlobalComponentMsg, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
+import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as DateTime from 'front-end/lib/views/input/datetime';
@@ -31,7 +30,7 @@ export interface Params {
   existingRfi?: PublicRfi;
 }
 
-export type InnerMsg
+export type Msg
   = ADT<'onChangeRfiNumber', string>
   | ADT<'onChangeTitle', string>
   | ADT<'onChangePublicSectorEntity', string>
@@ -51,8 +50,6 @@ export type InnerMsg
   | ADT<'validateDiscoveryDay'>
   | ADT<'validateClosingDate'>
   | ADT<'validateClosingTime'>;
-
-export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export interface State {
   loading: number;

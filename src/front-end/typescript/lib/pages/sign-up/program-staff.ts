@@ -5,6 +5,6 @@ export const component = SignUp.component(ProgramStaffProfile.component);
 
 export type RouteParams = SignUp.RouteParams;
 
-export type Msg = SignUp.Msg<ProgramStaffProfile.InnerMsg>;
+export type Msg = SignUp.Msg<ProgramStaffProfile.Msg>;
 
 export type State = SignUp.State<ProgramStaffProfile.State>;

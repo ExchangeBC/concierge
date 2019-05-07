@@ -297,7 +297,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled} className='text-nowrap'>
         Submit Response
       </LoadingButton>
-      <Link page={viewRfiRoute(rfi)} textColor='secondary' className='text-nowrap'>
+      <Link route={viewRfiRoute(rfi)} color='secondary' className='text-nowrap mx-3'>
         Cancel
       </Link>
     </FixedBar>

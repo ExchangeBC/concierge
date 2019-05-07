@@ -1,5 +1,4 @@
-import { Route } from 'front-end/lib/app/types';
-import { Component, ComponentViewProps, Dispatch, GlobalComponentMsg, Init, Update, View } from 'front-end/lib/framework';
+import { Component, ComponentViewProps, Dispatch, Init, Update, View } from 'front-end/lib/framework';
 import { CSSProperties, default as React, ReactElement } from 'react';
 import { Table, Tooltip } from 'reactstrap';
 import { ADT, Omit } from 'shared/lib/types';
@@ -15,10 +14,8 @@ export interface State<Data> {
 
 export type Params<Data> = Omit<State<Data>, 'activeTooltipThIndex'>;
 
-type InnerMsg
+export type Msg
   = ADT<'toggleTooltip', number>;
-
-export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export function init<Data>(): Init<Params<Data>, State<Data>> {
   return async params => ({

@@ -146,14 +146,13 @@ function isValid(state: State): boolean {
 
 const viewBottomBar: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
-  const skipUrl = getRedirectUrl(state, true);
   if (state.acceptedTermsAt) {
     return (
       <FixedBar>
         <p className='text-align-right mb-0'>
           {formatTermsAndConditionsAgreementDate(state.acceptedTermsAt)}
         </p>
-        <Link href={skipUrl} text='Skip' className='mr-auto d-none d-md-block' buttonClassName='p-0 d-flex align-items-center' textColor='secondary'>
+        <Link route={{ tag: 'profile', value: { profileUserId: state.userId } }} className='mr-auto d-none d-md-flex align-items-center' color='secondary'>
           <Icon name='chevron-left' color='secondary' className='mr-1' />
           My Profile
         </Link>
@@ -169,7 +168,7 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
         <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={acceptTerms} loading={isLoading} disabled={isDisabled}>
           I Accept
         </LoadingButton>
-        <Link href={skipUrl} text='Skip' textColor='secondary' />
+        <Link href={getRedirectUrl(state, true)} color='secondary' className='mx-3'>Skip</Link>
       </FixedBar>
     );
   }

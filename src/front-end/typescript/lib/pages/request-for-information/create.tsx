@@ -141,7 +141,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <LoadingButton color='info'  onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
         Preview RFI
       </LoadingButton>
-      <Link page={cancelRoute} text='Cancel' textColor='secondary' disabled={isLoading} buttonClassName='px-0' />
+      <Link route={cancelRoute} color='secondary' disabled={isLoading} className='mx-3'>Cancel</Link>
     </FixedBar>
   );
 };

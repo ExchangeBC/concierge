@@ -34,17 +34,17 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 const CallToActionButton: View<{ signedIn: boolean, userType?: UserType }> = ({ signedIn, userType }) => {
-  let page: Route = { tag: 'signUpBuyer', value: {} };
+  let route: Route = { tag: 'signUpBuyer', value: {} };
   let text = 'Get Started';
   if (signedIn) {
-    page = {
+    route = {
       tag: 'requestForInformationList',
       value: null
     };
     text = 'View RFIs';
   }
   return (
-    <Link page={page} buttonSize='lg' buttonColor='primary' text={text} />
+    <Link button route={route} size='lg' color='primary'>{text}</Link>
   );
 };
 
@@ -122,14 +122,14 @@ const UserPersonas: ComponentView<State, Msg> = ({ state, dispatch }) => {
               </li>
             </ul>
           </Col>
-          <Col xs='12' md='4' className='bg-info py-6 px-4 text-light mt-md-m3 mb-md-3 d-flex flex-column shadow'>
+          <Col xs='12' md='4' className='bg-info py-6 px-4 text-light mt-md-m3 mb-md-3 d-flex flex-column align-items-start shadow'>
             <h4 className='mb-3'>
               Want to learn more?
             </h4>
             <p>
               Learn how to use the Procurement Concierge Program's Web Application.
             </p>
-            <Link page={{ tag: 'markdown', value: { documentId: 'guide' } }} buttonColor='primary' text='Read the Guide' className='mt-4 d-block mt-auto' />
+            <Link button route={{ tag: 'markdown', value: { documentId: 'guide' } }} color='primary' className='mt-4 d-block mt-auto'>Read the Guide</Link>
           </Col>
         </Row>
       </Container>

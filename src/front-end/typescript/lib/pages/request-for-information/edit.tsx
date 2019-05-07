@@ -198,7 +198,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <LoadingButton color='info' onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
           Preview Changes
         </LoadingButton>
-        <Link onClick={cancelEditing} text='Cancel' textColor='secondary' disabled={isLoading} buttonClassName='px-0' />
+        <Link onClick={cancelEditing} color='secondary' disabled={isLoading} className='mx-3'>Cancel</Link>
       </FixedBar>
     );
   } else {
@@ -207,7 +207,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Button color='primary' onClick={startEditing} disabled={isLoading} className='text-nowrap'>
           Edit RFI
         </Button>
-        <Link page={viewRoute} text='View RFI' buttonColor='info' disabled={isLoading} className='ml-3 ml-md-0 mr-md-3 text-nowrap' />
+        <Link route={viewRoute} button color='info' disabled={isLoading} className='ml-3 ml-md-0 mr-md-3 text-nowrap'>View RFI</Link>
       </FixedBar>
     );
   }
