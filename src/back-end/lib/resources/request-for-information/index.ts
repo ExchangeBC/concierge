@@ -149,6 +149,10 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
           switch (validatedVersion.tag) {
             case 'valid':
               const version = validatedVersion.value;
+              // Remove addenda matching the DELETE_ADDENDUM_TOKEN
+              version.addenda = version.addenda.filter(addendum => {
+                return addendum.description !== DELETE_ADDENDUM_TOKEN;
+              });
               const rfi = new RfiModel({
                 createdAt: version.createdAt,
                 // TODO publishedAt will need to change when we add drafts.
