@@ -1,5 +1,4 @@
-import { Route } from 'front-end/lib/app/types';
-import { Component, ComponentView, GlobalComponentMsg, Immutable, Init, Update, View } from 'front-end/lib/framework';
+import { Component, ComponentView, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import { validateConfirmPassword } from 'front-end/lib/validators';
 import { updateField, validateField } from 'front-end/lib/views/form-field';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
@@ -47,15 +46,13 @@ export function isValid(state: Immutable<State>): boolean {
   return !state.email.errors.length && !state.password.errors.length && !state.confirmPassword.errors.length;
 }
 
-type InnerMsg
+export type Msg
   = ADT<'onChangeEmail', string>
   | ADT<'onChangePassword', string>
   | ADT<'onChangeConfirmPassword', string>
   | ADT<'validateEmail'>
   | ADT<'validatePassword'>
   | ADT<'validateConfirmPassword'>;
-
-export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export interface Params {
   userType: UserType;
