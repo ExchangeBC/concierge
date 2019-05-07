@@ -112,12 +112,13 @@ const router: Router<Route> = {
     {
       path: '/terms-and-conditions',
       makeRoute({ query }) {
+        const rawWarningId = getQueryParamString(query, 'warningId');
         return {
           tag: 'termsAndConditions',
           value: {
             redirectOnAccept: getQueryParamString(query, 'redirectOnAccept') || undefined,
             redirectOnSkip: getQueryParamString(query, 'redirectOnSkip') || undefined,
-            warningId: PageTermsAndConditions.parseWarningId(getQueryParamString(query, 'warningId')) || undefined
+            warningId: rawWarningId && PageTermsAndConditions.parseWarningId(rawWarningId) || undefined
           }
         };
       }
