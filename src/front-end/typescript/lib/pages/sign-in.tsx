@@ -9,7 +9,7 @@ import * as ShortText from 'front-end/lib/views/input/short-text';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
-import { Alert, Col, Row } from 'reactstrap';
+import { Col, Row } from 'reactstrap';
 import { ADT } from 'shared/lib/types';
 import { validateEmail, validatePassword } from 'shared/lib/validators';
 
@@ -77,18 +77,19 @@ const startLoading: UpdateState<State> = makeStartLoading('loading');
 const stopLoading: UpdateState<State> = makeStopLoading('loading');
 
 const update: Update<State, Msg> = ({ state, msg }) => {
-  // Reset errors every time state updates.
-  state = state.set('errors', []);
   switch (msg.tag) {
     case 'onChangeEmail':
+      state = state.set('errors', []);
       return [updateField(state, 'email', msg.value)];
     case 'onChangePassword':
+      state = state.set('errors', []);
       return [updateField(state, 'password', msg.value)];
     case 'validateEmail':
       return [validateField(state, 'email', validateEmail)];
     case 'validatePassword':
       return [validateField(state, 'password', validatePassword)];
     case 'submit':
+      state = state.set('errors', []);
       state = startLoading(state);
       return [
         state,
@@ -124,22 +125,6 @@ function isValid(state: State): boolean {
   return providedRequiredFields && !isInvalid(state);
 }
 
-const ConditionalErrors: ComponentView<State, Msg> = ({ state }) => {
-  if (state.errors.length) {
-    return (
-      <Row className='mb-3'>
-        <Col xs='12'>
-          <Alert color='danger'>
-            {state.errors.map((e, i) => (<div key={`sign-in-error-${i}`}>{e}</div>))}
-          </Alert>
-        </Col>
-      </Row>
-    );
-  } else {
-    return (<div></div>);
-  }
-};
-
 const view: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   const onChange = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
@@ -161,7 +146,6 @@ const view: ComponentView<State, Msg> = props => {
           </p>
         </Col>
       </Row>
-      <ConditionalErrors {...props} />
       <Row>
         <Col xs='12' md='6' lg='5'>
           <Row>
@@ -205,7 +189,12 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   init,
   update,
   view,
-  getAlerts: emptyPageAlerts,
+  getAlerts(state) {
+    return {
+      ...emptyPageAlerts(),
+      errors: state.errors
+    };
+  },
   getMetadata() {
     return makePageMetadata('Sign In');
   }

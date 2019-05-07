@@ -131,7 +131,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               return state;
             case 'invalid':
               return stopLoading(state)
-                .setIn(['onChangeCurrentPassword', 'errors'], result.value.currentPassword || []);
+                .setIn(['currentPassword', 'errors'], result.value.currentPassword || []);
           }
         }
       ];

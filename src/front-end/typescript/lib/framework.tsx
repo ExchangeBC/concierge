@@ -186,8 +186,8 @@ export interface PageMetadata {
 
 export interface PageAlerts {
   info: string[];
-  warn: string[];
-  danger: string[];
+  warnings: string[];
+  errors: string[];
 }
 
 export interface PageContainerOptions {
@@ -203,8 +203,8 @@ export type PageGetAlerts<State> = (state: Immutable<State>) => PageAlerts;
 export function emptyPageAlerts(): PageAlerts {
   return {
     info: [],
-    warn: [],
-    danger: []
+    warnings: [],
+    errors: []
   };
 }
 

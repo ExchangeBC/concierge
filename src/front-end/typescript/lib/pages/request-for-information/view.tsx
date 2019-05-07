@@ -5,6 +5,7 @@ import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newRoute
 import * as api from 'front-end/lib/http/api';
 import { publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
+import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import Icon from 'front-end/lib/views/icon';
 import FixedBar from 'front-end/lib/views/layout/fixed-bar';
@@ -12,7 +13,7 @@ import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import Markdown from 'front-end/lib/views/markdown';
 import { default as React, ReactElement } from 'react';
-import { Alert, Col, Row } from 'reactstrap';
+import { Col, Row } from 'reactstrap';
 import { compareDates, formatDate, formatTime } from 'shared/lib';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as FileResource from 'shared/lib/resources/file';
@@ -36,7 +37,7 @@ export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export interface State {
   respondToDiscoveryDayLoading: number;
-  alerts: string[];
+  infoAlerts: string[];
   preview: boolean;
   // TODO refactor how userType, rfi and ddr exist on state
   // once we have better session retrieval in the front-end.
@@ -53,7 +54,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
   const userType = session && session.user && session.user.type;
   const defaultState: State = {
     respondToDiscoveryDayLoading: 0,
-    alerts: [],
+    infoAlerts: [],
     preview,
     userType
   };
@@ -74,29 +75,29 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
           ddr = ddrResult.value;
         }
       }
-      // Determine alerts to display on the page.
-      const alerts: string[] = [];
+      // Determine infoAlerts to display on the page.
+      const infoAlerts: string[] = [];
       if (preview) {
-        alerts.push('This is a preview. All "Published" and "Last Updated" dates on this page are only relevant to the preview, and do not reflect the dates associated with the original RFI.');
+        infoAlerts.push('This is a preview. All "Published" and "Last Updated" dates on this page are only relevant to the preview, and do not reflect the dates associated with the original RFI.');
       } else {
-        // Use `mightViewResponseButtons` to only show response-related alerts
+        // Use `mightViewResponseButtons` to only show response-related infoAlerts
         // to unauthenticated users and Vendor.
         const mightViewResponseButtons = userType === UserType.Vendor || !userType;
         const rfiStatus = rfiToRfiStatus(rfi);
         if (mightViewResponseButtons && rfiStatus === RfiStatus.Closed) {
-          alerts.push(`This RFI is still accepting responses up to ${RFI_EXPIRY_WINDOW_DAYS} calendar days after the closing date and time.`);
+          infoAlerts.push(`This RFI is still accepting responses up to ${RFI_EXPIRY_WINDOW_DAYS} calendar days after the closing date and time.`);
         }
         if (mightViewResponseButtons && rfiStatus === RfiStatus.Expired) {
-          alerts.push('This RFI is no longer accepting responses.');
+          infoAlerts.push('This RFI is no longer accepting responses.');
         }
         const updatedAt = rfi.latestVersion && rfi.latestVersion.createdAt;
         if (rfiStatus === RfiStatus.Open && updatedAt && compareDates(rfi.publishedAt, updatedAt) === -1) {
-          alerts.push(`This RFI was last updated on ${formatDate(updatedAt)}.`);
+          infoAlerts.push(`This RFI was last updated on ${formatDate(updatedAt)}.`);
         }
       }
       return {
         ...defaultState,
-        alerts,
+        infoAlerts,
         rfi,
         ddr
       };
@@ -148,7 +149,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               tag: 'termsAndConditions' as 'termsAndConditions',
               value: {
                 userId: user.value._id,
-                warnings: ['You must accept the terms and conditions in order to register for a Discovery Session.'],
+                warningId: WarningId.DiscoveryDayResponse,
                 redirectOnAccept: thisUrl,
                 redirectOnSkip: thisUrl
               }
@@ -336,41 +337,13 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
   );
 };
 
-const ConditionalAlerts: View<Pick<State, 'alerts'>> = ({ alerts }) => {
-  if (!alerts.length) { return null; }
-  return (
-    <Row>
-      <Col xs='12'>
-        <Alert color='primary' className='mb-5'>
-          {alerts.map((text, i) => (<div key={`rfi-view-alert-${i}`}>{text}</div>))}
-        </Alert>
-      </Col>
-    </Row>
-  );
-};
-
 const view: ComponentView<State, Msg> = props => {
   const { state } = props;
-  if (!state.rfi || !state.rfi.latestVersion) {
-    return (
-      <div>
-        <Row>
-          <Col xs='12'>
-            <Alert color='danger'>
-              <div>
-                {ERROR_MESSAGE}
-              </div>
-            </Alert>
-          </Col>
-        </Row>
-      </div>
-    );
-  }
+  if (!state.rfi || !state.rfi.latestVersion) { return null; }
   const rfi = state.rfi;
   const version = state.rfi.latestVersion;
   return (
     <div>
-      <ConditionalAlerts alerts={state.alerts} />
       <Row className='mb-5'>
         <Col xs='12' className='d-flex flex-column text-center align-items-center'>
           <h1 className='h4'>RFI Number: {version.rfiNumber}</h1>
@@ -396,7 +369,13 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   update,
   view,
   viewBottomBar,
-  getAlerts: emptyPageAlerts,
+  getAlerts(state) {
+    return {
+      ...emptyPageAlerts(),
+      info: state.infoAlerts,
+      errors: !state.rfi || !state.rfi.latestVersion ? [ERROR_MESSAGE] : []
+    };
+  },
   getMetadata(state) {
     const title
       = state.preview

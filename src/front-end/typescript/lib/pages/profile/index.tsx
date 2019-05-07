@@ -9,7 +9,6 @@ import * as BuyerProfile from 'front-end/lib/pages/profile/components/buyer';
 import * as ProgramStaffProfile from 'front-end/lib/pages/profile/components/program-staff';
 import * as VendorProfile from 'front-end/lib/pages/profile/components/vendor';
 import { default as React, ReactElement } from 'react';
-import { Alert, Col, Row } from 'reactstrap';
 import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, UserType } from 'shared/lib/types';
 
@@ -148,15 +147,7 @@ function ViewProfile<ProfileState, ProfileMsg>(props: ViewProfileProps<ProfileSt
 
 const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (state.errors.length) {
-    return (
-      <Row>
-        <Col xs='12'>
-          <Alert color='danger'>
-            {state.errors.map((e, i) => (<div key={`profile-error-${i}`}>{e}</div>))}
-          </Alert>
-        </Col>
-      </Row>
-    );
+    return null;
   } else if (state.buyer) {
     return (
       <ViewProfile
@@ -190,7 +181,12 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   init,
   update,
   view,
-  getAlerts: emptyPageAlerts,
+  getAlerts(state) {
+    return {
+      ...emptyPageAlerts(),
+      errors: state.errors
+    };
+  },
   getMetadata() {
     // TODO Show user's name in the title.
     return makePageMetadata('User Profile');

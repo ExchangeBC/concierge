@@ -5,6 +5,7 @@ import * as FileMulti from 'front-end/lib/components/input/file-multi';
 import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, replaceRoute, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { uploadFiles } from 'front-end/lib/pages/request-for-information/lib';
+import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
 import FixedBar from 'front-end/lib/views/layout/fixed-bar';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
@@ -180,7 +181,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                 tag: 'termsAndConditions' as 'termsAndConditions',
                 value: {
                   userId: user._id,
-                  warnings: ['You must accept the terms and conditions in order to respond to a Request for Information.'],
+                  warningId: WarningId.RfiResponse,
                   redirectOnAccept: respondToRfiUrl(rfi),
                   redirectOnSkip: viewRfiUrl(rfi)
                 }

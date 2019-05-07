@@ -11,9 +11,34 @@ import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import Markdown from 'front-end/lib/views/markdown';
 import React from 'react';
-import { Alert, Col, Container, Row } from 'reactstrap';
+import { Col, Container, Row } from 'reactstrap';
 import { formatTermsAndConditionsAgreementDate } from 'shared/lib';
 import { ADT, UserType } from 'shared/lib/types';
+
+export enum WarningId {
+  RfiResponse = 'RFI_RESPONSE',
+  DiscoveryDayResponse = 'DISCOVERY_DAY_RESPONSE'
+}
+
+function warningIdToString(warningId: WarningId): string {
+  switch (warningId) {
+    case WarningId.RfiResponse:
+      return 'You must accept the terms and conditions in order to respond to a Request for Information.';
+    case WarningId.DiscoveryDayResponse:
+      return 'You must accept the terms and conditions in order to register for a Discovery Session.';
+  }
+}
+
+export function parseWarningId(raw: string): WarningId | null {
+  switch (raw.toUpperCase()) {
+    case 'RFI_RESPONSE':
+      return WarningId.RfiResponse;
+    case 'DISCOVERY_DAY_RESPONSE':
+      return WarningId.DiscoveryDayResponse;
+    default:
+      return null
+  }
+}
 
 export interface State {
   loading: number;
@@ -27,7 +52,7 @@ export interface State {
 };
 
 export interface RouteParams extends Pick<State, 'redirectOnAccept' | 'redirectOnSkip'> {
-  warnings?: string[];
+  warningId?: WarningId;
 }
 
 type InnerMsg
@@ -48,7 +73,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
   userTypes: [UserType.Buyer, UserType.Vendor],
 
   async success({ routeParams, shared }) {
-    const { redirectOnAccept, redirectOnSkip, warnings = [] } = routeParams;
+    const { redirectOnAccept, redirectOnSkip, warningId } = routeParams;
     const userId = shared.sessionUser.id;
     const result = await api.readOneUser(userId);
     const acceptedTermsAt = result.tag === 'valid' ? result.value.acceptedTermsAt : undefined;
@@ -56,7 +81,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
     return {
       ...initState,
       errors,
-      warnings,
+      warnings: warningId ? [warningIdToString(warningId)] : [],
       markdownSource: await markdown.getDocument('terms_and_conditions'),
       userId,
       acceptedTermsAt,
@@ -119,31 +144,6 @@ function isValid(state: State): boolean {
   return !state.errors.length;
 }
 
-const ConditionalAlerts: ComponentView<State, Msg> = ({ state }) => {
-  const hasErrors = !!state.errors.length;
-  const hasWarnings = !!state.warnings.length;
-  if (hasErrors || hasWarnings) {
-    return (
-      <Row className='mb-3'>
-        <Col xs='12'>
-          {hasErrors
-            ? (<Alert color='danger'>
-                {state.errors.map((s, i) => (<div key={`terms-error-${i}`}>{s}</div>))}
-              </Alert>)
-            : null}
-          {hasWarnings
-            ? (<Alert color='warning'>
-                {state.warnings.map((s, i) => (<div key={`terms-warning-${i}`}>{s}</div>))}
-              </Alert>)
-            : null}
-        </Col>
-      </Row>
-    );
-  } else {
-    return null;
-  }
-};
-
 const viewBottomBar: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   const skipUrl = getRedirectUrl(state, true);
@@ -179,7 +179,6 @@ const view: ComponentView<State, Msg> = props => {
   const { state } = props;
   return (
     <Container className='mb-5 flex-grow-1'>
-      <ConditionalAlerts {...props} />
       <Row className='mb-3'>
         <Col xs='12'>
           <h1>Concierge Web App Terms and Conditions</h1>
@@ -199,7 +198,13 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   update,
   view,
   viewBottomBar,
-  getAlerts: emptyPageAlerts,
+  getAlerts(state) {
+    return {
+      ...emptyPageAlerts(),
+      warnings: state.warnings,
+      errors: state.errors
+    };
+  },
   getMetadata() {
     return makePageMetadata('Terms and Conditions');
   }

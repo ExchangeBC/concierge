@@ -1,5 +1,6 @@
 import { Route } from 'front-end/lib/app/types';
 import { Router } from 'front-end/lib/framework';
+import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
 
 function getQueryParamString(query: Record<string, string | string[]>, key: string): string {
   let value = query[key];
@@ -115,7 +116,8 @@ const router: Router<Route> = {
           tag: 'termsAndConditions',
           value: {
             redirectOnAccept: getQueryParamString(query, 'redirectOnAccept') || undefined,
-            redirectOnSkip: getQueryParamString(query, 'redirectOnSkip') || undefined
+            redirectOnSkip: getQueryParamString(query, 'redirectOnSkip') || undefined,
+            warningId: PageTermsAndConditions.parseWarningId(getQueryParamString(query, 'warningId')) || undefined
           }
         };
       }
@@ -392,9 +394,11 @@ const router: Router<Route> = {
       case 'termsAndConditions':
         const tcRedirectOnAccept = route.value.redirectOnAccept;
         const tcRedirectOnSkip = route.value.redirectOnSkip;
+        const tcWarningId = route.value.warningId;
         const tcQueryParams: string[] = [];
         if (tcRedirectOnAccept) { tcQueryParams.push(`redirectOnAccept=${tcRedirectOnAccept}`); }
         if (tcRedirectOnSkip) { tcQueryParams.push(`redirectOnSkip=${tcRedirectOnSkip}`); }
+        if (tcWarningId) { tcQueryParams.push(`warningId=${tcWarningId}`); }
         const tcQueryString = tcQueryParams.join('&');
         return `/terms-and-conditions?${tcQueryString}`;
       case 'profile':

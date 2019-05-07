@@ -11,7 +11,7 @@ import FixedBar from 'front-end/lib/views/layout/fixed-bar';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
-import { Alert, Button, Col, Row } from 'reactstrap';
+import { Button, Col, Row } from 'reactstrap';
 import { getString } from 'shared/lib';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { ADT, UserType } from 'shared/lib/types';
@@ -215,21 +215,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 const view: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
-  if (!state.valid || !state.valid.rfi.latestVersion) {
-    return (
-      <div>
-        <Row>
-          <Col xs='12'>
-            <Alert color='danger'>
-              <div>
-                {ERROR_MESSAGE}
-              </div>
-            </Alert>
-          </Col>
-        </Row>
-      </div>
-    );
-  }
+  if (!state.valid || !state.valid.rfi.latestVersion) { return null; }
   const dispatchRfiForm: Dispatch<RfiForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'rfiForm' as 'rfiForm', value }));
   const rfi = state.valid.rfi;
   const version = state.valid.rfi.latestVersion;
@@ -274,7 +260,12 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   update,
   view,
   viewBottomBar,
-  getAlerts: emptyPageAlerts,
+  getAlerts(state) {
+    return {
+      ...emptyPageAlerts(),
+      errors: !state.valid || !state.valid.rfi.latestVersion ? [ERROR_MESSAGE] : []
+    };
+  },
   getMetadata() {
     return makePageMetadata('Edit a Request for Information');
   }

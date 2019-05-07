@@ -2,7 +2,7 @@ import { LIVE_SITE_DOMAIN } from 'front-end/config';
 import { Msg, Route, SharedState, State } from 'front-end/lib/app/types';
 import Footer from 'front-end/lib/app/view/footer';
 import Nav from 'front-end/lib/app/view/nav';
-import { AppMsg, ComponentView, Dispatch, GlobalComponentMsg, Immutable, mapAppDispatch, newRoute, PageComponent, View } from 'front-end/lib/framework';
+import { AppMsg, ComponentView, Dispatch, GlobalComponentMsg, Immutable, mapAppDispatch, newRoute, PageAlerts, PageComponent, PageContainerOptions, View } from 'front-end/lib/framework';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
@@ -25,6 +25,51 @@ import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-condition
 import * as PageUserList from 'front-end/lib/pages/user-list';
 import PageContainer from 'front-end/lib/views/layout/page-container';
 import { default as React, ReactElement } from 'react';
+import { Alert, Col, Container, Row } from 'reactstrap';
+
+interface ViewAlertProps {
+  messages: string[];
+  color: 'info' | 'warning' | 'danger';
+  className?: string;
+}
+
+const ViewAlert: View<ViewAlertProps> = ({ messages, color, className }) => {
+  if (messages.length) {
+    return (
+      <Alert color={color} className={className} >{messages.map(text => (<div>{text}</div>))}</Alert>
+    );
+  } else {
+    return null;
+  }
+}
+
+interface ViewAlertsProps {
+  alerts: PageAlerts;
+  containerOptions: PageContainerOptions;
+}
+
+const ViewAlerts: View<ViewAlertsProps> = ({ alerts, containerOptions }) => {
+  const { info, warnings, errors } = alerts;
+  const hasAlerts = !!(info.length || warnings.length || errors.length);
+  const child = (
+    <Row className={`${containerOptions.paddingTop === false && hasAlerts ? 'pt-5' : ''} ${hasAlerts ? 'pb-5' : ''}`}>
+      <Col xs='12'>
+        <ViewAlert messages={info} color='info' />
+        <ViewAlert messages={warnings} color='warning' />
+        <ViewAlert messages={errors} color='danger' className='mb-0' />
+      </Col>
+    </Row>
+  );
+  if (containerOptions.fullWidth) {
+    return (
+      <Container>
+        {child}
+      </Container>
+    );
+  } else {
+    return child;
+  }
+};
 
 interface ViewPageProps<PageState, PageMsg> {
   dispatch: Dispatch<AppMsg<Msg, Route>>;
@@ -46,6 +91,7 @@ function ViewPage<PageState, PageMsg>(props: ViewPageProps<PageState, PageMsg>):
     return (
       <div className='d-flex flex-column flex-grow-1'>
         <PageContainer {...containerOptions}>
+          <ViewAlerts alerts={component.getAlerts(pageState)} containerOptions={containerOptions} />
           <component.view dispatch={dispatchPage} state={pageState} />
         </PageContainer>
         {bottomBar}
