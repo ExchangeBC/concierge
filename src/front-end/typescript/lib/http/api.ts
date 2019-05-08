@@ -141,8 +141,8 @@ export const getSession = withCurrentSession(HttpMethod.Get);
 
 export const deleteSession = withCurrentSession(HttpMethod.Delete);
 
-export async function createForgotPasswordToken(email: string): Promise<ValidOrInvalid<null, null>> {
-  const response = await request(HttpMethod.Post, 'forgot-password-tokens', { email });
+export async function createForgotPasswordToken(body: ForgotPasswordTokenResource.CreateRequestBody): Promise<ValidOrInvalid<null, null>> {
+  const response = await request(HttpMethod.Post, 'forgot-password-tokens', body);
   switch (response.status) {
     case 201:
       return valid(null);
@@ -152,7 +152,9 @@ export async function createForgotPasswordToken(email: string): Promise<ValidOrI
 }
 
 // i.e. Reset password using forgot-password token.
-export async function updateForgotPasswordToken(token: string, userId: string, password: string): Promise<ValidOrInvalid<null, ForgotPasswordTokenResource.UpdateValidationErrors>> {
+export async function updateForgotPasswordToken(body: ForgotPasswordTokenResource.UpdateRequestBody): Promise<ValidOrInvalid<null, ForgotPasswordTokenResource.UpdateValidationErrors>> {
+  const { token, userId } = body;
+  let { password } = body;
   password = hashPassword(password);
   const response = await request(HttpMethod.Put, `forgot-password-tokens/${token}`, { userId, password });
   switch (response.status) {

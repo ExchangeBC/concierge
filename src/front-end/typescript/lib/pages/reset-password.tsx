@@ -83,7 +83,11 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [
         state,
         async (state, dispatch) => {
-          const result = await api.updateForgotPasswordToken(state.forgotPasswordToken, state.userId, state.newPassword.value);
+          const result = await api.updateForgotPasswordToken({
+            token: state.forgotPasswordToken,
+            userId: state.userId,
+            password: state.newPassword.value
+          });
           switch (result.tag) {
             case 'valid':
               dispatch(newRoute({

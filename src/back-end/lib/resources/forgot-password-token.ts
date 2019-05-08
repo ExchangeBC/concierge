@@ -7,19 +7,9 @@ import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateObjectIdString, validatePassword } from 'back-end/lib/validators';
 import { getString } from 'shared/lib';
-import { UpdateValidationErrors } from 'shared/lib/resources/forgot-password-token';
-import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
-
-type CreateRequestBody = InstanceType<UserSchema.Model> | null;
+import { CreateRequestBody, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/forgot-password-token';
 
 type CreateResponseBody = JsonResponseBody<null>;
-
-interface ValidUpdateRequestBody {
-  user: InstanceType<UserSchema.Model>;
-  forgotPasswordToken: InstanceType<ForgotPasswordTokenSchema.Model>;
-}
-
-type UpdateRequestBody = ValidOrInvalid<ValidUpdateRequestBody, UpdateValidationErrors>;
 
 type UpdateResponseBody = JsonResponseBody<null | UpdateValidationErrors>;
 
@@ -36,35 +26,35 @@ export const resource: Resource = {
     const UserModel = Models.User as UserSchema.Model;
     return {
       async transformRequest(request) {
-        if (!permissions.createForgotPasswordToken(request.session)) {
-          return null;
-        } else {
-          // TODO bad request response if body is not json
-          const body = request.body.tag === 'json' ? request.body.value : {};
-          const email = getString(body, 'email');
-          const user = await UserModel.findOne({ email, active: true }).exec();
-          return user || null;
-        }
+        // TODO bad request response if body is not json
+        const body = request.body.tag === 'json' ? request.body.value : {};
+        return {
+          email: getString(body, 'email')
+        };
       },
       async respond(request): Promise<Response<CreateResponseBody, Session>> {
-        if (request.body) {
-          const userId = request.body._id;
-          const forgotPasswordToken = new ForgotPasswordTokenModel({
-            createdAt: Date.now(),
-            token: await ForgotPasswordTokenSchema.hashToken(userId),
-            userId
-          });
-          await forgotPasswordToken.save();
-          // Send notification email.
-          try {
-            await notifications.createForgotPasswordToken(request.body.email, forgotPasswordToken.token, userId);
-          } catch (error) {
-            request.logger.error('sending the createForgotPasswordToken notification email failed', error);
-          }
-          return basicResponse(201, request.session, makeJsonResponseBody(null));
-        } else {
-          return basicResponse(400, request.session, makeJsonResponseBody(null));
+        const respond = (code: number) => basicResponse(code, request.session, makeJsonResponseBody(null));
+        if (!permissions.createForgotPasswordToken(request.session)) {
+          return respond(401);
         }
+        const user = await UserModel.findOne({ email: request.body.email, active: true }).exec();
+        // We respond with a 201 so we don't give away any information about
+        // which users do and don't have accounts.
+        if (!user) { return respond(201); }
+        const userId = user._id;
+        const forgotPasswordToken = new ForgotPasswordTokenModel({
+          createdAt: Date.now(),
+          token: await ForgotPasswordTokenSchema.hashToken(userId),
+          userId
+        });
+        await forgotPasswordToken.save();
+        // Send notification email.
+        try {
+          await notifications.createForgotPasswordToken(request.body.email, forgotPasswordToken.token, userId);
+        } catch (error) {
+          request.logger.error('sending the createForgotPasswordToken notification email failed', error);
+        }
+        return respond(201);
       }
     };
   },
@@ -74,63 +64,56 @@ export const resource: Resource = {
     const UserModel = Models.User as UserSchema.Model;
     return {
       async transformRequest(request) {
-        if (!permissions.createForgotPasswordToken(request.session)) {
-          return invalid({
-            permissions: [permissions.ERROR_MESSAGE]
-          });
-        } else {
-          const forgotPasswordToken = await ForgotPasswordTokenModel.findOne({ token: request.params.id }).exec();
-          if (!forgotPasswordToken) {
-            return invalid({
-              forgotPasswordToken: ['Your link has expired, please try requesting a new one.']
-            });
-          }
-          // TODO bad request response if body is not json
-          const body = request.body.tag === 'json' ? request.body.value : {};
-          const userId = getString(body, 'userId');
-          const validatedUserId = validateObjectIdString(userId);
-          if (validatedUserId.tag === 'invalid') {
-            return invalid({
-              userId: validatedUserId.value
-            });
-          }
-          const password = getString(body, 'password');
-          const validatedPassword = await validatePassword(password);
-          if (validatedPassword.tag === 'invalid') {
-            return invalid({
-              password: validatedPassword.value
-            });
-          }
-          const user = await UserModel.findOne({ _id: validatedUserId.value, active: true }).exec();
-          if (!user) {
-            return invalid({
-              userId: ['Your user account is no longer active.']
-            });
-          }
-          const correctForgotPasswordToken = await ForgotPasswordTokenSchema.authenticateToken(forgotPasswordToken.token, validatedUserId.value);
-          if (!correctForgotPasswordToken) {
-            return invalid({
-              forgotPasswordToken: ['Your link has expired, please try requesting a new one.']
-            });
-          }
-          user.passwordHash = validatedPassword.value;
-          return valid({
-            user,
-            forgotPasswordToken
-          });
-        }
+        // TODO bad request response if body is not json
+        const body = request.body.tag === 'json' ? request.body.value : {};
+        return {
+          token: request.params.id,
+          userId: getString(body, 'userId'),
+          password: getString(body, 'password')
+        };
       },
       async respond(request): Promise<Response<UpdateResponseBody, Session>> {
-        switch (request.body.tag) {
-          case 'invalid':
-            const invalidCode = request.body.value.permissions ? 401 : 400;
-            return basicResponse(invalidCode, request.session, makeJsonResponseBody(request.body.value));
-          case 'valid':
-            const { user, forgotPasswordToken } = request.body.value;
-            await user.save();
-            await ForgotPasswordTokenSchema.deleteToken(ForgotPasswordTokenModel, forgotPasswordToken.token);
-            return basicResponse(200, request.session, makeJsonResponseBody(null));
+        const respond = (code: number, body: UpdateValidationErrors | null) => basicResponse(code, request.session, makeJsonResponseBody(body));
+        if (!permissions.createForgotPasswordToken(request.session)) {
+          return respond(401, {
+            permissions: [permissions.ERROR_MESSAGE]
+          });
         }
+        const { token, userId, password } = request.body;
+        const forgotPasswordToken = await ForgotPasswordTokenModel.findOne({ token }).exec();
+        if (!forgotPasswordToken) {
+          return respond(400, {
+            forgotPasswordToken: ['Your link has expired, please try requesting a new one.']
+          });
+        }
+        const validatedUserId = validateObjectIdString(userId);
+        if (validatedUserId.tag === 'invalid') {
+          return respond(400, {
+            userId: validatedUserId.value
+          });
+        }
+        const validatedPassword = await validatePassword(password);
+        if (validatedPassword.tag === 'invalid') {
+          return respond(400, {
+            password: validatedPassword.value
+          });
+        }
+        const user = await UserModel.findOne({ _id: validatedUserId.value, active: true }).exec();
+        if (!user) {
+          return respond(400, {
+            userId: ['Your user account is no longer active.']
+          });
+        }
+        const correctForgotPasswordToken = await ForgotPasswordTokenSchema.authenticateToken(forgotPasswordToken.token, validatedUserId.value);
+        if (!correctForgotPasswordToken) {
+          return respond(400, {
+            forgotPasswordToken: ['Your link has expired, please try requesting a new one.']
+          });
+        }
+        user.passwordHash = validatedPassword.value;
+        await user.save();
+        await ForgotPasswordTokenSchema.deleteToken(ForgotPasswordTokenModel, forgotPasswordToken.token);
+        return basicResponse(200, request.session, makeJsonResponseBody(null));
       }
     };
   }
