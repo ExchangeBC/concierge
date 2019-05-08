@@ -296,7 +296,7 @@ const RespondToDiscoveryDayButton: View<RespondToDiscoveryDayButtonProps> = prop
   );
 };
 
-function showButtons(rfiStatus: RfiStatus | null, userType?: UserType): boolean {
+function showButtons(rfiStatus: RfiStatus, userType?: UserType): boolean {
   return (!userType || userType === UserType.Vendor) && !!rfiStatus && rfiStatus !== RfiStatus.Expired;
 }
 

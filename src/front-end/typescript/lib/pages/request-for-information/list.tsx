@@ -24,7 +24,7 @@ function formatTableDate(date: Date): string {
 type TableCellData
   = ADT<'rfiNumber', string>
   | ADT<'publishDate', Date>
-  | ADT<'status', RfiStatus | null>
+  | ADT<'status', RfiStatus>
   | ADT<'title', { rfiId: string, text: string, edit: boolean }>
   | ADT<'publicSectorEntity', string>
   | ADT<'lastUpdated', Date>
@@ -50,7 +50,7 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
     case 'publicSectorEntity':
       return wrap(data.value, true);
     case 'status':
-      return wrap((<StatusBadge status={data.value || undefined} />));
+      return wrap((<StatusBadge status={data.value} />));
     case 'publishDate':
     case 'lastUpdated':
     case 'closingDate':
@@ -64,7 +64,7 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
 // Add status property to each RFI
 // as we want to cache the RFI status on each one up front.
 interface Rfi extends PublicRfi {
-  status: RfiStatus | null;
+  status: RfiStatus;
 }
 
 export interface State {
@@ -102,9 +102,9 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) 
     rfis = rfis.sort((a, b) => {
       if (a.status === b.status) {
         return compareDates(a.publishedAt, b.publishedAt) * -1;
-      } else if (!b.status || a.status === RfiStatus.Open) {
+      } else if (a.status === RfiStatus.Open) {
         return -1;
-      } else if (!a.status || b.status === RfiStatus.Open) {
+      } else if (b.status === RfiStatus.Open) {
         return 1;
       } else {
         return a.status.localeCompare(b.status);
