@@ -1,9 +1,8 @@
-import { AvailableModels, SupportedRequestBodies } from 'back-end/lib/app';
+import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
 import * as permissions from 'back-end/lib/permissions';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
-import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateFileIdArray, validateUserId } from 'back-end/lib/validators';
@@ -19,7 +18,7 @@ type CreateRequestBody
   | ADT<401, CreateValidationErrors>
   | ADT<400, CreateValidationErrors>;
 
-async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, raw: object, session: AppSession): Promise<ValidOrInvalid<RfiSchema.Version, CreateValidationErrors>> {
+async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, raw: object, session: Session): Promise<ValidOrInvalid<RfiSchema.Version, CreateValidationErrors>> {
   // Get raw values.
   const createdBy = getString(session.user, 'id');
   const closingDate = getString(raw, 'closingDate');
@@ -110,11 +109,11 @@ type UpdateRequestBody
 
 type UpdateResponseBody = JsonResponseBody<PublicRfi | UpdateValidationErrors>;
 
-export type Resource<RequiredModels extends keyof AvailableModels> = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, UpdateRequestBody, AppSession>;
+export type Resource<RequiredModels extends keyof AvailableModels> = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, UpdateRequestBody, Session>;
 
 type GetRfiModel<RfiModelName extends keyof AvailableModels> = (Models: Pick<AvailableModels, RfiModelName>) => RfiSchema.Model;
 
-type GlobalPermissions = (session: AppSession) => boolean;
+type GlobalPermissions = (session: Session) => boolean;
 
 export function makeResource<RfiModelName extends keyof AvailableModels>(routeNamespace: string, getRfiModel: GetRfiModel<RfiModelName>, globalPermissions: GlobalPermissions): Resource<RfiModelName | 'User' | 'File'> {
 
@@ -172,7 +171,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
               };
           }
         },
-        async respond(request): Promise<Response<CreateResponseBody, AppSession>> {
+        async respond(request): Promise<Response<CreateResponseBody, Session>> {
           return basicResponse(request.body.tag, request.session, makeJsonResponseBody(request.body.value));
         }
       };
@@ -186,7 +185,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
         async transformRequest({ body }) {
           return body;
         },
-        async respond(request): Promise<Response<ReadOneResponseBody, AppSession>> {
+        async respond(request): Promise<Response<ReadOneResponseBody, Session>> {
           if (!globalPermissions(request.session) || !permissions.readOneRfi()) {
             return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
           } else {
@@ -216,7 +215,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
         async transformRequest({ body }) {
           return body;
         },
-        async respond(request): Promise<Response<ReadManyResponseBody, AppSession>> {
+        async respond(request): Promise<Response<ReadManyResponseBody, Session>> {
           if (!globalPermissions(request.session) || !permissions.readManyRfis()) {
             return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
           } else {
@@ -319,7 +318,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
               };
           }
         },
-        async respond(request): Promise<Response<UpdateResponseBody, AppSession>> {
+        async respond(request): Promise<Response<UpdateResponseBody, Session>> {
           return basicResponse(request.body.tag, request.session, makeJsonResponseBody(request.body.value));
         }
       };

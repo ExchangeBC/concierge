@@ -5,8 +5,9 @@ import * as FileResource from 'shared/lib/resources/file';
 import * as ForgotPasswordTokenResource from 'shared/lib/resources/forgot-password-token';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
 import * as RfiResponseResource from 'shared/lib/resources/request-for-information/response';
+import * as SessionResource from 'shared/lib/resources/session';
 import * as UserResource from 'shared/lib/resources/user';
-import { HttpMethod, Omit, PaginatedList, UserType } from 'shared/lib/types';
+import { HttpMethod, Omit, PaginatedList } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
 const request = prefixRequest('api');
@@ -96,26 +97,12 @@ export async function deleteUser(userId: string): Promise<ValidOrInvalid<null, n
   return valid(null);
 }
 
-export interface SessionUser {
-  id: string;
-  type: UserType;
-  email: string;
-}
-
-export interface Session {
-  _id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  sessionId: string;
-  user?: SessionUser;
-}
-
-export interface RawSession extends Omit<Session, 'createdAt' | 'updatedAt'> {
+export interface RawSession extends Omit<SessionResource.PublicSession, 'createdAt' | 'updatedAt'> {
   createdAt: string;
   updatedAt: string;
 }
 
-function rawSessionToSession(raw: RawSession): Session {
+function rawSessionToSession(raw: RawSession): SessionResource.PublicSession {
   return {
     ...raw,
     createdAt: new Date(raw.createdAt),
@@ -123,9 +110,9 @@ function rawSessionToSession(raw: RawSession): Session {
   };
 }
 
-export async function createSession(email: string, password: string): Promise<ValidOrInvalid<Session, string[]>> {
-  password = hashPassword(password);
-  const response = await request(HttpMethod.Post, 'sessions', { email, password });
+export async function createSession(body: SessionResource.CreateRequestBody): Promise<ValidOrInvalid<SessionResource.PublicSession, string[]>> {
+  body.password = hashPassword(body.password);
+  const response = await request(HttpMethod.Post, 'sessions', body);
   switch (response.status) {
     case 201:
       const rawSession = response.data as RawSession;
@@ -137,7 +124,7 @@ export async function createSession(email: string, password: string): Promise<Va
   }
 }
 
-function withCurrentSession(method: HttpMethod): () => Promise<ValidOrInvalid<Session, null>> {
+function withCurrentSession(method: HttpMethod): () => Promise<ValidOrInvalid<SessionResource.PublicSession, null>> {
 return async () => {
     const response = await request(method, 'sessions/current');
     switch (response.status) {

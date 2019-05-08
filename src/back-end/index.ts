@@ -1,5 +1,6 @@
 import { BASIC_AUTH_PASSWORD_HASH, BASIC_AUTH_USERNAME, getConfigErrors, MONGO_URL, SERVER_HOST, SERVER_PORT } from 'back-end/config';
 import * as app from 'back-end/lib/app';
+import { Session } from 'back-end/lib/app/types';
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
 import * as SessionSchema from 'back-end/lib/schemas/session';
@@ -28,7 +29,7 @@ async function start() {
   });
   // Bind the server to a port and listen for incoming connections.
   // Need to lock-in Session type here.
-  const adapter: ExpressAdapter<app.Session> = express();
+  const adapter: ExpressAdapter<Session> = express();
   const SessionModel = Models.Session;
   adapter({
     router,

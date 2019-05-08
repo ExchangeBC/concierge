@@ -1,3 +1,4 @@
+import { AvailableModels, Session, SupportedRequestBodies, SupportedResponseBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
 import loggerHook from 'back-end/lib/hooks/logger';
 import basicAuth from 'back-end/lib/map-routes/basic-auth';
@@ -18,13 +19,11 @@ import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import * as RfiResponseSchema from 'back-end/lib/schemas/request-for-information/response';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { addHooksToRoute, ErrorResponseBody, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route, Router, TextResponseBody } from 'back-end/lib/server';
+import { addHooksToRoute, namespaceRoute, notFoundJsonRoute, Route, Router } from 'back-end/lib/server';
 import { concat, flatten, flow, map } from 'lodash/fp';
 import * as mongoose from 'mongoose';
 import mongooseDefault from 'mongoose';
 import { flipCurried } from 'shared/lib';
-
-export type Session = SessionSchema.AppSession;
 
 export async function connectToDatabase(mongoUrl: string): Promise<mongoose.Connection> {
   await mongooseDefault.connect(mongoUrl, {
@@ -33,20 +32,7 @@ export async function connectToDatabase(mongoUrl: string): Promise<mongoose.Conn
   return mongooseDefault.connection;
 }
 
-// Add new models as properties on this interface.
-export interface AvailableModels {
-  Session: SessionSchema.Model;
-  User: UserSchema.Model;
-  ForgotPasswordToken: ForgotPasswordTokenSchema.Model;
-  File: FileSchema.Model;
-  Rfi: RfiSchema.Model;
-  // Use the same code as RFIs for RFI Previews.
-  RfiPreview: RfiSchema.Model;
-  RfiResponse: RfiResponseSchema.Model;
-}
-
 export function createModels(): AvailableModels {
-  // Add new models to this object.
   return {
     Session: mongoose.model('Session', SessionSchema.schema),
     User: mongoose.model('User', UserSchema.schema),
@@ -57,10 +43,6 @@ export function createModels(): AvailableModels {
     RfiResponse: mongoose.model('RfiResponse', RfiResponseSchema.schema)
   };
 };
-
-export type SupportedRequestBodies = JsonRequestBody | FileRequestBody;
-
-export type SupportedResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody | ErrorResponseBody;
 
 interface CreateRouterParams {
   Models: AvailableModels;

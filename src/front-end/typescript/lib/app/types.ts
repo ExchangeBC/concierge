@@ -1,5 +1,4 @@
 import { AppMsg, Immutable } from 'front-end/lib/framework';
-import { Session } from 'front-end/lib/http/api';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
@@ -20,7 +19,10 @@ import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-sta
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
 import * as PageUserList from 'front-end/lib/pages/user-list';
+import { PublicSession } from 'shared/lib/resources/session';
 import { ADT } from 'shared/lib/types';
+
+export type Session = PublicSession;
 
 export type Route
   = ADT<'landing', PageLanding.RouteParams>

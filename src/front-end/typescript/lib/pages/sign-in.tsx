@@ -94,7 +94,10 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [
         state,
         async (state, dispatch) => {
-          const result = await api.createSession(state.email.value, state.password.value);
+          const result = await api.createSession({
+            email: state.email.value,
+            password: state.password.value
+          });
           switch (result.tag) {
             case 'valid':
               if (state.redirectOnSuccess) {

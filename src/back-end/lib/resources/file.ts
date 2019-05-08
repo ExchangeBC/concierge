@@ -1,8 +1,7 @@
-import { AvailableModels, SupportedRequestBodies } from 'back-end/lib/app';
+import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
 import * as permissions from 'back-end/lib/permissions';
 import * as FileSchema from 'back-end/lib/schemas/file';
-import { AppSession } from 'back-end/lib/schemas/session';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { renameSync } from 'fs';
 import { PublicFile } from 'shared/lib/resources/file';
@@ -26,7 +25,7 @@ type ReadOneResponseBody = JsonResponseBody<PublicFile | string[]>;
 
 type RequiredModels = 'File';
 
-export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, AppSession>;
+export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, Session>;
 
 export const resource: Resource = {
 
@@ -103,7 +102,7 @@ export const resource: Resource = {
           };
         }
       },
-      async respond(request): Promise<Response<CreateResponseBody, AppSession>> {
+      async respond(request): Promise<Response<CreateResponseBody, Session>> {
         return basicResponse(request.body.tag, request.session, makeJsonResponseBody(request.body.value));
       }
     };
@@ -115,7 +114,7 @@ export const resource: Resource = {
       async transformRequest({ body }) {
         return body;
       },
-      async respond(request): Promise<Response<ReadOneResponseBody, AppSession>> {
+      async respond(request): Promise<Response<ReadOneResponseBody, Session>> {
         const file = await FileModel.findById(request.params.id);
         if (!file) {
           return basicResponse(404, request.session, makeJsonResponseBody(['File not found']));

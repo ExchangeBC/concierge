@@ -1,11 +1,10 @@
-import { AvailableModels, SupportedRequestBodies } from 'back-end/lib/app';
+import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
 import * as notifications from 'back-end/lib/mailer/notifications';
 import * as permissions from 'back-end/lib/permissions';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import * as RfiResponseSchema from 'back-end/lib/schemas/request-for-information/response';
-import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateFileIdArray, validateRfiId, validateUserId } from 'back-end/lib/validators';
@@ -20,7 +19,7 @@ type CreateRequestBody
   | ADT<401, CreateValidationErrors>
   | ADT<400, CreateValidationErrors>;
 
-async function validateCreateRequestBody(RfiResponseModel: RfiResponseSchema.Model, RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, raw: object, session: AppSession): Promise<ValidOrInvalid<InstanceType<RfiResponseSchema.Model>, CreateValidationErrors>> {
+async function validateCreateRequestBody(RfiResponseModel: RfiResponseSchema.Model, RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, raw: object, session: Session): Promise<ValidOrInvalid<InstanceType<RfiResponseSchema.Model>, CreateValidationErrors>> {
   // Get raw values.
   const createdBy = getString(session.user, 'id');
   const rfiId = getString(raw, 'rfiId');
@@ -53,7 +52,7 @@ type CreateResponseBody = JsonResponseBody<PublicRfiResponse | CreateValidationE
 
 type RequiredModels = 'RfiResponse' | 'Rfi' | 'User' | 'File';
 
-export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, AppSession>;
+export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, Session>;
 
 export const resource: Resource = {
 
@@ -115,7 +114,7 @@ export const resource: Resource = {
             };
         }
       },
-      async respond(request): Promise<Response<CreateResponseBody, AppSession>> {
+      async respond(request): Promise<Response<CreateResponseBody, Session>> {
         return basicResponse(request.body.tag, request.session, makeJsonResponseBody(request.body.value));
       }
     };

@@ -1,7 +1,7 @@
+import { Session } from 'back-end/lib/app/types';
 import * as permissions from 'back-end/lib/permissions';
 import { dateSchema } from 'back-end/lib/schemas';
 import * as FileSchema from 'back-end/lib/schemas/file';
-import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import * as mongoose from 'mongoose';
 import { PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
@@ -54,7 +54,7 @@ export function makePublicDiscoveryDayResponse(ddr: DiscoveryDayResponse): Publi
   };
 }
 
-export async function makePublicRfi(UserModel: UserSchema.Model, FileModel: FileSchema.Model, rfi: Data, session: AppSession): Promise<PublicRfi> {
+export async function makePublicRfi(UserModel: UserSchema.Model, FileModel: FileSchema.Model, rfi: Data, session: Session): Promise<PublicRfi> {
   const isProgramStaff = permissions.isProgramStaff(session);
   const latestVersion = getLatestVersion(rfi);
   let latestPublicVersion: PublicVersion | undefined;
@@ -96,7 +96,7 @@ export async function makePublicRfi(UserModel: UserSchema.Model, FileModel: File
   };
 }
 
-export async function findPublicRfiByIdUnsafely(RfiModel: Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, rfiId: mongoose.Types.ObjectId, session: AppSession): Promise<PublicRfi> {
+export async function findPublicRfiByIdUnsafely(RfiModel: Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, rfiId: mongoose.Types.ObjectId, session: Session): Promise<PublicRfi> {
   const rfi = await RfiModel.findById(rfiId);
   if (!rfi) {
     throw new Error('RFI does not exist');

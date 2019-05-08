@@ -1,9 +1,8 @@
-import { AvailableModels, SupportedRequestBodies } from 'back-end/lib/app';
+import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
 import * as notifications from 'back-end/lib/mailer/notifications';
 import * as permissions from 'back-end/lib/permissions';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
-import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateRfiId, validateUserId } from 'back-end/lib/validators';
@@ -36,7 +35,7 @@ function findDiscoveryDayResponse(rfi: RfiSchema.Data, vendor: mongoose.Types.Ob
 
 type RequiredModels = 'Rfi' | 'User';
 
-export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, AppSession>;
+export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, Session>;
 
 export const resource: Resource = {
 
@@ -129,7 +128,7 @@ export const resource: Resource = {
           value: publicDdr
         };
       },
-      async respond(request): Promise<Response<CreateResponseBody, AppSession>> {
+      async respond(request): Promise<Response<CreateResponseBody, Session>> {
         return basicResponse(request.body.tag, request.session, makeJsonResponseBody(request.body.value));
       }
     };
@@ -147,7 +146,7 @@ export const resource: Resource = {
       async transformRequest(request) {
         return request.body;
       },
-      async respond(request): Promise<Response<ReadOneResponseBody, AppSession>> {
+      async respond(request): Promise<Response<ReadOneResponseBody, Session>> {
         if (!permissions.readOneDiscoveryDayResponse(request.session) || !request.session.user) {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         }

@@ -1,9 +1,8 @@
-import { AvailableModels, SupportedRequestBodies } from 'back-end/lib/app';
+import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
 import * as notifications from 'back-end/lib/mailer/notifications';
 import * as permissions from 'back-end/lib/permissions';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
-import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateObjectIdString, validatePassword } from 'back-end/lib/validators';
@@ -26,7 +25,7 @@ type UpdateResponseBody = JsonResponseBody<null | UpdateValidationErrors>;
 
 type RequiredModels = 'ForgotPasswordToken' | 'Session' | 'User';
 
-export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, UpdateRequestBody, AppSession>;
+export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, UpdateRequestBody, Session>;
 
 export const resource: Resource = {
 
@@ -47,7 +46,7 @@ export const resource: Resource = {
           return user || null;
         }
       },
-      async respond(request): Promise<Response<CreateResponseBody, AppSession>> {
+      async respond(request): Promise<Response<CreateResponseBody, Session>> {
         if (request.body) {
           const userId = request.body._id;
           const forgotPasswordToken = new ForgotPasswordTokenModel({
@@ -121,7 +120,7 @@ export const resource: Resource = {
           });
         }
       },
-      async respond(request): Promise<Response<UpdateResponseBody, AppSession>> {
+      async respond(request): Promise<Response<UpdateResponseBody, Session>> {
         switch (request.body.tag) {
           case 'invalid':
             const invalidCode = request.body.value.permissions ? 401 : 400;

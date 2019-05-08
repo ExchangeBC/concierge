@@ -1,7 +1,7 @@
 import { Route, SharedState } from 'front-end/lib/app/types';
 import { GlobalComponentMsg, PageInit } from 'front-end/lib/framework';
-import { SessionUser } from 'front-end/lib/http/api';
 import { includes } from 'lodash';
+import { PublicSessionUser } from 'shared/lib/resources/session';
 import { UserType } from 'shared/lib/types';
 
 export interface AccessControlParams<RouteParams, PageState, PageMsg, SuccessSharedState = SharedState> {
@@ -10,7 +10,7 @@ export interface AccessControlParams<RouteParams, PageState, PageMsg, SuccessSha
 }
 
 export interface SharedStateWithGuaranteedSessionUser {
-  sessionUser: SessionUser;
+  sessionUser: PublicSessionUser;
   original: SharedState;
 }
 

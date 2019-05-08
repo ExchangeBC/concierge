@@ -1,9 +1,8 @@
-import { AvailableModels, SupportedRequestBodies } from 'back-end/lib/app';
+import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
 import * as notifications from 'back-end/lib/mailer/notifications';
 import * as permissions from 'back-end/lib/permissions';
 import * as SessionSchema from 'back-end/lib/schemas/session';
-import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateEmail, validatePassword } from 'back-end/lib/validators';
@@ -123,7 +122,7 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, body: UpdateRe
 
 type RequiredModels = 'User' | 'Session';
 
-export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, UpdateRequestBody, AppSession>;
+export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, UpdateRequestBody, Session>;
 
 const resource: Resource = {
 
@@ -143,7 +142,7 @@ const resource: Resource = {
           profile: isObject(body.profile) ? body.profile : {}
         };
       },
-      async respond(request): Promise<Response<CreateResponseBody, AppSession>> {
+      async respond(request): Promise<Response<CreateResponseBody, Session>> {
         if (!permissions.createUser(request.session, request.body.profile.type)) {
           return basicResponse(401, request.session, makeJsonResponseBody({
             permissions: [permissions.ERROR_MESSAGE]
@@ -183,7 +182,7 @@ const resource: Resource = {
       async transformRequest({ body }) {
         return body;
       },
-      async respond(request): Promise<Response<ReadOneResponseBody, AppSession>> {
+      async respond(request): Promise<Response<ReadOneResponseBody, Session>> {
         if (!permissions.readOneUser(request.session, request.params.id)) {
           return basicResponse(401, request.session, makeJsonResponseBody(null));
         }
@@ -204,7 +203,7 @@ const resource: Resource = {
       async transformRequest({ body }) {
         return body;
       },
-      async respond(request): Promise<Response<ReadManyResponseBody, AppSession>> {
+      async respond(request): Promise<Response<ReadManyResponseBody, Session>> {
         if (!permissions.readManyUsers(request.session)) {
           return basicResponse(401, request.session, makeJsonResponseBody(null));
         }
@@ -237,7 +236,7 @@ const resource: Resource = {
           currentPassword: getString(body, 'currentPassword') || undefined
         };
       },
-      async respond(request): Promise<Response<UpdateResponseBody, AppSession>> {
+      async respond(request): Promise<Response<UpdateResponseBody, Session>> {
         if (!permissions.updateUser(request.session, request.body.id)) {
           return basicResponse(401, request.session, makeJsonResponseBody({
             permissions: [permissions.ERROR_MESSAGE]
@@ -264,7 +263,7 @@ const resource: Resource = {
       async transformRequest({ body }) {
         return body;
       },
-      async respond(request): Promise<Response<DeleteResponseBody, AppSession>> {
+      async respond(request): Promise<Response<DeleteResponseBody, Session>> {
         const user = await UserModel.findOne({ _id: request.params.id, active: true });
         if (!user) {
           return basicResponse(404, request.session, makeJsonResponseBody(null));

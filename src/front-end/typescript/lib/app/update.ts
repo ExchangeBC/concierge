@@ -1,6 +1,6 @@
-import { Msg, Route, State } from 'front-end/lib/app/types';
+import { Msg, Route, Session, State } from 'front-end/lib/app/types';
 import { Dispatch, Immutable, initAppChildPage, Update, updateAppChildPage } from 'front-end/lib/framework';
-import { getSession, Session } from 'front-end/lib/http/api';
+import { getSession } from 'front-end/lib/http/api';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';

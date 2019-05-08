@@ -1,7 +1,5 @@
-import * as SessionSchema from 'back-end/lib/schemas/session';
+import { Session } from 'back-end/lib/app/types';
 import { AuthLevel, UserType } from 'shared/lib/types';
-
-type Session = SessionSchema.AppSession;
 
 export const CURRENT_SESSION_ID = 'current';
 

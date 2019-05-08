@@ -1,6 +1,5 @@
-import { Route } from 'front-end/lib/app/types';
+import { Route, Session } from 'front-end/lib/app/types';
 import { View } from 'front-end/lib/framework';
-import { Session } from 'front-end/lib/http/api';
 import Link from 'front-end/lib/views/link';
 import { get } from 'lodash';
 import React from 'react';

@@ -1,7 +1,7 @@
+import { Session } from 'back-end/lib/app/types';
 import { dateSchema, userIdSchema } from 'back-end/lib/schemas';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
-import { AppSession } from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import * as mongoose from 'mongoose';
 import { PublicRfiResponse } from 'shared/lib/resources/request-for-information/response';
@@ -14,7 +14,7 @@ export interface Data {
   attachments: mongoose.Types.ObjectId[];
 }
 
-export async function makePublicRfiResponse(RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, rfiResponse: Data, session: AppSession): Promise<PublicRfiResponse> {
+export async function makePublicRfiResponse(RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, rfiResponse: Data, session: Session): Promise<PublicRfiResponse> {
   const createdBy = await UserSchema.findPublicUserByIdUnsafely(UserModel, rfiResponse.createdBy);
   const rfi = await RfiSchema.findPublicRfiByIdUnsafely(RfiModel, UserModel, FileModel, rfiResponse.rfi, session);
   const attachments = await Promise.all(rfiResponse.attachments.map(fileId => FileSchema.findPublicFileByIdUnsafely(FileModel, fileId)));

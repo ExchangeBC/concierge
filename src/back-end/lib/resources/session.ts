@@ -1,22 +1,23 @@
-import { AvailableModels, SupportedRequestBodies } from 'back-end/lib/app';
+import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
 import * as permissions from 'back-end/lib/permissions';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { getString } from 'shared/lib';
+import { CreateRequestBody, PublicSession } from 'shared/lib/resources/session';
 
-type CreateRequestBody = InstanceType<UserSchema.Model> | null;
+const INVALID_CREDENTIALS_ERROR_MESSAGE = 'Your email and password combination do not match.';
 
-type CreateResponseBody = JsonResponseBody<SessionSchema.AppSession | string[]>;
+type CreateResponseBody = JsonResponseBody<PublicSession | string[]>;
 
-type ReadOneResponseBody = JsonResponseBody<SessionSchema.AppSession | null>;
+type ReadOneResponseBody = JsonResponseBody<PublicSession | null>;
 
-type DeleteResponseBody = JsonResponseBody<SessionSchema.AppSession | null>;
+type DeleteResponseBody = JsonResponseBody<PublicSession | null>;
 
 type RequiredModels = 'Session' | 'User';
 
-export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, SessionSchema.AppSession>;
+export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, Session>;
 
 export const resource: Resource = {
 
@@ -28,22 +29,24 @@ export const resource: Resource = {
     const UserModel = Models.User as UserSchema.Model;
     return {
       async transformRequest(request) {
-        if (!permissions.createSession(request.session)) { return null; }
         // TODO bad request response if body is not json
         const body = request.body.tag === 'json' ? request.body.value : {};
-        const email = getString(body, 'email');
-        const password = getString(body, 'password');
-        const user = await UserModel.findOne({ email, active: true }).exec();
-        const authenticated = user ? await UserSchema.authenticate(user, password) : false;
-        return authenticated ? user : null;
+        return {
+          email: getString(body, 'email'),
+          password: getString(body, 'password')
+        };
       },
-      async respond(request): Promise<Response<CreateResponseBody, SessionSchema.AppSession>> {
-        if (request.body) {
-          const session = await SessionSchema.signIn(SessionModel, UserModel, request.session, request.body._id);
-          return basicResponse(201, session, makeJsonResponseBody(session));
-        } else {
-          return basicResponse(401, request.session, makeJsonResponseBody(['Your email and password combination do not match.']));
-        }
+      async respond(request): Promise<Response<CreateResponseBody, Session>> {
+        const fail = () => basicResponse(401, request.session, makeJsonResponseBody([INVALID_CREDENTIALS_ERROR_MESSAGE]));
+        if (!permissions.createSession(request.session)) { return fail(); }
+        const { email, password } = request.body;
+        const user = await UserModel.findOne({ email, active: true }).exec();
+        if (!user) { return fail(); }
+        const authenticated = await UserSchema.authenticate(user, password);
+        if (!authenticated) { return fail(); }
+        const session = await SessionSchema.signIn(SessionModel, UserModel, request.session, user._id);
+        const publicSession = SessionSchema.makePublicSession(session);
+        return basicResponse(201, session, makeJsonResponseBody(publicSession));
       }
     };
   },
@@ -53,11 +56,12 @@ export const resource: Resource = {
       async transformRequest({ body }) {
         return body;
       },
-      async respond(request): Promise<Response<ReadOneResponseBody, SessionSchema.AppSession>> {
+      async respond(request): Promise<Response<ReadOneResponseBody, Session>> {
         if (!permissions.readOneSession(request.session, request.params.id)) {
           return basicResponse(401, request.session, makeJsonResponseBody(null));
         } else {
-          return basicResponse(200, request.session, makeJsonResponseBody(request.session));
+          const publicSession = SessionSchema.makePublicSession(request.session);
+          return basicResponse(200, request.session, makeJsonResponseBody(publicSession));
         }
       }
     };
@@ -70,12 +74,13 @@ export const resource: Resource = {
       async transformRequest({ body }) {
         return body;
       },
-      async respond(request): Promise<Response<DeleteResponseBody, SessionSchema.AppSession>> {
+      async respond(request): Promise<Response<DeleteResponseBody, Session>> {
         if (!permissions.deleteSession(request.session, request.params.id)) {
           return basicResponse(401, request.session, makeJsonResponseBody(null));
         } else {
           const newSession = await SessionSchema.signOut(SessionModel, request.session);
-          return basicResponse(200, newSession, makeJsonResponseBody(newSession));
+          const publicSession = SessionSchema.makePublicSession(newSession);
+          return basicResponse(200, newSession, makeJsonResponseBody(publicSession));
         }
       }
     }
