@@ -21,7 +21,7 @@ const FALLBACK_NAME = 'No Name Provided';
 
 type TableCellData
   = ADT<'userType', UserType>
-  | ADT<'name', { href: string, text: string }>
+  | ADT<'name', { userId: string, text: string }>
   | ADT<'email', string>
   | ADT<'acceptedTerms', boolean>;
 
@@ -35,7 +35,7 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
     case 'userType':
       return wrap(userTypeToTitleCase(data.value));
     case 'name':
-      return wrap((<a href={data.value.href}>{data.value.text}</a>));
+      return wrap((<Link route={{ tag: 'profile', value: { profileUserId: data.value.userId } }}>{data.value.text}</Link>));
     case 'email':
       return wrap(data.value);
     case 'acceptedTerms':
@@ -262,8 +262,7 @@ function tableBodyRows(users: PublicUser[]): Array<Array<TableComponent.TDSpec<T
       TableComponent.makeTDSpec({
         tag: 'name' as 'name',
         value: {
-          // TODO after refactoring <Link>, use it here somehow.
-          href: `/profiles/${user._id}`,
+          userId: user._id,
           text: profileToName(user.profile) || FALLBACK_NAME
         }
       }),

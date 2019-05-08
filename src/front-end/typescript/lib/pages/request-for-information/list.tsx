@@ -25,7 +25,7 @@ type TableCellData
   = ADT<'rfiNumber', string>
   | ADT<'publishDate', Date>
   | ADT<'status', RfiStatus | null>
-  | ADT<'title', { href: string, text: string }>
+  | ADT<'title', { rfiId: string, text: string, edit: boolean }>
   | ADT<'publicSectorEntity', string>
   | ADT<'lastUpdated', Date>
   | ADT<'closingDate', Date>
@@ -41,7 +41,12 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
     case 'rfiNumber':
       return wrap(data.value);
     case 'title':
-      return wrap((<a href={data.value.href}>{data.value.text}</a>), true);
+      const routeParams = { rfiId: data.value.rfiId };
+      const rfiRoute: Route
+        = data.value.edit
+        ? { tag: 'requestForInformationEdit', value: routeParams }
+        : { tag: 'requestForInformationView', value: routeParams };
+      return wrap((<Link route={rfiRoute}>{data.value.text}</Link>), true);
     case 'publicSectorEntity':
       return wrap(data.value, true);
     case 'status':
@@ -324,9 +329,9 @@ function programStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.TDSp
       TableComponent.makeTDSpec({
         tag: 'title' as 'title',
         value: {
-          // TODO after refactoring <Link>, use it here somehow.
-          href: `/requests-for-information/${rfi._id}/edit`,
-          text: version.title
+          rfiId: rfi._id,
+          text: version.title,
+          edit: true
         }
       }),
       TableComponent.makeTDSpec({ tag: 'publicSectorEntity' as 'publicSectorEntity', value: version.publicSectorEntity }),
@@ -347,9 +352,9 @@ function nonProgramStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.T
       TableComponent.makeTDSpec({
         tag: 'title' as 'title',
         value: {
-          // TODO after refactoring <Link>, use it here somehow.
-          href: `/requests-for-information/${rfi._id}/view`,
-          text: version.title
+          rfiId: rfi._id,
+          text: version.title,
+          edit: false
         }
       }),
       TableComponent.makeTDSpec({ tag: 'closingDate' as 'closingDate', value: version.closingAt }),
