@@ -215,7 +215,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 const view: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
-  if (!state.valid || !state.valid.rfi.latestVersion) { return null; }
+  if (!state.valid) { return null; }
   const dispatchRfiForm: Dispatch<RfiForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'rfiForm' as 'rfiForm', value }));
   const rfi = state.valid.rfi;
   const version = state.valid.rfi.latestVersion;
@@ -263,7 +263,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getAlerts(state) {
     return {
       ...emptyPageAlerts(),
-      errors: !state.valid || !state.valid.rfi.latestVersion ? [ERROR_MESSAGE] : []
+      errors: !state.valid ? [ERROR_MESSAGE] : []
     };
   },
   getMetadata() {

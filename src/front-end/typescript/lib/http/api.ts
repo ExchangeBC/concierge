@@ -295,7 +295,7 @@ interface RawRfiVersion extends Omit<RfiResource.PublicVersion, 'createdAt' | 'c
 interface RawRfi extends Omit<RfiResource.PublicRfi, 'createdAt' | 'publishedAt' | 'latestVersion'> {
   createdAt: string;
   publishedAt: string;
-  latestVersion?: RawRfiVersion;
+  latestVersion: RawRfiVersion;
 }
 
 function rawRfiToPublicRfi(raw: RawRfi): RfiResource.PublicRfi {
@@ -303,7 +303,7 @@ function rawRfiToPublicRfi(raw: RawRfi): RfiResource.PublicRfi {
     ...raw,
     createdAt: new Date(raw.createdAt),
     publishedAt: new Date(raw.publishedAt),
-    latestVersion: raw.latestVersion && {
+    latestVersion: {
       ...raw.latestVersion,
       createdAt: new Date(raw.latestVersion.createdAt),
       closingAt: new Date(raw.latestVersion.closingAt),

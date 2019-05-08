@@ -315,7 +315,6 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   // If the user is in the correct state, render the response form.
   const validState = state.init.value;
   const { rfi, attachments } = validState;
-  if (!rfi.latestVersion) { return null; }
   const version = rfi.latestVersion;
   return (
     <Container className='flex-grow-1'>

@@ -58,32 +58,31 @@ export async function makePublicRfi(UserModel: UserSchema.Model, FileModel: File
   const isProgramStaff = permissions.isProgramStaff(session);
   const latestVersion = getLatestVersion(rfi);
   let latestPublicVersion: PublicVersion | undefined;
-  if (latestVersion) {
-    const attachments = await Promise.all(latestVersion.attachments.map(fileId => FileSchema.findPublicFileByIdUnsafely(FileModel, fileId)));
-    const programStaffContact = await UserSchema.findPublicUserByIdUnsafely(UserModel, latestVersion.programStaffContact);
-    const programStaffProfile = programStaffContact.profile as ProgramStaffProfile;
-    latestPublicVersion = {
-      createdAt: latestVersion.createdAt,
-      closingAt: latestVersion.closingAt,
-      rfiNumber: latestVersion.rfiNumber,
-      title: latestVersion.title,
-      description: latestVersion.description,
-      publicSectorEntity: latestVersion.publicSectorEntity,
-      categories: latestVersion.categories,
-      discoveryDay: latestVersion.discoveryDay,
-      addenda: latestVersion.addenda,
-      attachments,
-      // We expect the program staff and buyer contact information to be present
-      // whether or not they are `active`.
-      programStaffContact: {
-        _id: isProgramStaff ? programStaffContact._id : undefined,
-        firstName: programStaffProfile.firstName,
-        lastName: programStaffProfile.lastName,
-        positionTitle: programStaffProfile.positionTitle
-      },
-      buyerContact: isProgramStaff ? await UserSchema.findPublicUserByIdUnsafely(UserModel, latestVersion.buyerContact) : undefined
-    };
-  }
+  if (!latestVersion) { throw new Error('RFI does not have at least one version'); }
+  const attachments = await Promise.all(latestVersion.attachments.map(fileId => FileSchema.findPublicFileByIdUnsafely(FileModel, fileId)));
+  const programStaffContact = await UserSchema.findPublicUserByIdUnsafely(UserModel, latestVersion.programStaffContact);
+  const programStaffProfile = programStaffContact.profile as ProgramStaffProfile;
+  latestPublicVersion = {
+    createdAt: latestVersion.createdAt,
+    closingAt: latestVersion.closingAt,
+    rfiNumber: latestVersion.rfiNumber,
+    title: latestVersion.title,
+    description: latestVersion.description,
+    publicSectorEntity: latestVersion.publicSectorEntity,
+    categories: latestVersion.categories,
+    discoveryDay: latestVersion.discoveryDay,
+    addenda: latestVersion.addenda,
+    attachments,
+    // We expect the program staff and buyer contact information to be present
+    // whether or not they are `active`.
+    programStaffContact: {
+      _id: isProgramStaff ? programStaffContact._id : undefined,
+      firstName: programStaffProfile.firstName,
+      lastName: programStaffProfile.lastName,
+      positionTitle: programStaffProfile.positionTitle
+    },
+    buyerContact: isProgramStaff ? await UserSchema.findPublicUserByIdUnsafely(UserModel, latestVersion.buyerContact) : undefined
+  };
   let discoveryDayResponses: PublicDiscoveryDayResponse[] | undefined;
   if (isProgramStaff) {
     discoveryDayResponses = rfi.discoveryDayResponses.map(v => makePublicDiscoveryDayResponse(v));

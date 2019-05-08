@@ -154,11 +154,11 @@ function rfiMatchesStatus(rfi: Rfi, filterStatus: RfiStatus | null): boolean {
 }
 
 function rfiMatchesCategory(rfi: PublicRfi, category: string): boolean {
-  return !!rfi.latestVersion && rfi.latestVersion.categories.includes(category);
+  return rfi.latestVersion.categories.includes(category);
 }
 
 function rfiMatchesSearch(rfi: PublicRfi, query: RegExp): boolean {
-  return !!rfi.latestVersion && !!rfi.latestVersion.title.match(query);
+  return !!rfi.latestVersion.title.match(query);
 }
 
 function updateAndQuery(state: Immutable<State>, key?: string, value?: string): Immutable<State> {
@@ -318,7 +318,6 @@ const nonProgramStaffTableHeadCells: TableComponent.THSpec[] = [
 function programStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.TDSpec<TableCellData>>> {
   return rfis.map(rfi => {
     const version = rfi.latestVersion;
-    if (!version) { return []; }
     return [
       TableComponent.makeTDSpec({ tag: 'rfiNumber' as 'rfiNumber', value: version.rfiNumber }),
       TableComponent.makeTDSpec({ tag: 'status' as 'status', value: rfi.status }),
@@ -341,7 +340,6 @@ function programStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.TDSp
 function nonProgramStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.TDSpec<TableCellData>>> {
   return rfis.map(rfi => {
     const version = rfi.latestVersion;
-    if (!version) { return []; }
     return [
       TableComponent.makeTDSpec({ tag: 'rfiNumber' as 'rfiNumber', value: version.rfiNumber }),
       TableComponent.makeTDSpec({ tag: 'publishDate' as 'publishDate', value: rfi.publishedAt }),

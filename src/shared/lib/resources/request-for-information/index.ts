@@ -28,7 +28,7 @@ export interface PublicRfi {
   _id: string;
   createdAt: Date;
   publishedAt: Date;
-  latestVersion?: PublicVersion;
+  latestVersion: PublicVersion;
   discoveryDayResponses?: PublicDiscoveryDayResponse[]; // Only defined for Program Staff.
 }
 
@@ -74,8 +74,6 @@ export function rfiClosingAtToRfiStatus(closingAt: Date): RfiStatus {
   }
 }
 
-export function rfiToRfiStatus(rfi: PublicRfi): RfiStatus | null {
-  const { latestVersion } = rfi;
-  if (!latestVersion) { return null; }
-  return rfiClosingAtToRfiStatus(latestVersion.closingAt);
+export function rfiToRfiStatus(rfi: PublicRfi): RfiStatus {
+  return rfiClosingAtToRfiStatus(rfi.latestVersion.closingAt);
 }

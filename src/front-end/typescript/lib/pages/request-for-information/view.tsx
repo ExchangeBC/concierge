@@ -63,9 +63,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
     case 'valid':
       const rfi = rfiResult.value;
       // Show newest addenda first.
-      if (rfi.latestVersion) {
-        rfi.latestVersion.addenda.reverse();
-      }
+      rfi.latestVersion.addenda.reverse();
       // Determine if the user has already sent a Discovery Day Response,
       // if they are a Vendor.
       let ddr: DdrResource.PublicDiscoveryDayResponse | undefined;
@@ -90,7 +88,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
         if (mightViewResponseButtons && rfiStatus === RfiStatus.Expired) {
           infoAlerts.push('This RFI is no longer accepting responses.');
         }
-        const updatedAt = rfi.latestVersion && rfi.latestVersion.createdAt;
+        const updatedAt = rfi.latestVersion.createdAt;
         if (rfiStatus === RfiStatus.Open && updatedAt && compareDates(rfi.publishedAt, updatedAt) === -1) {
           infoAlerts.push(`This RFI was last updated on ${formatDate(updatedAt)}.`);
         }
@@ -192,7 +190,6 @@ const Detail: View<DetailProps> = ({ title, values }) => {
 
 const Details: View<{ rfi: PublicRfi }> = ({ rfi }) => {
   const version = rfi.latestVersion;
-  if (!version) { return null; }
   const contactValues = [
     `${version.programStaffContact.firstName} ${version.programStaffContact.lastName}`,
     version.programStaffContact.positionTitle,
@@ -306,7 +303,7 @@ function showButtons(rfiStatus: RfiStatus | null, userType?: UserType): boolean 
 const viewBottomBar: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   // Do not show buttons for previews.
-  if (state.preview || !state.rfi || !state.rfi.latestVersion) { return null; }
+  if (state.preview || !state.rfi) { return null; }
   // Only show these buttons for Vendors and unauthenticated users.
   const rfiStatus = rfiToRfiStatus(state.rfi);
   if (!showButtons(rfiStatus, state.userType)) { return null; }
@@ -339,7 +336,7 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
 
 const view: ComponentView<State, Msg> = props => {
   const { state } = props;
-  if (!state.rfi || !state.rfi.latestVersion) { return null; }
+  if (!state.rfi) { return null; }
   const rfi = state.rfi;
   const version = state.rfi.latestVersion;
   return (
@@ -373,7 +370,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     return {
       ...emptyPageAlerts(),
       info: state.infoAlerts,
-      errors: !state.rfi || !state.rfi.latestVersion ? [ERROR_MESSAGE] : []
+      errors: !state.rfi ? [ERROR_MESSAGE] : []
     };
   },
   getMetadata(state) {
