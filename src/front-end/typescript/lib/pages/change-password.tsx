@@ -113,7 +113,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         state,
         async (state, dispatch) => {
           const result = await api.updateUser({
-            _id: state.userId,
+            id: state.userId,
             currentPassword: state.currentPassword.value,
             newPassword: state.newPassword.value
           });

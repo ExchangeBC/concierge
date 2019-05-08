@@ -9,7 +9,7 @@ export const request: RequestFunction = (method, url, data) => {
     url,
     data,
     validateStatus(code) {
-      return (code >= 200 && code < 300) || code === 400 || code === 401;
+      return true;
     }
   });
 }

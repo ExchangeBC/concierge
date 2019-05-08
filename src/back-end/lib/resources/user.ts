@@ -10,12 +10,10 @@ import { validateEmail, validatePassword } from 'back-end/lib/validators';
 import { get, isBoolean, isObject } from 'lodash';
 import * as mongoose from 'mongoose';
 import { getBoolean, getString } from 'shared/lib';
-import { CreateValidationErrors, PublicUser, UpdateValidationErrors } from 'shared/lib/resources/user';
+import { CreateRequestBody, CreateValidationErrors, PublicUser, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/user';
 import { PaginatedList } from 'shared/lib/types';
-import { allValid, getInvalidValue, invalid, valid, validateUserType, ValidOrInvalid } from 'shared/lib/validators';
+import { allValid, getInvalidValue, invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 import { validateProfile } from 'shared/lib/validators/profile';
-
-type CreateRequestBody = ValidOrInvalid<UserSchema.Data, CreateValidationErrors>;
 
 type CreateResponseBody = JsonResponseBody<PublicUser | CreateValidationErrors>;
 
@@ -23,13 +21,12 @@ type ReadOneResponseBody = JsonResponseBody<PublicUser | null>;
 
 type ReadManyResponseBody = JsonResponseBody<PaginatedList<PublicUser> | null>;
 
-type UpdateRequestBody = ValidOrInvalid<InstanceType<UserSchema.Model>, UpdateValidationErrors>;
-
 type UpdateResponseBody = JsonResponseBody<PublicUser | UpdateValidationErrors>;
 
 type DeleteResponseBody = JsonResponseBody<null>;
 
-async function validateCreateRequestBody(Model: UserSchema.Model, email: string, password: string, acceptedTerms: boolean, profile: object, createdBy?: mongoose.Types.ObjectId): Promise<CreateRequestBody> {
+async function validateCreateRequestBody(Model: UserSchema.Model, body: CreateRequestBody, createdBy?: mongoose.Types.ObjectId): Promise<ValidOrInvalid<UserSchema.Data, CreateValidationErrors>> {
+  const { email, password, profile, acceptedTerms = false } = body;
   const validatedEmail = await validateEmail(Model, email);
   const validatedPassword = await validatePassword(password);
   const validatedProfile = validateProfile(profile);
@@ -55,7 +52,9 @@ async function validateCreateRequestBody(Model: UserSchema.Model, email: string,
 }
 
 // TODO break this up into smaller functions.
-async function validateUpdateRequestBody(Model: UserSchema.Model, id: string, email?: string, profile?: object, acceptedTerms?: boolean, newPassword?: string, currentPassword?: string): Promise<UpdateRequestBody> {
+async function validateUpdateRequestBody(Model: UserSchema.Model, body: UpdateRequestBody): Promise<ValidOrInvalid<InstanceType<UserSchema.Model>, UpdateValidationErrors>> {
+  const { id, currentPassword, newPassword, profile, acceptedTerms } = body;
+  let { email } = body;
   // Does the user exist? Is their account active?
   const user = await Model.findById(id);
   if (!user || !user.active) {
@@ -137,27 +136,27 @@ const resource: Resource = {
       async transformRequest(request) {
         // TODO bad request response if body is not json
         const body = request.body.tag === 'json' ? request.body.value : {};
-        const profile = isObject(body.profile) ? body.profile : {};
-        const validatedUserType = validateUserType(getString(profile, 'type'));
-        if (validatedUserType.tag === 'invalid' || !permissions.createUser(request.session, validatedUserType.value)) {
-          return invalid({
-            permissions: [permissions.ERROR_MESSAGE]
-          });
-        }
-        const email = getString(body, 'email');
-        const password = getString(body, 'password');
-        const acceptedTerms = getBoolean(body, 'acceptedTerms');
-        const createdBy = get(request.session.user, 'id');
-        const validatedBody = await validateCreateRequestBody(UserModel, email, password, acceptedTerms, profile, createdBy);
-        return validatedBody;
+        return {
+          email: getString(body, 'email'),
+          password: getString(body, 'password'),
+          acceptedTerms: getBoolean(body, 'acceptedTerms'),
+          profile: isObject(body.profile) ? body.profile : {}
+        };
       },
       async respond(request): Promise<Response<CreateResponseBody, AppSession>> {
-        switch (request.body.tag) {
+        if (!permissions.createUser(request.session, request.body.profile.type)) {
+          return basicResponse(401, request.session, makeJsonResponseBody({
+            permissions: [permissions.ERROR_MESSAGE]
+          }));
+        }
+        const createdBy = get(request.session.user, 'id');
+        const validatedBody = await validateCreateRequestBody(UserModel, request.body, createdBy);
+        switch (validatedBody.tag) {
           case 'invalid':
-            const invalidCode = request.body.value.permissions ? 401 : 400;
-            return basicResponse(invalidCode, request.session, makeJsonResponseBody(request.body.value));
+            const invalidCode = validatedBody.value.permissions ? 401 : 400;
+            return basicResponse(invalidCode, request.session, makeJsonResponseBody(validatedBody.value));
           case 'valid':
-            const body = request.body.value;
+            const body = validatedBody.value;
             const user = new UserModel(body);
             await user.save();
             // Send notification email.
@@ -227,29 +226,30 @@ const resource: Resource = {
     const UserModel = Models.User as UserSchema.Model;
     return {
       async transformRequest(request) {
-        const id = request.params.id;
-        if (!permissions.updateUser(request.session, id)) {
-          return invalid({
-            permissions: [permissions.ERROR_MESSAGE]
-          });
-        }
         // TODO bad request response if body is not json
         const body = request.body.tag === 'json' ? request.body.value : {};
-        const email = getString(body, 'email') || undefined;
-        const profile = isObject(body.profile) ? body.profile : undefined;
-        const acceptedTerms = isBoolean(body.acceptedTerms) ? body.acceptedTerms : undefined;
-        const newPassword = getString(body, 'newPassword') || undefined;
-        const currentPassword = getString(body, 'currentPassword') || undefined;
-        const validatedBody = await validateUpdateRequestBody(UserModel, id, email, profile, acceptedTerms, newPassword, currentPassword);
-        return validatedBody;
+        return {
+          id: request.params.id,
+          email: getString(body, 'email') || undefined,
+          profile: isObject(body.profile) ? body.profile : undefined,
+          acceptedTerms: isBoolean(body.acceptedTerms) ? body.acceptedTerms : undefined,
+          newPassword: getString(body, 'newPassword') || undefined,
+          currentPassword: getString(body, 'currentPassword') || undefined
+        };
       },
       async respond(request): Promise<Response<UpdateResponseBody, AppSession>> {
-        switch (request.body.tag) {
+        if (!permissions.updateUser(request.session, request.body.id)) {
+          return basicResponse(401, request.session, makeJsonResponseBody({
+            permissions: [permissions.ERROR_MESSAGE]
+          }));
+        }
+        const validatedBody = await validateUpdateRequestBody(UserModel, request.body);
+        switch (validatedBody.tag) {
           case 'invalid':
-            const invalidCode = request.body.value.permissions ? 401 : 400;
-            return basicResponse(invalidCode, request.session, makeJsonResponseBody(request.body.value));
+            const invalidCode = validatedBody.value.permissions ? 401 : 400;
+            return basicResponse(invalidCode, request.session, makeJsonResponseBody(validatedBody.value));
           case 'valid':
-            const user = request.body.value;
+            const user = validatedBody.value;
             await user.save();
             return basicResponse(200, request.session, makeJsonResponseBody(UserSchema.makePublicUser(user)));
         }

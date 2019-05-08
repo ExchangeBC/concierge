@@ -122,7 +122,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         state,
         async (state, dispatch) => {
           const result = await api.updateUser({
-            _id: state.userId,
+            id: state.userId,
             acceptedTerms: true
           });
           switch (result.tag) {

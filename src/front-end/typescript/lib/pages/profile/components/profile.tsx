@@ -190,7 +190,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
           state,
           async () => {
             const result = await api.updateUser({
-              _id: state.profileUser._id,
+              id: state.profileUser._id,
               email: state.email.value,
               profile: Profile.getValues(state.profile)
             });
