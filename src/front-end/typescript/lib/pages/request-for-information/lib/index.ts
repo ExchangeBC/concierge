@@ -34,7 +34,7 @@ export async function uploadFiles(files: FileMulti.Value[]): Promise<ArrayValida
   });
 }
 
-export async function makeRequestBody(state: RfiForm.State): Promise<ValidOrInvalid<api.CreateRfiRequestBody, RfiResource.CreateValidationErrors>> {
+export async function makeRequestBody(state: RfiForm.State): Promise<ValidOrInvalid<RfiResource.CreateRequestBody, RfiResource.CreateValidationErrors>> {
   const values = RfiForm.getValues(state);
   const uploadedFiles = await uploadFiles(values.attachments);
   switch (uploadedFiles.tag) {

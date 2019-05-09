@@ -70,7 +70,7 @@ export interface State {
   addenda: Immutable<LongTextMulti.State>;
 };
 
-export interface Values extends Omit<api.CreateRfiRequestBody, 'attachments'> {
+export interface Values extends Omit<RfiResource.CreateRequestBody, 'attachments'> {
   attachments: FileMulti.Value[];
 }
 

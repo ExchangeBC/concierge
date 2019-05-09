@@ -8,15 +8,9 @@ import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonRespons
 import { validateRfiId, validateUserId } from 'back-end/lib/validators';
 import * as mongoose from 'mongoose';
 import { getString } from 'shared/lib';
-import { CreateValidationErrors, PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
+import { CreateRequestBody, CreateValidationErrors, PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
 import { profileToName } from 'shared/lib/types';
-import { ADT, RfiStatus, UserType } from 'shared/lib/types';
-
-type CreateRequestBody
-  = ADT<201, PublicDiscoveryDayResponse>
-  | ADT<200, PublicDiscoveryDayResponse>
-  | ADT<401, CreateValidationErrors>
-  | ADT<400, CreateValidationErrors>;
+import { RfiStatus, UserType } from 'shared/lib/types';
 
 type CreateResponseBody = JsonResponseBody<PublicDiscoveryDayResponse | CreateValidationErrors>;
 
@@ -46,41 +40,29 @@ export const resource: Resource = {
     const UserModel = Models.User;
     return {
       async transformRequest(request) {
+        return {
+          rfiId: getString(request.body.value, 'rfiId')
+        };
+      },
+      async respond(request): Promise<Response<CreateResponseBody, Session>> {
+        const respond = (code: number, body: PublicDiscoveryDayResponse | CreateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
         if (!permissions.createDiscoveryDayResponse(request.session) || !request.session.user) {
-          return {
-            tag: 401 as 401,
-            value: {
-              permissions: [permissions.ERROR_MESSAGE]
-            }
-          };
-        }
-        if (request.body.tag !== 'json') {
-          return {
-            tag: 400 as 400,
-            value: {
-              contentType: ['Discovery Day Responses must be created with a JSON request.']
-            }
-          };
+          return respond(401, {
+            permissions: [permissions.ERROR_MESSAGE]
+          })
         }
         // Validate the RFI ID and session user ID.
-        const rawRfiId = getString(request.body.value, 'rfiId');
-        const validatedRfi = await validateRfiId(RfiModel, rawRfiId, [RfiStatus.Open, RfiStatus.Closed], true);
+        const validatedRfi = await validateRfiId(RfiModel, request.body.rfiId, [RfiStatus.Open, RfiStatus.Closed], true);
         if (validatedRfi.tag === 'invalid') {
-          return {
-            tag: 400 as 400,
-            value: {
-              rfiId: validatedRfi.value
-            }
-          };
+          return respond(400, {
+            rfiId: validatedRfi.value
+          });
         }
         const validatedVendor = await validateUserId(UserModel, request.session.user.id, UserType.Vendor, true);
         if (validatedVendor.tag === 'invalid') {
-          return {
-            tag: 400 as 400,
-            value: {
-              vendor: validatedVendor.value
-            }
-          };
+          return respond(400, {
+            vendor: validatedVendor.value
+          });
         }
         const rfi = validatedRfi.value;
         // Do not store duplicate responses.
@@ -88,10 +70,7 @@ export const resource: Resource = {
         const vendorId = vendor._id;
         const existingDdr = findDiscoveryDayResponse(rfi, vendorId);
         if (existingDdr) {
-          return {
-            tag: 200 as 200,
-            value: RfiSchema.makePublicDiscoveryDayResponse(existingDdr)
-          };
+          return respond(200, RfiSchema.makePublicDiscoveryDayResponse(existingDdr));
         }
         // Create the DDR.
         const ddr = {
@@ -123,13 +102,7 @@ export const resource: Resource = {
             vendorId
           });
         }
-        return {
-          tag: 201 as 201,
-          value: publicDdr
-        };
-      },
-      async respond(request): Promise<Response<CreateResponseBody, Session>> {
-        return basicResponse(request.body.tag, request.session, makeJsonResponseBody(request.body.value));
+        return respond(201, publicDdr);
       }
     };
   },

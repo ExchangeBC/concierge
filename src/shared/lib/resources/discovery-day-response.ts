@@ -4,6 +4,10 @@ export interface PublicDiscoveryDayResponse {
   vendor: string;
 }
 
+export interface CreateRequestBody {
+  rfiId: string;
+}
+
 export interface CreateValidationErrors {
   permissions?: string[];
   contentType?: string[];

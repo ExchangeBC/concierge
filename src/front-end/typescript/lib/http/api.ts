@@ -230,22 +230,7 @@ function rawRfiToPublicRfi(raw: RawRfi): RfiResource.PublicRfi {
   };
 }
 
-export interface CreateRfiRequestBody {
-  rfiNumber: string;
-  title: string;
-  publicSectorEntity: string;
-  description: string;
-  discoveryDay: boolean;
-  closingDate: string;
-  closingTime: string;
-  buyerContact: string;
-  programStaffContact: string;
-  categories: string[];
-  attachments: string[];
-  addenda: string[];
-}
-
-export async function createRfi(rfi: CreateRfiRequestBody): Promise<ValidOrInvalid<RfiResource.PublicRfi, RfiResource.CreateValidationErrors>> {
+export async function createRfi(rfi: RfiResource.CreateRequestBody): Promise<ValidOrInvalid<RfiResource.PublicRfi, RfiResource.CreateValidationErrors>> {
   const response = await request(HttpMethod.Post, 'requestsForInformation', rfi);
   switch (response.status) {
     case 201:
@@ -258,7 +243,7 @@ export async function createRfi(rfi: CreateRfiRequestBody): Promise<ValidOrInval
   }
 }
 
-export async function updateRfi(rfiId: string, rfi: CreateRfiRequestBody): Promise<ValidOrInvalid<RfiResource.PublicRfi, RfiResource.UpdateValidationErrors>> {
+export async function updateRfi(rfiId: string, rfi: RfiResource.CreateRequestBody): Promise<ValidOrInvalid<RfiResource.PublicRfi, RfiResource.UpdateValidationErrors>> {
   const response = await request(HttpMethod.Put, `requestsForInformation/${rfiId}`, rfi);
   switch (response.status) {
     case 200:
@@ -300,7 +285,7 @@ export async function readManyRfis(): Promise<ValidOrInvalid<ReadManyRfiResponse
   }
 }
 
-export async function createRfiPreview(rfi: CreateRfiRequestBody): Promise<ValidOrInvalid<RfiResource.PublicRfi, RfiResource.CreateValidationErrors>> {
+export async function createRfiPreview(rfi: RfiResource.CreateRequestBody): Promise<ValidOrInvalid<RfiResource.PublicRfi, RfiResource.CreateValidationErrors>> {
   const response = await request(HttpMethod.Post, 'requestForInformationPreviews', rfi);
   switch (response.status) {
     case 201:
@@ -335,11 +320,7 @@ function rawDdrToPublicDdr(raw: RawDdr): DdrResource.PublicDiscoveryDayResponse 
   };
 }
 
-export interface CreateDdrRequestBody {
-  rfiId: string;
-}
-
-export async function createDdr(ddr: CreateDdrRequestBody): Promise<ValidOrInvalid<DdrResource.PublicDiscoveryDayResponse, DdrResource.CreateValidationErrors>> {
+export async function createDdr(ddr: DdrResource.CreateRequestBody): Promise<ValidOrInvalid<DdrResource.PublicDiscoveryDayResponse, DdrResource.CreateValidationErrors>> {
   const response = await request(HttpMethod.Post, 'discoveryDayResponses', ddr);
   switch (response.status) {
     case 201:
@@ -382,12 +363,7 @@ function rawRfiResponseToPublicRfiResponse(raw: RawRfiResponse): RfiResponseReso
   };
 }
 
-export interface CreateRfiResponseRequestBody {
-  rfiId: string;
-  attachments: string[];
-}
-
-export async function createRfiResponse(rfiResponse: CreateRfiResponseRequestBody): Promise<ValidOrInvalid<RfiResponseResource.PublicRfiResponse, RfiResponseResource.CreateValidationErrors>> {
+export async function createRfiResponse(rfiResponse: RfiResponseResource.CreateRequestBody): Promise<ValidOrInvalid<RfiResponseResource.PublicRfiResponse, RfiResponseResource.CreateValidationErrors>> {
   const response = await request(HttpMethod.Post, 'requestForInformationResponses', rfiResponse);
   switch (response.status) {
     case 201:

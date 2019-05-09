@@ -10,6 +10,11 @@ export interface PublicRfiResponse {
   attachments: PublicFile[];
 }
 
+export interface CreateRequestBody {
+  rfiId: string;
+  attachments: string[];
+}
+
 export interface CreateValidationErrors {
   permissions?: string[];
   contentType?: string[];

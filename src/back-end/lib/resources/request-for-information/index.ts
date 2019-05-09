@@ -8,31 +8,15 @@ import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonRespons
 import { validateFileIdArray, validateUserId } from 'back-end/lib/validators';
 import { get, isObject } from 'lodash';
 import { getString, getStringArray } from 'shared/lib';
-import { CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicRfi, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
-import { ADT, PaginatedList, UserType } from 'shared/lib/types';
+import { CreateRequestBody, CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicRfi, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
+import { PaginatedList, UserType } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, valid, validateBoolean, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
 import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
 
-type CreateRequestBody
-  = ADT<201, PublicRfi>
-  | ADT<401, CreateValidationErrors>
-  | ADT<400, CreateValidationErrors>;
-
-async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, raw: object, session: Session): Promise<ValidOrInvalid<RfiSchema.Version, CreateValidationErrors>> {
+async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, body: CreateRequestBody, session: Session): Promise<ValidOrInvalid<RfiSchema.Version, CreateValidationErrors>> {
   // Get raw values.
   const createdBy = getString(session.user, 'id');
-  const closingDate = getString(raw, 'closingDate');
-  const closingTime = getString(raw, 'closingTime');
-  const rfiNumber = getString(raw, 'rfiNumber');
-  const title = getString(raw, 'title');
-  const description = getString(raw, 'description');
-  const publicSectorEntity = getString(raw, 'publicSectorEntity');
-  const categories = getStringArray(raw, 'categories');
-  const discoveryDay = get(raw, 'discoveryDay');
-  const addenda = getStringArray(raw, 'addenda');
-  const attachments = getStringArray(raw, 'attachments');
-  const buyerContact = getString(raw, 'buyerContact');
-  const programStaffContact = getString(raw, 'programStaffContact');
+  const { rfiNumber, title, publicSectorEntity, description, discoveryDay, closingDate, closingTime, buyerContact, programStaffContact, categories, attachments, addenda } = body;
   // Validate individual values.
   const validatedCreatedBy = await validateUserId(UserModel, createdBy, UserType.ProgramStaff);
   const validatedClosingDate = validateClosingDate(closingDate);
@@ -101,12 +85,6 @@ type ReadOneResponseBody = JsonResponseBody<PublicRfi | string[]>;
 
 type ReadManyResponseBody = JsonResponseBody<PaginatedList<PublicRfi> | string[]>;
 
-type UpdateRequestBody
-  = ADT<200, PublicRfi>
-  | ADT<401, UpdateValidationErrors>
-  | ADT<404, UpdateValidationErrors>
-  | ADT<400, UpdateValidationErrors>;
-
 type UpdateResponseBody = JsonResponseBody<PublicRfi | UpdateValidationErrors>;
 
 export type Resource<RequiredModels extends keyof AvailableModels> = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, UpdateRequestBody, Session>;
@@ -127,24 +105,30 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
       const UserModel = Models.User;
       return {
         async transformRequest(request) {
+          const body = request.body.tag === 'json' && isObject(request.body.value) ? request.body.value : {};
+          return {
+            closingDate: getString(body, 'closingDate'),
+            closingTime: getString(body, 'closingTime'),
+            rfiNumber: getString(body, 'rfiNumber'),
+            title: getString(body, 'title'),
+            description: getString(body, 'description'),
+            publicSectorEntity: getString(body, 'publicSectorEntity'),
+            categories: getStringArray(body, 'categories'),
+            discoveryDay: get(body, 'discoveryDay'),
+            addenda: getStringArray(body, 'addenda'),
+            attachments: getStringArray(body, 'attachments'),
+            buyerContact: getString(body, 'buyerContact'),
+            programStaffContact: getString(body, 'programStaffContact')
+          };
+        },
+        async respond(request): Promise<Response<CreateResponseBody, Session>> {
+          const respond = (code: number, body: PublicRfi | CreateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
           if (!globalPermissions(request.session) || !permissions.createRfi(request.session)) {
-            return {
-              tag: 401 as 401,
-              value: {
-                permissions: [permissions.ERROR_MESSAGE]
-              }
-            };
+            return respond(401, {
+              permissions: [permissions.ERROR_MESSAGE]
+            });
           }
-          if (request.body.tag !== 'json') {
-            return {
-              tag: 400 as 400,
-              value: {
-                contentType: ['Requests for Information must be created with a JSON request.']
-              }
-            };
-          }
-          const rawBody = isObject(request.body.value) ? request.body.value : {};
-          const validatedVersion = await validateCreateRequestBody(RfiModel, UserModel, FileModel, rawBody, request.session);
+          const validatedVersion = await validateCreateRequestBody(RfiModel, UserModel, FileModel, request.body, request.session);
           switch (validatedVersion.tag) {
             case 'valid':
               const version = validatedVersion.value;
@@ -160,19 +144,10 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
                 discoveryDayResponses: []
               });
               await rfi.save();
-              return {
-                tag: 201 as 201,
-                value: await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session)
-              };
+              return respond(201, await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session));
             case 'invalid':
-              return {
-                tag: 400 as 400,
-                value: validatedVersion.value
-              };
+              return respond(400, validatedVersion.value);
           }
-        },
-        async respond(request): Promise<Response<CreateResponseBody, Session>> {
-          return basicResponse(request.body.tag, request.session, makeJsonResponseBody(request.body.value));
         }
       };
     },
@@ -243,33 +218,36 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
       const UserModel = Models.User;
       return {
         async transformRequest(request) {
+          const body = request.body.tag === 'json' && isObject(request.body.value) ? request.body.value : {};
+          return {
+            closingDate: getString(body, 'closingDate'),
+            closingTime: getString(body, 'closingTime'),
+            rfiNumber: getString(body, 'rfiNumber'),
+            title: getString(body, 'title'),
+            description: getString(body, 'description'),
+            publicSectorEntity: getString(body, 'publicSectorEntity'),
+            categories: getStringArray(body, 'categories'),
+            discoveryDay: get(body, 'discoveryDay'),
+            addenda: getStringArray(body, 'addenda'),
+            attachments: getStringArray(body, 'attachments'),
+            buyerContact: getString(body, 'buyerContact'),
+            programStaffContact: getString(body, 'programStaffContact')
+          };
+        },
+        async respond(request): Promise<Response<UpdateResponseBody, Session>> {
+          const respond = (code: number, body: PublicRfi | UpdateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
           if (!globalPermissions(request.session) || !permissions.updateRfi(request.session)) {
-            return {
-              tag: 401 as 401,
-              value: {
-                permissions: [permissions.ERROR_MESSAGE]
-              }
-            };
-          }
-          if (request.body.tag !== 'json') {
-            return {
-              tag: 400 as 400,
-              value: {
-                contentType: ['Requests for Information must be updated with a JSON request.']
-              }
-            };
+            return respond(401, {
+              permissions: [permissions.ERROR_MESSAGE]
+            });
           }
           const rfi = await RfiModel.findById(request.params.id);
           if (!rfi) {
-            return {
-              tag: 404 as 404,
-              value: {
-                rfiId: ['RFI not found']
-              }
-            };
+            return respond(404, {
+              rfiId: ['RFI not found']
+            });
           }
-          const rawBody = isObject(request.body.value) ? request.body.value : {};
-          const validatedVersion = await validateCreateRequestBody(RfiModel, UserModel, FileModel, rawBody, request.session);
+          const validatedVersion = await validateCreateRequestBody(RfiModel, UserModel, FileModel, request.body, request.session);
           switch (validatedVersion.tag) {
             case 'valid':
               const currentVersion: RfiSchema.Version | null = rfi.versions.reduce((acc: RfiSchema.Version | null, version) => {
@@ -307,19 +285,10 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
               // Persist the new version.
               rfi.versions.push(newVersion);
               await rfi.save();
-              return {
-                tag: 200 as 200,
-                value: await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session)
-              };
+              return respond(200, await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session));
             case 'invalid':
-              return {
-                tag: 400 as 400,
-                value: validatedVersion.value
-              };
+              return respond(400, validatedVersion.value);
           }
-        },
-        async respond(request): Promise<Response<UpdateResponseBody, Session>> {
-          return basicResponse(request.body.tag, request.session, makeJsonResponseBody(request.body.value));
         }
       };
     }

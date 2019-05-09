@@ -32,6 +32,21 @@ export interface PublicRfi {
   discoveryDayResponses?: PublicDiscoveryDayResponse[]; // Only defined for Program Staff.
 }
 
+export interface CreateRequestBody {
+  rfiNumber: string;
+  title: string;
+  publicSectorEntity: string;
+  description: string;
+  discoveryDay: boolean;
+  closingDate: string;
+  closingTime: string;
+  buyerContact: string;
+  programStaffContact: string;
+  categories: string[];
+  attachments: string[];
+  addenda: string[];
+}
+
 export interface CreateValidationErrors {
   permissions?: string[];
   contentType?: string[];
@@ -49,6 +64,8 @@ export interface CreateValidationErrors {
   buyerContact?: string[];
   programStaffContact?: string[];
 }
+
+export type UpdateRequestBody = CreateRequestBody;
 
 export interface UpdateValidationErrors extends CreateValidationErrors {
   rfiId?: string[];

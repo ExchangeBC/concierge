@@ -10,20 +10,14 @@ import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonRespons
 import { validateFileIdArray, validateRfiId, validateUserId } from 'back-end/lib/validators';
 import { isObject } from 'lodash';
 import { getString, getStringArray } from 'shared/lib';
-import { CreateValidationErrors, PublicRfiResponse } from 'shared/lib/resources/request-for-information/response';
-import { ADT, Omit, RfiStatus } from 'shared/lib/types';
+import { CreateRequestBody, CreateValidationErrors, PublicRfiResponse } from 'shared/lib/resources/request-for-information/response';
+import { Omit, RfiStatus } from 'shared/lib/types';
 import { getInvalidValue, invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
-type CreateRequestBody
-  = ADT<201, PublicRfiResponse>
-  | ADT<401, CreateValidationErrors>
-  | ADT<400, CreateValidationErrors>;
-
-async function validateCreateRequestBody(RfiResponseModel: RfiResponseSchema.Model, RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, raw: object, session: Session): Promise<ValidOrInvalid<InstanceType<RfiResponseSchema.Model>, CreateValidationErrors>> {
+async function validateCreateRequestBody(RfiResponseModel: RfiResponseSchema.Model, RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, body: CreateRequestBody, session: Session): Promise<ValidOrInvalid<InstanceType<RfiResponseSchema.Model>, CreateValidationErrors>> {
   // Get raw values.
   const createdBy = getString(session.user, 'id');
-  const rfiId = getString(raw, 'rfiId');
-  const attachments = getStringArray(raw, 'attachments');
+  const { rfiId, attachments } = body;
   // Validate individual values.
   const validatedCreatedBy = await validateUserId(UserModel, createdBy);
   const validatedRfi = await validateRfiId(RfiModel, rfiId, [RfiStatus.Open, RfiStatus.Closed], true);
@@ -65,24 +59,20 @@ export const resource: Resource = {
     const UserModel = Models.User;
     return {
       async transformRequest(request) {
+        const body = isObject(request.body.value) ? request.body.value : {};
+        return {
+          rfiId: getString(body, 'rfiId'),
+          attachments: getStringArray(body, 'attachments')
+        };
+      },
+      async respond(request): Promise<Response<CreateResponseBody, Session>> {
+        const respond = (code: number, body: PublicRfiResponse | CreateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
         if (!permissions.createRfiResponse(request.session)) {
-          return {
-            tag: 401 as 401,
-            value: {
-              permissions: [permissions.ERROR_MESSAGE]
-            }
-          };
+          return respond(401, {
+            permissions: [permissions.ERROR_MESSAGE]
+          });
         }
-        if (request.body.tag !== 'json') {
-          return {
-            tag: 400 as 400,
-            value: {
-              contentType: ['Requests for Information must be created with a JSON request.']
-            }
-          };
-        }
-        const rawBody = isObject(request.body.value) ? request.body.value : {};
-        const validatedVersion = await validateCreateRequestBody(RfiResponseModel, RfiModel, UserModel, FileModel, rawBody, request.session);
+        const validatedVersion = await validateCreateRequestBody(RfiResponseModel, RfiModel, UserModel, FileModel, request.body, request.session);
         switch (validatedVersion.tag) {
           case 'valid':
             const rfiResponse = validatedVersion.value;
@@ -103,19 +93,10 @@ export const resource: Resource = {
                 rfiResponseId: rfiResponse._id
               });
             }
-            return {
-              tag: 201 as 201,
-              value: publicRfiResponse
-            };
+            return respond(201, publicRfiResponse);
           case 'invalid':
-            return {
-              tag: 400 as 400,
-              value: validatedVersion.value
-            };
+            return respond(400, validatedVersion.value);
         }
-      },
-      async respond(request): Promise<Response<CreateResponseBody, Session>> {
-        return basicResponse(request.body.tag, request.session, makeJsonResponseBody(request.body.value));
       }
     };
   }

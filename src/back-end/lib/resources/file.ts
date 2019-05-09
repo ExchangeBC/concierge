@@ -5,7 +5,7 @@ import * as FileSchema from 'back-end/lib/schemas/file';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { renameSync } from 'fs';
 import { PublicFile } from 'shared/lib/resources/file';
-import { ADT, AuthLevel, parseAuthLevel, parseUserType, UserType } from 'shared/lib/types';
+import { AuthLevel, parseAuthLevel, parseUserType, UserType } from 'shared/lib/types';
 import { validateFileName } from 'shared/lib/validators/file';
 
 const DEFAULT_AUTH_LEVEL: AuthLevel<UserType> = {
@@ -13,19 +13,13 @@ const DEFAULT_AUTH_LEVEL: AuthLevel<UserType> = {
   value: undefined
 };
 
-type CreateRequestBody
-  = ADT<201, PublicFile> // File uploaded and stored.
-  | ADT<200, PublicFile> // File already exists.
-  | ADT<401, string[]>
-  | ADT<400, string[]>;
-
 type CreateResponseBody = JsonResponseBody<PublicFile | string[]>;
 
 type ReadOneResponseBody = JsonResponseBody<PublicFile | string[]>;
 
 type RequiredModels = 'File';
 
-export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, Session>;
+export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, SupportedRequestBodies, null, Session>;
 
 export const resource: Resource = {
 
@@ -34,17 +28,15 @@ export const resource: Resource = {
   create(Models) {
     const FileModel = Models.File;
     return {
-      async transformRequest(request) {
+      async transformRequest({ body }) {
+        return body;
+      },
+      async respond(request): Promise<Response<CreateResponseBody, Session>> {
+        const respond = (code: number, body: PublicFile | string[]) => basicResponse(code, request.session, makeJsonResponseBody(body));
         if (!permissions.createFile(request.session)) {
-          return {
-            tag: 401 as 401,
-            value: [permissions.ERROR_MESSAGE]
-          };
+          return respond(401, [permissions.ERROR_MESSAGE]);
         } else if (request.body.tag !== 'file') {
-          return {
-            tag: 400 as 400,
-            value: ['File must be uploaded in a multipart request.']
-          };
+          return respond(400, ['File must be uploaded in a multipart request.']);
         } else {
           const rawFile = request.body.value;
           let authLevel: AuthLevel<UserType> = DEFAULT_AUTH_LEVEL;
@@ -64,28 +56,19 @@ export const resource: Resource = {
             // Otherwise, if the user is a Program Staff, allow them to set the AuthLevel via the request body.
             const parsedAuthLevel: AuthLevel<UserType> | null  = rawFile.authLevel ? parseAuthLevel(rawFile.authLevel, parseUserType) : null;
             if (!parsedAuthLevel && rawFile.authLevel) {
-              return {
-                tag: 400 as 400,
-                value: ['Invalid authLevel field.']
-              };
+              return respond(400, ['Invalid authLevel field.']);
             }
             authLevel = parsedAuthLevel || authLevel;
           }
           const validatedOriginalName = validateFileName(rawFile.name);
           if (validatedOriginalName.tag === 'invalid') {
-            return {
-              tag: 400 as 400,
-              value: validatedOriginalName.value
-            };
+            return respond(400, validatedOriginalName.value);
           }
           const originalName = validatedOriginalName.value;
           const hash = await FileSchema.hashFile(originalName, rawFile.path, authLevel);
           const existingFile = await FileModel.findOne({ hash });
           if (existingFile) {
-            return {
-              tag: 200 as 200,
-              value: FileSchema.makePublicFile(existingFile)
-            };
+            return respond(200, FileSchema.makePublicFile(existingFile));
           }
           const file = new FileModel({
             createdAt: new Date(),
@@ -96,14 +79,8 @@ export const resource: Resource = {
           await file.save();
           const storageName = FileSchema.getStorageName(file);
           renameSync(rawFile.path, storageName);
-          return {
-            tag: 201 as 201,
-            value: FileSchema.makePublicFile(file)
-          };
+          return respond(201, FileSchema.makePublicFile(file));
         }
-      },
-      async respond(request): Promise<Response<CreateResponseBody, Session>> {
-        return basicResponse(request.body.tag, request.session, makeJsonResponseBody(request.body.value));
       }
     };
   },
