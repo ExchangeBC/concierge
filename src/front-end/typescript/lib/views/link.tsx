@@ -49,7 +49,7 @@ function AnchorLink(props: AnchorProps) {
     ? router.routeToUrl(route)
     : href;
   let finalClassName = className;
-  finalClassName += nav ? ' nav-link py-0 py-md-2' : '';
+  finalClassName += nav ? ' nav-link' : '';
   finalClassName += disabled ? ' disabled' : '';
   finalClassName += color ? ` text-${color}` : '';
   const finalOnClick = onClick && ((e: MouseEvent<HTMLAnchorElement>) => {

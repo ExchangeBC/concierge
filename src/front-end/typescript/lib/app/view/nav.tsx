@@ -124,7 +124,7 @@ const Navigation: View<Props> = props => {
           <img src='/images/logo.svg' style={{ height: '2.25rem' }} alt='Procurement Concierge Program' />
         </NavbarBrand>
         <NavbarToggler className='ml-auto' onClick={() => props.toggleIsOpen()} />
-        <Collapse isOpen={props.isOpen} className='pt-3 pt-md-0' navbar>
+        <Collapse isOpen={props.isOpen} className='py-3 py-md-0' navbar>
           <ContextualLinks {...props} />
           <AuthLinks {...props} />
         </Collapse>
