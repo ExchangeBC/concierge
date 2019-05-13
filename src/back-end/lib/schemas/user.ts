@@ -22,8 +22,13 @@ export interface Data {
 
 export function makePublicUser(user: Data): PublicUser {
   return {
-    ...user,
-    _id: user._id.toString()
+    _id: user._id.toString(),
+    email: user.email,
+    active: user.active,
+    profile: user.profile,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    acceptedTermsAt: user.acceptedTermsAt
   };
 }
 

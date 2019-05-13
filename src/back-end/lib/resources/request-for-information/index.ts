@@ -193,21 +193,20 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
         async respond(request): Promise<Response<ReadManyResponseBody, Session>> {
           if (!globalPermissions(request.session) || !permissions.readManyRfis()) {
             return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
-          } else {
-            let rfis = await RfiModel.find().exec();
-            if (!permissions.isProgramStaff(request.session)) {
-              rfis = rfis.filter(rfi => {
-                return RfiSchema.hasBeenPublished(rfi);
-              });
-            }
-            const publicRfis = await Promise.all(rfis.map(rfi => RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session)));
-            return basicResponse(200, request.session, makeJsonResponseBody({
-              total: publicRfis.length,
-              offset: 0,
-              count: publicRfis.length,
-              items: publicRfis
-            }));
           }
+          let rfis = await RfiModel.find().exec();
+          if (!permissions.isProgramStaff(request.session)) {
+            rfis = rfis.filter(rfi => {
+              return RfiSchema.hasBeenPublished(rfi);
+            });
+          }
+          const publicRfis = await Promise.all(rfis.map(rfi => RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session)));
+          return basicResponse(200, request.session, makeJsonResponseBody({
+            total: publicRfis.length,
+            offset: 0,
+            count: publicRfis.length,
+            items: publicRfis
+          }));
         }
       };
     },
