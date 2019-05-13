@@ -135,6 +135,15 @@ a.disabled {
   }
 }
 
+// Custom components
+
+.markdown {
+  
+  img {
+    max-width: 100%;
+  }
+}
+
 // Custom page overrides.
 
 .route-termsAndConditions {
