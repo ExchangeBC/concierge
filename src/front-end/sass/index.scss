@@ -90,8 +90,13 @@ button {
   }
 }
 
-a.disabled {
-  opacity: $btn-disabled-opacity;
+a {
+  cursor: pointer;
+
+  &.disabled {
+    opacity: $btn-disabled-opacity;
+    cursor: default;
+  }
 }
 
 // Custom utilities.
