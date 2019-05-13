@@ -4,7 +4,7 @@ import { set } from 'lodash';
 
 const element = document.getElementById('main') || document.body;
 // TODO use environment variables.
-const debug = true;
+const debug = false;
 start(app, element, debug)
   .then(stateManager => {
     // Store stateManager on the window in development.
