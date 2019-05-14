@@ -2,6 +2,7 @@
 *.tmp
 *.pem
 *.map
+*.DS_Store
 .env
 .sass-cache/
 node_modules/
