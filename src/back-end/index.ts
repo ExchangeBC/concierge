@@ -1,96 +1,49 @@
-import { Map } from 'immutable';
-import { concat, flatten, flow, map } from 'lodash/fp';
-import mongoose from 'mongoose';
-import { MONGO_URL, PORT } from './config';
-import loggerHook from './hooks/logger';
-import * as crud from './lib/crud';
-import { makeDomainLogger } from './lib/logger';
-import { console } from './lib/logger/adapters';
-import { addHooksToRoute, JsonResponseBody, namespaceRoute, notFoundJsonRoute, Route } from './lib/server';
-import { express } from './lib/server/adapters';
-import userResource from './resources/user';
-import frontEndRouter from './routers/front-end';
-import * as BuyerProfileSchema from './schemas/buyer-profile';
-import * as ProgramStaffProfileSchema from './schemas/program-staff-profile';
-import * as UserSchema from './schemas/user';
-import * as VendorProfileSchema from './schemas/vendor-profile';
+import { BASIC_AUTH_PASSWORD_HASH, BASIC_AUTH_USERNAME, getConfigErrors, MONGO_URL, SERVER_HOST, SERVER_PORT } from 'back-end/config';
+import * as app from 'back-end/lib/app';
+import { Session } from 'back-end/lib/app/types';
+import { makeDomainLogger } from 'back-end/lib/logger';
+import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
+import * as SessionSchema from 'back-end/lib/schemas/session';
+import { makeErrorResponseBody } from 'back-end/lib/server';
+import { express, ExpressAdapter } from 'back-end/lib/server/adapters';
+import { MAX_MULTIPART_FILES_SIZE } from 'shared/lib/resources/file';
 
-const logger = makeDomainLogger(console, 'back-end');
-
-function connect(mongoUrl: string) {
-  return new Promise((resolve, reject) => {
-    mongoose.connect(mongoUrl, {
-      useNewUrlParser: true
-    });
-    const db = mongoose.connection;
-    db.once('error', reject);
-    db.once('open', () => resolve());
-  });
-}
+const logger = makeDomainLogger(consoleAdapter, 'back-end');
 
 async function start() {
+  // Ensure all environment variables are specified correctly.
+  const configErrors = getConfigErrors();
+  if (configErrors.length || !MONGO_URL) {
+    configErrors.forEach((error: string) => logger.error(error));
+    throw new Error('Invalid environment variable configuration.');
+  }
   // Connect to MongoDB.
-  await connect(MONGO_URL);
+  await app.connectToDatabase(MONGO_URL);
   logger.info('connected to MongoDB');
-  // Declare resources.
-  const resources: Array<crud.Resource<any, any, any, any, any, any, any, any>> = [
-    userResource
-  ];
-  // Declare models as a map.
-  const Models: Map<string, mongoose.Model<any>> = Map({
-    [UserSchema.NAME]: mongoose.model(UserSchema.NAME, UserSchema.schema),
-    [BuyerProfileSchema.NAME]: mongoose.model(BuyerProfileSchema.NAME, BuyerProfileSchema.schema),
-    [VendorProfileSchema.NAME]: mongoose.model(VendorProfileSchema.NAME, VendorProfileSchema.schema),
-    [ProgramStaffProfileSchema.NAME]: mongoose.model(ProgramStaffProfileSchema.NAME, ProgramStaffProfileSchema.schema)
+  const Models = app.createModels();
+  const router = app.createRouter({
+    Models,
+    basicAuth: BASIC_AUTH_USERNAME && BASIC_AUTH_PASSWORD_HASH
+      ? { username: BASIC_AUTH_USERNAME, passwordHash: BASIC_AUTH_PASSWORD_HASH }
+      : undefined
   });
-  // Declare global hooks.
-  const hooks = [
-    loggerHook
-  ];
-  // Define CRUD routes.
-  // We need to use `flippedConcat` as using `concat` binds the routes in the wrong order.
-  const flippedConcat = (a: any) => (b: any[]): any[] => concat(b)(a);
-  const crudRoutes = flow([
-    // Create routers from resources.
-    map((resource: crud.Resource<any, any, any, any, any, any, any, any>) => {
-      const Model = Models.get(resource.MODEL_NAME);
-      if (Model) {
-        logger.info('created resource router', { routeNamespace: resource.ROUTE_NAMESPACE });
-        return crud.makeRouter(resource)(Model);
-      } else {
-        // Throw an error if a requested model doesn't exist for a resource.
-        const msg = 'could not create resource router: undefined Model';
-        logger.error(msg, { routeNamespace: resource.ROUTE_NAMESPACE });
-        throw new Error(msg);
-      }
-    }),
-    // Make a flat list of routes.
-    flatten,
-    // Respond with a standard 404 JSON response if API route is not handled.
-    flippedConcat(notFoundJsonRoute),
-    // Namespace all CRUD routes with '/api'.
-    map((route: Route<any, any, any, JsonResponseBody, any>) => namespaceRoute('/api', route))
-  ])(resources);
-  // Set up the app router.
-  const router = flow([
-    // API routes.
-    flippedConcat(crudRoutes),
-    // Front-end router.
-    flippedConcat(frontEndRouter),
-    // Add global hooks to all routes.
-    map((route: Route<any, any, any, any, any>) => addHooksToRoute(hooks, route))
-  ])([]);
   // Bind the server to a port and listen for incoming connections.
-  express.run(router, PORT);
-  logger.info('server started', { host: '0.0.0.0', port: String(PORT) });
+  // Need to lock-in Session type here.
+  const adapter: ExpressAdapter<Session> = express();
+  const SessionModel = Models.Session;
+  adapter({
+    router,
+    sessionIdToSession: SessionSchema.sessionIdToSession(SessionModel),
+    sessionToSessionId: SessionSchema.sessionToSessionId(SessionModel),
+    host: SERVER_HOST,
+    port: SERVER_PORT,
+    maxMultipartFilesSize: MAX_MULTIPART_FILES_SIZE
+  });
+  logger.info('server started', { host: SERVER_HOST, port: String(SERVER_PORT) });
 }
 
 start()
-  .catch(err => {
-    logger.error('app startup failed', {
-      stack: err.stack,
-      message: err.message,
-      raw: err
-    });
+  .catch(error => {
+    logger.error('app startup failed', makeErrorResponseBody(error).value);
     process.exit(1);
   });

@@ -10,7 +10,8 @@ global.gruntConfig = {
   src: {
     "static": `${src}/static`,
     sass: `${src}/sass`,
-    ts: `${src}/typescript`
+    ts: `${src}/typescript`,
+    tsShared: `src/shared`
   },
   out: {
     css: `${build}/app.css`,
@@ -39,16 +40,23 @@ module.exports = function (grunt) {
     "sass",
     "postcss:prefix"
   ]);
-  grunt.registerTask("development", [
+  grunt.registerTask("development-build", [
     "common",
-    "browserify:development"
+    "browserify:development",
+    "compress"
   ]);
-  grunt.registerTask("production", [
+  grunt.registerTask("development-watch", [
+    "development-build",
+    "watch"
+  ]);
+  grunt.registerTask("production-build", [
     "common",
     "postcss:min",
     "browserify:production",
     "uglify:production",
-    "htmlmin:production"
+    "htmlmin:production",
+    "compress"
   ]);
-  grunt.registerTask("build", [ env ]);
+  grunt.registerTask("build", [ `${env}-build` ]);
+  grunt.registerTask("default", [ "development-watch" ]);
 };

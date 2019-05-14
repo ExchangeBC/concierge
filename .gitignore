@@ -2,8 +2,12 @@
 *.tmp
 *.pem
 *.map
+.env
 .sass-cache/
 node_modules/
 tmp/
 build/
+typedoc/front-end/
+typedoc/back-end/
+typedoc/shared/
 

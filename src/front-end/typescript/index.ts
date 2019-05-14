@@ -1,4 +1,12 @@
-import app from './app';
-import { start } from './lib/framework';
+import app from 'front-end/lib/app/index';
+import { start } from 'front-end/lib/framework';
+import { set } from 'lodash';
 
-start(app, document.getElementById('main') || document.body, true);
+const element = document.getElementById('main') || document.body;
+// TODO use environment variables.
+const debug = process.env.NODE_ENV === 'development';
+start(app, element, debug)
+  .then(stateManager => {
+    // Store stateManager on the window in development.
+    if (debug) { set(window, 'stateManager', stateManager); }
+  });

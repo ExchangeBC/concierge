@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
+    "module": "commonjs",
     "moduleResolution": "node",
     "jsx": "react",
     "allowJs": true,
@@ -11,10 +12,12 @@
     "noUnusedLocals": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "types": [
-      "node",
-      "mocha"
-    ]
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "front-end/*": ["./*"],
+      "shared/*": ["../../shared/*"]
+    }
   },
   "files": [
     "index.ts"

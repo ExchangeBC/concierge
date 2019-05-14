@@ -10,6 +10,12 @@
     "noUnusedLocals": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "back-end/*": ["../../src/back-end/*"],
+      "shared/*": ["../../src/shared/*"]
+    },
     "types": ["node", "mocha"]
   }
 }

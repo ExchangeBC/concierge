@@ -1,15 +1,28 @@
+const { transform, assign } = require("lodash");
+const path = require("path");
+const root = path.resolve(__dirname, '..', gruntConfig.src.ts);
+const compilerOptions = require(path.join(root, 'tsconfig.json')).compilerOptions;
+const pathmodify = require("pathmodify");
+const envify = require("envify/custom");
+
 const makeConfig = debug => ({
   options: {
-    plugin: [
-      [
-        "tsify",
-        {
-          project: gruntConfig.src.ts
-        }
-      ]
-    ],
+    configure(b) {
+      return b
+        .plugin('pathmodify', {
+          mods: [
+            pathmodify.mod.dir("front-end", root),
+            pathmodify.mod.dir("shared", path.resolve(root, "../../shared"))
+          ]
+        })
+        .plugin('tsify', { project: root })
+        .transform(envify({
+          NODE_ENV: debug ? 'development' : 'production'
+        }), { global: true });
+    },
     browserifyOptions: {
-      debug
+      debug,
+      extensions: [".js", ".json", ".ts", ".tsx", ".jsx"]
     }
   },
   src: [

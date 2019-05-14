@@ -1,0 +1,300 @@
+import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
+import * as crud from 'back-end/lib/crud';
+import * as permissions from 'back-end/lib/permissions';
+import * as FileSchema from 'back-end/lib/schemas/file';
+import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
+import * as UserSchema from 'back-end/lib/schemas/user';
+import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
+import { validateFileIdArray, validateUserId } from 'back-end/lib/validators';
+import { get, isObject } from 'lodash';
+import { getString, getStringArray } from 'shared/lib';
+import { CreateRequestBody, CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicRfi, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
+import { PaginatedList, UserType } from 'shared/lib/types';
+import { allValid, getInvalidValue, getValidValue, invalid, valid, validateBoolean, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
+import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
+
+async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, body: CreateRequestBody, session: Session): Promise<ValidOrInvalid<RfiSchema.Version, CreateValidationErrors>> {
+  // Get raw values.
+  const createdBy = getString(session.user, 'id');
+  const { rfiNumber, title, publicSectorEntity, description, discoveryDay, closingDate, closingTime, buyerContact, programStaffContact, categories, attachments, addenda } = body;
+  // Validate individual values.
+  const validatedCreatedBy = await validateUserId(UserModel, createdBy, UserType.ProgramStaff);
+  const validatedClosingDate = validateClosingDate(closingDate);
+  const validatedClosingTime = validateClosingTime(closingTime, getValidValue(validatedClosingDate, ''));
+  const validatedRfiNumber = validateRfiNumber(rfiNumber);
+  const validatedTitle = validateTitle(title);
+  const validatedDescription = validateDescription(description);
+  const validatedPublicSectorEntity = validatePublicSectorEntity(publicSectorEntity);
+  const validatedNumCategories = !categories.length ? invalid(['Please select at least one Commodity Code.']) : valid(null);
+  const validatedCategories = validateCategories(categories, 'Commodity Code');
+  const validatedDiscoveryDay = validateBoolean(discoveryDay);
+  const validatedAddenda = validateAddendumDescriptions(addenda);
+  const validatedAttachments = await validateFileIdArray(FileModel, attachments);
+  const validatedBuyerContact = await validateUserId(UserModel, buyerContact, UserType.Buyer, true);
+  const validatedProgramStaffContact = await validateUserId(UserModel, programStaffContact, UserType.ProgramStaff);
+  // Check if the payload is valid.
+  if (allValid([validatedCreatedBy, validatedClosingDate, validatedClosingTime, validatedRfiNumber, validatedTitle, validatedDescription, validatedPublicSectorEntity, validatedNumCategories, validatedCategories, validatedDiscoveryDay, validatedAddenda, validatedAttachments, validatedBuyerContact, validatedProgramStaffContact])) {
+    // If everything is valid, return the version.
+    const createdAt = new Date();
+    const version: RfiSchema.Version = {
+      createdAt,
+      createdBy: (validatedCreatedBy.value as InstanceType<UserSchema.Model>)._id,
+      closingAt: new Date(`${validatedClosingDate.value} ${validatedClosingTime.value}`),
+      rfiNumber: validatedRfiNumber.value as string,
+      title: validatedTitle.value as string,
+      description: validatedDescription.value as string,
+      publicSectorEntity: validatedPublicSectorEntity.value as string,
+      categories: validatedCategories.value as string[],
+      discoveryDay: validatedDiscoveryDay.value as boolean,
+      addenda: (validatedAddenda.value as string[]).map((description: string) => {
+        return {
+          createdAt,
+          updatedAt: createdAt,
+          description
+        };
+      }),
+      attachments: (validatedAttachments.value as Array<InstanceType<FileSchema.Model>>).map(file => file._id),
+      buyerContact: (validatedBuyerContact.value as InstanceType<UserSchema.Model>)._id,
+      programStaffContact: (validatedProgramStaffContact.value as InstanceType<UserSchema.Model>)._id
+    };
+    return valid(version);
+  } else {
+    // If anything is invalid, return the validation errors.
+    return invalid({
+      permissions: validatedCreatedBy.tag === 'invalid' ? [permissions.ERROR_MESSAGE] : undefined,
+      closingDate: getInvalidValue(validatedClosingDate, undefined),
+      closingTime: getInvalidValue(validatedClosingTime, undefined),
+      rfiNumber: getInvalidValue(validatedRfiNumber, undefined),
+      title: getInvalidValue(validatedTitle, undefined),
+      description: getInvalidValue(validatedDescription, undefined),
+      publicSectorEntity: getInvalidValue(validatedPublicSectorEntity, undefined),
+      numCategories: getInvalidValue(validatedNumCategories, undefined),
+      categories: getInvalidValue(validatedCategories, undefined),
+      discoveryDay: getInvalidValue(validatedDiscoveryDay, undefined),
+      addenda: getInvalidValue(validatedAddenda, undefined),
+      attachments: getInvalidValue(validatedAttachments, undefined),
+      buyerContact: getInvalidValue(validatedBuyerContact, undefined),
+      programStaffContact: getInvalidValue(validatedProgramStaffContact, undefined)
+    });
+  }
+}
+
+type CreateResponseBody = JsonResponseBody<PublicRfi | CreateValidationErrors>;
+
+type ReadOneResponseBody = JsonResponseBody<PublicRfi | string[]>;
+
+type ReadManyResponseBody = JsonResponseBody<PaginatedList<PublicRfi> | string[]>;
+
+type UpdateResponseBody = JsonResponseBody<PublicRfi | UpdateValidationErrors>;
+
+export type Resource<RequiredModels extends keyof AvailableModels> = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, UpdateRequestBody, Session>;
+
+type GetRfiModel<RfiModelName extends keyof AvailableModels> = (Models: Pick<AvailableModels, RfiModelName>) => RfiSchema.Model;
+
+type GlobalPermissions = (session: Session) => boolean;
+
+export function makeResource<RfiModelName extends keyof AvailableModels>(routeNamespace: string, getRfiModel: GetRfiModel<RfiModelName>, globalPermissions: GlobalPermissions): Resource<RfiModelName | 'User' | 'File'> {
+
+  return {
+
+    routeNamespace,
+
+    create(Models) {
+      const RfiModel = getRfiModel(Models);
+      const FileModel = Models.File;
+      const UserModel = Models.User;
+      return {
+        async transformRequest(request) {
+          const body = request.body.tag === 'json' && isObject(request.body.value) ? request.body.value : {};
+          return {
+            closingDate: getString(body, 'closingDate'),
+            closingTime: getString(body, 'closingTime'),
+            rfiNumber: getString(body, 'rfiNumber'),
+            title: getString(body, 'title'),
+            description: getString(body, 'description'),
+            publicSectorEntity: getString(body, 'publicSectorEntity'),
+            categories: getStringArray(body, 'categories'),
+            discoveryDay: get(body, 'discoveryDay'),
+            addenda: getStringArray(body, 'addenda'),
+            attachments: getStringArray(body, 'attachments'),
+            buyerContact: getString(body, 'buyerContact'),
+            programStaffContact: getString(body, 'programStaffContact')
+          };
+        },
+        async respond(request): Promise<Response<CreateResponseBody, Session>> {
+          const respond = (code: number, body: PublicRfi | CreateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
+          if (!globalPermissions(request.session) || !permissions.createRfi(request.session)) {
+            return respond(401, {
+              permissions: [permissions.ERROR_MESSAGE]
+            });
+          }
+          const validatedVersion = await validateCreateRequestBody(RfiModel, UserModel, FileModel, request.body, request.session);
+          switch (validatedVersion.tag) {
+            case 'valid':
+              const version = validatedVersion.value;
+              // Remove addenda matching the DELETE_ADDENDUM_TOKEN
+              version.addenda = version.addenda.filter(addendum => {
+                return addendum.description !== DELETE_ADDENDUM_TOKEN;
+              });
+              const rfi = new RfiModel({
+                createdAt: version.createdAt,
+                // TODO publishedAt will need to change when we add drafts.
+                publishedAt: version.createdAt,
+                versions: [version],
+                discoveryDayResponses: []
+              });
+              await rfi.save();
+              return respond(201, await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session));
+            case 'invalid':
+              return respond(400, validatedVersion.value);
+          }
+        }
+      };
+    },
+
+    readOne(Models) {
+      const RfiModel = getRfiModel(Models);
+      const FileModel = Models.File;
+      const UserModel = Models.User;
+      return {
+        async transformRequest({ body }) {
+          return body;
+        },
+        async respond(request): Promise<Response<ReadOneResponseBody, Session>> {
+          if (!globalPermissions(request.session) || !permissions.readOneRfi()) {
+            return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
+          } else {
+            let rfi: InstanceType<RfiSchema.Model> | null = null;
+            try {
+              rfi = await RfiModel.findById(request.params.id);
+            } catch (error) {
+              request.logger.error('unable to find RFI', makeErrorResponseBody(error).value);
+            }
+            if (!rfi || (!permissions.isProgramStaff(request.session) && !RfiSchema.hasBeenPublished(rfi))) {
+              return basicResponse(404, request.session, makeJsonResponseBody(['RFI not found']));
+            } else {
+              const publicRfi = await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session);
+              return basicResponse(200, request.session, makeJsonResponseBody(publicRfi));
+            }
+          }
+        }
+      };
+    },
+
+    // TODO pagination.
+    readMany(Models) {
+      const RfiModel = getRfiModel(Models);
+      const FileModel = Models.File;
+      const UserModel = Models.User;
+      return {
+        async transformRequest({ body }) {
+          return body;
+        },
+        async respond(request): Promise<Response<ReadManyResponseBody, Session>> {
+          if (!globalPermissions(request.session) || !permissions.readManyRfis()) {
+            return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
+          }
+          let rfis = await RfiModel.find().exec();
+          if (!permissions.isProgramStaff(request.session)) {
+            rfis = rfis.filter(rfi => {
+              return RfiSchema.hasBeenPublished(rfi);
+            });
+          }
+          const publicRfis = await Promise.all(rfis.map(rfi => RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session)));
+          return basicResponse(200, request.session, makeJsonResponseBody({
+            total: publicRfis.length,
+            offset: 0,
+            count: publicRfis.length,
+            items: publicRfis
+          }));
+        }
+      };
+    },
+
+    update(Models) {
+      const RfiModel = getRfiModel(Models);
+      const FileModel = Models.File;
+      const UserModel = Models.User;
+      return {
+        async transformRequest(request) {
+          const body = request.body.tag === 'json' && isObject(request.body.value) ? request.body.value : {};
+          return {
+            closingDate: getString(body, 'closingDate'),
+            closingTime: getString(body, 'closingTime'),
+            rfiNumber: getString(body, 'rfiNumber'),
+            title: getString(body, 'title'),
+            description: getString(body, 'description'),
+            publicSectorEntity: getString(body, 'publicSectorEntity'),
+            categories: getStringArray(body, 'categories'),
+            discoveryDay: get(body, 'discoveryDay'),
+            addenda: getStringArray(body, 'addenda'),
+            attachments: getStringArray(body, 'attachments'),
+            buyerContact: getString(body, 'buyerContact'),
+            programStaffContact: getString(body, 'programStaffContact')
+          };
+        },
+        async respond(request): Promise<Response<UpdateResponseBody, Session>> {
+          const respond = (code: number, body: PublicRfi | UpdateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
+          if (!globalPermissions(request.session) || !permissions.updateRfi(request.session)) {
+            return respond(401, {
+              permissions: [permissions.ERROR_MESSAGE]
+            });
+          }
+          const rfi = await RfiModel.findById(request.params.id);
+          if (!rfi) {
+            return respond(404, {
+              rfiId: ['RFI not found']
+            });
+          }
+          const validatedVersion = await validateCreateRequestBody(RfiModel, UserModel, FileModel, request.body, request.session);
+          switch (validatedVersion.tag) {
+            case 'valid':
+              const currentVersion: RfiSchema.Version | null = rfi.versions.reduce((acc: RfiSchema.Version | null, version) => {
+                if (!acc || version.createdAt.getTime() > acc.createdAt.getTime()) {
+                  return version;
+                } else {
+                  return acc;
+                }
+              }, null);
+              const newVersion = validatedVersion.value;
+              // Update the addenda correctly (support deleting, updating and adding new addenda).
+              const now = new Date();
+              const newAddenda = newVersion.addenda.map((newAddendum, index) => {
+                const currentAddendum = get(currentVersion, ['addenda', index]);
+                if (currentAddendum && newAddendum.description !== currentAddendum.description) {
+                  // Addendum has changed.
+                  return {
+                    createdAt: currentAddendum.createdAt,
+                    updatedAt: now,
+                    description: newAddendum.description
+                  };
+                } else if (currentAddendum && newAddendum.description === currentAddendum.description) {
+                  // The addendum has not changed, so we return the current addendum,
+                  // which has the correct `updatedAt` date.
+                  return currentAddendum;
+                } else {
+                  // Return the addendum if it is new, unchanged or flagged for deletion.
+                  // Re: flagged for deletion, we will remove it later in this function.
+                  return newAddendum;
+                }
+              });
+              newVersion.addenda = newAddenda.filter(addendum => {
+                return addendum.description !== DELETE_ADDENDUM_TOKEN;
+              });
+              // Persist the new version.
+              rfi.versions.push(newVersion);
+              await rfi.save();
+              return respond(200, await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session));
+            case 'invalid':
+              return respond(400, validatedVersion.value);
+          }
+        }
+      };
+    }
+  };
+
+}
+
+export const resource = makeResource('requestsForInformation', Models => Models.Rfi, () => true);
+
+export default resource;

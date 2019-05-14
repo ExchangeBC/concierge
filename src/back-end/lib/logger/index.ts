@@ -1,5 +1,5 @@
+import { Adapter, AdapterFunction } from 'back-end/lib/logger/adapters';
 import { reduce } from 'lodash';
-import { Adapter, AdapterFunction } from './adapters';
 
 export type LogFunction = (domain: string, msg: string, data?: object) => void;
 

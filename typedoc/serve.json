@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "back-end", "destination": "back-end/index.html" },
+    { "source": "front-end", "destination": "front-end/index.html" },
+    { "source": "shared", "destination": "shared/index.html" }
+  ]
+}

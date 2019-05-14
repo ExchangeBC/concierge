@@ -3,12 +3,14 @@ module.exports = {
     interrupt: true,
     debounceDelay: 250
   },
-  ts: {
+  js: {
     files: [
-      `${gruntConfig.src.ts}/**`
+      `${gruntConfig.src.ts}/**`,
+      `${gruntConfig.src.tsShared}/**`
     ],
     tasks: [
-      "browserify:development"
+      "browserify:development",
+      "compress"
     ]
   },
   sass: {
@@ -17,7 +19,8 @@ module.exports = {
     ],
     tasks: [
       "sass",
-      "postcss:prefix"
+      "postcss:prefix",
+      "compress"
     ]
   },
   static: {
@@ -26,7 +29,8 @@ module.exports = {
     ],
     tasks: [
       "common",
-      "browserify:development"
+      "browserify:development",
+      "compress"
     ]
   },
 };
