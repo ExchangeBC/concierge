@@ -176,7 +176,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       id: 'rfi-description',
       required: true,
       label: 'RFI Description',
-      placeholder: 'Suggested sections for an RFI\'s description:\n- Business Requirement(s) or Issue(s);\n- Brief Ministry Overview;\n- Objectives of the RFI;\n- Ministry Obligations; and,\n- Response Instructions.',
+      placeholder: 'Suggested sections for an RFI\'s description: \n(1) Business Requirement(s) or Issue(s); \n(2) Brief Ministry Overview; \n(3) Objectives of the RFI; \n(4) Ministry Obligations; and \n(5) Response Instructions.',
       value: getRfiString('description')
     }),
     discoveryDay: Switch.init({
