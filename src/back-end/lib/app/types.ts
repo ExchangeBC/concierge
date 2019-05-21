@@ -1,3 +1,4 @@
+import * as FeedbackSchema from 'back-end/lib/schemas/feedback';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
@@ -11,6 +12,7 @@ export type Session = SessionSchema.Data;
 export interface AvailableModels {
   Session: SessionSchema.Model;
   User: UserSchema.Model;
+  Feedback: FeedbackSchema.Model;
   ForgotPasswordToken: ForgotPasswordTokenSchema.Model;
   File: FileSchema.Model;
   Rfi: RfiSchema.Model;
