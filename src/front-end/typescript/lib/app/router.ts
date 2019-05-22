@@ -114,6 +114,15 @@ const router: Router<Route> = {
       }
     },
     {
+      path: '/feedback',
+      makeRoute() {
+        return {
+          tag: 'feedback',
+          value: null
+        }
+      }
+    },
+    {
       path: '/terms-and-conditions',
       makeRoute({ query }) {
         const rawWarningId = getQueryParamString(query, 'warningId');
@@ -400,6 +409,8 @@ const router: Router<Route> = {
         return `/reset-password/${route.value.forgotPasswordToken}/${route.value.userId}`;
       case 'forgotPassword':
         return '/forgot-password';
+      case 'feedback':
+        return '/feedback';
       case 'termsAndConditions':
         const tcRedirectOnAccept = route.value.redirectOnAccept;
         const tcRedirectOnSkip = route.value.redirectOnSkip;

@@ -2,6 +2,7 @@ import { Msg, Route, Session, State } from 'front-end/lib/app/types';
 import { Dispatch, Immutable, initAppChildPage, Update, updateAppChildPage } from 'front-end/lib/framework';
 import { getSession } from 'front-end/lib/http/api';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
+import * as PageFeedback from 'front-end/lib/pages/feedback';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageMarkdown from 'front-end/lib/pages/markdown';
@@ -340,6 +341,21 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         }
       });
 
+    case 'feedback':
+      return await initAppChildPage({
+        state,
+        dispatch,
+        childStatePath: ['pages', 'feedback'],
+        childRouteParams: route.value,
+        childInit: PageFeedback.component.init,
+        getSharedState(state) {
+          return state.shared;
+        },
+        mapChildMsg(value) {
+          return { tag: 'pageFeedback' as 'pageFeedback', value };
+        }
+      });
+
   }
 }
 
@@ -574,6 +590,16 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         childStatePath: ['pages', 'notice'],
         childUpdate: PageNotice.component.update,
         childGetMetadata: PageNotice.component.getMetadata,
+        childMsg: msg.value
+      });
+
+    case 'pageFeedback':
+      return updateAppChildPage({
+        state,
+        mapChildMsg: value => ({ tag: 'pageFeedback', value }),
+        childStatePath: ['pages', 'feedback'],
+        childUpdate: PageFeedback.component.update,
+        childGetMetadata: PageFeedback.component.getMetadata,
         childMsg: msg.value
       });
 

@@ -1,5 +1,6 @@
 import { AppMsg, Immutable } from 'front-end/lib/framework';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
+import * as PageFeedback from 'front-end/lib/pages/feedback';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageMarkdown from 'front-end/lib/pages/markdown';
@@ -44,7 +45,8 @@ export type Route
   | ADT<'requestForInformationRespond', PageRequestForInformationRespond.RouteParams>
   | ADT<'requestForInformationList', PageRequestForInformationList.RouteParams>
   | ADT<'markdown', PageMarkdown.RouteParams>
-  | ADT<'notice', PageNotice.RouteParams>;
+  | ADT<'notice', PageNotice.RouteParams>
+  | ADT<'feedback', PageFeedback.RouteParams>;
 
 export interface SharedState {
   session?: Session;
@@ -78,6 +80,7 @@ export interface State {
     requestForInformationList?: Immutable<PageRequestForInformationList.State>;
     markdown?: Immutable<PageMarkdown.State>;
     notice?: Immutable<PageNotice.State>;
+    feedback?: Immutable<PageFeedback.State>;
   };
 }
 
@@ -102,6 +105,7 @@ type InnerMsg
   | ADT<'pageRequestForInformationRespond', PageRequestForInformationRespond.Msg>
   | ADT<'pageRequestForInformationList', PageRequestForInformationList.Msg>
   | ADT<'pageMarkdown', PageMarkdown.Msg>
-  | ADT<'pageNotice', PageNotice.Msg>;
+  | ADT<'pageNotice', PageNotice.Msg>
+  | ADT<'pageFeedback', PageFeedback.Msg>
 
 export type Msg = AppMsg<InnerMsg, Route>;

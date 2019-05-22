@@ -4,6 +4,7 @@ import Footer from 'front-end/lib/app/view/footer';
 import Nav from 'front-end/lib/app/view/nav';
 import { AppMsg, ComponentView, Dispatch, GlobalComponentMsg, Immutable, mapAppDispatch, newRoute, PageAlerts, PageComponent, PageContainerOptions, View } from 'front-end/lib/framework';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
+import * as PageFeedback from 'front-end/lib/pages/feedback';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageMarkdown from 'front-end/lib/pages/markdown';
@@ -194,6 +195,15 @@ const ViewActiveRoute: ComponentView<State, Msg> = ({ state, dispatch }) => {
           mapPageMsg={value => ({ tag: 'pageForgotPassword', value })}
           component={PageForgotPassword.component} />
       );
+
+    case 'feedback':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.feedback}
+          mapPageMsg={value => ({ tag: 'pageFeedback', value })}
+          component={PageFeedback.component} />
+      )
 
     case 'termsAndConditions':
       return (
