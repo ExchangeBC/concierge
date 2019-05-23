@@ -117,7 +117,7 @@ export type AuthLevel<UserType>
  * Returns `null` if the parse fails.
  */
 
-export function parseAuthLevel<UserType>(raw: object, parseOneUserType: (raw: string) => UserType | null): AuthLevel<UserType> | null {
+export function parseAuthLevel<UserType>(raw: any, parseOneUserType: (raw: string) => UserType | null): AuthLevel<UserType> | null {
   switch (get(raw, 'tag')) {
     case 'any':
       return { tag: 'any', value: undefined };

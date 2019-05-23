@@ -69,15 +69,15 @@ export function makeJsonRequestBody(value: any): JsonRequestBody {
   };
 }
 
-export interface FileUpload {
+export interface FileUpload<Metadata> {
   readonly name: string;
   readonly path: string;
-  readonly authLevel?: object;
+  readonly metadata?: Metadata;
 }
 
-export type FileRequestBody = ADT<'file', FileUpload>;
+export type FileRequestBody<FileUploadMetadata> = ADT<'file', FileUpload<FileUploadMetadata>>;
 
-export function makeFileRequestBody(value: FileUpload): FileRequestBody {
+export function makeFileRequestBody<FileUploadMetadata>(value: FileUpload<FileUploadMetadata>): FileRequestBody<FileUploadMetadata> {
   return {
     tag: 'file',
     value

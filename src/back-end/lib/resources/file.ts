@@ -5,7 +5,7 @@ import * as FileSchema from 'back-end/lib/schemas/file';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { renameSync } from 'fs';
 import { PublicFile } from 'shared/lib/resources/file';
-import { AuthLevel, parseAuthLevel, parseUserType, UserType } from 'shared/lib/types';
+import { AuthLevel, UserType } from 'shared/lib/types';
 import { validateFileName } from 'shared/lib/validators/file';
 
 const DEFAULT_AUTH_LEVEL: AuthLevel<UserType> = {
@@ -54,9 +54,9 @@ export const resource: Resource = {
             };
           } else {
             // Otherwise, if the user is a Program Staff, allow them to set the AuthLevel via the request body.
-            const parsedAuthLevel: AuthLevel<UserType> | null  = rawFile.authLevel ? parseAuthLevel(rawFile.authLevel, parseUserType) : null;
-            if (!parsedAuthLevel && rawFile.authLevel) {
-              return respond(400, ['Invalid authLevel field.']);
+            const parsedAuthLevel: AuthLevel<UserType> | null  = rawFile.metadata || null;
+            if (!parsedAuthLevel && rawFile.metadata) {
+              return respond(400, ['Invalid metadata field.']);
             }
             authLevel = parsedAuthLevel || authLevel;
           }
