@@ -370,6 +370,20 @@ const router: Router<Route> = {
       }
     },
     {
+      path: '/notice/feedback-submitted',
+      makeRoute() {
+        return {
+          tag: 'notice',
+          value: {
+            noticeId: {
+              tag: 'feedbackSubmitted',
+              value: undefined
+            }
+          }
+        }
+      }
+    },
+    {
       path: '*',
       makeRoute() {
         return {
@@ -471,6 +485,8 @@ const router: Router<Route> = {
               return '/notice/forgot-password';
             case 'notFound':
               return '/not-found';
+            case 'feedbackSubmitted':
+              return '/notice/feedback-submitted'
           }
         })();
     }

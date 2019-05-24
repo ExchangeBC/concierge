@@ -13,6 +13,7 @@ export type NoticeId
   | ADT<'changePassword'>
   | ADT<'resetPassword'>
   | ADT<'forgotPassword'>
+  | ADT<'feedbackSubmitted'>
   | ADT<'rfiResponseSubmitted', RfiId>
   | ADT<'rfiNonVendorResponse', RfiId>
   | ADT<'rfiExpiredResponse', RfiId>;
@@ -64,6 +65,19 @@ function noticeIdToState(noticeId: NoticeId): State {
           }
         }
       };
+
+    case 'feedbackSubmitted':
+      return {
+        title: 'Feedback Sent',
+        body: 'You have successfully sent your feedback.  Thank you!',
+        button: {
+          text: 'Return to the Home Page',
+          route: {
+            tag: 'landing',
+            value: null
+          }
+        }
+      }
 
     case 'rfiResponseSubmitted':
       return {

@@ -1,6 +1,6 @@
 import { makePageMetadata } from 'front-end/lib';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, PageComponent, PageInit, Update } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newRoute, PageComponent, PageInit, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { updateField } from 'front-end/lib/views/form-field';
 import Icon from 'front-end/lib/views/icon';
@@ -65,8 +65,16 @@ const update: Update<State, Msg> = ({state, msg }) => {
             text: state.feedbackText.value
           });
 
-          // TODO: Redirect user to the 'feedback submitted' page
-
+          // Route to feedback submitted notice
+          dispatch(newRoute({
+            tag: 'notice' as 'notice',
+            value: {
+              noticeId: {
+                tag: 'feedbackSubmitted' as 'feedbackSubmitted',
+                value: undefined
+              }
+            }
+          }));
           return stopLoading(state);
         }
       ];
@@ -94,10 +102,10 @@ const RatingSelector: ComponentView<State, Msg> = props => {
 
 const viewBottomBar: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
-  const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   const isLoading = state.loading > 0;
-  const isDisabled = isLoading;
+  const isDisabled = isLoading || state.rating === undefined || state.feedbackText.value.length === 0;
   const cancelRoute: Route = { tag: 'landing' as 'landing', value: null };
+  const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
     <FixedBar>
       <LoadingButton color='secondary' onClick={submit} loading={isLoading} disabled={isDisabled}>
