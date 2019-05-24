@@ -99,6 +99,35 @@ a {
   }
 }
 
+.blockquote {
+  margin-left: $spacer;
+  padding-left: $spacer;
+  border-left: 2px solid $gray-200;
+}
+
+blockquote {
+  @extend .blockquote;
+}
+
+table {
+  @extend .table;
+
+  thead {
+    @extend .small;
+    @extend .text-secondary;
+    @extend .text-uppercase;
+    @extend .font-weight-bold;
+    @extend .bg-light;
+  }
+}
+
+pre {
+  @extend .bg-light;
+  @extend .p-3;
+  @extend .border;
+  @extend .rounded;
+}
+
 // Custom utilities.
 
 // Create classes for each of the text colors
@@ -159,6 +188,14 @@ a {
       margin-top: 2*$spacer;
     }
   }
+
+  blockquote,
+  table,
+  pre {
+    margin-top: 2*$spacer;
+    margin-bottom: 2*$spacer;
+  }
+
 }
 
 // Custom page overrides.

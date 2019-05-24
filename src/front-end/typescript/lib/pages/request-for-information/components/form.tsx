@@ -426,7 +426,8 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
             state={state.rfiNumber}
             disabled={isDisabled}
             onChangeDebounced={onChangeDebounced('validateRfiNumber')}
-            onChange={onChangeShortText('onChangeRfiNumber')} />
+            onChange={onChangeShortText('onChangeRfiNumber')}
+            autoFocus />
         </Col>
       </Row>
       <Row>

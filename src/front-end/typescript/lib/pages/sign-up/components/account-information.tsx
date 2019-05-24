@@ -161,7 +161,8 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
           <ShortText.view
             state={state.email}
             onChangeDebounced={() => dispatch({ tag: 'validateEmail', value: undefined })}
-            onChange={onChange('onChangeEmail')} />
+            onChange={onChange('onChangeEmail')}
+            autoFocus />
         </Col>
       </Row>
       <Row>

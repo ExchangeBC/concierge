@@ -157,7 +157,8 @@ const view: ComponentView<State, Msg> = props => {
                 state={state.email}
                 onChange={onChange('onChangeEmail')}
                 onChangeDebounced={() => dispatch({ tag: 'validateEmail', value: undefined })}
-                onEnter={submit} />
+                onEnter={submit}
+                autoFocus />
             </Col>
           </Row>
           <Row>

@@ -15,6 +15,7 @@ interface ExtraProps {
   disabled: boolean;
   onChangeDebounced?: Input.OnChangeDebounced;
   inputClassName: string;
+  autoFocus?: boolean;
 }
 
 export interface Props extends Pick<FormField.Props<State, HTMLInputElement, ExtraProps>, 'toggleHelp'> {
@@ -24,6 +25,7 @@ export interface Props extends Pick<FormField.Props<State, HTMLInputElement, Ext
   onChangeDebounced?: Input.OnChangeDebounced;
   onEnter?: OnEnter;
   inputClassName?: string;
+  autoFocus?: boolean
 }
 
 interface Params extends Pick<State, 'id' | 'required' | 'type' | 'label' | 'placeholder' | 'help'> {
@@ -58,6 +60,7 @@ const Child: View<FormField.ChildProps<State, HTMLInputElement, ExtraProps>> = p
   const { state, className, onChange, extraProps } = props;
   const inputClassName: string = (extraProps && extraProps.inputClassName) || '';
   const disabled: boolean = !!(extraProps && extraProps.disabled) || false;
+  const autoFocus: boolean = !disabled && !!(extraProps && extraProps.autoFocus);
   return (
     <Input.View
       id={state.id}
@@ -66,18 +69,20 @@ const Child: View<FormField.ChildProps<State, HTMLInputElement, ExtraProps>> = p
       placeholder={state.placeholder}
       className={`${className} ${inputClassName} form-control`}
       disabled={disabled}
+      autoFocus={autoFocus}
       onChange={onChange}
       onChangeDebounced={extraProps && extraProps.onChangeDebounced}
       onKeyUp={extraProps && extraProps.onKeyUp} />
   );
 };
 
-export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter, toggleHelp, disabled = false, inputClassName = '' }) => {
+export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter, toggleHelp, disabled = false, inputClassName = '', autoFocus }) => {
   const extraProps: ExtraProps = {
     onKeyUp: makeOnKeyUp(onEnter),
     onChangeDebounced,
     disabled,
-    inputClassName
+    inputClassName,
+    autoFocus
   };
   return (
     <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={extraProps} />
