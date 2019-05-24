@@ -222,7 +222,7 @@ const Description: View<{ value: string }> = ({ value }) => {
   return (
     <Row className='mt-5 pt-5 border-top'>
       <Col xs='12'>
-        <Markdown source={value} />
+        <Markdown source={value} openLinksInNewTabs />
       </Col>
     </Row>
   );

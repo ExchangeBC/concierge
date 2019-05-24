@@ -4,14 +4,18 @@ import ReactMarkdown from 'react-markdown';
 
 interface Props {
   source: string;
-  escapeHtml?: boolean;
   className?: string;
+  escapeHtml?: boolean;
+  openLinksInNewTabs?: boolean
 }
 
-const Markdown: View<Props> = ({ source, escapeHtml = true, className = '' }) => {
+const Markdown: View<Props> = ({ source, className = '', escapeHtml = true, openLinksInNewTabs = false }) => {
   return (
     <div className={`markdown ${className}`}>
-      <ReactMarkdown source={source} escapeHtml={escapeHtml} />
+      <ReactMarkdown
+        source={source}
+        escapeHtml={escapeHtml}
+        linkTarget={openLinksInNewTabs ? '_blank' : undefined} />
     </div>
   );
 };
