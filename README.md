@@ -144,8 +144,10 @@ As a convenience, developers can refer to `sample.env` as a guide.
 | `TOKEN_SECRET` | The secret used to hash ForgotPasswordTokens. |
 | `COOKIE_SECRET` | The secret used to hash cookies. |
 | `FILE_STORAGE_DIR` | The location to store uploaded files. |
-| `MAILER_GMAIL_USER` | Your GMail SMTP username to test transactional emails in development. |
-| `MAILER_GMAIL_PASS` | Your GMail SMTP password to test transactional emails in development. |
+| `MAILER_GMAIL_USER` | A GMail SMTP username to test transactional emails in development. |
+| `MAILER_GMAIL_PASS` | A GMail SMTP password to test transactional emails in development. |
+| `MAILER_HOST` | SMTP server host for transactional emails in production. |
+| `MAILER_PORT` | SMTP server port for transactional emails in production. |
 | `MAILER_FROM` | The sender for transactional emails. |
 | `MAILER_ROOT_URL` | The domain used for links in transactional email bodies. |
 
