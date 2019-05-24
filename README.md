@@ -52,7 +52,7 @@ Hotfixes can be merged directly to `master` via a pull request, but should be me
 
 ### Dependencies
 
-If you are using NixOS or the Nix package manager, simply running `nix-shell` will install all necessary dependencies,
+If you are using NixOS or the Nix package manager, running `nix-shell` will install all necessary dependencies,
 and drop you in a shell with them accessible in your `$PATH`.
 
 If you are not using Nix, please ensure the following packages have been installed:
@@ -172,9 +172,9 @@ The Development, Test and Staging environments are secured behind HTTP Basic Aut
 
 The "akpalw-tools" OpenShift project is used to trigger the deployment process for all environments.
 
-To deploy to the Development environment, simply start a build for "akpalw-dev", and OpenShift will build and deploy HEAD from the `develop` branch.
+To deploy to the Development environment, start a build for "akpalw-dev", and OpenShift will build and deploy HEAD from the `develop` branch.
 
-To deploy to the Production environment, simply merge the `develop` branch into the `master` branch. "akpalw-prod" has been configured to start the deployment process for production automatically when commits are made to the `master` branch. Note that the Production deployment process first deploys to the Staging environment, and requires approval before the deployment continues to the Production environment.
+To deploy to the Production environment, merge the `develop` branch into the `master` branch. "akpalw-prod" has been configured to start the deployment process for production automatically when commits are made to the `master` branch. Note that the Production deployment process first deploys to the Staging environment, and requires approval before the deployment continues to the Production environment.
 
 ## Team
 
