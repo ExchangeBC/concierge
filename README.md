@@ -9,7 +9,7 @@ This document describes the project's developer environment, technical architect
 
 The Concierge is a full-stack TypeScript web application that uses MongoDB for persistence.
 
-![Concierge Architecture](https://raw.githubusercontent.com/BCDevExchange/concierge/develop/docs/Concierge%20Architecture.svg)
+![Concierge Architecture](https://github.com/BCDevExchange/concierge/develop/blob/docs/Concierge%20Architecture.svg)
 
 The source code is split into three parts:
 
@@ -20,7 +20,7 @@ The front-end is build system is executed by Grunt.
 
 The front-end's state management framework (`src/front-end/lib/framework.ts`) provides type-safe state management, and is heavily influenced by the [Elm Architecture](https://guide.elm-lang.org/architecture/). If you've used Redux before, you will find this to be very similar since Redux is also based on the Elm Architecture. The main difference is that this project's framework derives greater inspiration from the Elm Architecture and it aims to be far more type-safe than Redux.
 
-![Concierge Front-End Architecture](https://raw.githubusercontent.com/BCDevExchange/concierge/develop/docs/Front-End%20Architecture.svg)
+![Concierge Front-End Architecture](https://github.com/BCDevExchange/concierge/develop/blob/docs/Front-End%20Architecture.svg)
 
 ### Back-End (`src/back-end`)
 
@@ -28,7 +28,7 @@ A TypeScript server that vends the front-end's build assets (`src/back-end/lib/r
 
 The server framework (`src/back-end/lib/server/index.ts`) provides type-safe abstractions for API development, and is executed by Express (`src/back-end/lib/server/adapters.ts`).
 
-![Concierge Back-End Architecture](https://raw.githubusercontent.com/BCDevExchange/concierge/develop/docs/Back-End%20Architecture.svg)
+![Concierge Back-End Architecture](https://github.com/BCDevExchange/concierge/develop/blob/docs/Back-End%20Architecture.svg)
 
 #### CRUD Resources
 
