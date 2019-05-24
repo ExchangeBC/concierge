@@ -12,7 +12,7 @@ export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, A
 
 export const resource: Resource = {
 
-  routeNamespace: 'feedbackResponse',
+  routeNamespace: 'feedback',
 
   create(Models) {
     const FeedbackModel = Models.Feedback;

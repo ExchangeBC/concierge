@@ -1,6 +1,7 @@
 import { prefixRequest } from 'front-end/lib/http';
 import shajs from 'sha.js';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
+import * as FeedbackResource from 'shared/lib/resources/feedback';
 import * as FileResource from 'shared/lib/resources/file';
 import * as ForgotPasswordTokenResource from 'shared/lib/resources/forgot-password-token';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
@@ -140,6 +141,16 @@ return async () => {
 export const getSession = withCurrentSession(HttpMethod.Get);
 
 export const deleteSession = withCurrentSession(HttpMethod.Delete);
+
+export async function createFeedback(body: FeedbackResource.CreateRequestBody): Promise<ValidOrInvalid<null, null>> {
+  const response = await request(HttpMethod.Post, 'feedback', body);
+  switch (response.status) {
+    case 201:
+      return valid(null);
+    default:
+      return invalid(null);
+  }
+}
 
 export async function createForgotPasswordToken(body: ForgotPasswordTokenResource.CreateRequestBody): Promise<ValidOrInvalid<null, null>> {
   const response = await request(HttpMethod.Post, 'forgot-password-tokens', body);
