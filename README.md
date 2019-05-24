@@ -80,6 +80,8 @@ npm run back-end:watch # Terminal 2, starts the back-end server.
 npm run front-end:watch # Terminal 3, builds the front-end source code.
 ```
 
+Then, visit the URL logged to your terminal to view the now locally-running web application.
+
 You can stop (and wipe) the local MongoDB server by running `docker-compose down`.
 
 ### NPM Scripts
