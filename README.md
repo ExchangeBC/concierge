@@ -34,11 +34,13 @@ This folder contains modules that expose types and functions that are used acros
 
 ## Contributing
 
-Features should be implemented in feature branches. Create a pull request against the `develop` branch to have your work deployed.
+Features should be implemented in feature branches. Create a pull request against the `develop` branch to have your work reviewed for subsequent deployment.
 
 The `develop` branch contains all approved code.
 
-The `master` branch contains the latest work deployed to production. A production release is triggered by merging the `develop` branch into `master`.
+The `master` branch contains work that has passed the Quality Assurance process and is ready to be deployed to production.
+
+Hotfixes can be merged directly to `master` via a pull request, but should be merged back into the `develop` branch as well.
 
 ## Development Environment
 
