@@ -258,7 +258,7 @@ const Addenda: View<{ addenda: Addendum[] }> = ({ addenda }) => {
     return (
       <div key={`view-rfi-addendum-${i}`} className={`pb-${i === addenda.length - 1 ? '0' : '4'} w-100`}>
         <Col xs='12' md={{ size: 10, offset: 1 }} className={i !== 0 ? 'pt-4 border-top' : ''}>
-          <p className='mb-2'>{addendum.description}</p>
+          <Markdown source={addendum.description} className='mb-2' openLinksInNewTabs />
         </Col>
         <Col xs='12' md={{ size: 10, offset: 1 }} className='d-flex flex-column flex-md-row justify-content-between text-secondary'>
           <small>{publishedDateToString(addendum.createdAt)}</small>
