@@ -8,6 +8,7 @@ This document describes the project's developer environment, technical architect
 ## Project Organisation
 
 The Concierge is a full-stack TypeScript web application that uses MongoDB for persistence.
+It is written in a functional and declarative style with the goal of maximising compile-time guarantees through type-safety.
 
 ![Concierge Architecture](https://github.com/BCDevExchange/concierge/blob/develop/docs/Concierge%20Architecture.svg)
 
@@ -164,7 +165,7 @@ We have four environments:
 | akpalw-dev | Development | https://concierge-dev.pathfinder.gov.bc.ca |
 | akpalw-test | Test | https://concierge-test.pathfinder.gov.bc.ca |
 | akpalw-prod | Staging | https://concierge-staging.pathfinder.gov.bc.ca |
-| akpalw-prod | Production | https://procurementconcierge.gov.bc.ca |
+| akpalw-prod | Production | https://concierge.pathfinder.gov.bc.ca |
 
 The Test and Staging environments share the same database instance, whereas the Development and Production environments have their own databases.
 
