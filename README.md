@@ -73,7 +73,7 @@ cp sample.env .env
 Finally, open three terminals and run the following commands:
 
 ```bash
-docker-compose up -d # Terminal 1, starts a local MongoDB server.
+docker-compose up # Terminal 1, starts a local MongoDB server.
 npm run back-end:watch # Terminal 2, starts the back-end server.
 npm run front-end:watch # Terminal 3, builds the front-end source code.
 ```
@@ -117,9 +117,9 @@ All environment variables affect the back-end server's functionality, and are sa
 In development, developers can create a `.env` file in the repository's root directory to configure environment variables.
 As a convenience, developers can refer to `sample.env` as a guide.
 
-| Name | Possible Values | Description |
+| Name | Description |
 |---|---|---|
-| `NODE_ENV` | development, production | The back-end run-time's environment, or the front-end's build target. |
+| `NODE_ENV` | The back-end run-time's environment, or the front-end's build target. Possible values include either "development" or "production". |
 | `SERVER_HOST` | The IPv4 address for the back-end to bind to. |
 | `SERVER_PORT` | The TCP port for the back-end to bind to. |
 | `BASIC_AUTH_USERNAME` | An HTTP basic auth username to limit access to the web application. |
