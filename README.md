@@ -5,6 +5,28 @@ In addition, Vendors can use this tool to publish their own ideas, enabling Prog
 
 This document describes the project's developer environment, technical architecture and deployment infrastructure.
 
+## Table of Contents
+
+<!-- toc -->
+
+- [Project Organisation](#project-organisation)
+  * [Front-End (`src/front-end`)](#front-end-srcfront-end)
+  * [Back-End (`src/back-end`)](#back-end-srcback-end)
+    + [CRUD Resources](#crud-resources)
+  * [Shared (`src/shared`)](#shared-srcshared)
+- [Contributing](#contributing)
+- [Development Environment](#development-environment)
+  * [Dependencies](#dependencies)
+  * [Quick Start](#quick-start)
+  * [NPM Scripts](#npm-scripts)
+  * [Environment Variables](#environment-variables)
+- [Deployment](#deployment)
+  * [Environments](#environments)
+  * [Deployment Process](#deployment-process)
+- [Team](#team)
+
+<!-- tocstop -->
+
 ## Project Organisation
 
 The Concierge is a full-stack TypeScript web application that uses MongoDB for persistence.
@@ -118,6 +140,7 @@ npm run <SCRIPT_NAME>
 | `shared:typedoc` | Builds TypeDoc API documentation for the shared source code. |
 | `typedoc:build` | Builds all TypeDoc API documentation. |
 | `typedoc:start` | Serves TypeDoc documentation on a local server. |
+| `readme:toc` | Generate and insert a table of contents for README.md. |
 
 ### Environment Variables
 
