@@ -140,7 +140,8 @@ npm run <SCRIPT_NAME>
 | `shared:typedoc` | Builds TypeDoc API documentation for the shared source code. |
 | `typedoc:build` | Builds all TypeDoc API documentation. |
 | `typedoc:start` | Serves TypeDoc documentation on a local server. |
-| `readme:toc` | Generate and insert a table of contents for README.md. |
+| `docs:readme-toc` | Generate and insert a table of contents for README.md. |
+| `docs:licenses` | Generate the list of licenses from this project's NPM dependencies in OPEN_SOURCE_LICENSES.txt. |
 
 ### Environment Variables
 
