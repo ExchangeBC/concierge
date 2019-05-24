@@ -254,7 +254,7 @@ export function component<PS, PM, P extends ProfileType>(Profile: ProfileCompone
     viewBottomBar: viewBottomBar(Profile),
     getAlerts: emptyPageAlerts,
     getMetadata() {
-      return makePageMetadata('Terms and Conditions');
+      return makePageMetadata(`Create a ${userTypeToTitleCase(Profile.userType)} Account`);
     }
   };
 };

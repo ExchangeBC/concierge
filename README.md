@@ -18,7 +18,7 @@ The source code is split into three parts:
 A TypeScript single-page application using React, Immutable.js, Bootstrap and SASS.
 The front-end is build system is executed by Grunt.
 
-The front-end's state management framework (`src/front-end/lib/framework.ts`) provides type-safe state management, and is heavily influenced by the [Elm Architecture](https://guide.elm-lang.org/architecture/). If you've used Redux before, you will find this to be very similar since Redux is also based on the Elm Architecture. The main difference is that this project's framework derives greater inspiration from the Elm Architecture and it aims to be far more type-safe than Redux.
+The front-end's state management framework (`src/front-end/lib/framework.tsx`) provides type-safe state management, and is heavily influenced by the [Elm Architecture](https://guide.elm-lang.org/architecture/). If you've used Redux before, you will find this to be very similar since Redux is also based on the Elm Architecture. The main difference is that this project's framework derives greater inspiration from the Elm Architecture and it aims to be far more type-safe than Redux.
 
 ![Concierge Front-End Architecture](https://github.com/BCDevExchange/concierge/blob/develop/docs/Front-End%20Architecture.svg)
 
