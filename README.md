@@ -118,7 +118,7 @@ In development, developers can create a `.env` file in the repository's root dir
 As a convenience, developers can refer to `sample.env` as a guide.
 
 | Name | Description |
-|---|---|---|
+|---|---|
 | `NODE_ENV` | The back-end run-time's environment, or the front-end's build target. Possible values include either "development" or "production". |
 | `SERVER_HOST` | The IPv4 address for the back-end to bind to. |
 | `SERVER_PORT` | The TCP port for the back-end to bind to. |
