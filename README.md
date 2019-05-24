@@ -148,7 +148,7 @@ This project is deployed to the Government of British Columbia's own OpenShift i
 We have four environments:
 
 | OpenShift Project | Name | URL |
-|---|---|
+|---|---|---|
 | akpalw-dev | Development | https://concierge-dev.pathfinder.gov.bc.ca |
 | akpalw-test | Test | https://concierge-test.pathfinder.gov.bc.ca |
 | akpalw-prod | Staging | https://concierge-staging.pathfinder.gov.bc.ca |
