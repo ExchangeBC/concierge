@@ -18,6 +18,7 @@ export interface State<Value = string> {
 
 export interface ChildProps<State, ChildElement, ExtraProps> {
   state: State;
+  disabled: boolean;
   onChange: FormEventHandler<ChildElement>;
   className: string;
   extraProps?: ExtraProps;
@@ -25,6 +26,7 @@ export interface ChildProps<State, ChildElement, ExtraProps> {
 
 export interface Props<ChildState extends State<Value>, ChildElement, ChildExtraProps, Value = string> {
   state: ChildState;
+  disabled?: boolean;
   Child: View<ChildProps<ChildState, ChildElement, ChildExtraProps>>;
   onChange: FormEventHandler<ChildElement>;
   labelClassName?: string;
@@ -32,9 +34,9 @@ export interface Props<ChildState extends State<Value>, ChildElement, ChildExtra
   toggleHelp?(): void;
 }
 
-const ConditionalHelpToggle: View<Props<any, any, any>> = ({ state, toggleHelp }) => {
+const ConditionalHelpToggle: View<Props<any, any, any>> = ({ state, toggleHelp, disabled = false }) => {
   const { help } = state;
-  if (help && toggleHelp) {
+  if (help && toggleHelp && !disabled) {
     return (
       <Icon
         name='question-circle'
@@ -43,7 +45,7 @@ const ConditionalHelpToggle: View<Props<any, any, any>> = ({ state, toggleHelp }
         height={1}
         className='ml-2'
         style={{ cursor: 'pointer' }}
-        onClick={() => toggleHelp()} />
+        onClick={e => { toggleHelp(); e.preventDefault(); }} />
     );
   } else {
     return null;
@@ -66,8 +68,9 @@ const ConditionalLabel: View<Props<any, any, any>> = (props) => {
   }
 };
 
-const ConditionalHelp: View<State<any>> = ({ help }) => {
-  if (help && help.show) {
+const ConditionalHelp: View<Props<any, any, any>> = ({ state, disabled }) => {
+  const { help } = state;
+  if (help && help.show && !disabled) {
     return (
       <Alert color='info' style={{ whiteSpace: 'pre' }}>
         {help.text}
@@ -94,14 +97,14 @@ const ConditionalErrors: View<State<any>> = ({ errors }) => {
 }
 
 export function view<ChildState extends State<Value>, ChildElement, ChildExtraProps, Value>(props: Props<ChildState, ChildElement, ChildExtraProps, Value>) {
-  const { state, Child, onChange, extraProps } = props;
+  const { state, disabled = false, Child, onChange, extraProps } = props;
   const invalid = !!state.errors.length;
   const className = invalid ? 'is-invalid' : '';
   return (
     <FormGroup className={`form-field-${state.id}`}>
       <ConditionalLabel {...props} />
-      <ConditionalHelp {...state} />
-      <Child state={state} onChange={onChange} className={className} extraProps={extraProps} />
+      <ConditionalHelp {...props} />
+      <Child state={state} onChange={onChange} className={className} extraProps={extraProps} disabled={disabled} />
       <ConditionalErrors {...state} />
     </FormGroup>
   );

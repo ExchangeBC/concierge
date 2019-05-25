@@ -88,7 +88,7 @@ const ConditionalHelpToggle: View<Props<any, any, any, any>> = ({ state, toggleH
         color='secondary'
         width={1}
         height={1}
-        className='ml-2'
+        className='ml-3'
         style={{ cursor: 'pointer' }}
         onClick={() => toggleHelp()} />
     );

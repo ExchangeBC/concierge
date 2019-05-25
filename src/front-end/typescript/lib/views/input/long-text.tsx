@@ -13,14 +13,12 @@ type OnChangeDebounced = () => void;
 
 interface ExtraProps {
   onKeyUp: KeyboardEventHandler<HTMLTextAreaElement>;
-  disabled: boolean;
   onChangeDebounced?: OnChangeDebounced;
   style?: CSSProperties;
 }
 
-export interface Props extends Pick<FormField.Props<State, HTMLTextAreaElement, ExtraProps>, 'toggleHelp'> {
+export interface Props extends Pick<FormField.Props<State, HTMLTextAreaElement, ExtraProps>, 'toggleHelp' | 'disabled'> {
   state: State;
-  disabled?: boolean;
   onChange: ChangeEventHandler<HTMLTextAreaElement>;
   onChangeDebounced?: OnChangeDebounced;
   onEnter?: OnEnter;
@@ -52,8 +50,7 @@ function makeOnKeyUp(onEnter?: OnEnter): KeyboardEventHandler<HTMLTextAreaElemen
 };
 
 const Child: View<FormField.ChildProps<State, HTMLTextAreaElement, ExtraProps>> = props => {
-  const { state, className, onChange, extraProps } = props;
-  const disabled: boolean = !!(extraProps && extraProps.disabled) || false;
+  const { state, className, onChange, extraProps, disabled } = props;
   return (
     <TextArea.View
       id={state.id}
@@ -72,10 +69,9 @@ export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter,
   const extraProps: ExtraProps = {
     onKeyUp: makeOnKeyUp(onEnter),
     onChangeDebounced,
-    disabled,
     style
   };
   return (
-    <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={extraProps} />
+    <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={extraProps} disabled={disabled} />
   );
 };

@@ -7,13 +7,10 @@ export interface State extends FormField.State<boolean> {
   inlineLabel: string;
 }
 
-interface ExtraProps {
-  disabled: boolean;
-}
+type ExtraProps = null;
 
-export interface Props extends Pick<FormField.Props<State, HTMLInputElement, undefined, boolean>, 'toggleHelp' | 'labelClassName'> {
+export interface Props extends Pick<FormField.Props<State, HTMLInputElement, undefined, boolean>, 'toggleHelp' | 'labelClassName' | 'disabled'> {
   state: State;
-  disabled?: boolean;
   onChange: FormEventHandler<HTMLInputElement>;
 }
 
@@ -36,8 +33,7 @@ export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (event: Synthetic
 }
 
 const Child: View<ChildProps> = props => {
-  const { state, onChange, className, extraProps } = props;
-  const disabled: boolean = !!(extraProps && extraProps.disabled) || false;
+  const { state, disabled, onChange, className } = props;
   return (
     <CustomInput
       id={state.id}
@@ -52,16 +48,14 @@ const Child: View<ChildProps> = props => {
 };
 
 export const view: View<Props> = ({ state, onChange, toggleHelp, labelClassName, disabled = false }) => {
-  const extraProps: ExtraProps = {
-    disabled
-  };
   return (
     <FormField.view
       Child={Child}
       state={state}
       onChange={onChange}
       toggleHelp={toggleHelp}
-      extraProps={extraProps}
+      extraProps={null}
+      disabled={disabled}
       labelClassName={labelClassName} />
   );
 };

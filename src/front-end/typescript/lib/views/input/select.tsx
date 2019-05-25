@@ -12,13 +12,10 @@ export interface State extends FormField.State {
   unselectedLabel?: string;
 }
 
-interface ExtraProps {
-  disabled: boolean;
-}
+type ExtraProps = null;
 
-export interface Props extends Pick<FormField.Props<State, HTMLSelectElement, undefined>, 'toggleHelp'> {
+export interface Props extends Pick<FormField.Props<State, HTMLSelectElement, ExtraProps>, 'toggleHelp' | 'disabled'> {
   state: State;
-  disabled?: boolean;
   onChange: FormEventHandler<HTMLSelectElement>;
 }
 
@@ -45,8 +42,7 @@ export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (event: Synthetic
 }
 
 const Child: View<ChildProps> = props => {
-  const { state, onChange, className, extraProps } = props;
-  const disabled: boolean = !!(extraProps && extraProps.disabled) || false;
+  const { state, disabled, onChange, className } = props;
   const children = state.options.map((o, i) => {
     return (<option key={`select-option-${o.value}-${i}`} value={o.value}>{o.label}</option>);
   });
@@ -64,10 +60,7 @@ const Child: View<ChildProps> = props => {
 };
 
 export const view: View<Props> = ({ state, onChange, toggleHelp, disabled }) => {
-  const extraProps: ExtraProps = {
-    disabled: disabled || false
-  };
   return (
-    <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={extraProps}/>
+    <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={null} disabled={disabled} />
   );
 };

@@ -1,6 +1,6 @@
 import { View } from 'front-end/lib/framework';
 import { BootstrapColor } from 'front-end/lib/types';
-import { CSSProperties, default as React, ReactElement } from 'react';
+import { CSSProperties, default as React, MouseEventHandler, ReactElement } from 'react';
 
 export type AvailableIcons
   = 'chevron-left'
@@ -21,7 +21,7 @@ interface Props {
   height?: number;
   className?: string;
   style?: CSSProperties;
-  onClick?(): void;
+  onClick?: MouseEventHandler<SVGSVGElement>;
 }
 
 interface SvgProps extends Props {
