@@ -23,12 +23,9 @@ type InitParams = Pick<State, 'id' | 'value' | 'label' | 'help' | 'inlineLabel'>
 
 export function init(params: InitParams): State {
   return {
-    id: params.id,
-    value: params.value,
+    ...params,
     errors: [],
-    required: false,
-    label: params.label,
-    inlineLabel: params.inlineLabel
+    required: false
   };
 }
 

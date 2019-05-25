@@ -79,13 +79,18 @@ export interface Props<ChildElement, Value, OnAddParams, ExtraChildProps> {
   toggleHelp?(): void;
 }
 
-const ConditionHelpToggle: View<Props<any, any, any, any>> = ({ state, toggleHelp, disabled = false }) => {
+const ConditionalHelpToggle: View<Props<any, any, any, any>> = ({ state, toggleHelp, disabled = false }) => {
   const { help } = state;
   if (help && toggleHelp && !disabled) {
     return (
-      <a onClick={() => toggleHelp()}>
-        {help.show ? 'Hide' : 'Show'} Help Text
-      </a>
+      <Icon
+        name='question-circle'
+        color='secondary'
+        width={1}
+        height={1}
+        className='ml-2'
+        style={{ cursor: 'pointer' }}
+        onClick={() => toggleHelp()} />
     );
   } else {
     return null;
@@ -99,7 +104,6 @@ const ConditionalLabel: View<Props<any, any, any, any>> = (props) => {
       <Label className={`mb-0 mr-3 ${required ? 'font-weight-bold' : ''}`}>
         {label}
         <span className='text-info'>{required ? '*' : ''}</span>
-        <ConditionHelpToggle {...props} />
       </Label>
     );
   } else {
@@ -235,6 +239,7 @@ export function view<ChildElement, Value, OnAddParams, ExtraChildProps>(props: P
       <div className={`d-flex flex-wrap align-items-center mb-2 ${labelClassName}`}>
         <ConditionalLabel {...props} />
         <ConditionalAddButton {...props} />
+        <ConditionalHelpToggle {...props} />
       </div>
       <ConditionalHelp {...props} />
       <Children {...props} />

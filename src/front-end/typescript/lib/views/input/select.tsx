@@ -32,13 +32,9 @@ export function init(params: InitParams): State {
     options = [{ value: '', label: params.unselectedLabel }].concat(params.options);
   }
   return {
-    id: params.id,
-    value: params.value,
+    ...params,
     errors: [],
-    required: params.required,
-    label: params.label,
-    options,
-    unselectedLabel: params.unselectedLabel
+    options
   };
 }
 

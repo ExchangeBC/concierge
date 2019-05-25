@@ -34,13 +34,9 @@ interface Params extends Pick<State, 'id' | 'required' | 'type' | 'label' | 'pla
 
 export function init(params: Params): State {
   return {
-    id: params.id,
+    ...params,
     value: params.value || '',
-    errors: [],
-    required: params.required,
-    type: params.type,
-    label: params.label,
-    placeholder: params.placeholder
+    errors: []
   };
 }
 

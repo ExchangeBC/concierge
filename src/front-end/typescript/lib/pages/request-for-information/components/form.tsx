@@ -30,6 +30,10 @@ export interface Params {
   existingRfi?: PublicRfi;
 }
 
+type HelpFieldName
+  = 'description'
+  | 'addenda';
+
 export type Msg
   = ADT<'onChangeRfiNumber', string>
   | ADT<'onChangeTitle', string>
@@ -49,7 +53,8 @@ export type Msg
   | ADT<'validateDescription'>
   | ADT<'validateDiscoveryDay'>
   | ADT<'validateClosingDate'>
-  | ADT<'validateClosingTime'>;
+  | ADT<'validateClosingTime'>
+  | ADT<'toggleHelp', HelpFieldName>;
 
 export interface State {
   loading: number;
@@ -143,6 +148,8 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
         removable: true
       };
     });
+  const descriptionHelpText = 'Suggested sections for this RFI\'s description: \n(1) Business Requirement(s) or Issue(s); \n(2) Brief Ministry Overview; \n(3) Objectives of this RFI; \n(4) Ministry Obligations; and \n(5) Response Instructions.';
+  const addendaHelpText = 'Additional information related to this RFI.';
   return {
     loading: 0,
     isEditing,
@@ -176,8 +183,12 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       id: 'rfi-description',
       required: true,
       label: 'RFI Description',
-      placeholder: 'Suggested sections for an RFI\'s description: \n(1) Business Requirement(s) or Issue(s); \n(2) Brief Ministry Overview; \n(3) Objectives of the RFI; \n(4) Ministry Obligations; and \n(5) Response Instructions.',
-      value: getRfiString('description')
+      placeholder: descriptionHelpText,
+      value: getRfiString('description'),
+      help: {
+        text: descriptionHelpText,
+        show: false
+      }
     }),
     discoveryDay: Switch.init({
       id: 'rfi-discovery-day',
@@ -248,7 +259,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       addButtonText: 'Add Addendum',
       field: {
         label: 'Addendum',
-        placeholder: 'Additional information related to the RFI.',
+        placeholder: addendaHelpText,
         textAreaStyle: {
           height: '120px'
         }
@@ -259,7 +270,11 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
         labelClassName: 'h3 mb-4',
         required: false,
         reverseFieldOrderInView: true,
-        fields: existingAddenda
+        fields: existingAddenda,
+        help: {
+          text: addendaHelpText,
+          show: false
+        }
       }
     }))
   };
@@ -340,6 +355,15 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       return [validateClosingDateAndTime(state)];
     case 'validateClosingTime':
       return [validateClosingDateAndTime(state)];
+    case 'toggleHelp':
+      return [(() => {
+        switch (msg.value) {
+          case 'description':
+            return state.setIn(['description', 'help', 'show'], !state.getIn(['description', 'help', 'show']));
+          case 'addenda':
+            return state.setIn(['addenda', 'help', 'show'], !state.getIn(['addenda', 'help', 'show']));
+        }
+      })()];
     default:
       return [state];
   }
@@ -495,6 +519,7 @@ const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeLongText = (tag: any) => LongText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const onChangeSwitch = (tag: any) => Switch.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.checked }));
   const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
+  const toggleHelp = (value: HelpFieldName) => () => dispatch({ tag: 'toggleHelp', value });
   return (
     <div className='mb-4'>
       <Row>
@@ -511,6 +536,7 @@ const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
             disabled={isDisabled}
             onChangeDebounced={onChangeDebounced('validateDescription')}
             onChange={onChangeLongText('onChangeDescription')}
+            toggleHelp={toggleHelp('description')}
             style={{ height: '50vh', minHeight: '400px' }} />
         </Col>
       </Row>

@@ -1,4 +1,5 @@
 import { Immutable, View } from 'front-end/lib/framework';
+import Icon from 'front-end/lib/views/icon';
 import { default as React, FormEventHandler } from 'react';
 import { Alert, FormGroup, FormText, Label } from 'reactstrap';
 import { getInvalidValue, getValidValue, Validation } from 'shared/lib/validators';
@@ -31,13 +32,18 @@ export interface Props<ChildState extends State<Value>, ChildElement, ChildExtra
   toggleHelp?(): void;
 }
 
-const ConditionHelpToggle: View<Props<any, any, any>> = ({ state, toggleHelp }) => {
+const ConditionalHelpToggle: View<Props<any, any, any>> = ({ state, toggleHelp }) => {
   const { help } = state;
   if (help && toggleHelp) {
     return (
-      <a onClick={() => toggleHelp()}>
-        {help.show ? 'Hide' : 'Show'} Help Text
-      </a>
+      <Icon
+        name='question-circle'
+        color='secondary'
+        width={1}
+        height={1}
+        className='ml-2'
+        style={{ cursor: 'pointer' }}
+        onClick={() => toggleHelp()} />
     );
   } else {
     return null;
@@ -46,13 +52,13 @@ const ConditionHelpToggle: View<Props<any, any, any>> = ({ state, toggleHelp }) 
 
 const ConditionalLabel: View<Props<any, any, any>> = (props) => {
   const { id, label, required } = props.state;
-  const className = `${required ? 'font-weight-bold' : ''} ${props.labelClassName || ''}`;
+  const className = `${required ? 'font-weight-bold' : ''} ${props.labelClassName || ''} d-flex align-items-center`;
   if (label) {
     return (
       <Label for={id} className={className}>
         {label}
         <span className='text-info'>{required ? '*' : ''}</span>
-        <ConditionHelpToggle {...props} />
+        <ConditionalHelpToggle {...props} />
       </Label>
     );
   } else {
@@ -63,7 +69,7 @@ const ConditionalLabel: View<Props<any, any, any>> = (props) => {
 const ConditionalHelp: View<State<any>> = ({ help }) => {
   if (help && help.show) {
     return (
-      <Alert color='info'>
+      <Alert color='info' style={{ whiteSpace: 'pre' }}>
         {help.text}
       </Alert>
     );
