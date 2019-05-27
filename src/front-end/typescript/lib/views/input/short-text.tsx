@@ -1,9 +1,7 @@
 import { Dispatch, View } from 'front-end/lib/framework';
 import * as FormField from 'front-end/lib/views/form-field';
-import { AvailableIcons, default as Icon } from 'front-end/lib/views/icon';
 import * as Input from 'front-end/lib/views/input/input';
 import { ChangeEvent, ChangeEventHandler, default as React, KeyboardEventHandler } from 'react';
-import { InputGroup, InputGroupAddon, InputGroupText } from 'reactstrap';
 
 export interface State extends FormField.State {
   type: 'text' | 'email' | 'password' | 'date';
@@ -12,17 +10,11 @@ export interface State extends FormField.State {
 
 type OnEnter = () => void;
 
-export interface Addon {
-  icon: AvailableIcons;
-  type: 'prepend' | 'append';
-}
-
 interface ExtraProps {
   onKeyUp: KeyboardEventHandler<HTMLInputElement>;
   onChangeDebounced?: Input.OnChangeDebounced;
   inputClassName: string;
   autoFocus?: boolean;
-  addon?: Addon;
 }
 
 export interface Props extends Pick<FormField.Props<State, HTMLInputElement, ExtraProps>, 'toggleHelp' | 'disabled'> {
@@ -32,7 +24,6 @@ export interface Props extends Pick<FormField.Props<State, HTMLInputElement, Ext
   onEnter?: OnEnter;
   inputClassName?: string;
   autoFocus?: boolean
-  addon?: Addon;
 }
 
 interface Params extends Pick<State, 'id' | 'required' | 'type' | 'label' | 'placeholder' | 'help'> {
@@ -59,48 +50,31 @@ function makeOnKeyUp(onEnter?: OnEnter): KeyboardEventHandler<HTMLInputElement> 
   };
 };
 
-const ConditionalAddon: View<{ addon?: Addon }> = ({ addon }) => {
-  if (!addon) { return null; }
-  return(
-    <InputGroupAddon addonType={addon.type}>
-      <InputGroupText>
-        <Icon name={addon.icon} color='secondary' width={0.875} height={0.875} />
-      </InputGroupText>
-    </InputGroupAddon>
-  );
-};
-
 const Child: View<FormField.ChildProps<State, HTMLInputElement, ExtraProps>> = props => {
   const { state, disabled, className, onChange, extraProps } = props;
-  const addon: Addon | undefined = (extraProps && extraProps.addon);
-  let inputClassName: string = (extraProps && extraProps.inputClassName) || '';
-  inputClassName = `${inputClassName} ${addon ? (addon.type === 'prepend' ? 'border-left-0' : 'border-right-0') : ''}`;
+  const inputClassName: string = (extraProps && extraProps.inputClassName) || '';
   const autoFocus: boolean = !disabled && !!(extraProps && extraProps.autoFocus);
   return (
-    <InputGroup>
-      <Input.View
-        id={state.id}
-        type={state.type}
-        value={state.value}
-        placeholder={state.placeholder}
-        className={`${className} ${inputClassName} form-control`}
-        disabled={disabled}
-        autoFocus={autoFocus}
-        onChange={onChange}
-        onChangeDebounced={extraProps && extraProps.onChangeDebounced}
-        onKeyUp={extraProps && extraProps.onKeyUp} />
-      <ConditionalAddon addon={addon} />
-    </InputGroup>
+    <Input.View
+      id={state.id}
+      type={state.type}
+      value={state.value}
+      placeholder={state.placeholder}
+      className={`${className} ${inputClassName} form-control`}
+      disabled={disabled}
+      autoFocus={autoFocus}
+      onChange={onChange}
+      onChangeDebounced={extraProps && extraProps.onChangeDebounced}
+      onKeyUp={extraProps && extraProps.onKeyUp} />
   );
 };
 
-export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter, toggleHelp, disabled = false, inputClassName = '', autoFocus, addon }) => {
+export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter, toggleHelp, disabled = false, inputClassName = '', autoFocus }) => {
   const extraProps: ExtraProps = {
     onKeyUp: makeOnKeyUp(onEnter),
     onChangeDebounced,
     inputClassName,
-    autoFocus,
-    addon
+    autoFocus
   };
   return (
     <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={extraProps} disabled={disabled} />

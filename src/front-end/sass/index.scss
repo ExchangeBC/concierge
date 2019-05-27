@@ -62,14 +62,11 @@ $spacers: (
 // Theme colors.
 // Bootstrap updates the theme map based on these variables,
 // so we don't need to update the map at all.
-$white: #fff;
 $primary: #0c99d6;
 $info: #0f4c8b;
 $warn: #fcb817;
 $danger: #DC3545;
 $success: #28A745;
-
-$input-group-addon-bg: $white;
 
 $enable-validation-icons: false;
 

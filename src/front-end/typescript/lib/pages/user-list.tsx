@@ -29,7 +29,7 @@ const Table: TableComponent.TableComponent<TableCellData> = TableComponent.compo
 
 const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
   const wrap = (child: string | null | ReactElement<any>, center = false) => {
-    return (<td className={center ? 'text-center' : ''}>{child}</td>);
+    return (<td className={`align-middle ${center ? 'text-center' : ''}`}>{child}</td>);
   };
   switch (data.tag) {
     case 'userType':
@@ -229,8 +229,7 @@ const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Col xs='12' md='4' className='ml-md-auto'>
           <ShortText.view
             state={state.searchFilter}
-            onChange={onChangeShortText('searchFilter')}
-            addon={{ icon: 'search', type: 'append' }} />
+            onChange={onChangeShortText('searchFilter')} />
         </Col>
       </Row>
     </div>
