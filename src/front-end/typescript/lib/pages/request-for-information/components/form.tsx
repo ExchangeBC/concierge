@@ -25,6 +25,8 @@ import { validateAddendumDescriptions, validateClosingDate, validateClosingTime,
 const FALLBACK_NAME = 'No Name Provided';
 const DEFAULT_CLOSING_TIME = '14:00';
 
+export const GLOBAL_ERROR_MESSAGE = 'Please fix the errors below, and try submitting the form again.';
+
 export interface Params {
   isEditing: boolean;
   existingRfi?: PublicRfi;

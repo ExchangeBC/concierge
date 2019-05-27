@@ -110,6 +110,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                   break;
                 case 'invalid':
                   state = fail(state, result.value);
+                  if (window.scrollTo) { window.scrollTo(0, 0); }
                   break;
               }
               break;
@@ -170,7 +171,14 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   update,
   view,
   viewBottomBar,
-  getAlerts: emptyPageAlerts,
+  getAlerts(state) {
+    return {
+      ...emptyPageAlerts(),
+      errors: !RfiForm.isValid(state.rfiForm)
+        ? [RfiForm.GLOBAL_ERROR_MESSAGE]
+        : []
+    };
+  },
   getMetadata() {
     return makePageMetadata('Create a Request for Information');
   }
