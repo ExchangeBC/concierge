@@ -107,7 +107,6 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
             formFieldMulti: {
               idNamespace: 'rfi-categories',
               label: 'Attachments',
-              labelClassName: 'h3 mb-4',
               required: false,
               fields: []
             }
@@ -277,7 +276,9 @@ const Attachments: View<AttachmentsProps> = ({ attachments, dispatch }) => {
       <Col xs='12' md='6'>
         <FileMulti.view
           state={attachments}
-          dispatch={dispatchAttachments} />
+          dispatch={dispatchAttachments}
+          labelClassName='h3'
+          labelWrapperClassName='mb-4' />
       </Col>
     </Row>
   );

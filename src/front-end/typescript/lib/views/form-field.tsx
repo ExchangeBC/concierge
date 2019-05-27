@@ -43,7 +43,7 @@ const ConditionalHelpToggle: View<Props<any, any, any>> = ({ state, toggleHelp, 
         color='secondary'
         width={1}
         height={1}
-        className='ml-2'
+        className='ml-2 text-hover-dark'
         style={{ cursor: 'pointer' }}
         onClick={e => { toggleHelp(); e.preventDefault(); }} />
     );
@@ -59,7 +59,7 @@ const ConditionalLabel: View<Props<any, any, any>> = (props) => {
     return (
       <Label for={id} className={className}>
         {label}
-        <span className='text-info'>{required ? '*' : ''}</span>
+        {required ? (<span className='text-info'>*</span>) : null }
         <ConditionalHelpToggle {...props} />
       </Label>
     );

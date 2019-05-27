@@ -176,9 +176,11 @@ const Child: View<FormFieldMulti.ChildProps<HTMLTextAreaElement, Value, ExtraChi
 
 interface Props extends ComponentViewProps<State, Msg> {
   disabled?: boolean;
+  labelClassName?: string;
+  labelWrapperClassName?: string;
 }
 
-export const view: View<Props> = ({ state, dispatch, disabled = false }) => {
+export const view: View<Props> = ({ state, dispatch, disabled = false, labelClassName, labelWrapperClassName }) => {
   const AddButton: View<FormFieldMulti.AddButtonProps<void>> = FormFieldMulti.makeDefaultAddButton(state.addButtonText);
   const onChange = (index: number): ChangeEventHandler<HTMLTextAreaElement> => event => {
     dispatch({
@@ -203,7 +205,9 @@ export const view: View<Props> = ({ state, dispatch, disabled = false }) => {
     toggleHelp: () => dispatch({ tag: 'toggleHelp', value: undefined }),
     extraChildProps: {
       field: state.field
-    }
+    },
+    labelClassName,
+    labelWrapperClassName
   };
   return (
     <FormFieldMulti.view {...formFieldProps} />

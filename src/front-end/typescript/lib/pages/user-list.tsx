@@ -207,23 +207,33 @@ const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
-    <Row className='d-none d-md-flex align-items-end'>
-      <Col xs='12' md='3'>
-        <Select.view
-          state={state.userTypeFilter}
-          onChange={onChangeSelect('userTypeFilter')} />
-      </Col>
-      <Col xs='12' md='4'>
-        <Select.view
-          state={state.categoryFilter}
-          onChange={onChangeSelect('categoryFilter')} />
-      </Col>
-      <Col xs='12' md='4' className='ml-md-auto'>
-        <ShortText.view
-          state={state.searchFilter}
-          onChange={onChangeShortText('searchFilter')} />
-      </Col>
-    </Row>
+    <div>
+      <Row>
+        <Col xs='12'>
+          <h6 className='text-secondary mb-3'>
+            Filter By:
+          </h6>
+        </Col>
+      </Row>
+      <Row className='d-none d-md-flex align-items-end'>
+        <Col xs='12' md='3'>
+          <Select.view
+            state={state.userTypeFilter}
+            onChange={onChangeSelect('userTypeFilter')} />
+        </Col>
+        <Col xs='12' md='4'>
+          <Select.view
+            state={state.categoryFilter}
+            onChange={onChangeSelect('categoryFilter')} />
+        </Col>
+        <Col xs='12' md='4' className='ml-md-auto'>
+          <ShortText.view
+            state={state.searchFilter}
+            onChange={onChangeShortText('searchFilter')}
+            addon={{ icon: 'search', type: 'append' }} />
+        </Col>
+      </Row>
+    </div>
   );
 };
 

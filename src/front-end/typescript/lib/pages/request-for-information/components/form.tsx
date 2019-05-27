@@ -244,7 +244,6 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       formFieldMulti: {
         idNamespace: 'rfi-categories',
         label: 'Attachments (Optional)',
-        labelClassName: 'h3 mb-4',
         required: false,
         fields: get(existingRfi, ['latestVersion', 'attachments'], [])
           .map((attachment: FileResource.PublicFile) => {
@@ -267,7 +266,6 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       formFieldMulti: {
         idNamespace: 'rfi-addenda',
         label: 'Addenda (Optional)',
-        labelClassName: 'h3 mb-4',
         required: false,
         reverseFieldOrderInView: true,
         fields: existingAddenda,
@@ -495,14 +493,14 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='3' lg='2'>
+        <Col xs='12' md='3'>
           <DateTime.view
             state={state.closingDate}
             disabled={isDisabled}
             onChangeDebounced={onChangeDebounced('validateClosingDate')}
             onChange={onChangeShortText('onChangeClosingDate')} />
         </Col>
-        <Col xs='12' md='2'>
+        <Col xs='12' md='3' lg='2'>
           <DateTime.view
             state={state.closingTime}
             disabled={isDisabled}
@@ -563,7 +561,9 @@ const Attachments: ComponentView<State, Msg> = ({ state, dispatch }) => {
           <FileMulti.view
             state={state.attachments}
             dispatch={dispatchAttachments}
-            disabled={isDisabled} />
+            disabled={isDisabled}
+            labelClassName='h3'
+            labelWrapperClassName='mb-4' />
         </Col>
       </Row>
     </div>
@@ -580,7 +580,9 @@ const Addenda: ComponentView<State, Msg> = ({ state, dispatch }) => {
           <LongTextMulti.view
             state={state.addenda}
             dispatch={dispatchAddenda}
-            disabled={isDisabled} />
+            disabled={isDisabled}
+            labelClassName='h3'
+            labelWrapperClassName='mb-4' />
         </Col>
       </Row>
     </div>
