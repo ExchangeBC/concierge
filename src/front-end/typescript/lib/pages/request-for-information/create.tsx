@@ -26,6 +26,7 @@ export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 export interface State {
   previewLoading: number;
   publishLoading: number;
+  hasTriedPublishing: boolean;
   rfiForm: Immutable<RfiForm.State>
 };
 
@@ -33,6 +34,7 @@ async function makeInitState(): Promise<State> {
   return {
     previewLoading: 0,
     publishLoading: 0,
+    hasTriedPublishing: false,
     rfiForm: immutable(await RfiForm.init({
       isEditing: true
     }))
@@ -88,6 +90,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         }
       });
     case 'publish':
+      state = state.set('hasTriedPublishing', true);
       return [
         startPublishLoading(state),
         async (state, dispatch) => {
@@ -174,7 +177,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getAlerts(state) {
     return {
       ...emptyPageAlerts(),
-      errors: !RfiForm.isValid(state.rfiForm)
+      errors: state.hasTriedPublishing && !RfiForm.isValid(state.rfiForm)
         ? [RfiForm.GLOBAL_ERROR_MESSAGE]
         : []
     };
