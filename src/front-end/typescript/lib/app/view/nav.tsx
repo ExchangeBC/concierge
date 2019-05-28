@@ -116,12 +116,14 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
   }
 };
 
+// Computed height of main nav.
+// May need to be updated if the main nav height changes.
 const MAIN_NAVBAR_HEIGHT = '64px';
 
 const Navigation: View<Props> = props => {
   return (
-    <div className='position-sticky' style={{ top: `-${MAIN_NAVBAR_HEIGHT}`, 'z-index': '1000' /*computed height of main nav*/ }}>
-      <Navbar expand='md' dark color='info' className='navbar border-bottom-gov' style={{ height: MAIN_NAVBAR_HEIGHT }}>
+    <div className='position-sticky' style={{ top: `-${MAIN_NAVBAR_HEIGHT}`, 'z-index': '1000' }}>
+      <Navbar expand='md' dark color='info' className='navbar border-bottom-gov'>
         <Container className='px-sm-3'>
           <NavbarBrand href='/'>
             <img src='/images/logo.svg' style={{ height: '2.25rem' }} alt='Procurement Concierge Program' />
