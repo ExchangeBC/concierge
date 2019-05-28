@@ -1,3 +1,4 @@
+import { CONTACT_EMAIL } from 'front-end/config';
 import { View } from 'front-end/lib/framework';
 import Link from 'front-end/lib/views/link';
 import React from 'react';
@@ -7,39 +8,60 @@ export interface State {
   title: string;
 }
 
-const Links: View<{}> = () => {
+const Sep: View<{}> = () => {
   return (
-    <Row className='mb-3'>
-      <Col xs='12' className='d-flex flex-column flex-md-row justify-content-center align-items-center'>
-        <Link href='/about' color='secondary' className='pr-md-3'>About</Link>
-        <Link href='/copyright' color='secondary' className='pr-md-3'>Copyright</Link>
-        <Link href='/disclaimer' color='secondary' className='pr-md-3'>Disclaimer</Link>
-        <Link href='/privacy' color='secondary' className='pr-md-3'>Privacy</Link>
-        <Link href='/accessibility' color='secondary'>Accessibility</Link>
-      </Col>
-    </Row>
+    <span className='px-2'><span className='d-none d-lg-inline'>|</span></span>
   );
 };
 
-const SupportedBy: View<{}> = () => {
+const ProvinceLogo: View<{}> = () => {
   return (
-    <Row>
-      <Col xs='12' className='text-center'>
-        <img
-          src='/images/bcgov_logo.svg'
-          alt='Supported by the Province of British Columbia'
-          style={{ width: '165px' }} />
-      </Col>
-    </Row>
+    <img
+      src='/images/bcgov_logo.svg'
+      alt='The Province of British Columbia'
+      style={{ width: '165px' }}
+      className='mb-3 mb-lg-0' />
+  );
+};
+
+const Links: View<{}> = () => {
+  return (
+    <div className='d-flex flex-row flex-wrap flex-lg-nowrap justify-content-center justify-content-lg-start align-items-center mb-3 mb-lg-0 font-size-small'>
+      <Link route={{ tag: 'landing', value: null }} color='light'>Home</Link>
+      <Sep />
+      <Link route={{ tag: 'markdown', value: { documentId: 'about' }}} color='light'>About</Link>
+      <Sep />
+      <Link route={{ tag: 'markdown', value: { documentId: 'disclaimer' }}} color='light'>Disclaimer</Link>
+      <Sep />
+      <Link route={{ tag: 'markdown', value: { documentId: 'privacy' }}} color='light'>Privacy</Link>
+      <Sep />
+      <Link route={{ tag: 'markdown', value: { documentId: 'accessibility' }}} color='light'>Accessibility</Link>
+      <Sep />
+      <Link route={{ tag: 'markdown', value: { documentId: 'copyright' }}} color='light'>Copyright</Link>
+      <Sep />
+      <Link href={`mailto:${CONTACT_EMAIL}`} color='light'>Contact Us</Link>
+    </div>
+  );
+};
+
+const FeedbackButton: View<{}> = () => {
+  // TODO use the route prop for the Link view
+  return (
+    <Link href='/feedback' color='light' size='sm' className='ml-lg-auto' button outline>Send Feedback</Link>
   );
 };
 
 const Footer: View<{}> = () => {
   return (
-    <footer className='w-100 bg-dark text-secondary'>
-      <Container className='py-5'>
-        <Links />
-        <SupportedBy />
+    <footer className='w-100 bg-info text-light border-top-gov'>
+      <Container className='py-4'>
+        <Row>
+          <Col xs='12' className='d-flex flex-column flex-lg-row flex-lg-wrap align-items-center'>
+            <ProvinceLogo />
+            <Links />
+            <FeedbackButton />
+          </Col>
+        </Row>
       </Container>
     </footer>
   );

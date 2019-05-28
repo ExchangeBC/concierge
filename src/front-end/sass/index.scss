@@ -47,26 +47,26 @@ $container-max-widths: (
 $spacer: 1rem;
 
 $spacers: (
-	m0: 0,
-	m1: ($spacer * -0.25),
-	m2: ($spacer * -0.5),
-	m3: $spacer * -1,
-	m4: ($spacer * -1.5),
-	m5: ($spacer * -3),
-	m6: ($spacer * -4),
-	m7: ($spacer * -5),
+	n6: ($spacer * -4),
+	n7: ($spacer * -5),
 	6: ($spacer * 4),
 	7: ($spacer * 5)
 );
+
+$grid-gutter-width: $spacer * 2;
 
 // Theme colors.
 // Bootstrap updates the theme map based on these variables,
 // so we don't need to update the map at all.
 $primary: #0c99d6;
-$info: #0f4c8b;
-$warn: #fcb817;
+$info: #003366;
+$warn: #FCBA19;
 $danger: #DC3545;
 $success: #28A745;
+
+$theme-colors: (
+  'info-alt': #38598A
+);
 
 $enable-validation-icons: false;
 
@@ -138,6 +138,10 @@ label {
   }
 }
 
+nav.navbar .nav-link:hover {
+  text-decoration: underline;
+}
+
 // Custom utilities.
 
 .font-size-small {
@@ -150,6 +154,10 @@ label {
 
 .font-size-large {
   font-size: $font-size-lg;
+}
+
+.text-decoration-underline {
+  text-decoration: underline !important;
 }
 
 // Create classes for each of the text colors
@@ -189,6 +197,14 @@ label {
   .transition-hide {
     display: none;
   }
+}
+
+.border-bottom-gov {
+  border-bottom: 2px solid $warn;
+}
+
+.border-top-gov {
+  border-top: 2px solid $warn;
 }
 
 // Custom components
