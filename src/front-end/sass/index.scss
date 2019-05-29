@@ -27,6 +27,10 @@ input[type="time"] {
   }
 }
 
+.in-transition {
+  pointer-events: none;
+}
+
 .navbar .transition-indicator {
   display: none;
 
@@ -198,13 +202,6 @@ nav.navbar .nav-link:hover {
 
 .fixed-bar {
   height: $fixed-bar-height;
-}
-
-.in-transition {
-
-  .transition-hide {
-    display: none;
-  }
 }
 
 .border-bottom-gov {
