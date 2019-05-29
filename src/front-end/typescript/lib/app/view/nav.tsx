@@ -122,7 +122,7 @@ const MAIN_NAVBAR_HEIGHT = '64px';
 
 const Navigation: View<Props> = props => {
   return (
-    <div className='position-sticky' style={{ top: `-${MAIN_NAVBAR_HEIGHT}`, 'z-index': '1000' }}>
+    <div className='position-sticky' style={{ top: `-${MAIN_NAVBAR_HEIGHT}`, zIndex: 1000 }}>
       <Navbar expand='md' dark color='info' className='navbar border-bottom-gov'>
         <Container className='px-sm-3'>
           <NavbarBrand href='/'>
