@@ -3,7 +3,7 @@ import { View } from 'front-end/lib/framework';
 import Link from 'front-end/lib/views/link';
 import { get } from 'lodash';
 import React from 'react';
-import { Collapse, Container, Nav, Navbar, NavbarBrand, NavbarToggler, NavItem } from 'reactstrap'
+import { Collapse, Container, Nav, Navbar, NavbarBrand, NavbarToggler, NavItem, Spinner } from 'reactstrap'
 import { UserType } from 'shared/lib/types';
 
 interface Props {
@@ -93,7 +93,7 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
     return (
       <Nav navbar className='ml-md-auto'>
         <NavItem className='d-none d-md-block'>
-          <Link nav color='white' className='px-0 px-md-3 opacity-75' disabled>{session.user.email}</Link>
+          <Link nav color='white' className='px-0 px-md-3' disabled>{session.user.email}</Link>
         </NavItem>
         <NavItem>
           <Link nav route={signOutRoute} color='white' onClick={onClick} className='px-0 pl-md-3'>Sign Out</Link>
@@ -128,6 +128,7 @@ const Navigation: View<Props> = props => {
           <NavbarBrand href='/'>
             <img src='/images/logo.svg' style={{ height: '2.25rem' }} alt='Procurement Concierge Program' />
           </NavbarBrand>
+          <Spinner size='sm' color='info-alt' className='transition-indicator' />
           <NavbarToggler className='ml-auto' onClick={() => props.toggleIsOpen()} />
           <Collapse isOpen={props.isOpen} className='py-3 py-md-0' navbar>
             <ContextualLinks {...props} className='d-md-none' />
@@ -136,7 +137,7 @@ const Navigation: View<Props> = props => {
         </Container>
       </Navbar>
       <Navbar expand='sm' className='bg-info-alt d-none d-md-block shadow border-bottom'>
-        <Container className='px-0'>
+        <Container className='pl-0'>
           <ContextualLinks {...props} />
         </Container>
       </Navbar>

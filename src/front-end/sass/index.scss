@@ -27,6 +27,14 @@ input[type="time"] {
   }
 }
 
+.navbar .transition-indicator {
+  display: none;
+
+  .in-transition & {
+    display: block;
+  }
+}
+
 // Custom Bootstrap variable overrides.
 
 $grid-breakpoints: (
