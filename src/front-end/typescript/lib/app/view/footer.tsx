@@ -10,7 +10,7 @@ export interface State {
 
 const Sep: View<{}> = () => {
   return (
-    <span className='px-2'><span className='d-none d-lg-inline'>|</span></span>
+    <span className='pt-2 pt-lg-0 px-lg-2'><span className='d-none d-lg-inline'>|</span></span>
   );
 };
 
@@ -20,13 +20,13 @@ const ProvinceLogo: View<{}> = () => {
       src='/images/bcgov_logo.svg'
       alt='The Province of British Columbia'
       style={{ width: '165px' }}
-      className='mb-3 mb-lg-0' />
+      className='mt-4 mt-lg-0 order-2 order-lg-0' />
   );
 };
 
 const Links: View<{}> = () => {
   return (
-    <div className='d-flex flex-row flex-wrap flex-lg-nowrap justify-content-center justify-content-lg-start align-items-center mb-3 mb-lg-0 font-size-small'>
+    <div className='d-flex flex-column flex-lg-row flex-lg-nowrap justify-content-lg-start align-items-center mb-3 mb-lg-0 font-size-small'>
       <Link route={{ tag: 'landing', value: null }} color='light'>Home</Link>
       <Sep />
       <Link route={{ tag: 'markdown', value: { documentId: 'about' }}} color='light'>About</Link>
