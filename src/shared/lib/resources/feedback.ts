@@ -1,6 +1,8 @@
+import { Rating } from 'shared/lib/types';
+
 export interface CreateRequestBody {
     text: string;
-    rating: string;
+    rating: Rating;
 }
 
 export interface CreateValidationErrors {
