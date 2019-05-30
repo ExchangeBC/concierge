@@ -221,7 +221,7 @@ To deploy to the Production environment, merge the `develop` branch into the `ma
 
 #### Running Database Migrations
 
-Using an environment's deployment shell, run `npm run migrations:up` in the root of this repository's directory. It is recommended to run a migration prior to deploying code that depends on the changes effected by that migration.
+Using an environment's deployment shell, run `npm run migrations:up` in the root of this repository's directory.
 
 ## Team
 
