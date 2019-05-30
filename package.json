@@ -63,6 +63,7 @@
     "html-to-text": "^4.0.0",
     "immutable": "^4.0.0-rc.12",
     "lodash": "^4.17.11",
+    "migrate": "^1.6.2",
     "mime-types": "^2.1.22",
     "moment": "^2.24.0",
     "mongoose": "^5.4.3",
