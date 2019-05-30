@@ -6,7 +6,7 @@ import { CreateRequestBody, CreateValidationErrors } from 'shared/lib/resources/
 
 type CreateResponseBody = JsonResponseBody<null | CreateValidationErrors>;
 
-type RequiredModels = 'Feedback' | 'User';
+type RequiredModels = 'Feedback';
 
 export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, Session>;
 
