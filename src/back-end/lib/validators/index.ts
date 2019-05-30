@@ -4,7 +4,7 @@ import * as UserSchema from 'back-end/lib/schemas/user';
 import { includes } from 'lodash';
 import * as mongoose from 'mongoose';
 import mongooseDefault from 'mongoose';
-import { rfiClosingAtToRfiStatus } from 'shared/lib/resources/request-for-information';
+import { determineRfiStatus } from 'shared/lib/resources/request-for-information';
 import { RfiStatus, UserType } from 'shared/lib/types';
 import { ArrayValidation, invalid, valid, validateArrayAsync, validateEmail as validateEmailShared, validatePassword as validatePasswordShared, Validation } from 'shared/lib/validators';
 
@@ -105,7 +105,7 @@ export async function validateRfiId(RfiModel: RfiSchema.Model, id: string | mong
         return invalid(['RFI does not exist.']);
       }
       const latestVersion = RfiSchema.getLatestVersion(rfi);
-      const matchesRfiStatus = !!latestVersion && !!rfiStatus && includes(rfiStatus, rfiClosingAtToRfiStatus(latestVersion.closingAt));
+      const matchesRfiStatus = !!latestVersion && !!rfiStatus && includes(rfiStatus, determineRfiStatus(latestVersion.closingAt, latestVersion.gracePeriodDays));
       if (rfiStatus && !matchesRfiStatus) {
         return invalid([`RFI is not one of: ${rfiStatus.join(', ')}`]);
       }

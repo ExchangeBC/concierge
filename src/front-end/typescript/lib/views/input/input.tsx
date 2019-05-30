@@ -12,7 +12,7 @@ import { ChangeEvent, ChangeEventHandler, default as React, KeyboardEventHandler
 export type OnChangeDebounced = () => void;
 
 export interface Props {
-  type: 'text' | 'email' | 'password' | 'date' | 'time' | 'datetime-local';
+  type: 'text' | 'email' | 'password' | 'date' | 'time' | 'datetime-local' | 'number';
   id: string;
   value?: string;
   placeholder?: string;

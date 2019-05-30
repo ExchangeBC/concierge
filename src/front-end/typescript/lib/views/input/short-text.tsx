@@ -4,7 +4,7 @@ import * as Input from 'front-end/lib/views/input/input';
 import { ChangeEvent, ChangeEventHandler, default as React, KeyboardEventHandler } from 'react';
 
 export interface State extends FormField.State {
-  type: 'text' | 'email' | 'password' | 'date';
+  type: 'text' | 'email' | 'password';
   placeholder?: string;
 }
 

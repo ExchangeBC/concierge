@@ -18,7 +18,7 @@ import { compareDates, formatDate, formatTime } from 'shared/lib';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as FileResource from 'shared/lib/resources/file';
 import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
-import { PublicRfi, RFI_EXPIRY_WINDOW_DAYS, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
+import { PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
 import { Addendum, ADT, RfiStatus, UserType } from 'shared/lib/types';
 
 const ERROR_MESSAGE = 'The Request for Information you are looking for is not available.';
@@ -83,7 +83,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
         const mightViewResponseButtons = userType === UserType.Vendor || !userType;
         const rfiStatus = rfiToRfiStatus(rfi);
         if (mightViewResponseButtons && rfiStatus === RfiStatus.Closed) {
-          infoAlerts.push(`This RFI is still accepting responses up to ${RFI_EXPIRY_WINDOW_DAYS} calendar days after the closing date and time.`);
+          infoAlerts.push(`This RFI is still accepting responses up to ${rfi.latestVersion.gracePeriodDays} calendar days after the closing date and time.`);
         }
         if (mightViewResponseButtons && rfiStatus === RfiStatus.Expired) {
           infoAlerts.push('This RFI is no longer accepting responses.');

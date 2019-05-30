@@ -47,6 +47,7 @@ export async function makeRequestBody(state: RfiForm.State): Promise<ValidOrInva
         discoveryDay: values.discoveryDay,
         closingDate: values.closingDate,
         closingTime: values.closingTime,
+        gracePeriodDays: values.gracePeriodDays,
         buyerContact: values.buyerContact,
         programStaffContact: values.programStaffContact,
         categories: values.categories,

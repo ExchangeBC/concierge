@@ -2,14 +2,19 @@ import { get, isArray, isBoolean } from 'lodash';
 import moment from 'moment-timezone';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
-export function getString(obj: any, keyPath: string | string[]): string {
-  return String(get(obj, keyPath, ''));
+export function getString(obj: any, keyPath: string | string[], fallback = ''): string {
+  return String(get(obj, keyPath, fallback));
 }
 
 export function getStringArray(obj: any, keyPath: string | string[]): string[] {
   const value: any[] = get(obj, keyPath, []);
   if (!isArray(value)) { return []; }
   return value.map(v => String(v));
+}
+
+export function getNumber<Fallback>(obj: any, keyPath: string | string[], fallback: number | Fallback = 0): number | Fallback {
+  const result = parseInt(get(obj, keyPath), 10);
+  return isNaN(result) ? fallback : result;
 }
 
 export function getBoolean(obj: any, keyPath: string | string[], fallback = false): boolean {
