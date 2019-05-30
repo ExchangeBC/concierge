@@ -271,3 +271,5 @@ export function rfiStatusToTitleCase(s: RfiStatus): string {
       return 'Closed';
   }
 }
+
+export type Rating = 'good' | 'meh' | 'bad';

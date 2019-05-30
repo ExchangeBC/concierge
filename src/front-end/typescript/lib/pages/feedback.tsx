@@ -10,15 +10,13 @@ import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
-import { ADT } from 'shared/lib/types';
+import { ADT, Rating } from 'shared/lib/types';
 
 export interface State {
   loading: number;
   rating?: Rating;
   feedbackText: LongText.State
 }
-
-type Rating = 'good' | 'meh' | 'bad';
 
 type InnerMsg
   = ADT<'onChangeRating', Rating>
