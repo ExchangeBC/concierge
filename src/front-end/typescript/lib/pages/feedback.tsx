@@ -1,6 +1,6 @@
-import { makePageMetadata } from 'front-end/lib';
+import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newRoute, PageComponent, PageInit, Update } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, GlobalComponentMsg, newRoute, PageComponent, PageInit, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { updateField } from 'front-end/lib/views/form-field';
 import Icon from 'front-end/lib/views/icon';
@@ -39,13 +39,8 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async () => {
   };
 };
 
-function startLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('loading', state.loading + 1);
-}
-
-function stopLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('loading', Math.max(state.loading - 1, 0));
-}
+const startLoading: UpdateState<State> = makeStartLoading('loading');
+const stopLoading: UpdateState<State> = makeStopLoading('loading');
 
 const update: Update<State, Msg> = ({state, msg }) => {
   switch (msg.tag) {
