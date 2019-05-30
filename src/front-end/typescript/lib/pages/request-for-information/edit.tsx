@@ -39,6 +39,7 @@ export interface ValidState {
 export interface State {
   previewLoading: number;
   publishLoading: number;
+  hasTriedPublishing: boolean;
   valid?: ValidState;
 };
 
@@ -51,7 +52,8 @@ async function resetRfiForm(existingRfi: RfiResource.PublicRfi): Promise<Immutab
 
 const initState: State = {
   previewLoading: 0,
-  publishLoading: 0
+  publishLoading: 0,
+  hasTriedPublishing: false
 };
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
@@ -121,6 +123,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'startEditing':
       return [setIsEditing(state, true)];
     case 'cancelEditing':
+      state = state.set('hasTriedPublishing', false);
       return [
         setIsEditing(state, false),
         async () => {
@@ -141,9 +144,9 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         }
       });
     case 'publish':
-      state = startPublishLoading(state);
+      state = state.set('hasTriedPublishing', true);
       return [
-        state,
+        startPublishLoading(state),
         async (state, dispatch) => {
           const fail = (state: Immutable<State>, errors: RfiResource.UpdateValidationErrors) => {
             state = stopPublishLoading(state);
@@ -162,6 +165,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                   break;
                 case 'invalid':
                   state = fail(state, result.value);
+                  if (window.scrollTo) { window.scrollTo(0, 0); }
                   break;
               }
               break;
@@ -261,9 +265,13 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   view,
   viewBottomBar,
   getAlerts(state) {
+    const initializationErrors = !state.valid ? [ERROR_MESSAGE] : [];
+    const validationErrors = state.valid && state.hasTriedPublishing && !RfiForm.isValid(state.valid.rfiForm)
+      ? [RfiForm.GLOBAL_ERROR_MESSAGE]
+      : [];
     return {
       ...emptyPageAlerts(),
-      errors: !state.valid ? [ERROR_MESSAGE] : []
+      errors: initializationErrors.concat(validationErrors)
     };
   },
   getMetadata() {

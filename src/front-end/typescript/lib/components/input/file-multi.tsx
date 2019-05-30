@@ -207,9 +207,11 @@ function AddButton(props: FormFieldMulti.AddButtonProps<File>) {
 
 interface Props extends ComponentViewProps<State, Msg> {
   disabled?: boolean;
+  labelClassName?: string;
+  labelWrapperClassName?: string;
 }
 
-export const view: View<Props> = ({ state, dispatch, disabled = false }) => {
+export const view: View<Props> = ({ state, dispatch, disabled = false, labelClassName, labelWrapperClassName }) => {
   const onChange = (index: number): ChangeEventHandler<HTMLInputElement> => event => {
     dispatch({
       tag: 'change',
@@ -236,7 +238,9 @@ export const view: View<Props> = ({ state, dispatch, disabled = false }) => {
       }
     },
     onChange,
-    onRemove
+    onRemove,
+    labelClassName,
+    labelWrapperClassName
   };
   return (
     <FormFieldMulti.view {...formFieldProps} />

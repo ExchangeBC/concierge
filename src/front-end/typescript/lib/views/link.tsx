@@ -23,6 +23,7 @@ interface AnchorProps extends BaseProps {
 
 interface ButtonProps extends BaseProps {
   button: true;
+  outline?: boolean;
   color?: ButtonColor;
   size?: 'sm' | 'md' | 'lg';
 }
@@ -67,13 +68,14 @@ function ButtonLink(props: ButtonProps) {
   const {
     color,
     size = 'md',
-    className = ''
+    className = '',
+    outline = false
   } = props;
   const anchorProps: AnchorProps = {
     ...props,
     button: false,
     color: undefined,
-    className: `${className} btn btn-${size} ${color ? `btn-${color}` : ''}`
+    className: `${className} btn btn-${size} ${color ? `btn-${outline ? 'outline-' : ''}${color}` : ''}`
   };
   return (
     <AnchorLink {...anchorProps} />

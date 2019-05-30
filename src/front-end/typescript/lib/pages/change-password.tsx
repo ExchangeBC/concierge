@@ -170,7 +170,8 @@ const view: ComponentView<State, Msg> = props => {
                 state={state.currentPassword}
                 onChange={onChange('onChangeCurrentPassword')}
                 onChangeDebounced={() => dispatch({ tag: 'validateCurrentPassword', value: undefined })}
-                onEnter={submit} />
+                onEnter={submit}
+                autoFocus />
             </Col>
           </Row>
           <Row>

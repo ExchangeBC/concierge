@@ -7,6 +7,7 @@ import { Addendum, RfiStatus } from 'shared/lib/types';
 export interface PublicVersion {
   createdAt: Date;
   closingAt: Date;
+  gracePeriodDays: number;
   rfiNumber: string;
   title: string;
   description: string;
@@ -40,6 +41,7 @@ export interface CreateRequestBody {
   discoveryDay: boolean;
   closingDate: string;
   closingTime: string;
+  gracePeriodDays?: number;
   buyerContact: string;
   programStaffContact: string;
   categories: string[];
@@ -52,6 +54,7 @@ export interface CreateValidationErrors {
   contentType?: string[];
   closingDate?: string[];
   closingTime?: string[];
+  gracePeriodDays?: string[];
   rfiNumber?: string[];
   title?: string[];
   description?: string[];
@@ -78,11 +81,9 @@ export interface UpdateValidationErrors extends CreateValidationErrors {
 
 export const DELETE_ADDENDUM_TOKEN = '$$__DELETE_ADDENDUM_TOKEN__$$';
 
-export const RFI_EXPIRY_WINDOW_DAYS = 2;
-
-export function rfiClosingAtToRfiStatus(closingAt: Date): RfiStatus {
+export function determineRfiStatus(closingAt: Date, gracePeriodDays: number): RfiStatus {
   const days = diffDates(closingAt, new Date(), 'days');
-  if (days >= (-1 * RFI_EXPIRY_WINDOW_DAYS) && days <= 0) {
+  if (days >= (-1 * gracePeriodDays) && days <= 0) {
     return RfiStatus.Closed;
   } else if (days > 0) {
     return RfiStatus.Open;
@@ -92,5 +93,5 @@ export function rfiClosingAtToRfiStatus(closingAt: Date): RfiStatus {
 }
 
 export function rfiToRfiStatus(rfi: PublicRfi): RfiStatus {
-  return rfiClosingAtToRfiStatus(rfi.latestVersion.closingAt);
+  return determineRfiStatus(rfi.latestVersion.closingAt, rfi.latestVersion.gracePeriodDays);
 }

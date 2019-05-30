@@ -25,7 +25,8 @@ type TableCellData
   = ADT<'rfiNumber', string>
   | ADT<'publishDate', Date>
   | ADT<'status', RfiStatus>
-  | ADT<'title', { rfiId: string, text: string, edit: boolean }>
+  | ADT<'programStaffTitle', { rfiId: string, text: string }>
+  | ADT<'nonProgramStaffTitle', { rfiId: string, text: string, entity: string }>
   | ADT<'publicSectorEntity', string>
   | ADT<'lastUpdated', Date>
   | ADT<'closingDate', Date>
@@ -35,18 +36,24 @@ const Table: TableComponent.TableComponent<TableCellData> = TableComponent.compo
 
 const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
   const wrap = (child: string | null | ReactElement<any>, wrapText = false, center = false) => {
-    return (<td className={`${wrapText ? 'text-wrap' : ''} ${center ? 'text-center' : ''}`}>{child}</td>);
+    return (<td className={`${wrapText ? 'text-wrap' : ''} ${center ? 'text-center' : ''} align-middle`}>{child}</td>);
   };
   switch (data.tag) {
     case 'rfiNumber':
       return wrap(data.value);
-    case 'title':
-      const routeParams = { rfiId: data.value.rfiId };
-      const rfiRoute: Route
-        = data.value.edit
-        ? { tag: 'requestForInformationEdit', value: routeParams }
-        : { tag: 'requestForInformationView', value: routeParams };
-      return wrap((<Link route={rfiRoute}>{data.value.text}</Link>), true);
+    case 'programStaffTitle':
+      return wrap((
+        <Link route={{ tag: 'requestForInformationEdit', value: { rfiId: data.value.rfiId }}} className='mb-1'>
+          {data.value.text}
+        </Link>
+      ), true);
+    case 'nonProgramStaffTitle':
+      return wrap((
+        <div>
+          <Link route={{ tag: 'requestForInformationView', value: { rfiId: data.value.rfiId }}}>{data.value.text}</Link>
+          <div className='small text-uppercase text-secondary mt-n1'>{data.value.entity}</div>
+        </div>
+      ), true);
     case 'publicSectorEntity':
       return wrap(data.value, true);
     case 'status':
@@ -197,7 +204,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'table':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'table' as 'table', value }),
+        mapChildMsg: value => ({ tag: 'table' as const, value }),
         childStatePath: ['table'],
         childUpdate: Table.update,
         childMsg: msg.value
@@ -220,19 +227,28 @@ const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
         </Col>
       );
   return (
-    <Row className='d-none d-md-flex align-items-end'>
-      <Col xs='12' md='3'>
-        <Select.view
-          state={state.statusFilter}
-          onChange={onChangeSelect('statusFilter')} />
-      </Col>
-      {categoryFilterElement}
-      <Col xs='12' md='4' className='ml-md-auto'>
-        <ShortText.view
-          state={state.searchFilter}
-          onChange={onChangeShortText('searchFilter')} />
-      </Col>
-    </Row>
+    <div>
+      <Row>
+        <Col xs='12'>
+          <h6 className='text-secondary mb-3'>
+            Filter By:
+          </h6>
+        </Col>
+      </Row>
+      <Row className='d-none d-md-flex align-items-end'>
+        <Col xs='12' md='3'>
+          <Select.view
+            state={state.statusFilter}
+            onChange={onChangeSelect('statusFilter')} />
+        </Col>
+        {categoryFilterElement}
+        <Col xs='12' md='4' className='ml-md-auto'>
+          <ShortText.view
+            state={state.searchFilter}
+            onChange={onChangeShortText('searchFilter')} />
+        </Col>
+      </Row>
+    </div>
   );
 };
 
@@ -324,20 +340,19 @@ function programStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.TDSp
   return rfis.map(rfi => {
     const version = rfi.latestVersion;
     return [
-      TableComponent.makeTDSpec({ tag: 'rfiNumber' as 'rfiNumber', value: version.rfiNumber }),
-      TableComponent.makeTDSpec({ tag: 'status' as 'status', value: rfi.status }),
+      TableComponent.makeTDSpec({ tag: 'rfiNumber' as const, value: version.rfiNumber }),
+      TableComponent.makeTDSpec({ tag: 'status' as const, value: rfi.status }),
       TableComponent.makeTDSpec({
-        tag: 'title' as 'title',
+        tag: 'programStaffTitle' as const,
         value: {
           rfiId: rfi._id,
-          text: version.title,
-          edit: true
+          text: version.title
         }
       }),
-      TableComponent.makeTDSpec({ tag: 'publicSectorEntity' as 'publicSectorEntity', value: version.publicSectorEntity }),
-      TableComponent.makeTDSpec({ tag: 'lastUpdated' as 'lastUpdated', value: version.createdAt }),
-      TableComponent.makeTDSpec({ tag: 'closingDate' as 'closingDate', value: version.closingAt }),
-      TableComponent.makeTDSpec({ tag: 'discoveryDay' as 'discoveryDay', value: [version.discoveryDay, rfi] as [boolean, PublicRfi] })
+      TableComponent.makeTDSpec({ tag: 'publicSectorEntity' as const, value: version.publicSectorEntity }),
+      TableComponent.makeTDSpec({ tag: 'lastUpdated' as const, value: version.createdAt }),
+      TableComponent.makeTDSpec({ tag: 'closingDate' as const, value: version.closingAt }),
+      TableComponent.makeTDSpec({ tag: 'discoveryDay' as const, value: [version.discoveryDay, rfi] as [boolean, PublicRfi] })
     ];
   });
 }
@@ -346,20 +361,20 @@ function nonProgramStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.T
   return rfis.map(rfi => {
     const version = rfi.latestVersion;
     return [
-      TableComponent.makeTDSpec({ tag: 'rfiNumber' as 'rfiNumber', value: version.rfiNumber }),
-      TableComponent.makeTDSpec({ tag: 'publishDate' as 'publishDate', value: rfi.publishedAt }),
-      TableComponent.makeTDSpec({ tag: 'status' as 'status', value: rfi.status }),
+      TableComponent.makeTDSpec({ tag: 'rfiNumber' as const, value: version.rfiNumber }),
+      TableComponent.makeTDSpec({ tag: 'publishDate' as const, value: rfi.publishedAt }),
+      TableComponent.makeTDSpec({ tag: 'status' as const, value: rfi.status }),
       TableComponent.makeTDSpec({
-        tag: 'title' as 'title',
+        tag: 'nonProgramStaffTitle' as const,
         value: {
           rfiId: rfi._id,
           text: version.title,
-          edit: false
+          entity: version.publicSectorEntity
         }
       }),
-      TableComponent.makeTDSpec({ tag: 'closingDate' as 'closingDate', value: version.closingAt }),
-      TableComponent.makeTDSpec({ tag: 'discoveryDay' as 'discoveryDay', value: [version.discoveryDay, rfi] as [boolean, PublicRfi] }),
-      TableComponent.makeTDSpec({ tag: 'lastUpdated' as 'lastUpdated', value: version.createdAt })
+      TableComponent.makeTDSpec({ tag: 'closingDate' as const, value: version.closingAt }),
+      TableComponent.makeTDSpec({ tag: 'discoveryDay' as const, value: [version.discoveryDay, rfi] as [boolean, PublicRfi] }),
+      TableComponent.makeTDSpec({ tag: 'lastUpdated' as const, value: version.createdAt })
     ];
   });
 }
@@ -370,7 +385,7 @@ const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isProgramStaff = state.userType === UserType.ProgramStaff;
   const headCells = isProgramStaff ? programStaffTableHeadCells : nonProgramStaffTableHeadCells;
   const bodyRows = isProgramStaff ? programStaffTableBodyRows(state.visibleRfis) : nonProgramStaffTableBodyRows(state.visibleRfis);
-  const dispatchTable: Dispatch<TableComponent.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as 'table', value }));
+  const dispatchTable: Dispatch<TableComponent.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
   return (
     <Table.view
       className='text-nowrap'

@@ -247,7 +247,6 @@ export const init: Init<Params, State> = async ({ profile }) => {
       formFieldMulti: {
         idNamespace: 'vendor-industry-sectors',
         label: 'Industry Sector(s)',
-        labelClassName: 'h3 mb-3',
         required: false,
         fields: []
       }
@@ -258,7 +257,6 @@ export const init: Init<Params, State> = async ({ profile }) => {
       formFieldMulti: {
         idNamespace: 'vendor-categories',
         label: 'Area(s) of Interest',
-        labelClassName: 'h3 mb-3',
         required: false,
         fields: []
       }
@@ -485,7 +483,7 @@ export const IndustrySectors: ProfileView<State, Msg> = ({ state, dispatch, disa
   return (
     <Row className='mt-3'>
       <Col xs='12' lg='10'>
-        <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} disabled={disabled} />
+        <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} disabled={disabled} labelClassName='h3' labelWrapperClassName='mb-3' />
       </Col>
     </Row>
   );
@@ -496,7 +494,7 @@ export const Categories: ProfileView<State, Msg> = ({ state, dispatch, disabled 
   return (
     <Row className='mt-3'>
       <Col xs='12' lg='10'>
-        <SelectMulti.view state={state.categories} dispatch={dispatchCategories} disabled={disabled} />
+        <SelectMulti.view state={state.categories} dispatch={dispatchCategories} disabled={disabled} labelClassName='h3' labelWrapperClassName='mb-3' />
       </Col>
     </Row>
   );

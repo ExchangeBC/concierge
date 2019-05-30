@@ -18,7 +18,7 @@ import { compareDates, formatDate, formatTime } from 'shared/lib';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as FileResource from 'shared/lib/resources/file';
 import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
-import { PublicRfi, RFI_EXPIRY_WINDOW_DAYS, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
+import { PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
 import { Addendum, ADT, RfiStatus, UserType } from 'shared/lib/types';
 
 const ERROR_MESSAGE = 'The Request for Information you are looking for is not available.';
@@ -83,7 +83,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
         const mightViewResponseButtons = userType === UserType.Vendor || !userType;
         const rfiStatus = rfiToRfiStatus(rfi);
         if (mightViewResponseButtons && rfiStatus === RfiStatus.Closed) {
-          infoAlerts.push(`This RFI is still accepting responses up to ${RFI_EXPIRY_WINDOW_DAYS} calendar days after the closing date and time.`);
+          infoAlerts.push(`This RFI is still accepting responses up to ${rfi.latestVersion.gracePeriodDays} calendar days after the closing date and time.`);
         }
         if (mightViewResponseButtons && rfiStatus === RfiStatus.Expired) {
           infoAlerts.push('This RFI is no longer accepting responses.');
@@ -222,7 +222,7 @@ const Description: View<{ value: string }> = ({ value }) => {
   return (
     <Row className='mt-5 pt-5 border-top'>
       <Col xs='12'>
-        <Markdown source={value} />
+        <Markdown source={value} openLinksInNewTabs />
       </Col>
     </Row>
   );
@@ -258,7 +258,7 @@ const Addenda: View<{ addenda: Addendum[] }> = ({ addenda }) => {
     return (
       <div key={`view-rfi-addendum-${i}`} className={`pb-${i === addenda.length - 1 ? '0' : '4'} w-100`}>
         <Col xs='12' md={{ size: 10, offset: 1 }} className={i !== 0 ? 'pt-4 border-top' : ''}>
-          <p className='mb-2'>{addendum.description}</p>
+          <Markdown source={addendum.description} className='mb-2' openLinksInNewTabs />
         </Col>
         <Col xs='12' md={{ size: 10, offset: 1 }} className='d-flex flex-column flex-md-row justify-content-between text-secondary'>
           <small>{publishedDateToString(addendum.createdAt)}</small>

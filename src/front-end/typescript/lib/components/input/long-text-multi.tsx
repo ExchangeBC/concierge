@@ -72,7 +72,8 @@ export function isValid(state: Immutable<State>): boolean {
 type InnerMsg
   = ADT<'add'>
   | ADT<'remove', number>
-  | ADT<'change', { index: number, value: string }>;
+  | ADT<'change', { index: number, value: string }>
+  | ADT<'toggleHelp'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -84,8 +85,7 @@ type ExtraChildProps = Pick<State, 'field'>;
 
 export const init: Init<Params, State> = async params => {
   return {
-    addButtonText: params.addButtonText,
-    field: params.field,
+    ...params,
     formFieldMulti: immutable(params.formFieldMulti)
   };
 };
@@ -131,6 +131,12 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
         return field;
       });
       return [state.setIn(['formFieldMulti', 'fields'], changeFields)];
+    case 'toggleHelp':
+      if (state.formFieldMulti.help) {
+        return [state.setIn(['formFieldMulti', 'help', 'show'], !state.getIn(['formFieldMulti', 'help', 'show']))];
+      } else {
+        return [state];
+      }
     default:
       return [state];
   }
@@ -170,9 +176,11 @@ const Child: View<FormFieldMulti.ChildProps<HTMLTextAreaElement, Value, ExtraChi
 
 interface Props extends ComponentViewProps<State, Msg> {
   disabled?: boolean;
+  labelClassName?: string;
+  labelWrapperClassName?: string;
 }
 
-export const view: View<Props> = ({ state, dispatch, disabled = false }) => {
+export const view: View<Props> = ({ state, dispatch, disabled = false, labelClassName, labelWrapperClassName }) => {
   const AddButton: View<FormFieldMulti.AddButtonProps<void>> = FormFieldMulti.makeDefaultAddButton(state.addButtonText);
   const onChange = (index: number): ChangeEventHandler<HTMLTextAreaElement> => event => {
     dispatch({
@@ -194,9 +202,12 @@ export const view: View<Props> = ({ state, dispatch, disabled = false }) => {
     formGroupClassName: 'px-md-7',
     onChange,
     onRemove,
+    toggleHelp: () => dispatch({ tag: 'toggleHelp', value: undefined }),
     extraChildProps: {
       field: state.field
-    }
+    },
+    labelClassName,
+    labelWrapperClassName
   };
   return (
     <FormFieldMulti.view {...formFieldProps} />

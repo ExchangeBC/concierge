@@ -15,11 +15,16 @@
     "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "back-end/*": ["../back-end/*"],
-      "shared/*": ["./*"]
+      "migrations/*": ["./*"],
+      "back-end/*": ["../src/back-end/*"],
+      "shared/*": ["../src/shared/*"]
     },
     "types": [
       "node"
     ]
-  }
+  },
+  "files": [
+    "*",
+    "**/*"
+  ]
 }

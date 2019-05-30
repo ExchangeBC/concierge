@@ -37,7 +37,9 @@ interface ViewAlertProps {
 const ViewAlert: View<ViewAlertProps> = ({ messages, color, className }) => {
   if (messages.length) {
     return (
-      <Alert color={color} className={className} >{messages.map(text => (<div>{text}</div>))}</Alert>
+      <Alert color={color} className={className}>
+        {messages.map((text, i)  => (<div key={`alert-${color}-${i}`}>{text}</div>))}
+      </Alert>
     );
   } else {
     return null;

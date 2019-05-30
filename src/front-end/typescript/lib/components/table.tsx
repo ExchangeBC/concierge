@@ -100,7 +100,7 @@ interface THeadProps {
 export const THead: View<THeadProps> = ({ cells, THView }) => {
   const children = cells.map((cell, i) => (<THView key={`table-thead-${i}`} {...cell} />));
   return (
-    <thead className='small text-secondary text-uppercase font-weight-bold bg-light'>
+    <thead>
       <tr>
         {children}
       </tr>

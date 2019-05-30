@@ -83,6 +83,14 @@ export function validateBoolean(value: any): Validation<boolean> {
   }
 }
 
+export function validateInteger(value: number, name: string, min: number, max: number): Validation<number> {
+  if (value >= min && value <= max && value % 1 === 0) {
+    return valid(value);
+  } else {
+    return invalid([`${name} must be an integer between ${min} and ${max}.`]);
+  }
+}
+
 export function validateGenericString(value: string, name: string, min = 1, max = 100, characters = 'characters'): Validation<string> {
   if (value.length < min || value.length > max) {
     return invalid([`${name} must be between ${min} and ${max} ${characters} long.`]);

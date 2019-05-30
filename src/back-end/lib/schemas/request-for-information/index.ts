@@ -12,6 +12,7 @@ export interface Version {
   createdAt: Date;
   createdBy: mongoose.Types.ObjectId;
   closingAt: Date;
+  gracePeriodDays: number;
   rfiNumber: string;
   title: string;
   description: string;
@@ -65,6 +66,7 @@ export async function makePublicRfi(UserModel: UserSchema.Model, FileModel: File
   latestPublicVersion = {
     createdAt: latestVersion.createdAt,
     closingAt: latestVersion.closingAt,
+    gracePeriodDays: latestVersion.gracePeriodDays,
     rfiNumber: latestVersion.rfiNumber,
     title: latestVersion.title,
     description: latestVersion.description,

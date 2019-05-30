@@ -6,6 +6,7 @@ import * as RfiResponseSchema from 'back-end/lib/schemas/request-for-information
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { ErrorResponseBody, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, TextResponseBody } from 'back-end/lib/server';
+import { AuthLevel, UserType } from 'shared/lib/types';
 
 export type Session = SessionSchema.Data;
 
@@ -21,6 +22,8 @@ export interface AvailableModels {
   RfiResponse: RfiResponseSchema.Model;
 }
 
-export type SupportedRequestBodies = JsonRequestBody | FileRequestBody;
+export type FileUploadMetadata = AuthLevel<UserType> | null;
+
+export type SupportedRequestBodies = JsonRequestBody | FileRequestBody<FileUploadMetadata>;
 
 export type SupportedResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody | ErrorResponseBody;

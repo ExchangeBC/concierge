@@ -48,6 +48,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'landing'],
         childRouteParams: route.value,
         childInit: PageLanding.component.init,
+        childGetMetadata: PageLanding.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -63,6 +64,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'signIn'],
         childRouteParams: route.value,
         childInit: PageSignIn.component.init,
+        childGetMetadata: PageSignIn.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -78,6 +80,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'signUpBuyer'],
         childRouteParams: route.value,
         childInit: PageSignUpBuyer.component.init,
+        childGetMetadata: PageSignUpBuyer.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -93,6 +96,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'signUpVendor'],
         childRouteParams: route.value,
         childInit: PageSignUpVendor.component.init,
+        childGetMetadata: PageSignUpVendor.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -108,6 +112,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'signUpProgramStaff'],
         childRouteParams: route.value,
         childInit: PageSignUpProgramStaff.component.init,
+        childGetMetadata: PageSignUpProgramStaff.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -123,6 +128,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'signOut'],
         childRouteParams: route.value,
         childInit: PageSignOut.component.init,
+        childGetMetadata: PageSignOut.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -138,6 +144,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'changePassword'],
         childRouteParams: route.value,
         childInit: PageChangePassword.component.init,
+        childGetMetadata: PageChangePassword.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -153,6 +160,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'resetPassword'],
         childRouteParams: route.value,
         childInit: PageResetPassword.component.init,
+        childGetMetadata: PageResetPassword.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -168,6 +176,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'forgotPassword'],
         childRouteParams: route.value,
         childInit: PageForgotPassword.component.init,
+        childGetMetadata: PageForgotPassword.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -183,6 +192,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'termsAndConditions'],
         childRouteParams: route.value,
         childInit: PageTermsAndConditions.component.init,
+        childGetMetadata: PageTermsAndConditions.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -198,6 +208,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'profile'],
         childRouteParams: route.value,
         childInit: PageProfile.component.init,
+        childGetMetadata: PageProfile.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -213,6 +224,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'userList'],
         childRouteParams: route.value,
         childInit: PageUserList.component.init,
+        childGetMetadata: PageUserList.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -228,6 +240,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'requestForInformationCreate'],
         childRouteParams: route.value,
         childInit: PageRequestForInformationCreate.component.init,
+        childGetMetadata: PageRequestForInformationCreate.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -243,6 +256,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'requestForInformationEdit'],
         childRouteParams: route.value,
         childInit: PageRequestForInformationEdit.component.init,
+        childGetMetadata: PageRequestForInformationEdit.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -258,6 +272,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'requestForInformationView'],
         childRouteParams: route.value,
         childInit: PageRequestForInformationView.component.init,
+        childGetMetadata: PageRequestForInformationView.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -273,6 +288,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'requestForInformationPreview'],
         childRouteParams: route.value,
         childInit: PageRequestForInformationPreview.component.init,
+        childGetMetadata: PageRequestForInformationPreview.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -288,6 +304,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'requestForInformationRespond'],
         childRouteParams: route.value,
         childInit: PageRequestForInformationRespond.component.init,
+        childGetMetadata: PageRequestForInformationRespond.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -303,6 +320,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'requestForInformationList'],
         childRouteParams: route.value,
         childInit: PageRequestForInformationList.component.init,
+        childGetMetadata: PageRequestForInformationList.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -318,6 +336,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'markdown'],
         childRouteParams: route.value,
         childInit: PageMarkdown.component.init,
+        childGetMetadata: PageMarkdown.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },
@@ -333,6 +352,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'notice'],
         childRouteParams: route.value,
         childInit: PageNotice.component.init,
+        childGetMetadata: PageNotice.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },

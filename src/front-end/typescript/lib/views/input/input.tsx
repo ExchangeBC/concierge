@@ -12,12 +12,13 @@ import { ChangeEvent, ChangeEventHandler, default as React, KeyboardEventHandler
 export type OnChangeDebounced = () => void;
 
 export interface Props {
-  type: 'text' | 'email' | 'password' | 'date' | 'time' | 'datetime-local';
+  type: 'text' | 'email' | 'password' | 'date' | 'time' | 'datetime-local' | 'number';
   id: string;
   value?: string;
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  autoFocus?: boolean;
   min?: string;
   max?: string;
   onChange: ChangeEventHandler<HTMLInputElement>;
@@ -53,6 +54,7 @@ export class View extends React.Component<Props> {
       placeholder = '',
       className = '',
       disabled = false,
+      autoFocus = false,
       min = '',
       max = '',
       onChange,
@@ -92,6 +94,7 @@ export class View extends React.Component<Props> {
         value={value}
         placeholder={disabled ? '' : placeholder}
         disabled={disabled}
+        autoFocus={autoFocus}
         min={min}
         max={max}
         className={className}

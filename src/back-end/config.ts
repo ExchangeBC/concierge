@@ -85,9 +85,9 @@ const developmentMailerConfigOptions = {
 
 export const MAILER_CONFIG = ENV === 'development' ? developmentMailerConfigOptions : productionMailerConfigOptions;
 
-export const MAILER_FROM = get('MAILER_FROM', 'Procurement Concierge Program <noreply@procurementconcierge.gov.bc.ca>');
-
 export const MAILER_NOREPLY = 'noreply@procurementconcierge.gov.bc.ca';
+
+export const MAILER_FROM = get('MAILER_FROM', `Procurement Concierge Program <${MAILER_NOREPLY}>`);
 
 export const MAILER_ROOT_URL = get('MAILER_ROOT_URL', 'https://procurementconcierge.gov.bc.ca').replace(/\/*$/, '');
 

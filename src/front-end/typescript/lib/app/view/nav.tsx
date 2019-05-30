@@ -3,7 +3,7 @@ import { View } from 'front-end/lib/framework';
 import Link from 'front-end/lib/views/link';
 import { get } from 'lodash';
 import React from 'react';
-import { Collapse, Container, Nav, Navbar, NavbarBrand, NavbarToggler, NavItem } from 'reactstrap'
+import { Collapse, Container, Nav, Navbar, NavbarBrand, NavbarToggler, NavItem, Spinner } from 'reactstrap'
 import { UserType } from 'shared/lib/types';
 
 interface Props {
@@ -13,13 +13,13 @@ interface Props {
   toggleIsOpen(open?: boolean): void;
 }
 
-const ContextualLinks: View<Props> = ({ activeRoute, session, toggleIsOpen }) => {
+const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, session, toggleIsOpen, className = '' }) => {
   const isMyProfileRoute = activeRoute.tag === 'profile' && activeRoute.value.profileUserId === get(session, ['user', 'id']);
   const isUserListRoute = activeRoute.tag === 'userList';
   const isRequestForInformationListRoute = activeRoute.tag === 'requestForInformationList';
-  const activeClass = (active: boolean) => active ? 'font-weight-bold text-body' : 'text-dark';
+  const activeClass = (active: boolean) => active ? 'font-weight-bold text-decoration-underline' : '';
   const onClick = () => toggleIsOpen(false);
-  const linkClassName = (isActive: boolean) => `${activeClass(isActive)} px-0 px-md-3`;
+  const linkClassName = (isActive: boolean) => `${activeClass(isActive)} text-white px-0 px-md-3`;
   const rfiListRoute: Route = {
     tag: 'requestForInformationList',
     value: null
@@ -30,7 +30,7 @@ const ContextualLinks: View<Props> = ({ activeRoute, session, toggleIsOpen }) =>
   };
   if (!session || !session.user) {
     return (
-      <Nav navbar>
+      <Nav navbar className={className}>
         <NavItem>
           <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
         </NavItem>
@@ -46,7 +46,7 @@ const ContextualLinks: View<Props> = ({ activeRoute, session, toggleIsOpen }) =>
   switch (session.user.type) {
     case UserType.Buyer:
       return (
-        <Nav navbar>
+        <Nav navbar className={className}>
           <NavItem>
             <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
           </NavItem>
@@ -57,7 +57,7 @@ const ContextualLinks: View<Props> = ({ activeRoute, session, toggleIsOpen }) =>
       );
     case UserType.Vendor:
       return (
-        <Nav navbar>
+        <Nav navbar className={className}>
           <NavItem>
             <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
           </NavItem>
@@ -68,7 +68,7 @@ const ContextualLinks: View<Props> = ({ activeRoute, session, toggleIsOpen }) =>
       );
     case UserType.ProgramStaff:
       return (
-        <Nav navbar>
+        <Nav navbar className={className}>
           <NavItem>
             <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
           </NavItem>
@@ -93,10 +93,10 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
     return (
       <Nav navbar className='ml-md-auto'>
         <NavItem className='d-none d-md-block'>
-          <Link nav color='dark' className='px-0 px-md-3' disabled>{session.user.email}</Link>
+          <Link nav color='white' className='px-0 px-md-3' disabled>{session.user.email}</Link>
         </NavItem>
         <NavItem>
-          <Link nav route={signOutRoute} color='dark' onClick={onClick} className='px-0 pl-md-3'>Sign Out</Link>
+          <Link nav route={signOutRoute} color='white' onClick={onClick} className='px-0 pl-md-3'>Sign Out</Link>
         </NavItem>
       </Nav>
     );
@@ -106,30 +106,42 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
     return (
       <Nav navbar className='ml-md-auto'>
         <NavItem>
-          <Link nav route={signInRoute} color='dark' onClick={onClick} className='px-0 px-md-3'>Sign In</Link>
+          <Link nav route={signInRoute} color='white' onClick={onClick} className='px-0 px-md-3'>Sign In</Link>
         </NavItem>
         <NavItem>
-          <Link button route={signUpRoute} color='info' onClick={onClick} className='mt-2 mt-md-0'>Sign Up</Link>
+          <Link button route={signUpRoute} color='primary' onClick={onClick} className='mt-2 mt-md-0'>Sign Up</Link>
         </NavItem>
       </Nav>
     );
   }
 };
 
+// Computed height of main nav.
+// May need to be updated if the main nav height changes.
+const MAIN_NAVBAR_HEIGHT = '64px';
+
 const Navigation: View<Props> = props => {
   return (
-    <Navbar expand='md' light color='light' className='border-bottom'>
-      <Container className='px-sm-3'>
-        <NavbarBrand href='/'>
-          <img src='/images/logo.svg' style={{ height: '2.25rem' }} alt='Procurement Concierge Program' />
-        </NavbarBrand>
-        <NavbarToggler className='ml-auto' onClick={() => props.toggleIsOpen()} />
-        <Collapse isOpen={props.isOpen} className='py-3 py-md-0' navbar>
+    <div className='position-sticky' style={{ top: `-${MAIN_NAVBAR_HEIGHT}`, zIndex: 1000 }}>
+      <Navbar expand='md' dark color='info' className='navbar border-bottom-gov'>
+        <Container className='px-sm-3'>
+          <NavbarBrand href='/'>
+            <img src='/images/logo.svg' style={{ height: '2.25rem' }} alt='Procurement Concierge Program' />
+          </NavbarBrand>
+          <Spinner size='sm' color='info-alt' className='transition-indicator' />
+          <NavbarToggler className='ml-auto' onClick={() => props.toggleIsOpen()} />
+          <Collapse isOpen={props.isOpen} className='py-3 py-md-0' navbar>
+            <ContextualLinks {...props} className='d-md-none' />
+            <AuthLinks {...props} />
+          </Collapse>
+        </Container>
+      </Navbar>
+      <Navbar expand='sm' className='bg-info-alt d-none d-md-block shadow border-bottom'>
+        <Container className='pl-0'>
           <ContextualLinks {...props} />
-          <AuthLinks {...props} />
-        </Collapse>
-      </Container>
-    </Navbar>
+        </Container>
+      </Navbar>
+    </div>
   );
 };
 

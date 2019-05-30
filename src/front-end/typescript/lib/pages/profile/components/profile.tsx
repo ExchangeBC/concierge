@@ -244,7 +244,8 @@ function conditionalEmail<PS, PM, P extends ProfileType>(Profile: ProfileCompone
             state={state.email}
             disabled={isDisabled}
             onChangeDebounced={() => dispatch({ tag: 'validateEmail', value: undefined })}
-            onChange={onChangeEmail} />
+            onChange={onChangeEmail}
+            autoFocus />
         </Col>
       </Row>
     );

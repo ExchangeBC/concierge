@@ -22,6 +22,7 @@ const FALLBACK_NAME = 'No Name Provided';
 type TableCellData
   = ADT<'userType', UserType>
   | ADT<'name', { userId: string, text: string }>
+  | ADT<'publicSectorEntity', string>
   | ADT<'email', string>
   | ADT<'acceptedTerms', boolean>;
 
@@ -29,13 +30,15 @@ const Table: TableComponent.TableComponent<TableCellData> = TableComponent.compo
 
 const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
   const wrap = (child: string | null | ReactElement<any>, center = false) => {
-    return (<td className={center ? 'text-center' : ''}>{child}</td>);
+    return (<td className={`align-middle ${center ? 'text-center' : ''}`}>{child}</td>);
   };
   switch (data.tag) {
     case 'userType':
       return wrap(userTypeToTitleCase(data.value));
     case 'name':
       return wrap((<Link route={{ tag: 'profile', value: { profileUserId: data.value.userId } }}>{data.value.text}</Link>));
+    case 'publicSectorEntity':
+      return wrap(data.value);
     case 'email':
       return wrap(data.value);
     case 'acceptedTerms':
@@ -129,7 +132,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
 
   async fail({ routeParams, dispatch }) {
     dispatch(replaceRoute({
-      tag: 'signIn' as 'signIn',
+      tag: 'signIn' as const,
       value: {
         redirectOnSuccess: router.routeToUrl({
           tag: 'userList',
@@ -193,7 +196,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'table':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'table' as 'table', value }),
+        mapChildMsg: value => ({ tag: 'table' as const, value }),
         childStatePath: ['table'],
         childUpdate: Table.update,
         childMsg: msg.value
@@ -207,23 +210,32 @@ const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
   return (
-    <Row className='d-none d-md-flex align-items-end'>
-      <Col xs='12' md='3'>
-        <Select.view
-          state={state.userTypeFilter}
-          onChange={onChangeSelect('userTypeFilter')} />
-      </Col>
-      <Col xs='12' md='4'>
-        <Select.view
-          state={state.categoryFilter}
-          onChange={onChangeSelect('categoryFilter')} />
-      </Col>
-      <Col xs='12' md='4' className='ml-md-auto'>
-        <ShortText.view
-          state={state.searchFilter}
-          onChange={onChangeShortText('searchFilter')} />
-      </Col>
-    </Row>
+    <div>
+      <Row>
+        <Col xs='12'>
+          <h6 className='text-secondary mb-3'>
+            Filter By:
+          </h6>
+        </Col>
+      </Row>
+      <Row className='d-none d-md-flex align-items-end'>
+        <Col xs='12' md='3'>
+          <Select.view
+            state={state.userTypeFilter}
+            onChange={onChangeSelect('userTypeFilter')} />
+        </Col>
+        <Col xs='12' md='4'>
+          <Select.view
+            state={state.categoryFilter}
+            onChange={onChangeSelect('categoryFilter')} />
+        </Col>
+        <Col xs='12' md='4' className='ml-md-auto'>
+          <ShortText.view
+            state={state.searchFilter}
+            onChange={onChangeShortText('searchFilter')} />
+        </Col>
+      </Row>
+    </div>
   );
 };
 
@@ -237,13 +249,19 @@ const tableHeadCells: TableComponent.THSpec[] = [
   {
     children: 'Name',
     style: {
-      minWidth: '280px'
+      minWidth: '200px'
+    }
+  },
+  {
+    children: 'Public Sector Entity',
+    style: {
+      minWidth: '200px'
     }
   },
   {
     children: 'Email Address',
     style: {
-      minWidth: '210px'
+      minWidth: '200px'
     }
   },
   {
@@ -258,16 +276,20 @@ const tableHeadCells: TableComponent.THSpec[] = [
 function tableBodyRows(users: PublicUser[]): Array<Array<TableComponent.TDSpec<TableCellData>>> {
   return users.map(user => {
     return [
-      TableComponent.makeTDSpec({ tag: 'userType' as 'userType', value: user.profile.type }),
+      TableComponent.makeTDSpec({ tag: 'userType' as const, value: user.profile.type }),
       TableComponent.makeTDSpec({
-        tag: 'name' as 'name',
+        tag: 'name' as const,
         value: {
           userId: user._id,
           text: profileToName(user.profile) || FALLBACK_NAME
         }
       }),
-      TableComponent.makeTDSpec({ tag: 'email' as 'email', value: user.email }),
-      TableComponent.makeTDSpec({ tag: 'acceptedTerms' as 'acceptedTerms', value: !!user.acceptedTermsAt })
+      TableComponent.makeTDSpec({
+        tag: 'publicSectorEntity' as const,
+        value: (user.profile.type === UserType.Buyer && user.profile.publicSectorEntity) || ''
+      }),
+      TableComponent.makeTDSpec({ tag: 'email' as const, value: user.email }),
+      TableComponent.makeTDSpec({ tag: 'acceptedTerms' as const, value: !!user.acceptedTermsAt })
     ];
   });
 }
@@ -275,7 +297,7 @@ function tableBodyRows(users: PublicUser[]): Array<Array<TableComponent.TDSpec<T
 const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (!state.visibleUsers.length) { return (<div>There are no users that match the search criteria.</div>); }
   const bodyRows = tableBodyRows(state.visibleUsers);
-  const dispatchTable: Dispatch<TableComponent.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as 'table', value }));
+  const dispatchTable: Dispatch<TableComponent.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
   return (
     <Table.view
       className='text-nowrap'

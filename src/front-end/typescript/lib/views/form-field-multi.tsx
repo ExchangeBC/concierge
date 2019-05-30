@@ -20,7 +20,6 @@ export function makeField<Value>(value: Value, errors: string[] = []): Field<Val
 export interface State<Value> {
   idNamespace: string;
   label?: string;
-  labelClassName?: string;
   reverseFieldOrderInView?: boolean;
   required: boolean;
   fields: Array<Field<Value>>;
@@ -73,33 +72,39 @@ export interface Props<ChildElement, Value, OnAddParams, ExtraChildProps> {
   addButtonProps: AddButtonProps<OnAddParams>;
   Child: View<ChildProps<ChildElement, Value, ExtraChildProps>>;
   formGroupClassName?: string;
+  labelWrapperClassName?: string;
+  labelClassName?: string;
   extraChildProps: ExtraChildProps;
   onChange(index: number): ChangeEventHandler<ChildElement>;
   onRemove(index: number): () => void;
   toggleHelp?(): void;
 }
 
-const ConditionHelpToggle: View<Props<any, any, any, any>> = ({ state, toggleHelp, disabled = false }) => {
+const ConditionalHelpToggle: View<Props<any, any, any, any>> = ({ state, toggleHelp, disabled = false }) => {
   const { help } = state;
   if (help && toggleHelp && !disabled) {
     return (
-      <a onClick={() => toggleHelp()}>
-        {help.show ? 'Hide' : 'Show'} Help Text
-      </a>
+      <Icon
+        name='question-circle'
+        color='secondary'
+        width={1}
+        height={1}
+        className='ml-3 text-hover-dark'
+        style={{ cursor: 'pointer' }}
+        onClick={() => toggleHelp()} />
     );
   } else {
     return null;
   }
 };
 
-const ConditionalLabel: View<Props<any, any, any, any>> = (props) => {
-  const { label, required } = props.state;
+const ConditionalLabel: View<Props<any, any, any, any>> = ({ state, labelClassName = '' }) => {
+  const { label, required } = state;
   if (label) {
     return (
-      <Label className={`mb-0 mr-3 ${required ? 'font-weight-bold' : ''}`}>
+      <Label className={`mb-0 mr-3 ${required ? 'font-weight-bold' : ''} ${labelClassName}`}>
         {label}
-        <span className='text-info'>{required ? '*' : ''}</span>
-        <ConditionHelpToggle {...props} />
+        {required ? (<span className='text-info'>*</span>) : null }
       </Label>
     );
   } else {
@@ -228,13 +233,13 @@ function Children<ChildElement, Value, OnAddParams, ExtraChildProps>(props: Prop
 };
 
 export function view<ChildElement, Value, OnAddParams, ExtraChildProps>(props: Props<ChildElement, Value, OnAddParams, ExtraChildProps>) {
-  const { state } = props;
-  const labelClassName = state.labelClassName || '';
+  const { state, labelWrapperClassName = '' } = props;
   return (
     <FormGroup className={`form-field-${state.idNamespace}`}>
-      <div className={`d-flex flex-wrap align-items-center mb-2 ${labelClassName}`}>
+      <div className={`d-flex flex-wrap align-items-center mb-2 ${labelWrapperClassName}`}>
         <ConditionalLabel {...props} />
         <ConditionalAddButton {...props} />
+        <ConditionalHelpToggle {...props} />
       </div>
       <ConditionalHelp {...props} />
       <Children {...props} />

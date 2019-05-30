@@ -304,6 +304,7 @@ interface InitAppChildPageParams<ParentState, ParentMsg, ChildRouteParams, Child
   childStatePath: string[];
   childRouteParams: ChildRouteParams;
   childInit: PageInit<ChildRouteParams, SharedState, ChildState, GlobalComponentMsg<ChildMsg, Route>>;
+  childGetMetadata: PageGetMetadata<ChildState>;
   getSharedState(state: Immutable<ParentState>): SharedState;
   mapChildMsg(msg: GlobalComponentMsg<ChildMsg, Route>): ParentMsg;
 }
@@ -319,6 +320,7 @@ export async function initAppChildPage<ParentState, ParentMsg, ChildRouteParams,
     shared: params.getSharedState(params.state),
     dispatch: mapAppDispatch(params.dispatch, params.mapChildMsg)
   }));
+  setPageMetadata(params.childGetMetadata(childState));
   return params.state.setIn(params.childStatePath, childState);
 }
 
