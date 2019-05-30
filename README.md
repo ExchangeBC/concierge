@@ -59,7 +59,19 @@ CRUD resources are created in a standardised, type-safe way in this project. CRU
 
 ### Shared (`src/shared`)
 
-This folder contains modules that expose types and functions that are used across the entire stack: front-end and back-end.
+The `src/shared` folder contains modules that expose types and functions that are used across the entire stack: front-end and back-end.
+
+### Database Migrations (`migrations`)
+
+All database migration logic is stored in the `migrations` folder. Migrations are managed by the `migrate` NPM module, and use the native MongoDB driver to execute them. You can create a migration using the following command:
+
+```bash
+npm run migrations:create -- <MIGRATION_NAME>
+```
+
+This command creates a migration file from a template and stores it at `migrations/migrations/{TIMESTAMP}_{MIGRATION_NAME}.ts`.
+
+**DO NOT delete or change committed migration files. Creating and executing migrations is a stateful process, and, unless you know what you are doing, running a database migration should be viewed as an irreversible process.**
 
 ## Contributing
 
@@ -138,6 +150,8 @@ npm run <SCRIPT_NAME>
 | `back-end:watch` | Starts the back-end server inside a nodemon process, and restarts it whenever a back-end or shared source file changes. |
 | `back-end:typedoc` | Builds TypeDoc API documentation for the back-end source code. |
 | `shared:typedoc` | Builds TypeDoc API documentation for the shared source code. |
+| `migrations:create` | Creates a migration file from a template in `migrations/migrations`. |
+| `migrations:up` | Runs migrations using their exported `up` functions. |
 | `typedoc:build` | Builds all TypeDoc API documentation. |
 | `typedoc:start` | Serves TypeDoc documentation on a local server. |
 | `docs:readme-toc` | Generate and insert a table of contents for README.md. |
@@ -202,6 +216,10 @@ The "akpalw-tools" OpenShift project is used to trigger the deployment process f
 To deploy to the Development environment, start a build for "akpalw-dev", and OpenShift will build and deploy HEAD from the `develop` branch.
 
 To deploy to the Production environment, merge the `develop` branch into the `master` branch. "akpalw-prod" has been configured to start the deployment process for production automatically when commits are made to the `master` branch. Note that the Production deployment process first deploys to the Staging environment, and requires approval before the deployment continues to the Production environment.
+
+#### Running Database Migrations
+
+Using an environment's deployment shell, run `npm run migrations:up` in the root of this repository's directory. It is recommended to run a migration prior to deploying code that depends on the changes effected by that migration.
 
 ## Team
 
