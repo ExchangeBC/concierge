@@ -69,7 +69,7 @@ function noticeIdToState(noticeId: NoticeId): State {
     case 'feedbackSubmitted':
       return {
         title: 'Feedback Sent',
-        body: 'You have successfully sent your feedback.  Thank you!',
+        body: 'You have successfully sent your feedback. Thank you!',
         button: {
           text: 'Return to the Home Page',
           route: {
