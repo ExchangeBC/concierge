@@ -332,8 +332,8 @@
 │  ├─ publisher: Sindre Sorhus
 │  ├─ email: sindresorhus@gmail.com
 │  ├─ url: sindresorhus.com
-│  ├─ path: /home/dd/src/bcgov/concierge/node_modules/maxmin/node_modules/ansi-styles
-│  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/maxmin/node_modules/ansi-styles/license
+│  ├─ path: /home/dd/src/bcgov/concierge/node_modules/migrate/node_modules/ansi-styles
+│  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/migrate/node_modules/ansi-styles/license
 ├─ ansi-styles@3.2.1
 │  ├─ licenses: MIT
 │  ├─ repository: https://github.com/chalk/ansi-styles
@@ -892,6 +892,13 @@
 │  ├─ email: christkv@gmail.com
 │  ├─ path: /home/dd/src/bcgov/concierge/node_modules/bson
 │  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/bson/LICENSE.md
+├─ bson@1.1.1
+│  ├─ licenses: Apache-2.0
+│  ├─ repository: https://github.com/mongodb/js-bson
+│  ├─ publisher: Christian Amor Kvalheim
+│  ├─ email: christkv@gmail.com
+│  ├─ path: /home/dd/src/bcgov/concierge/node_modules/mongodb/node_modules/bson
+│  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/mongodb/node_modules/bson/LICENSE.md
 ├─ buffer-alloc-unsafe@1.1.0
 │  ├─ licenses: MIT
 │  ├─ repository: https://github.com/LinusU/buffer-alloc-unsafe
@@ -1072,8 +1079,8 @@
 ├─ chalk@1.1.3
 │  ├─ licenses: MIT
 │  ├─ repository: https://github.com/chalk/chalk
-│  ├─ path: /home/dd/src/bcgov/concierge/node_modules/maxmin/node_modules/chalk
-│  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/maxmin/node_modules/chalk/license
+│  ├─ path: /home/dd/src/bcgov/concierge/node_modules/migrate/node_modules/chalk
+│  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/migrate/node_modules/chalk/license
 ├─ chalk@2.4.1
 │  ├─ licenses: MIT
 │  ├─ repository: https://github.com/chalk/chalk
@@ -1663,6 +1670,12 @@
 │  ├─ publisher: Steven Levithan
 │  ├─ path: /home/dd/src/bcgov/concierge/node_modules/dateformat
 │  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/dateformat/LICENSE
+├─ dateformat@2.2.0
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/felixge/node-dateformat
+│  ├─ publisher: Steven Levithan
+│  ├─ path: /home/dd/src/bcgov/concierge/node_modules/migrate/node_modules/dateformat
+│  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/migrate/node_modules/dateformat/LICENSE
 ├─ debug@2.6.9
 │  ├─ licenses: MIT
 │  ├─ repository: https://github.com/visionmedia/debug
@@ -1916,6 +1929,12 @@
 │  ├─ url: sindresorhus.com
 │  ├─ path: /home/dd/src/bcgov/concierge/node_modules/dot-prop
 │  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/dot-prop/license
+├─ dotenv@4.0.0
+│  ├─ licenses: BSD-2-Clause
+│  ├─ repository: https://github.com/motdotla/dotenv
+│  ├─ publisher: scottmotte
+│  ├─ path: /home/dd/src/bcgov/concierge/node_modules/migrate/node_modules/dotenv
+│  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/migrate/node_modules/dotenv/LICENSE
 ├─ dotenv@6.2.0
 │  ├─ licenses: BSD-2-Clause
 │  ├─ repository: https://github.com/motdotla/dotenv
@@ -2386,7 +2405,7 @@
 │  ├─ url: http://blog.izs.me/
 │  ├─ path: /home/dd/src/bcgov/concierge/node_modules/bcrypt/node_modules/fs.realpath
 │  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/bcrypt/node_modules/fs.realpath/LICENSE
-├─ fstream@1.0.11
+├─ fstream@1.0.12
 │  ├─ licenses: ISC
 │  ├─ repository: https://github.com/npm/fstream
 │  ├─ publisher: Isaac Z. Schlueter
@@ -3548,6 +3567,13 @@
 │  ├─ email: rod@vagg.org
 │  ├─ path: /home/dd/src/bcgov/concierge/node_modules/isstream
 │  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/isstream/LICENSE.md
+├─ jquery@3.4.1
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/jquery/jquery
+│  ├─ publisher: JS Foundation and other contributors
+│  ├─ url: https://github.com/jquery/jquery/blob/3.4.1/AUTHORS.txt
+│  ├─ path: /home/dd/src/bcgov/concierge/node_modules/jquery
+│  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/jquery/LICENSE.txt
 ├─ js-base64@2.5.1
 │  ├─ licenses: BSD-3-Clause
 │  ├─ repository: https://github.com/dankogai/js-base64
@@ -4024,6 +4050,13 @@
 │  ├─ url: https://github.com/jonschlinkert
 │  ├─ path: /home/dd/src/bcgov/concierge/node_modules/watchify/node_modules/micromatch
 │  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/watchify/node_modules/micromatch/LICENSE
+├─ migrate@1.6.2
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/visionmedia/node-migrate
+│  ├─ publisher: TJ Holowaychuk
+│  ├─ email: tj@vision-media.ca
+│  ├─ path: /home/dd/src/bcgov/concierge/node_modules/migrate
+│  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/migrate/LICENSE
 ├─ miller-rabin@4.0.1
 │  ├─ licenses: MIT
 │  ├─ repository: https://github.com/indutny/miller-rabin
@@ -4171,7 +4204,18 @@
 │  ├─ publisher: Christian Kvalheim
 │  ├─ path: /home/dd/src/bcgov/concierge/node_modules/mongodb-core
 │  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/mongodb-core/LICENSE
+├─ mongodb-core@3.2.6
+│  ├─ licenses: Apache-2.0
+│  ├─ repository: https://github.com/mongodb-js/mongodb-core
+│  ├─ publisher: Christian Kvalheim
+│  ├─ path: /home/dd/src/bcgov/concierge/node_modules/mongodb/node_modules/mongodb-core
+│  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/mongodb/node_modules/mongodb-core/LICENSE
 ├─ mongodb@3.1.10
+│  ├─ licenses: Apache-2.0
+│  ├─ repository: https://github.com/mongodb/node-mongodb-native
+│  ├─ path: /home/dd/src/bcgov/concierge/node_modules/mongoose/node_modules/mongodb
+│  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/mongoose/node_modules/mongodb/LICENSE.md
+├─ mongodb@3.2.6
 │  ├─ licenses: Apache-2.0
 │  ├─ repository: https://github.com/mongodb/node-mongodb-native
 │  ├─ path: /home/dd/src/bcgov/concierge/node_modules/mongodb
@@ -5968,6 +6012,13 @@
 │  ├─ url: http://blog.izs.me/
 │  ├─ path: /home/dd/src/bcgov/concierge/node_modules/slide
 │  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/slide/LICENSE
+├─ slug@0.9.4
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/Trott/node-slug
+│  ├─ publisher: dodo
+│  ├─ url: https://github.com/dodo
+│  ├─ path: /home/dd/src/bcgov/concierge/node_modules/slug
+│  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/slug/LICENSE
 ├─ snapdragon-node@2.1.1
 │  ├─ licenses: MIT
 │  ├─ repository: https://github.com/jonschlinkert/snapdragon-node
@@ -6308,8 +6359,8 @@
 │  ├─ publisher: Sindre Sorhus
 │  ├─ email: sindresorhus@gmail.com
 │  ├─ url: sindresorhus.com
-│  ├─ path: /home/dd/src/bcgov/concierge/node_modules/maxmin/node_modules/supports-color
-│  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/maxmin/node_modules/supports-color/license
+│  ├─ path: /home/dd/src/bcgov/concierge/node_modules/migrate/node_modules/supports-color
+│  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/migrate/node_modules/supports-color/license
 ├─ supports-color@5.4.0
 │  ├─ licenses: MIT
 │  ├─ repository: https://github.com/chalk/supports-color
@@ -6363,7 +6414,7 @@
 │  ├─ email: mathiasbuus@gmail.com
 │  ├─ path: /home/dd/src/bcgov/concierge/node_modules/tar-stream
 │  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/tar-stream/LICENSE
-├─ tar@2.2.1
+├─ tar@2.2.2
 │  ├─ licenses: ISC
 │  ├─ repository: https://github.com/isaacs/node-tar
 │  ├─ publisher: Isaac Z. Schlueter
@@ -6637,7 +6688,7 @@
 │  ├─ publisher: Microsoft Corp.
 │  ├─ path: /home/dd/src/bcgov/concierge/node_modules/typedoc/node_modules/typescript
 │  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/typedoc/node_modules/typescript/LICENSE.txt
-├─ typescript@3.3.3
+├─ typescript@3.4.5
 │  ├─ licenses: Apache-2.0
 │  ├─ repository: https://github.com/Microsoft/TypeScript
 │  ├─ publisher: Microsoft Corp.
@@ -6707,6 +6758,13 @@
 │  ├─ url: http://wooorm.com
 │  ├─ path: /home/dd/src/bcgov/concierge/node_modules/unherit
 │  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/unherit/LICENSE
+├─ unicode@11.0.1
+│  ├─ licenses: MIT
+│  ├─ repository: https://github.com/eversport/node-unicodetable
+│  ├─ publisher: dodo
+│  ├─ url: https://github.com/dodo
+│  ├─ path: /home/dd/src/bcgov/concierge/node_modules/unicode
+│  └─ licenseFile: /home/dd/src/bcgov/concierge/node_modules/unicode/LICENSE
 ├─ unified@6.2.0
 │  ├─ licenses: MIT
 │  ├─ repository: https://github.com/unifiedjs/unified
