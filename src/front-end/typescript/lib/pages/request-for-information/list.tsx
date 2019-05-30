@@ -230,7 +230,7 @@ const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
     <div>
       <Row>
         <Col xs='12'>
-          <h6 className='text-secondary mb-3'>
+          <h6 className='text-secondary mb-3 d-none d-md-block'>
             Filter By:
           </h6>
         </Col>
