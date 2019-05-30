@@ -3,6 +3,7 @@ import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/a
 import * as crud from 'back-end/lib/crud';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { CreateRequestBody, CreateValidationErrors } from 'shared/lib/resources/feedback';
+import { validateFeedbackText } from 'shared/lib/validators/feedback';
 
 type CreateResponseBody = JsonResponseBody<null | CreateValidationErrors>;
 
@@ -36,6 +37,12 @@ export const resource: Resource = {
         // If we have an authenticated user, store the type with the feedback
         if (request.session && request.session.user) {
           feedback.userType = request.session.user.type;
+        }
+
+        // Validate feedback text
+        const validatedFeedbackText = validateFeedbackText(request.body.text);
+        if (validatedFeedbackText.tag === 'invalid') {
+          return respond(400, { text: validatedFeedbackText.value });
         }
 
         await feedback.save();

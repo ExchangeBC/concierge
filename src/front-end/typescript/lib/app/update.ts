@@ -368,6 +368,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childStatePath: ['pages', 'feedback'],
         childRouteParams: route.value,
         childInit: PageFeedback.component.init,
+        childGetMetadata: PageFeedback.component.getMetadata,
         getSharedState(state) {
           return state.shared;
         },

@@ -2,7 +2,7 @@ import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from
 import { Route, SharedState } from 'front-end/lib/app/types';
 import { ComponentView, emptyPageAlerts, GlobalComponentMsg, newRoute, PageComponent, PageInit, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
-import { updateField } from 'front-end/lib/views/form-field';
+import { updateField, validateField } from 'front-end/lib/views/form-field';
 import Icon from 'front-end/lib/views/icon';
 import * as LongText from 'front-end/lib/views/input/long-text';
 import FixedBar from 'front-end/lib/views/layout/fixed-bar';
@@ -11,6 +11,8 @@ import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import { ADT, Rating } from 'shared/lib/types';
+import { validateGenericString, validateRating } from 'shared/lib/validators';
+import { validateFeedbackText } from 'shared/lib/validators/feedback';
 
 export interface State {
   loading: number;
@@ -21,6 +23,7 @@ export interface State {
 type InnerMsg
   = ADT<'onChangeRating', Rating>
   | ADT<'onChangeFeedbackText', string>
+  | ADT<'validateFeedback'>
   | ADT<'submit'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
@@ -34,7 +37,8 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async () => {
     feedbackText: LongText.init({
       id: 'feedback-text',
       required: false,
-      placeholder: 'Describe your experience here.'
+      placeholder: 'Describe your experience here.',
+      label: 'Please describe your experience.'
     })
   };
 };
@@ -42,19 +46,25 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async () => {
 const startLoading: UpdateState<State> = makeStartLoading('loading');
 const stopLoading: UpdateState<State> = makeStopLoading('loading');
 
-const update: Update<State, Msg> = ({state, msg }) => {
+const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'onChangeRating':
       return [state.set('rating', msg.value)];
     case 'onChangeFeedbackText':
       return [updateField(state, 'feedbackText', msg.value)];
+    case 'validateFeedback':
+      return [validateField(state, 'feedbackText', validateFeedbackText)]
     case 'submit':
       state = startLoading(state);
       return [
         state,
         async (state, dispatch) => {
+          const validatedRating = validateRating(state.rating);
+          if (validatedRating.tag === 'invalid') {
+            return state;
+          }
           await api.createFeedback({
-            rating: state.rating as 'good' | 'bad' | 'meh',
+            rating: validatedRating.value,
             text: state.feedbackText.value
           });
 
@@ -95,8 +105,9 @@ const RatingSelector: ComponentView<State, Msg> = props => {
 
 const viewBottomBar: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
+  const validatedFeedbackText = validateGenericString(state.feedbackText.value, 'Description', 1, 2000);
   const isLoading = state.loading > 0;
-  const isDisabled = isLoading || state.rating === undefined || state.feedbackText.value.length === 0;
+  const isDisabled = isLoading || state.rating === undefined || validatedFeedbackText.tag === 'invalid';
   const cancelRoute: Route = { tag: 'landing' as 'landing', value: null };
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
@@ -112,21 +123,22 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
 const view: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   const onChange = (tag: any) => LongText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const validate = () => dispatch({ tag: 'validateFeedback', value: undefined })
   return (
     <div>
       <Row>
         <Col xs='12'>
           <h1>Send Feedback</h1>
+          <label>How would you rate your experience?</label>
         </Col>
       </Row>
-      <p>How would you rate your experience?</p>
       <RatingSelector {...props} />
       <Row>
         <Col xs='12'>
-          <p>Please describe your experience.</p>
           <LongText.view
           state={state.feedbackText}
           onChange={onChange('onChangeFeedbackText')}
+          onChangeDebounced={validate}
           style={{ width: '50vw', height: '25vh', minHeight: '150px' }} />
         </Col>
       </Row>
