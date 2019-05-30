@@ -14,6 +14,7 @@ This document describes the project's developer environment, technical architect
   * [Back-End (`src/back-end`)](#back-end-srcback-end)
     + [CRUD Resources](#crud-resources)
   * [Shared (`src/shared`)](#shared-srcshared)
+  * [Database Migrations (`migrations`)](#database-migrations-migrations)
 - [Contributing](#contributing)
 - [Development Environment](#development-environment)
   * [Dependencies](#dependencies)
@@ -23,6 +24,7 @@ This document describes the project's developer environment, technical architect
 - [Deployment](#deployment)
   * [Environments](#environments)
   * [Deployment Process](#deployment-process)
+    + [Running Database Migrations](#running-database-migrations)
 - [Team](#team)
 
 <!-- tocstop -->
