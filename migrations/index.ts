@@ -22,7 +22,7 @@ interface CustomStoreState extends StoreState {
 }
 
 async function mongoDbStore(): Promise<Store> {
-  const db = await connect();
+  const { client, db } = await connect();
   return {
     async load(callback) {
       try {
@@ -59,6 +59,8 @@ async function mongoDbStore(): Promise<Store> {
         callback(null);
       } catch (error) {
         callback(error);
+      } finally {
+        await client.close();
       }
     }
   };
