@@ -36,7 +36,7 @@ It is written in a functional and declarative style with the goal of maximising 
 
 ![Concierge Architecture](https://github.com/BCDevExchange/concierge/blob/develop/docs/Concierge%20Architecture.svg)
 
-The source code is split into three parts:
+The source code is split into four parts:
 
 ### Front-End (`src/front-end`)
 
@@ -65,7 +65,9 @@ The `src/shared` folder contains modules that expose types and functions that ar
 
 ### Database Migrations (`migrations`)
 
-All database migration logic is stored in the `migrations` folder. Migrations are managed by the `migrate` NPM module, and use the native MongoDB driver to execute them. You can create a migration using the following command:
+All database migration logic is stored in the `migrations` folder. Migrations are managed by the `migrate` NPM module, and use the native MongoDB driver to execute them. The MongoDB-related environment variables described below are required to define the database to connect to.
+
+You can create a migration using the following command:
 
 ```bash
 npm run migrations:create -- <MIGRATION_NAME>
@@ -154,6 +156,7 @@ npm run <SCRIPT_NAME>
 | `shared:typedoc` | Builds TypeDoc API documentation for the shared source code. |
 | `migrations:create` | Creates a migration file from a template in `migrations/migrations`. |
 | `migrations:up` | Runs migrations using their exported `up` functions. |
+| `migrations:down` | Runs migrations using their exported `down` functions. |
 | `typedoc:build` | Builds all TypeDoc API documentation. |
 | `typedoc:start` | Serves TypeDoc documentation on a local server. |
 | `docs:readme-toc` | Generate and insert a table of contents for README.md. |
@@ -221,7 +224,7 @@ To deploy to the Production environment, merge the `develop` branch into the `ma
 
 #### Running Database Migrations
 
-Using an environment's deployment shell, run `npm run migrations:up` in the root of this repository's directory.
+Using an environment's deployment shell, run `npm run migrations:up` or `npm run migrations:down` in the root of this repository's directory.
 
 ## Team
 
