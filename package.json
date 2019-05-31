@@ -80,7 +80,6 @@
     "typescript": "^3.4.5"
   },
   "devDependencies": {
-    "@types/axios": "^0.14.0",
     "@types/mocha": "^5.2.6",
     "@types/moment-timezone": "^0.5.10",
     "@types/page": "^1.8.0",
