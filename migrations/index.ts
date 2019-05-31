@@ -3,6 +3,7 @@ import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
 import { get } from 'lodash';
 import { Callback, default as migrate, LoadOptions, MigrationSet, Store, StoreState } from 'migrate';
 import { connect } from 'migrations/db';
+import minimist from 'minimist';
 import { ObjectId } from 'mongodb';
 import path from 'path';
 
@@ -67,7 +68,7 @@ async function mongoDbStore(): Promise<Store> {
 
 };
 
-async function start(): Promise<void> {
+async function start(direction: 'up' | 'down'): Promise<void> {
   const MIGRATION_FILE_REGEXP = /\.ts$/;
   const options: LoadOptions = {
     stateStore: await mongoDbStore(),
@@ -79,7 +80,7 @@ async function start(): Promise<void> {
 
   const callback: Callback<MigrationSet> = (error, set) => {
     if (error) { return exitWithFailure(error); }
-    set.up(error => {
+    set[direction](error => {
       if (error) { return exitWithFailure(error); }
       logger.info('migrations successfully completed');
       process.exit(0);
@@ -90,4 +91,16 @@ async function start(): Promise<void> {
   migrate.load(options, callback);
 }
 
-start().catch(exitWithFailure);
+// Parse command line arguments.
+const args = minimist(process.argv.slice(2));
+let direction: 'up' | 'down';
+switch (args.direction || args.d) {
+  case 'down':
+    direction = 'down';
+    break;
+  default:
+    direction = 'up';
+    break;
+}
+
+start(direction).catch(exitWithFailure);
