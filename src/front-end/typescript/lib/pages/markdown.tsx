@@ -1,6 +1,6 @@
 import { makePageMetadata } from 'front-end/lib';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, PageComponent, PageInit, Update } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, noPageModal, PageComponent, PageInit, Update } from 'front-end/lib/framework';
 import * as markdown from 'front-end/lib/http/markdown';
 import Markdown from 'front-end/lib/views/markdown';
 import React from 'react';
@@ -79,5 +79,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getAlerts: emptyPageAlerts,
   getMetadata({ title }) {
     return makePageMetadata(title);
-  }
+  },
+  getBreadcrumbs: emptyPageBreadcrumbs,
+  getModal: noPageModal
 };

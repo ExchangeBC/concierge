@@ -17,20 +17,19 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
   const isMyProfileRoute = activeRoute.tag === 'profile' && activeRoute.value.profileUserId === get(session, ['user', 'id']);
   const isUserListRoute = activeRoute.tag === 'userList';
   const isRequestForInformationListRoute = activeRoute.tag === 'requestForInformationList';
+  const isLandingRoute = activeRoute.tag === 'landing';
   const activeClass = (active: boolean) => active ? 'font-weight-bold text-decoration-underline' : '';
   const onClick = () => toggleIsOpen(false);
   const linkClassName = (isActive: boolean) => `${activeClass(isActive)} text-white px-0 px-md-3`;
-  const rfiListRoute: Route = {
-    tag: 'requestForInformationList',
-    value: null
-  };
-  const userListRoute: Route = {
-    tag: 'userList',
-    value: null
-  };
+  const landingRoute: Route = { tag: 'landing', value: null };
+  const rfiListRoute: Route = { tag: 'requestForInformationList', value: null };
+  const userListRoute: Route = { tag: 'userList', value: null };
   if (!session || !session.user) {
     return (
       <Nav navbar className={className}>
+        <NavItem>
+          <Link nav route={landingRoute} className={linkClassName(isLandingRoute)} onClick={onClick}>Home</Link>
+        </NavItem>
         <NavItem>
           <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
         </NavItem>
@@ -48,6 +47,9 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
       return (
         <Nav navbar className={className}>
           <NavItem>
+            <Link nav route={landingRoute} className={linkClassName(isLandingRoute)} onClick={onClick}>Home</Link>
+          </NavItem>
+          <NavItem>
             <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
           </NavItem>
           <NavItem>
@@ -59,6 +61,9 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
       return (
         <Nav navbar className={className}>
           <NavItem>
+            <Link nav route={landingRoute} className={linkClassName(isLandingRoute)} onClick={onClick}>Home</Link>
+          </NavItem>
+          <NavItem>
             <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
           </NavItem>
           <NavItem>
@@ -69,6 +74,9 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
     case UserType.ProgramStaff:
       return (
         <Nav navbar className={className}>
+          <NavItem>
+            <Link nav route={landingRoute} className={linkClassName(isLandingRoute)} onClick={onClick}>Home</Link>
+          </NavItem>
           <NavItem>
             <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
           </NavItem>

@@ -1,6 +1,6 @@
 import { makePageMetadata } from 'front-end/lib';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, PageComponent, PageInit, Update } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, noPageModal, PageComponent, PageInit, Update } from 'front-end/lib/framework';
 import { deleteSession } from 'front-end/lib/http/api';
 import Link from 'front-end/lib/views/link';
 import { get } from 'lodash';
@@ -53,5 +53,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getAlerts: emptyPageAlerts,
   getMetadata() {
     return makePageMetadata('Signed Out');
-  }
+  },
+  getBreadcrumbs: emptyPageBreadcrumbs,
+  getModal: noPageModal
 };

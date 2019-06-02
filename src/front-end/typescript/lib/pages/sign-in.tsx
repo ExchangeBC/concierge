@@ -2,7 +2,7 @@ import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { makePageMetadata } from 'front-end/lib';
 import { isSignedOut } from 'front-end/lib/access-control';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, PageComponent, PageInit, replaceRoute, replaceUrl, Update } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, noPageModal, PageComponent, PageInit, replaceRoute, replaceUrl, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { updateField, validateField } from 'front-end/lib/views/form-field';
 import * as ShortText from 'front-end/lib/views/input/short-text';
@@ -201,5 +201,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   },
   getMetadata() {
     return makePageMetadata('Sign In');
-  }
+  },
+  getBreadcrumbs: emptyPageBreadcrumbs,
+  getModal: noPageModal
 };

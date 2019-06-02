@@ -2,7 +2,7 @@ import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from
 import { isUserType } from 'front-end/lib/access-control';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newUrl, PageComponent, PageInit, replaceRoute, Update } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, newUrl, noPageModal, PageComponent, PageInit, replaceRoute, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as markdown from 'front-end/lib/http/markdown';
 import Icon from 'front-end/lib/views/icon';
@@ -206,5 +206,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   },
   getMetadata() {
     return makePageMetadata('Terms and Conditions');
-  }
+  },
+  getBreadcrumbs: emptyPageBreadcrumbs,
+  getModal: noPageModal
 };

@@ -2,7 +2,7 @@ import { makePageMetadata } from 'front-end/lib';
 import { isSignedIn } from 'front-end/lib/access-control';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newRoute, PageComponent, PageInit, replaceRoute, Update } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, newRoute, noPageModal, PageComponent, PageInit, replaceRoute, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { validateConfirmPassword } from 'front-end/lib/validators';
 import { updateField, validateField } from 'front-end/lib/views/form-field';
@@ -213,5 +213,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getMetadata() {
     return makePageMetadata('Change your Password')
   },
-  getAlerts: emptyPageAlerts
+  getAlerts: emptyPageAlerts,
+  getBreadcrumbs: emptyPageBreadcrumbs,
+  getModal: noPageModal
 };

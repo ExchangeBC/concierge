@@ -1,16 +1,17 @@
+import { FALLBACK_USER_NAME } from 'front-end/config';
 import { makePageMetadata } from 'front-end/lib';
 import { isSignedIn } from 'front-end/lib/access-control';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import { ViewerUser } from 'front-end/lib/components/profiles/types';
-import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapGlobalComponentDispatch, PageComponent, PageInit, replaceRoute, Update, updateGlobalComponentChild } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapGlobalComponentDispatch, newRoute, noPageModal, PageComponent, PageInit, replaceRoute, Update, updateGlobalComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as BuyerProfile from 'front-end/lib/pages/profile/components/buyer';
 import * as ProgramStaffProfile from 'front-end/lib/pages/profile/components/program-staff';
 import * as VendorProfile from 'front-end/lib/pages/profile/components/vendor';
 import { default as React, ReactElement } from 'react';
 import { PublicUser } from 'shared/lib/resources/user';
-import { ADT, UserType } from 'shared/lib/types';
+import { ADT, profileToName, UserType } from 'shared/lib/types';
 
 const ERROR_MESSAGE = 'You do not have sufficient privileges to view this profile.';
 
@@ -20,6 +21,8 @@ export interface RouteParams {
 
 export interface State {
   errors: string[];
+  viewerUser?: ViewerUser;
+  profileUser?: PublicUser;
   buyer?: Immutable<BuyerProfile.State>;
   vendor?: Immutable<VendorProfile.State>;
   programStaff?: Immutable<ProgramStaffProfile.State>;
@@ -37,6 +40,8 @@ async function userToState(profileUser: PublicUser, viewerUser?: ViewerUser): Pr
     case UserType.Buyer:
       return {
         errors: [],
+        profileUser,
+        viewerUser,
         buyer: immutable(await BuyerProfile.init({
           profileUser,
           viewerUser
@@ -45,6 +50,8 @@ async function userToState(profileUser: PublicUser, viewerUser?: ViewerUser): Pr
     case UserType.Vendor:
       return {
         errors: [],
+        profileUser,
+        viewerUser,
         vendor: immutable(await VendorProfile.init({
           profileUser,
           viewerUser
@@ -53,6 +60,8 @@ async function userToState(profileUser: PublicUser, viewerUser?: ViewerUser): Pr
     case UserType.ProgramStaff:
       return {
         errors: [],
+        profileUser,
+        viewerUser,
         programStaff: immutable(await ProgramStaffProfile.init({
           profileUser,
           viewerUser
@@ -72,7 +81,8 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedIn({
         return await userToState(result.value, viewerUser);
       case 'invalid':
         return {
-          errors: [ERROR_MESSAGE]
+          errors: [ERROR_MESSAGE],
+          viewerUser
         };
     }
   },
@@ -190,5 +200,24 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getMetadata() {
     // TODO Show user's name in the title.
     return makePageMetadata('User Profile');
-  }
+  },
+  getBreadcrumbs(state) {
+    if (state.viewerUser && state.viewerUser.type !== UserType.ProgramStaff) {
+      return [];
+    }
+    const profileUser = state.profileUser;
+    return [
+      {
+        text: 'Users',
+        onClickMsg: newRoute({
+          tag: 'userList',
+          value: null
+        })
+      },
+      {
+        text: profileUser ? profileToName(profileUser.profile) : FALLBACK_USER_NAME
+      }
+    ];
+  },
+  getModal: noPageModal
 };

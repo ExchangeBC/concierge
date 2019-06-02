@@ -3,7 +3,7 @@ import { AccessControlParams, isSignedOut, isUserType, SharedStateWithGuaranteed
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import { ProfileComponent } from 'front-end/lib/components/profiles/types';
-import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, immutable, Immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, replaceRoute, Update, updateComponentChild } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, newRoute, noPageModal, PageComponent, PageInit, replaceRoute, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as AccountInformation from 'front-end/lib/pages/sign-up/components/account-information';
 import FixedBar from 'front-end/lib/views/layout/fixed-bar';
@@ -255,6 +255,8 @@ export function component<PS, PM, P extends ProfileType>(Profile: ProfileCompone
     getAlerts: emptyPageAlerts,
     getMetadata() {
       return makePageMetadata(`Create a ${userTypeToTitleCase(Profile.userType)} Account`);
-    }
+    },
+    getBreadcrumbs: emptyPageBreadcrumbs,
+    getModal: noPageModal
   };
 };

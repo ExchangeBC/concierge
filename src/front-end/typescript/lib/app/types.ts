@@ -1,4 +1,4 @@
-import { AppMsg, Immutable } from 'front-end/lib/framework';
+import { AppMsg, Immutable, PageModal } from 'front-end/lib/framework';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
@@ -57,6 +57,10 @@ export interface State {
   inTransition: boolean;
   shared: SharedState;
   activeRoute: Route;
+  modal: {
+    open: boolean;
+    content: PageModal<Msg>;
+  },
   pages: {
     landing?: Immutable<PageLanding.State>;
     signIn?: Immutable<PageSignIn.State>;
@@ -83,6 +87,7 @@ export interface State {
 
 type InnerMsg
   = ADT<'toggleIsNavOpen', boolean | undefined >
+  | ADT<'toggleModal', undefined>
   | ADT<'pageLanding', PageLanding.Msg>
   | ADT<'pageSignIn', PageSignIn.Msg>
   | ADT<'pageSignUpBuyer', PageSignUpBuyer.Msg>

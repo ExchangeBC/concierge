@@ -1,9 +1,10 @@
+import { FALLBACK_USER_NAME } from 'front-end/config';
 import { makePageMetadata } from 'front-end/lib';
 import { isUserType } from 'front-end/lib/access-control';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import * as TableComponent from 'front-end/lib/components/table';
-import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, immutable, Immutable, mapComponentDispatch, PageComponent, PageInit, replaceRoute, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, noPageModal, PageComponent, PageInit, replaceRoute, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import { readManyUsers } from 'front-end/lib/http/api';
 import Icon from 'front-end/lib/views/icon';
 import * as Select from 'front-end/lib/views/input/select';
@@ -14,8 +15,6 @@ import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, parseUserType, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
-
-const FALLBACK_NAME = 'No Name Provided';
 
 // Define Table component.
 
@@ -114,8 +113,8 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
       // Sort users by user type first, then name.
       users = result.value.items.sort((a, b) => {
         if (a.profile.type === b.profile.type) {
-          const aName = profileToName(a.profile) || FALLBACK_NAME;
-          const bName = profileToName(b.profile) || FALLBACK_NAME;
+          const aName = profileToName(a.profile) || FALLBACK_USER_NAME;
+          const bName = profileToName(b.profile) || FALLBACK_USER_NAME;
           return aName.localeCompare(bName, 'en', { sensitivity: 'base' });
         } else {
           return a.profile.type.localeCompare(b.profile.type, 'en');
@@ -281,7 +280,7 @@ function tableBodyRows(users: PublicUser[]): Array<Array<TableComponent.TDSpec<T
         tag: 'name' as const,
         value: {
           userId: user._id,
-          text: profileToName(user.profile) || FALLBACK_NAME
+          text: profileToName(user.profile) || FALLBACK_USER_NAME
         }
       }),
       TableComponent.makeTDSpec({
@@ -339,5 +338,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getAlerts: emptyPageAlerts,
   getMetadata() {
     return makePageMetadata('Users');
-  }
+  },
+  getBreadcrumbs: emptyPageBreadcrumbs,
+  getModal: noPageModal
 };

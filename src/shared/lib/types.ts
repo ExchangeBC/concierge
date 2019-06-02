@@ -219,21 +219,15 @@ export interface VendorProfile {
 
 export type Profile = BuyerProfile | ProgramStaffProfile | VendorProfile;
 
-export function profileToName(profile: Profile): string | null {
+export function profileToName(profile: Profile): string {
   switch (profile.type) {
     case UserType.Buyer:
     case UserType.ProgramStaff:
       const firstName = profile.firstName;
       const lastName = profile.lastName;
-      if (firstName && lastName) {
-        return `${firstName} ${lastName}`;
-      } else if (firstName) {
-        return firstName;
-      } else {
-        return null;
-      }
+      return `${firstName} ${lastName}`;
     case UserType.Vendor:
-      return profile.businessName || null;
+      return profile.businessName;
   }
 }
 
