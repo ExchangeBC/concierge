@@ -4,7 +4,7 @@ import moment from 'moment';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
 import { compareDates, formatDate, formatDateAndTime, formatTime } from 'shared/lib';
-import { ADT, parsePhoneType, parseUserType, PhoneType, Rating, UserType } from 'shared/lib/types';
+import { ADT, parsePhoneType, parseUserType, PhoneType, UserType } from 'shared/lib/types';
 
 export type ValidOrInvalid<Valid, Invalid> = ADT<'valid', Valid> | ADT<'invalid', Invalid>;
 
@@ -292,18 +292,4 @@ export function validatePositionTitle(positionTitle: string): Validation<string>
 
 export function validateIndustrySectors(industrySectors: string[]): ArrayValidation<string> {
   return validateStringArray(industrySectors, AVAILABLE_INDUSTRY_SECTORS, 'Industry Sector', 'an', true, true);
-}
-
-export function validateRating(rating: string | undefined): Validation<Rating> {
-  if (rating === undefined) {
-    return invalid(['Rating not selected']);
-  }
-  switch (rating) {
-    case 'good':
-    case 'meh':
-    case 'bad':
-      return valid(rating as Rating)
-    default:
-      return invalid(['Not a valid rating'])
-  }
 }

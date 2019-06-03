@@ -1,6 +1,6 @@
 import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, newRoute, PageComponent, PageInit, Update } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, newRoute, noPageModal, PageComponent, PageInit, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { updateField, validateField } from 'front-end/lib/views/form-field';
 import Icon from 'front-end/lib/views/icon';
@@ -11,8 +11,7 @@ import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import { ADT, Rating } from 'shared/lib/types';
-import { validateGenericString, validateRating } from 'shared/lib/validators';
-import { validateFeedbackText } from 'shared/lib/validators/feedback';
+import { validateFeedbackText, validateRating } from 'shared/lib/validators/feedback';
 
 export interface State {
   loading: number;
@@ -86,6 +85,12 @@ const update: Update<State, Msg> = ({ state, msg }) => {
   }
 }
 
+function isValid(state: State): boolean {
+  const validatedRating = validateRating(state.rating);
+  const validatedFeedbackText = validateFeedbackText(state.feedbackText.value);
+  return (validatedRating.tag === 'valid' && validatedFeedbackText.tag === 'valid');
+}
+
 const RatingSelector: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   const setRating = (value: Rating) => () => dispatch({ tag: 'onChangeRating', value });
@@ -105,9 +110,8 @@ const RatingSelector: ComponentView<State, Msg> = props => {
 
 const viewBottomBar: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
-  const validatedFeedbackText = validateGenericString(state.feedbackText.value, 'Description', 1, 2000);
   const isLoading = state.loading > 0;
-  const isDisabled = isLoading || state.rating === undefined || validatedFeedbackText.tag === 'invalid';
+  const isDisabled = isLoading || !isValid(state);
   const cancelRoute: Route = { tag: 'landing' as 'landing', value: null };
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
@@ -136,10 +140,10 @@ const view: ComponentView<State, Msg> = props => {
       <Row>
         <Col xs='12'>
           <LongText.view
-          state={state.feedbackText}
-          onChange={onChange('onChangeFeedbackText')}
-          onChangeDebounced={validate}
-          style={{ width: '50vw', height: '25vh', minHeight: '150px' }} />
+            state={state.feedbackText}
+            onChange={onChange('onChangeFeedbackText')}
+            onChangeDebounced={validate}
+            style={{ width: '50vw', height: '25vh', minHeight: '150px' }} />
         </Col>
       </Row>
     </div>
@@ -154,5 +158,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getMetadata() {
     return makePageMetadata('Send Feedback');
   },
-  getAlerts: emptyPageAlerts
+  getAlerts: emptyPageAlerts,
+  getBreadcrumbs: emptyPageBreadcrumbs,
+  getModal: noPageModal
 };

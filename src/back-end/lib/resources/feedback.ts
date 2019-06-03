@@ -1,11 +1,12 @@
-import { getString } from 'back-end/../shared/lib';
 import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
+import * as FeedbackSchema from 'back-end/lib/schemas/feedback';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
-import { CreateRequestBody, CreateValidationErrors } from 'shared/lib/resources/feedback';
-import { validateFeedbackText } from 'shared/lib/validators/feedback';
+import { getString } from 'shared/lib';
+import { CreateRequestBody, CreateValidationErrors, PublicFeedback } from 'shared/lib/resources/feedback';
+import { validateFeedbackText, validateRating } from 'shared/lib/validators/feedback';
 
-type CreateResponseBody = JsonResponseBody<null | CreateValidationErrors>;
+type CreateResponseBody = JsonResponseBody<PublicFeedback | CreateValidationErrors>;
 
 type RequiredModels = 'Feedback';
 
@@ -25,19 +26,7 @@ export const resource: Resource = {
         }
       },
       async respond(request): Promise<Response<CreateResponseBody, Session>> {
-        const respond = (code: number, body: null | CreateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
-
-        // Create feedback object
-        const feedback = new FeedbackModel({
-          createdAt: new Date(),
-          text: request.body.text,
-          rating: request.body.rating
-        });
-
-        // If we have an authenticated user, store the type with the feedback
-        if (request.session && request.session.user) {
-          feedback.userType = request.session.user.type;
-        }
+        const respond = (code: number, body: PublicFeedback | CreateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
 
         // Validate feedback text
         const validatedFeedbackText = validateFeedbackText(request.body.text);
@@ -45,9 +34,29 @@ export const resource: Resource = {
           return respond(400, { text: validatedFeedbackText.value });
         }
 
+        // Validate rating
+        const validatedRating = validateRating(request.body.rating);
+        if (validatedRating.tag === 'invalid') {
+          return respond(400, { rating: validatedRating.value });
+        }
+
+        // Create feedback object
+        const feedback = new FeedbackModel({
+          createdAt: new Date(),
+          text: validatedFeedbackText.value,
+          rating: validatedRating.value
+        });
+
+        // If we have an authenticated user, store the type with the feedback
+        if (request.session && request.session.user) {
+          feedback.userType = request.session.user.type;
+        }
+
         await feedback.save();
 
-        return respond(200, null);
+        // TODO: Send email to FEEDBACK_MAIL_ADDRESS
+
+        return respond(201, FeedbackSchema.makePublicFeedback(feedback));
       }
     }
   }

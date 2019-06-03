@@ -317,12 +317,12 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'feedback':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'feedback'],
         childRouteParams: route.value,
         childInit: PageFeedback.component.init,
         childGetMetadata: PageFeedback.component.getMetadata,
+        childGetModal: PageFeedback.component.getModal,
         getSharedState(state) {
           return state.shared;
         },
@@ -603,11 +603,12 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 
     case 'pageFeedback':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageFeedback', value }),
         childStatePath: ['pages', 'feedback'],
         childUpdate: PageFeedback.component.update,
         childGetMetadata: PageFeedback.component.getMetadata,
+        childGetModal: PageFeedback.component.getModal,
         childMsg: msg.value
       });
 

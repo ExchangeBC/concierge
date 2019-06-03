@@ -1,6 +1,7 @@
 import { UserType } from 'back-end/../shared/lib/types';
 import { dateSchema } from 'back-end/lib/schemas';
 import * as mongoose from 'mongoose';
+import { PublicFeedback } from 'shared/lib/resources/feedback';
 import { Rating } from 'shared/lib/types';
 
 export interface Data {
@@ -11,11 +12,21 @@ export interface Data {
     userType?: UserType;
 }
 
+export function makePublicFeedback(feedback: Data): PublicFeedback {
+    return {
+        _id: feedback._id.toHexString(),
+        createdAt: feedback.createdAt,
+        text: feedback.text,
+        rating: feedback.rating,
+        userType: feedback.userType
+    };
+}
+
 export type Model = mongoose.Model<Data & mongoose.Document>;
 
 export const schema: mongoose.Schema = new mongoose.Schema({
     createdAt: dateSchema(true),
-    text: String,
+    text: { type: String, required: true },
     rating: { type: String, required: true, enum: ['good', 'meh', 'bad'] },
-    userType: { type: String }
+    userType: String
 });
