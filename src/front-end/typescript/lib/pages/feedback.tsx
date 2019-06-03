@@ -60,24 +60,30 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         async (state, dispatch) => {
           const validatedRating = validateRating(state.rating);
           if (validatedRating.tag === 'invalid') {
-            return state;
+            return stopLoading(state);
           }
-          await api.createFeedback({
+          const result = await api.createFeedback({
             rating: validatedRating.value,
             text: state.feedbackText.value
           });
 
-          // Route to feedback submitted notice
-          dispatch(newRoute({
-            tag: 'notice' as 'notice',
-            value: {
-              noticeId: {
-                tag: 'feedbackSubmitted' as 'feedbackSubmitted',
-                value: undefined
-              }
-            }
-          }));
-          return stopLoading(state);
+          switch (result.tag) {
+            case 'valid':
+              // Route to feedback submitted notice
+              dispatch(newRoute({
+                tag: 'notice' as 'notice',
+                value: {
+                  noticeId: {
+                    tag: 'feedbackSubmitted' as 'feedbackSubmitted',
+                    value: undefined
+                  }
+                }
+              }));
+              return stopLoading(state);
+            case 'invalid':
+              state = state.setIn(['feedbackText', 'errors'], result.value.text || []);
+              return stopLoading(state);
+          }
         }
       ];
     default:
