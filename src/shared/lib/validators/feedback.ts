@@ -7,7 +7,7 @@ export function validateFeedbackText(text: string): Validation<string> {
 
 export function validateRating(rating: string | undefined): Validation<Rating> {
     if (rating === undefined) {
-      return invalid(['Rating not selected']);
+      return invalid(['Select a rating']);
     }
     switch (rating) {
       case 'good':
@@ -15,6 +15,6 @@ export function validateRating(rating: string | undefined): Validation<Rating> {
       case 'bad':
         return valid(rating as Rating)
       default:
-        return invalid(['Not a valid rating'])
+        return invalid(['Select a valid rating'])
     }
   }
