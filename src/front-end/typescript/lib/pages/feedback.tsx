@@ -107,8 +107,8 @@ const RatingSelector: ComponentView<State, Msg> = props => {
     <Row className='mb-4'>
       <Col xs='12' className='d-flex'>
         <Icon className='mr-4' name='good-rating' color={isGood ? 'success' : 'secondary'} width={2.5} height={2.5} onClick={setRating('good')} />
-        <Icon className='mr-4' name='bad-rating' color={isBad ? 'danger' : 'secondary'} width={2.5} height={2.5} onClick={setRating('bad')} />
-        <Icon name='meh-rating' color={isMeh ? 'warning' : 'secondary'} width={2.5} height={2.5} onClick={setRating('meh')} />
+        <Icon className='mr-4' name='meh-rating' color={isMeh ? 'warning' : 'secondary'} width={2.5} height={2.5} onClick={setRating('meh')} />
+        <Icon name='bad-rating' color={isBad ? 'danger' : 'secondary'} width={2.5} height={2.5} onClick={setRating('bad')} />
       </Col>
     </Row>
   );
