@@ -1,5 +1,5 @@
 import * as BuyerProfile from 'front-end/lib/components/profiles/buyer-profile';
-import * as Profile from 'front-end/lib/pages/profile/components/profile';
+import * as Profile from 'front-end/lib/pages/user/view/components/profile';
 
 export const component = Profile.component(BuyerProfile.component);
 

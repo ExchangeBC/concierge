@@ -1,5 +1,5 @@
 import * as ProgramStaffProfile from 'front-end/lib/components/profiles/program-staff-profile';
-import * as Profile from 'front-end/lib/pages/profile/components/profile';
+import * as Profile from 'front-end/lib/pages/user/view/components/profile';
 
 export const component = Profile.component(ProgramStaffProfile.component);
 

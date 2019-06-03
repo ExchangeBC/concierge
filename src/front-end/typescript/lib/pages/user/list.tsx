@@ -35,7 +35,7 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
     case 'userType':
       return wrap(userTypeToTitleCase(data.value));
     case 'name':
-      return wrap((<Link route={{ tag: 'profile', value: { profileUserId: data.value.userId } }}>{data.value.text}</Link>));
+      return wrap((<Link route={{ tag: 'userView', value: { profileUserId: data.value.userId } }}>{data.value.text}</Link>));
     case 'publicSectorEntity':
       return wrap(data.value);
     case 'email':

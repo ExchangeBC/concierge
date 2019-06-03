@@ -6,7 +6,6 @@ import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageMarkdown from 'front-end/lib/pages/markdown';
 import * as PageNotice from 'front-end/lib/pages/notice';
-import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
 import * as PageRequestForInformationEdit from 'front-end/lib/pages/request-for-information/edit';
 import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
@@ -20,7 +19,8 @@ import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
-import * as PageUserList from 'front-end/lib/pages/user-list';
+import * as PageUserList from 'front-end/lib/pages/user/list';
+import * as PageUserView from 'front-end/lib/pages/user/view';
 import { ValidOrInvalid } from 'shared/lib/validators';
 
 function setSession(state: Immutable<State>, validated: ValidOrInvalid<Session, null>): Immutable<State> {
@@ -184,16 +184,16 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         }
       });
 
-    case 'profile':
+    case 'userView':
       return await initAppChildPage({
         ...defaultPageInitParams,
-        childStatePath: ['pages', 'profile'],
+        childStatePath: ['pages', 'userView'],
         childRouteParams: route.value,
-        childInit: PageProfile.component.init,
-        childGetMetadata: PageProfile.component.getMetadata,
-        childGetModal: PageProfile.component.getModal,
+        childInit: PageUserView.component.init,
+        childGetMetadata: PageUserView.component.getMetadata,
+        childGetModal: PageUserView.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageProfile' as 'pageProfile', value };
+          return { tag: 'pageUserView' as 'pageUserView', value };
         }
       });
 
@@ -474,14 +474,14 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         childMsg: msg.value
       });
 
-    case 'pageProfile':
+    case 'pageUserView':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageProfile', value }),
-        childStatePath: ['pages', 'profile'],
-        childUpdate: PageProfile.component.update,
-        childGetMetadata: PageProfile.component.getMetadata,
-        childGetModal: PageProfile.component.getModal,
+        mapChildMsg: value => ({ tag: 'pageUserView', value }),
+        childStatePath: ['pages', 'userView'],
+        childUpdate: PageUserView.component.update,
+        childGetMetadata: PageUserView.component.getMetadata,
+        childGetModal: PageUserView.component.getModal,
         childMsg: msg.value
       });
 

@@ -6,9 +6,9 @@ import { Route, SharedState } from 'front-end/lib/app/types';
 import { ViewerUser } from 'front-end/lib/components/profiles/types';
 import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapGlobalComponentDispatch, newRoute, noPageModal, PageComponent, PageInit, replaceRoute, Update, updateGlobalComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
-import * as BuyerProfile from 'front-end/lib/pages/profile/components/buyer';
-import * as ProgramStaffProfile from 'front-end/lib/pages/profile/components/program-staff';
-import * as VendorProfile from 'front-end/lib/pages/profile/components/vendor';
+import * as BuyerProfile from 'front-end/lib/pages/user/view/components/buyer';
+import * as ProgramStaffProfile from 'front-end/lib/pages/user/view/components/program-staff';
+import * as VendorProfile from 'front-end/lib/pages/user/view/components/vendor';
 import { default as React, ReactElement } from 'react';
 import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, profileToName, UserType } from 'shared/lib/types';
@@ -92,7 +92,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedIn({
       tag: 'signIn' as 'signIn',
       value: {
         redirectOnSuccess: router.routeToUrl({
-          tag: 'profile',
+          tag: 'userView',
           value: routeParams
         })
       }

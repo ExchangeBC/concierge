@@ -133,7 +133,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
                 // Redirect Program Staff to the created user's profile.
                 if (result.value.profile.type === UserType.ProgramStaff) {
                   dispatch(newRoute({
-                    tag: 'profile' as 'profile',
+                    tag: 'userView' as 'userView',
                     value: {
                       profileUserId: result.value._id
                     }

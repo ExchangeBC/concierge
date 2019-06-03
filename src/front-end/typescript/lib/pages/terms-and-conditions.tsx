@@ -107,7 +107,7 @@ function getRedirectUrl(state: Immutable<State>, skip: boolean): string {
   if (state.redirectOnAccept && !skip) { return state.redirectOnAccept; }
   if (state.redirectOnSkip && skip) { return state.redirectOnSkip; }
   return router.routeToUrl({
-    tag: 'profile',
+    tag: 'userView',
     value: {
       profileUserId: state.userId
     }
@@ -152,7 +152,7 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
         <p className='text-align-right mb-0'>
           {formatTermsAndConditionsAgreementDate(state.acceptedTermsAt)}
         </p>
-        <Link route={{ tag: 'profile', value: { profileUserId: state.userId } }} className='mr-auto d-none d-md-flex align-items-center' color='secondary'>
+        <Link route={{ tag: 'userView', value: { profileUserId: state.userId } }} className='mr-auto d-none d-md-flex align-items-center' color='secondary'>
           <Icon name='chevron-left' color='secondary' className='mr-1' />
           My Profile
         </Link>

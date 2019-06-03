@@ -197,7 +197,7 @@ const view: ComponentView<State, Msg> = props => {
               <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled}>
                 Update Password
               </LoadingButton>
-              <Link route={{ tag: 'profile', value: { profileUserId: state.userId } }} color='secondary' className='ml-3'>Cancel</Link>
+              <Link route={{ tag: 'userView', value: { profileUserId: state.userId } }} color='secondary' className='ml-3'>Cancel</Link>
             </Col>
           </Row>
         </Col>

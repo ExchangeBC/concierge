@@ -9,7 +9,6 @@ import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageMarkdown from 'front-end/lib/pages/markdown';
 import * as PageNotice from 'front-end/lib/pages/notice';
-import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
 import * as PageRequestForInformationEdit from 'front-end/lib/pages/request-for-information/edit';
 import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
@@ -23,7 +22,8 @@ import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
-import * as PageUserList from 'front-end/lib/pages/user-list';
+import * as PageUserList from 'front-end/lib/pages/user/list';
+import * as PageUserView from 'front-end/lib/pages/user/view';
 import { default as React } from 'react';
 import { Button, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
@@ -147,13 +147,13 @@ const ViewActiveRoute: ComponentView<State, Msg> = ({ state, dispatch }) => {
           component={PageTermsAndConditions.component} />
       );
 
-    case 'profile':
+    case 'userView':
       return (
         <ViewPage
           dispatch={dispatch}
-          pageState={state.pages.profile}
-          mapPageMsg={value => ({ tag: 'pageProfile', value })}
-          component={PageProfile.component} />
+          pageState={state.pages.userView}
+          mapPageMsg={value => ({ tag: 'pageUserView', value })}
+          component={PageUserView.component} />
       );
 
     case 'userList':
