@@ -83,8 +83,14 @@ input[type="time"] {
   }
 }
 
-.in-transition {
-  pointer-events: none;
+.app {
+  filter: grayscale(0);
+  transition: filter 240ms;
+
+  &.in-transition {
+    filter: grayscale(0.2);
+    pointer-events: none;
+  }
 }
 
 .navbar .transition-indicator {
