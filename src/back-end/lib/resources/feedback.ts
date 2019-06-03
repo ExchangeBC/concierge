@@ -1,7 +1,9 @@
+import { FEEDBACK_MAIL_ADDRESS } from 'back-end/config';
 import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
+import * as notifications from 'back-end/lib/mailer/notifications';
 import * as FeedbackSchema from 'back-end/lib/schemas/feedback';
-import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
+import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { getString } from 'shared/lib';
 import { CreateRequestBody, CreateValidationErrors, PublicFeedback } from 'shared/lib/resources/feedback';
 import { validateFeedbackText, validateRating } from 'shared/lib/validators/feedback';
@@ -54,7 +56,17 @@ export const resource: Resource = {
 
         await feedback.save();
 
-        // TODO: Send email to FEEDBACK_MAIL_ADDRESS
+        // Send email to configured FEEDBACK_MAIL_ADDRESS
+        try {
+          await notifications.createFeedback({
+            feedbackEmail: FEEDBACK_MAIL_ADDRESS,
+            feedbackResponse: FeedbackSchema.makePublicFeedback(feedback)
+          });
+        } catch (error) {
+          request.logger.error(`unable to send notification email to configured feedback email address: ${FEEDBACK_MAIL_ADDRESS}`, {
+            ...makeErrorResponseBody(error)
+          });
+        }
 
         return respond(201, FeedbackSchema.makePublicFeedback(feedback));
       }

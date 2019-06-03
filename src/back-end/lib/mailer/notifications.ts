@@ -3,11 +3,15 @@ import { send } from 'back-end/lib/mailer';
 import ejs from 'ejs';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import { PublicFeedback } from 'shared/lib/resources/feedback';
 import { PublicRfiResponse } from 'shared/lib/resources/request-for-information/response';
 import { profileToName } from 'shared/lib/types';
 
 const TEMPLATE_PATH = resolve(__dirname, './templates/notification.ejs');
 const TEMPLATE = readFileSync(TEMPLATE_PATH, 'utf8');
+
+const FEEDBACK_TEMPLATE_PATH = resolve(__dirname, './templates/feedback.ejs');
+const FEEDBACK_TEMPLATE = readFileSync(FEEDBACK_TEMPLATE_PATH, 'utf8');
 
 function makeUrl(path: string): string {
   return `${MAILER_ROOT_URL}/${path.replace(/^\/*/, '')}`;
@@ -42,6 +46,25 @@ function makeNotificationHtml(params: MakeNotificationParams): string {
     }
   }, {
     filename: TEMPLATE_PATH
+  });
+}
+
+interface MakeFeedbackParams {
+  feedback: PublicFeedback
+}
+
+function makeFeedbackHtml(params: MakeFeedbackParams) {
+  return ejs.render(FEEDBACK_TEMPLATE, {
+    data: {
+      ...params,
+      logo: {
+        href: makeUrl(''),
+        src: makeUrl('images/logo.svg'),
+        alt: 'Procurement Concierge Program'
+      }
+    }
+  }, {
+    filename: FEEDBACK_TEMPLATE_PATH
   });
 }
 
@@ -170,6 +193,23 @@ export async function createDdrProgramStaff(params: CreateDdrProgramStaffParams)
           ]
         }
       ]
+    })
+  });
+}
+
+interface CreateFeedbackEmailParams {
+  feedbackEmail: string;
+  feedbackResponse: PublicFeedback;
+}
+
+export async function createFeedback(params: CreateFeedbackEmailParams): Promise<void> {
+  const { feedbackEmail, feedbackResponse } = params;
+  const subject = 'Feedback Received';
+  await send({
+    to: feedbackEmail,
+    subject,
+    html: makeFeedbackHtml({
+      feedback: feedbackResponse
     })
   });
 }

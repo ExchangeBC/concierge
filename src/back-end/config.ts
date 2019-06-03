@@ -91,6 +91,8 @@ export const MAILER_FROM = get('MAILER_FROM', `Procurement Concierge Program <${
 
 export const MAILER_ROOT_URL = get('MAILER_ROOT_URL', 'https://procurementconcierge.gov.bc.ca').replace(/\/*$/, '');
 
+export const FEEDBACK_MAIL_ADDRESS = get('FEEDBACK_MAIL_ADDRESS', '');
+
 function isPositiveInteger(n: number): boolean {
   return !isNaN(n) && !!n && n >= 0 && Math.abs(n % 1) === 0;
 }
