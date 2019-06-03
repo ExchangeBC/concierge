@@ -231,11 +231,10 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       if (!state.promptSubmitConfirmation) {
         return [state.set('promptSubmitConfirmation', true)];
       } else {
-        state = startLoading(state);
         state = state.set('promptSubmitConfirmation', false);
       }
       return [
-        state,
+        startLoading(state),
         async (state, dispatch) => {
           if (state.init.tag === 'invalid') { return state; }
           const { rfi, attachments } = state.init.value;
