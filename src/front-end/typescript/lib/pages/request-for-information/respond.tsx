@@ -2,7 +2,7 @@ import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import * as FileMulti from 'front-end/lib/components/input/file-multi';
-import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, replaceRoute, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, newRoute, noPageModal, PageComponent, PageInit, replaceRoute, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { uploadFiles } from 'front-end/lib/pages/request-for-information/lib';
 import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
@@ -345,5 +345,30 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getAlerts: emptyPageAlerts,
   getMetadata() {
     return makePageMetadata('Respond to a Request for Information');
-  }
+  },
+  getBreadcrumbs(state) {
+    if (state.init.tag === 'invalid') { return []; }
+    return [
+      {
+        text: 'RFIs',
+        onClickMsg: newRoute({
+          tag: 'requestForInformationList',
+          value: null
+        })
+      },
+      {
+        text: state.init.value.rfi.latestVersion.rfiNumber,
+        onClickMsg: newRoute({
+          tag: 'requestForInformationView',
+          value: {
+            rfiId: state.init.value.rfi._id
+          }
+        })
+      },
+      {
+        text: 'Respond to RFI'
+      }
+    ];
+  },
+  getModal: noPageModal
 };

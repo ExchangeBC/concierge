@@ -9,7 +9,7 @@ export interface Props {
 
 export const view: framework.View<Props> = ({ className = '', children }: Props) => {
   return (
-    <div className={`mt-auto bg-light border-top fixed-bar position-sticky ${className}`} style={{ bottom: '0px' }}>
+    <div className={`mt-auto bg-light border-top fixed-bar shadow position-sticky ${className}`} style={{ bottom: '0px' }}>
       <Container className='h-100'>
         <Row className='h-100' style={{ overflowX: 'auto' }}>
           <Col

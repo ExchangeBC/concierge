@@ -1,7 +1,7 @@
 import { makePageMetadata } from 'front-end/lib';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import * as TableComponent from 'front-end/lib/components/table';
-import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, PageComponent, PageInit, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, immutable, Immutable, mapComponentDispatch, noPageModal, PageComponent, PageInit, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import { readManyRfis } from 'front-end/lib/http/api';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
 import Icon from 'front-end/lib/views/icon';
@@ -230,7 +230,7 @@ const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
     <div>
       <Row>
         <Col xs='12'>
-          <h6 className='text-secondary mb-3'>
+          <h6 className='text-secondary mb-3 d-none d-md-block'>
             Filter By:
           </h6>
         </Col>
@@ -435,5 +435,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getAlerts: emptyPageAlerts,
   getMetadata() {
     return makePageMetadata('Requests for Information');
-  }
+  },
+  getBreadcrumbs: emptyPageBreadcrumbs,
+  getModal: noPageModal
 };

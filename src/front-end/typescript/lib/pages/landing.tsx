@@ -1,6 +1,6 @@
 import { makePageMetadata } from 'front-end/lib';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, PageComponent, PageInit, Update, View } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, noPageModal, PageComponent, PageInit, Update, View } from 'front-end/lib/framework';
 import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
 import React from 'react';
@@ -221,5 +221,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getMetadata() {
     return makePageMetadata('Welcome');
   },
-  getAlerts: emptyPageAlerts
+  getAlerts: emptyPageAlerts,
+  getBreadcrumbs: emptyPageBreadcrumbs,
+  getModal: noPageModal
 };

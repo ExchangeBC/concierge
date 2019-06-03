@@ -2,7 +2,7 @@ import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from
 import { isUserType } from 'front-end/lib/access-control';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newUrl, PageComponent, PageInit, replaceRoute, Update } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, newUrl, noPageModal, PageComponent, PageInit, replaceRoute, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as markdown from 'front-end/lib/http/markdown';
 import Icon from 'front-end/lib/views/icon';
@@ -107,7 +107,7 @@ function getRedirectUrl(state: Immutable<State>, skip: boolean): string {
   if (state.redirectOnAccept && !skip) { return state.redirectOnAccept; }
   if (state.redirectOnSkip && skip) { return state.redirectOnSkip; }
   return router.routeToUrl({
-    tag: 'profile',
+    tag: 'userView',
     value: {
       profileUserId: state.userId
     }
@@ -152,7 +152,7 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
         <p className='text-align-right mb-0'>
           {formatTermsAndConditionsAgreementDate(state.acceptedTermsAt)}
         </p>
-        <Link route={{ tag: 'profile', value: { profileUserId: state.userId } }} className='mr-auto d-none d-md-flex align-items-center' color='secondary'>
+        <Link route={{ tag: 'userView', value: { profileUserId: state.userId } }} className='mr-auto d-none d-md-flex align-items-center' color='secondary'>
           <Icon name='chevron-left' color='secondary' className='mr-1' />
           My Profile
         </Link>
@@ -206,5 +206,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   },
   getMetadata() {
     return makePageMetadata('Terms and Conditions');
-  }
+  },
+  getBreadcrumbs: emptyPageBreadcrumbs,
+  getModal: noPageModal
 };

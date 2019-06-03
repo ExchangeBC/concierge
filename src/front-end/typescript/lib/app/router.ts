@@ -137,10 +137,10 @@ const router: Router<Route> = {
       }
     },
     {
-      path: '/profiles/:userId',
+      path: '/users/:userId',
       makeRoute({ params }) {
         return {
-          tag: 'profile',
+          tag: 'userView',
           value: {
             profileUserId: getParamString(params, 'userId')
           }
@@ -435,8 +435,8 @@ const router: Router<Route> = {
         if (tcWarningId) { tcQueryParams.push(`warningId=${encodeURIComponent(tcWarningId)}`); }
         const tcQueryString = tcQueryParams.join('&');
         return `/terms-and-conditions?${tcQueryString}`;
-      case 'profile':
-        return `/profiles/${route.value.profileUserId}`;
+      case 'userView':
+        return `/users/${route.value.profileUserId}`;
       case 'userList':
         return '/users';
       case 'requestForInformationCreate':

@@ -1,7 +1,7 @@
 import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newRoute, PageComponent, PageInit, Update, View } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newRoute, noPageModal, PageBreadcrumbs, PageComponent, PageInit, Update, View } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
@@ -379,5 +379,21 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
       ? 'Request for Information Preview'
       : 'Request for Information';
     return makePageMetadata(title);
-  }
+  },
+  getBreadcrumbs(state) {
+    const breadcrumbs: PageBreadcrumbs<Msg> = [{
+      text: 'RFIs',
+      onClickMsg: newRoute({
+        tag: 'requestForInformationList',
+        value: null
+      })
+    }];
+    if (state.rfi) {
+      breadcrumbs.push({
+        text: state.rfi.latestVersion.rfiNumber
+      });
+    }
+    return breadcrumbs;
+  },
+  getModal: noPageModal
 };

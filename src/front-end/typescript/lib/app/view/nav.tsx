@@ -14,23 +14,22 @@ interface Props {
 }
 
 const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, session, toggleIsOpen, className = '' }) => {
-  const isMyProfileRoute = activeRoute.tag === 'profile' && activeRoute.value.profileUserId === get(session, ['user', 'id']);
+  const isMyProfileRoute = activeRoute.tag === 'userView' && activeRoute.value.profileUserId === get(session, ['user', 'id']);
   const isUserListRoute = activeRoute.tag === 'userList';
   const isRequestForInformationListRoute = activeRoute.tag === 'requestForInformationList';
+  const isLandingRoute = activeRoute.tag === 'landing';
   const activeClass = (active: boolean) => active ? 'font-weight-bold text-decoration-underline' : '';
   const onClick = () => toggleIsOpen(false);
   const linkClassName = (isActive: boolean) => `${activeClass(isActive)} text-white px-0 px-md-3`;
-  const rfiListRoute: Route = {
-    tag: 'requestForInformationList',
-    value: null
-  };
-  const userListRoute: Route = {
-    tag: 'userList',
-    value: null
-  };
+  const landingRoute: Route = { tag: 'landing', value: null };
+  const rfiListRoute: Route = { tag: 'requestForInformationList', value: null };
+  const userListRoute: Route = { tag: 'userList', value: null };
   if (!session || !session.user) {
     return (
       <Nav navbar className={className}>
+        <NavItem>
+          <Link nav route={landingRoute} className={linkClassName(isLandingRoute)} onClick={onClick}>Home</Link>
+        </NavItem>
         <NavItem>
           <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
         </NavItem>
@@ -38,7 +37,7 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
     );
   }
   const myProfileRoute: Route = {
-    tag: 'profile',
+    tag: 'userView',
     value: {
       profileUserId: session.user.id
     }
@@ -47,6 +46,9 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
     case UserType.Buyer:
       return (
         <Nav navbar className={className}>
+          <NavItem>
+            <Link nav route={landingRoute} className={linkClassName(isLandingRoute)} onClick={onClick}>Home</Link>
+          </NavItem>
           <NavItem>
             <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
           </NavItem>
@@ -59,6 +61,9 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
       return (
         <Nav navbar className={className}>
           <NavItem>
+            <Link nav route={landingRoute} className={linkClassName(isLandingRoute)} onClick={onClick}>Home</Link>
+          </NavItem>
+          <NavItem>
             <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
           </NavItem>
           <NavItem>
@@ -69,6 +74,9 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
     case UserType.ProgramStaff:
       return (
         <Nav navbar className={className}>
+          <NavItem>
+            <Link nav route={landingRoute} className={linkClassName(isLandingRoute)} onClick={onClick}>Home</Link>
+          </NavItem>
           <NavItem>
             <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
           </NavItem>
@@ -128,7 +136,7 @@ const Navigation: View<Props> = props => {
           <NavbarBrand href='/'>
             <img src='/images/logo.svg' style={{ height: '2.25rem' }} alt='Procurement Concierge Program' />
           </NavbarBrand>
-          <Spinner size='sm' color='info-alt' className='transition-indicator' />
+          <Spinner size='sm' color='info-alt' className='transition-indicator d-md-none' />
           <NavbarToggler className='ml-auto' onClick={() => props.toggleIsOpen()} />
           <Collapse isOpen={props.isOpen} className='py-3 py-md-0' navbar>
             <ContextualLinks {...props} className='d-md-none' />
@@ -137,8 +145,9 @@ const Navigation: View<Props> = props => {
         </Container>
       </Navbar>
       <Navbar expand='sm' className='bg-info-alt d-none d-md-block shadow border-bottom'>
-        <Container className='pl-0'>
+        <Container className='pl-0 d-flex justify-content-between'>
           <ContextualLinks {...props} />
+          <Spinner size='sm' color='info' className='transition-indicator' />
         </Container>
       </Navbar>
     </div>

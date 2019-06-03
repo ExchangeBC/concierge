@@ -38,12 +38,13 @@ function AnchorLink(props: AnchorProps) {
     className = '',
     disabled = false,
     children,
-    href,
+    // href defaults to empty string so browser styles work properly.
+    href = '',
     route,
     onClick
   } = props;
   // Give precedence to the `route` prop over the `href` prop.
-  const finalHref: string | undefined
+  const finalHref: string
     = disabled
     ? ''
     : route
