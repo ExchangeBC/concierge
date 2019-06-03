@@ -45,7 +45,7 @@ function ViewBreadcrumbs<PageMsg>(props: ViewBreadcrumbsProps<PageMsg>): ReactEl
   const { dispatchPage, breadcrumbs } = props;
   if (!breadcrumbs.length) { return null; }
   return (
-    <Breadcrumb listClassName='bg-transparent px-0'>
+    <Breadcrumb className='d-none d-md-block' listClassName='bg-transparent px-0'>
       {breadcrumbs.map(({ text, onClickMsg }, i) => {
         const onClick = () => {
           if (onClickMsg) { dispatchPage(onClickMsg); }
@@ -64,11 +64,14 @@ type ViewAlertsAndBreadcrumbsProps<PageMsg> = ViewAlertsProps & ViewBreadcrumbsP
 
 function ViewAlertsAndBreadcrumbs<PageMsg>(props: ViewAlertsAndBreadcrumbsProps<PageMsg>) {
   const { dispatchPage, alerts, breadcrumbs } = props;
-  const className = breadcrumbs.length
-    ? 'pt-3 mb-n3'
-    : alerts.info.length || alerts.warnings.length || alerts.errors.length
-    ? 'pt-5 mb-n3'
+  const hasAlerts = alerts.info.length || alerts.warnings.length || alerts.errors.length;
+  const hasBreadcrumbs = !!breadcrumbs.length;
+  let className = hasBreadcrumbs
+    ? 'pt-md-3'
+    : hasAlerts
+    ? 'pt-5'
     : '';
+  className = `${className} ${hasBreadcrumbs ? 'mb-md-n4' : ''} ${hasAlerts ? 'mb-n4' : ''}`;
   return (
     <Container className={className}>
       <ViewBreadcrumbs dispatchPage={dispatchPage} breadcrumbs={breadcrumbs} />
