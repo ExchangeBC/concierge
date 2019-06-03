@@ -2,7 +2,7 @@ import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import * as FileMulti from 'front-end/lib/components/input/file-multi';
-import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, newRoute, noPageModal, PageComponent, PageInit, replaceRoute, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, replaceRoute, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { uploadFiles } from 'front-end/lib/pages/request-for-information/lib';
 import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
@@ -23,6 +23,7 @@ export interface RouteParams {
 export type InnerMsg
   = ADT<'handlePageInitError'>
   | ADT<'onChangeAttachments', FileMulti.Msg>
+  | ADT<'hideSubmitConfirmationPrompt'>
   | ADT<'submit'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
@@ -42,6 +43,7 @@ interface ValidState {
 
 export interface State {
   loading: number;
+  promptSubmitConfirmation: boolean;
   init: ValidOrInvalid<ValidState, PageInitError>;
   handledPageInitError: boolean;
 };
@@ -51,7 +53,8 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
   const rfiResult = await api.readOneRfi(rfiId);
   const baseState: Omit<State, 'init'> = {
     loading: 0,
-    handledPageInitError: false
+    handledPageInitError: false,
+    promptSubmitConfirmation: false
   };
   switch (rfiResult.tag) {
     case 'valid':
@@ -221,10 +224,18 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         childMsg: msg.value
       })[0];
       return [state];
+    case 'hideSubmitConfirmationPrompt':
+      return [state.set('promptSubmitConfirmation', false)];
     case 'submit':
       if (state.init.tag === 'invalid') { return [state]; }
+      if (!state.promptSubmitConfirmation) {
+        return [state.set('promptSubmitConfirmation', true)];
+      } else {
+        state = startLoading(state);
+        state = state.set('promptSubmitConfirmation', false);
+      }
       return [
-        startLoading(state),
+        state,
         async (state, dispatch) => {
           if (state.init.tag === 'invalid') { return state; }
           const { rfi, attachments } = state.init.value;
@@ -290,7 +301,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   }
   const validState = state.init.value;
   const { rfi } = validState;
-  const isLoading = state.loading > 0;
+  const isLoading = state.loading > 0 || state.promptSubmitConfirmation;
   const isDisabled = isLoading || !isValid(validState);
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
@@ -370,5 +381,24 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
       }
     ];
   },
-  getModal: noPageModal
+  getModal(state) {
+    if (!state.promptSubmitConfirmation) { return null; }
+    return {
+      title: 'Submit Response to RFI?',
+      body: 'You will not be able to edit your response once it has been submitted.',
+      actions: [
+        {
+          text: 'Submit Response',
+          color: 'primary',
+          button: true,
+          msg: { tag: 'submit', value: undefined }
+        },
+        {
+          text: 'Cancel',
+          color: 'secondary',
+          msg: { tag: 'hideSubmitConfirmationPrompt', value: undefined }
+        }
+      ]
+    };
+  }
 };

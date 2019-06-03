@@ -24,8 +24,9 @@ import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
 import * as PageUserList from 'front-end/lib/pages/user/list';
 import * as PageUserView from 'front-end/lib/pages/user/view';
+import Link from 'front-end/lib/views/link';
 import { default as React } from 'react';
-import { Button, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
 interface ViewModalProps {
   modal: State['modal'];
@@ -41,13 +42,19 @@ const ViewModal: View<ViewModalProps> = ({ dispatch, modal }) => {
     <Modal isOpen={open} toggle={toggle}>
       <ModalHeader toggle={toggle}>{content.title}</ModalHeader>
       <ModalBody>{content.body}</ModalBody>
-      <ModalFooter>
-        {content.buttons.map(({ text, color, onClickMsg, close = false }, i) => {
-          const onClick = () => {
-            if (onClickMsg) { dispatch(onClickMsg); }
-            if (close) { toggle(); }
+      <ModalFooter className='d-flex flex-md-row-reverse justify-content-start align-items-center'>
+        {content.actions.map(({ button, text, color, msg }, i) => {
+          const props = {
+            key: `modal-action-${i}`,
+            color,
+            onClick: () => dispatch(msg),
+            className: i === 0 ? 'mx-0' : 'ml-2 mr-0 ml-md-0 mr-md-2'
           };
-          return (<Button key={`modal-button-${i}`} color={color} onClick={onClick}>{text}</Button>);
+          if (button) {
+            return (<Link button {...props}>{text}</Link>);
+          } else {
+            return (<Link {...props}>{text}</Link>);
+          }
         })}
       </ModalFooter>
     </Modal>

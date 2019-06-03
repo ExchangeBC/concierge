@@ -28,7 +28,7 @@ interface ButtonProps extends BaseProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-type Props = AnchorProps | ButtonProps;
+export type Props = AnchorProps | ButtonProps;
 
 function AnchorLink(props: AnchorProps) {
   // Initialize props.

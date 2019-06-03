@@ -218,24 +218,24 @@ export function emptyPageBreadcrumbs<Msg>(): PageBreadcrumbs<Msg> {
 
 export interface ModalButton<Msg> {
   text: string;
-  color: 'primary' | 'info';
-  onClickMsg?: Msg;
-  close?: boolean;
+  color: 'primary' | 'info' | 'secondary';
+  msg: Msg;
+  button?: boolean;
 }
 
 export interface PageModal<Msg> {
   title: string;
   body: string;
-  buttons: Array<ModalButton<Msg>>;
+  actions: Array<ModalButton<Msg>>;
 }
 
 export function mapPageModalMsg<MsgA, MsgB>(modal: PageModal<MsgA> | null, mapMsg: (msgA: MsgA) => MsgB): PageModal<MsgB> | null {
   if (!modal) { return null; }
   return {
     ...modal,
-    buttons: modal.buttons.map(button => ({
-      ...button,
-      onClickMsg: button.onClickMsg && mapMsg(button.onClickMsg)
+    actions: modal.actions.map(action => ({
+      ...action,
+      msg: mapMsg(action.msg)
     }))
   };
 }
@@ -427,18 +427,17 @@ export function updateAppChildPage<PS, PM, CS, CM, Route>(params: UpdateChildPag
     return params.setModal(parentState, parentModal);
   };
   setMetadata(newState);
-  setModal(newState);
+  const newStateWithModal = setModal(newState);
   let asyncStateUpdate;
   if (newAsyncState) {
     asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<AppMsg<PM, Route>>) => {
       const newState = await newAsyncState(state, dispatch);
       setMetadata(newState);
-      setModal(newState);
-      return newState;
+      return setModal(newState);
     };
   }
   return [
-    newState,
+    newStateWithModal,
     asyncStateUpdate
   ];
 }

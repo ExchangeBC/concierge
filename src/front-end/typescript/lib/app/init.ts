@@ -15,7 +15,7 @@ const init: Init<null, State> = async () => {
       content: {
         title: '',
         body: '',
-        buttons: []
+        actions: []
       }
     },
     pages: {}

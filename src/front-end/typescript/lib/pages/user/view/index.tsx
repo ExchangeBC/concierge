@@ -197,9 +197,8 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
       errors: state.errors
     };
   },
-  getMetadata() {
-    // TODO Show user's name in the title.
-    return makePageMetadata('User Profile');
+  getMetadata(state) {
+    return makePageMetadata(state.profileUser ? profileToName(state.profileUser.profile) : FALLBACK_USER_NAME);
   },
   getBreadcrumbs(state) {
     if (state.viewerUser && state.viewerUser.type !== UserType.ProgramStaff) {
