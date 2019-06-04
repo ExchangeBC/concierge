@@ -48,7 +48,7 @@ const ViewModal: View<ViewModalProps> = ({ dispatch, modal }) => {
             key: `modal-action-${i}`,
             color,
             onClick: () => dispatch(msg),
-            className: i === 0 ? 'mx-0' : 'ml-2 mr-0 ml-md-0 mr-md-2'
+            className: i === 0 ? 'mx-0' : 'ml-3 mr-0 ml-md-0 mr-md-3'
           };
           if (button) {
             return (<Link button {...props}>{text}</Link>);

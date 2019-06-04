@@ -163,7 +163,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <LoadingButton color='info'  onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
         Preview RFI
       </LoadingButton>
-      <Link onClick={showCancelConfirmationPrompt} color='secondary' disabled={isLoading} className='mx-3'>Cancel</Link>
+      <Link onClick={showCancelConfirmationPrompt} color='secondary' disabled={isLoading}>Cancel</Link>
     </FixedBar>
   );
 };
@@ -225,7 +225,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
       };
     } else if (state.promptCancelConfirmation) {
       return {
-        title: 'Cancel New RFI?',
+        title: 'Cancel creating an RFI?',
         body: 'Any information that you may have entered will be lost if you choose to cancel.',
         actions: [
           {

@@ -229,14 +229,18 @@ export interface PageModal<Msg> {
   actions: Array<ModalButton<Msg>>;
 }
 
-export function mapPageModalMsg<MsgA, MsgB>(modal: PageModal<MsgA> | null, mapMsg: (msgA: MsgA) => MsgB): PageModal<MsgB> | null {
+export function mapPageModalMsg<MsgA, MsgB, Route>(modal: PageModal<GlobalComponentMsg<MsgA, Route>> | null, mapMsg: (msgA: GlobalComponentMsg<MsgA, Route>) => GlobalComponentMsg<MsgB, Route>): PageModal<GlobalComponentMsg<MsgB, Route>> | null {
   if (!modal) { return null; }
   return {
     ...modal,
-    actions: modal.actions.map(action => ({
-      ...action,
-      msg: mapMsg(action.msg)
-    }))
+    actions: modal.actions.map(action => {
+      const globalMsg = action.msg as GlobalMsg<Route>;
+      const isGlobalMsg = globalMsg.tag === '@newRoute' || globalMsg.tag === '@replaceRoute' || globalMsg.tag === '@newUrl' || globalMsg.tag === '@replaceUrl';
+      return {
+        ...action,
+        msg: isGlobalMsg ? globalMsg : mapMsg(action.msg)
+      };
+    })
   };
 }
 
