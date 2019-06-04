@@ -453,7 +453,7 @@ export function isValid(state: State): boolean {
     attachments,
     addenda
   } = state;
-  const providedRequiredFields = !!(rfiNumber.value && title.value && publicSectorEntity.value && description.value && closingDate.value && closingTime.value && gracePeriodDays.value && buyerContact.value && programStaffContact.value);
+  const providedRequiredFields = !!(rfiNumber.value && title.value && publicSectorEntity.value && description.value && closingDate.value && closingTime.value && gracePeriodDays.value !== undefined && buyerContact.value && programStaffContact.value);
   const noValidationErrors = !(rfiNumber.errors.length || title.errors.length || publicSectorEntity.errors.length || description.errors.length || closingDate.errors.length || closingTime.errors.length || gracePeriodDays.errors.length || buyerContact.errors.length || programStaffContact.errors.length);
   return providedRequiredFields && noValidationErrors && SelectMulti.isValid(categories) && FileMulti.isValid(attachments) && LongTextMulti.isValid(addenda);
 }

@@ -4,7 +4,7 @@ import { isSignedIn } from 'front-end/lib/access-control';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import { ViewerUser } from 'front-end/lib/components/profiles/types';
-import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapGlobalComponentDispatch, newRoute, noPageModal, PageComponent, PageInit, replaceRoute, Update, updateGlobalComponentChild } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapGlobalComponentDispatch, mapPageModalMsg, newRoute, PageComponent, PageInit, replaceRoute, Update, updateGlobalComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as BuyerProfile from 'front-end/lib/pages/user/view/components/buyer';
 import * as ProgramStaffProfile from 'front-end/lib/pages/user/view/components/program-staff';
@@ -218,5 +218,24 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
       }
     ];
   },
-  getModal: noPageModal
+  getModal(state) {
+    if (state.buyer) {
+      return mapPageModalMsg(BuyerProfile.getModal(state.buyer), value => ({
+        tag: 'buyer',
+        value
+      }));
+    } else if (state.vendor) {
+      return mapPageModalMsg(VendorProfile.getModal(state.vendor), value => ({
+        tag: 'vendor',
+        value
+      }));
+    } else if (state.programStaff) {
+      return mapPageModalMsg(ProgramStaffProfile.getModal(state.programStaff), value => ({
+        tag: 'programStaff',
+        value
+      }));
+    } else {
+      return null;
+    }
+  }
 };

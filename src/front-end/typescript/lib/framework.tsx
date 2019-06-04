@@ -137,14 +137,19 @@ export type GlobalMsg<Route>
 
 export type GlobalComponentMsg<Msg, Route> = Msg | GlobalMsg<Route>;
 
+export function isGlobalMsg<Msg, Route>(msg: GlobalComponentMsg<Msg, Route>): msg is GlobalMsg<Route> {
+  const globalMsg = msg as GlobalMsg<Route>;
+  return globalMsg.tag === '@newRoute' || globalMsg.tag === '@replaceRoute' || globalMsg.tag === '@newUrl' || globalMsg.tag === '@replaceUrl';
+}
+
+export function mapGlobalComponentMsg<MsgA, MsgB, Route>(msg: GlobalComponentMsg<MsgA, Route>, map: (msg: GlobalComponentMsg<MsgA, Route>) => GlobalComponentMsg<MsgB, Route>): GlobalComponentMsg<MsgB, Route> {
+  return isGlobalMsg(msg) ? msg : map(msg);
+}
+
 export function mapGlobalComponentDispatch<ParentMsg, ChildMsg, Route>(dispatch: Dispatch<GlobalComponentMsg<ParentMsg, Route>>, fn: (childMsg: GlobalComponentMsg<ChildMsg, Route>) => GlobalComponentMsg<ParentMsg, Route>): Dispatch<GlobalComponentMsg<ChildMsg, Route>> {
   return childMsg => {
-    const globalMsg = childMsg as GlobalMsg<Route>;
-    if (globalMsg.tag === '@newRoute' || globalMsg.tag === '@replaceRoute' || globalMsg.tag === '@newUrl' || globalMsg.tag === '@replaceUrl') {
-      return dispatch(childMsg as GlobalMsg<Route>);
-    } else {
-      return dispatch(fn(childMsg));
-    }
+    const mappedMsg = mapGlobalComponentMsg(childMsg, fn);
+    return dispatch(mappedMsg);
   };
 }
 
@@ -226,6 +231,7 @@ export interface ModalButton<Msg> {
 export interface PageModal<Msg> {
   title: string;
   body: string;
+  onCloseMsg: Msg;
   actions: Array<ModalButton<Msg>>;
 }
 
@@ -233,12 +239,11 @@ export function mapPageModalMsg<MsgA, MsgB, Route>(modal: PageModal<GlobalCompon
   if (!modal) { return null; }
   return {
     ...modal,
+    onCloseMsg: mapGlobalComponentMsg(modal.onCloseMsg, mapMsg),
     actions: modal.actions.map(action => {
-      const globalMsg = action.msg as GlobalMsg<Route>;
-      const isGlobalMsg = globalMsg.tag === '@newRoute' || globalMsg.tag === '@replaceRoute' || globalMsg.tag === '@newUrl' || globalMsg.tag === '@replaceUrl';
       return {
         ...action,
-        msg: isGlobalMsg ? globalMsg : mapMsg(action.msg)
+        msg: mapGlobalComponentMsg(action.msg, mapMsg)
       };
     })
   };
@@ -338,12 +343,8 @@ export interface AppComponent<State, Msg, Route> extends Component<null, State, 
 
 export function mapAppDispatch<ParentMsg, ChildMsg, Route>(dispatch: Dispatch<AppMsg<ParentMsg, Route>>, fn: (childMsg: GlobalComponentMsg<ChildMsg, Route>) => AppMsg<ParentMsg, Route>): Dispatch<GlobalComponentMsg<ChildMsg, Route>> {
   return childMsg => {
-    const globalMsg = childMsg as GlobalMsg<Route>;
-    if (globalMsg.tag === '@newRoute' || globalMsg.tag === '@replaceRoute' || globalMsg.tag === '@newUrl' || globalMsg.tag === '@replaceUrl') {
-      return dispatch(childMsg as GlobalMsg<Route>);
-    } else {
-      return dispatch(fn(childMsg));
-    }
+    const mappedMsg = mapGlobalComponentMsg(childMsg, fn);
+    return dispatch(mappedMsg);
   };
 }
 

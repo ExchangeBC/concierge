@@ -330,6 +330,9 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 
   switch (msg.tag) {
 
+    case 'noop':
+      return [state];
+
     case '@incomingRoute':
       const incomingRoute: Route = msg.value;
       state = startTransition(state);

@@ -153,7 +153,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const publish = () => dispatch({ tag: 'publish', value: undefined });
   const isPreviewLoading = state.previewLoading > 0;
   const isPublishLoading = state.publishLoading > 0;
-  const isLoading = isPreviewLoading || isPublishLoading || state.promptCancelConfirmation || state.promptPublishConfirmation;
+  const isLoading = isPreviewLoading || isPublishLoading;
   const isDisabled = isLoading || !RfiForm.isValid(state.rfiForm);
   return (
     <FixedBar>
@@ -207,8 +207,9 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getModal(state) {
     if (state.promptPublishConfirmation) {
       return {
-        title: 'Publish RFI?',
-        body: 'An RFI will be viewable by the public once it has been published.',
+        title: 'Publish this RFI?',
+        body: 'This RFI will be visible to the public once it has been published.',
+        onCloseMsg: { tag: 'hidePublishConfirmationPrompt', value: undefined },
         actions: [
           {
             text: 'Yes, publish RFI',
@@ -227,6 +228,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
       return {
         title: 'Cancel creating an RFI?',
         body: 'Any information that you may have entered will be lost if you choose to cancel.',
+        onCloseMsg: { tag: 'hideCancelConfirmationPrompt', value: undefined },
         actions: [
           {
             text: 'Yes, I want to cancel',

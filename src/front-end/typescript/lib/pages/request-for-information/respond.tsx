@@ -300,7 +300,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   }
   const validState = state.init.value;
   const { rfi } = validState;
-  const isLoading = state.loading > 0 || state.promptSubmitConfirmation;
+  const isLoading = state.loading > 0;
   const isDisabled = isLoading || !isValid(validState);
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
@@ -385,6 +385,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     return {
       title: 'Submit Response to RFI?',
       body: 'You will not be able to edit your response once it has been submitted.',
+      onCloseMsg: { tag: 'hideSubmitConfirmationPrompt', value: undefined },
       actions: [
         {
           text: 'Submit Response',

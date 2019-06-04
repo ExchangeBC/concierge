@@ -1,6 +1,7 @@
+import { FALLBACK_USER_NAME } from 'front-end/config';
 import { Route } from 'front-end/lib/app/types';
 import { ProfileComponent, ViewerUser } from 'front-end/lib/components/profiles/types';
-import { Component, ComponentView, Dispatch, GlobalComponentMsg, immutable, Immutable, Init, mapComponentDispatch, newRoute, Update, updateComponentChild } from 'front-end/lib/framework';
+import { Component, ComponentView, Dispatch, GlobalComponentMsg, Immutable, immutable, Init, mapComponentDispatch, newRoute, PageComponent, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { updateField, validateField } from 'front-end/lib/views/form-field';
 import * as ShortText from 'front-end/lib/views/input/short-text';
@@ -36,7 +37,7 @@ type InnerMsg<ProfileMsg>
   | ADT<'onChangeProfile', ProfileMsg>
   | ADT<'validateEmail'>
   | ADT<'deactivateAccount'>
-  | ADT<'cancelDeactivateAccount'>
+  | ADT<'hideDeactivationConfirmationPrompt'>
   | ADT<'startEditingProfile'>
   | ADT<'cancelEditingProfile'>
   | ADT<'saveProfile'>;
@@ -167,7 +168,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
           }
         ];
 
-      case 'cancelDeactivateAccount':
+      case 'hideDeactivationConfirmationPrompt':
         return [state.set('promptDeactivationConfirmation', false)];
 
       case 'startEditingProfile':
@@ -400,10 +401,8 @@ function conditionalDeactivateAccount<PS, PM, P extends ProfileType>(Profile: Pr
     if (!state.showDeactivateAccount) {
       return null;
     }
-    const showPrompt = state.promptDeactivationConfirmation;
     const isLoading = state.deactivateLoading > 0;
     const deactivateAccount = () => dispatch({ tag: 'deactivateAccount', value: undefined });
-    const cancelDeactivateAccount = () => dispatch({ tag: 'cancelDeactivateAccount', value: undefined });
     return (
       <div className='py-5 border-top'>
         <Row>
@@ -418,10 +417,9 @@ function conditionalDeactivateAccount<PS, PM, P extends ProfileType>(Profile: Pr
         </Row>
         <Row>
           <Col xs='12'>
-            <LoadingButton onClick={deactivateAccount} color={showPrompt ? 'danger' : 'info'} loading={isLoading} disabled={isLoading}>
-              {showPrompt ? 'Click Again to Confirm' : 'Deactivate Account'}
+            <LoadingButton onClick={deactivateAccount} color='info' loading={isLoading} disabled={isLoading}>
+              Deactivate Account
             </LoadingButton>
-            {showPrompt ? (<Button color='link' className='text-secondary' onClick={cancelDeactivateAccount}>Cancel</Button>) : null}
           </Col>
         </Row>
       </div>
@@ -457,10 +455,35 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
   };
 };
 
-export function component<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Component<Params, State<PS>, Msg<PM>> {
+export function component<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Component<Params, State<PS>, Msg<PM>> & Pick<PageComponent<never, never, State<PS>, Msg<PM>>, 'getModal'> {
   return {
     init: init(Profile),
     update: update(Profile),
-    view: view(Profile)
+    view: view(Profile),
+    getModal(state) {
+      if (!state.promptDeactivationConfirmation) { return null; }
+      const isOwnAccount = !!state.viewerUser && state.viewerUser.id === state.profileUser._id;
+      const your = isOwnAccount ? 'your' : 'this';
+      const you = isOwnAccount ? 'you' : profileToName(state.profileUser.profile) || FALLBACK_USER_NAME;
+      const my = isOwnAccount ? 'my' : 'this';
+      return {
+        title: `Deactivate ${your} account?`,
+        body: `By deactivating ${your} account, ${you} will no longer be able to sign into the Procurment Concierge web application.`,
+        onCloseMsg: { tag: 'hideDeactivationConfirmationPrompt', value: undefined },
+        actions: [
+          {
+            text: `Yes, deactivate ${my} account`,
+            color: 'primary',
+            button: true,
+            msg: { tag: 'deactivateAccount', value: undefined }
+          },
+          {
+            text: 'Cancel',
+            color: 'secondary',
+            msg: { tag: 'hideDeactivationConfirmationPrompt', value: undefined }
+          }
+        ]
+      };
+    }
   };
 };

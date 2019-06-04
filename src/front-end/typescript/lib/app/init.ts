@@ -15,6 +15,7 @@ const init: Init<null, State> = async () => {
       content: {
         title: '',
         body: '',
+        onCloseMsg: { tag: 'noop', value: undefined },
         actions: []
       }
     },

@@ -2,7 +2,7 @@ import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from
 import { isUserType } from 'front-end/lib/access-control';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, noPageModal, PageComponent, PageInit, replaceRoute, Update, updateComponentChild } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, PageComponent, PageInit, replaceRoute, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as RfiForm from 'front-end/lib/pages/request-for-information/components/form';
 import { createAndShowPreview, makeRequestBody, publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
@@ -27,6 +27,8 @@ export type InnerMsg
   | ADT<'startEditing'>
   | ADT<'cancelEditing'>
   | ADT<'preview'>
+  | ADT<'hideCancelConfirmationPrompt'>
+  | ADT<'hidePublishConfirmationPrompt'>
   | ADT<'publish'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
@@ -40,6 +42,8 @@ export interface State {
   previewLoading: number;
   publishLoading: number;
   hasTriedPublishing: boolean;
+  promptCancelConfirmation: boolean;
+  promptPublishConfirmation: boolean;
   valid?: ValidState;
 };
 
@@ -53,6 +57,8 @@ async function resetRfiForm(existingRfi: RfiResource.PublicRfi): Promise<Immutab
 const initState: State = {
   previewLoading: 0,
   publishLoading: 0,
+  promptCancelConfirmation: false,
+  promptPublishConfirmation: false,
   hasTriedPublishing: false
 };
 
@@ -124,6 +130,11 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [setIsEditing(state, true)];
     case 'cancelEditing':
       state = state.set('hasTriedPublishing', false);
+      if (!state.promptCancelConfirmation) {
+        return [state.set('promptCancelConfirmation', true)];
+      } else {
+        state = state.set('promptCancelConfirmation', false);
+      }
       return [
         setIsEditing(state, false),
         async () => {
@@ -143,8 +154,17 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           return state.setIn(['valid', 'rfiForm'], rfiForm);
         }
       });
+    case 'hideCancelConfirmationPrompt':
+      return [state.set('promptCancelConfirmation', false)];
+    case 'hidePublishConfirmationPrompt':
+      return [state.set('promptPublishConfirmation', false)];
     case 'publish':
       state = state.set('hasTriedPublishing', true);
+      if (!state.promptPublishConfirmation) {
+        return [state.set('promptPublishConfirmation', true)];
+      } else {
+        state = state.set('promptPublishConfirmation', false);
+      }
       return [
         startPublishLoading(state),
         async (state, dispatch) => {
@@ -202,7 +222,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <LoadingButton color='info' onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
           Preview Changes
         </LoadingButton>
-        <Link onClick={cancelEditing} color='secondary' disabled={isLoading} className='mx-3'>Cancel</Link>
+        <Link onClick={cancelEditing} color='secondary' disabled={isLoading}>Cancel</Link>
       </FixedBar>
     );
   } else {
@@ -278,5 +298,47 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     return makePageMetadata('Edit a Request for Information');
   },
   getBreadcrumbs: emptyPageBreadcrumbs,
-  getModal: noPageModal
+  getModal(state) {
+    if (state.promptPublishConfirmation) {
+      return {
+        title: 'Publish your changes to this RFI?',
+        body: 'Any changes that you have made will be visible to the public once they have been published.',
+        onCloseMsg: { tag: 'hidePublishConfirmationPrompt', value: undefined },
+        actions: [
+          {
+            text: 'Yes, publish changes',
+            color: 'primary',
+            button: true,
+            msg: { tag: 'publish', value: undefined }
+          },
+          {
+            text: 'Cancel',
+            color: 'secondary',
+            msg: { tag: 'hidePublishConfirmationPrompt', value: undefined }
+          }
+        ]
+      };
+    } else if (state.promptCancelConfirmation) {
+      return {
+        title: 'Cancel editing this RFI?',
+        body: 'Any changes that you have made will be lost if you choose to cancel.',
+        onCloseMsg: { tag: 'hideCancelConfirmationPrompt', value: undefined },
+        actions: [
+          {
+            text: 'Yes, I want to cancel',
+            color: 'primary',
+            button: true,
+            msg: { tag: 'cancelEditing', value: undefined }
+          },
+          {
+            text: 'Go Back',
+            color: 'secondary',
+            msg: { tag: 'hideCancelConfirmationPrompt', value: undefined }
+          }
+        ]
+      };
+    } else {
+      return null;
+    }
+  }
 };
