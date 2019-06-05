@@ -1,6 +1,6 @@
 import { Dispatch, View } from 'front-end/lib/framework';
-import * as FormField from 'front-end/lib/views/form-field';
-import * as Input from 'front-end/lib/views/input/input';
+import * as FormField from 'front-end/lib/views/form-field/lib';
+import * as Input from 'front-end/lib/views/form-field/lib/input';
 import { default as React, KeyboardEventHandler } from 'react';
 
 export type Value = string;

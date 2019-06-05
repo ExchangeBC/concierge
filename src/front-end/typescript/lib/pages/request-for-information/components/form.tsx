@@ -1,15 +1,15 @@
-import * as FileMulti from 'front-end/lib/components/input/file-multi';
-import * as LongTextMulti from 'front-end/lib/components/input/long-text-multi';
-import * as SelectMulti from 'front-end/lib/components/input/select-multi';
+import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
+import * as LongTextMulti from 'front-end/lib/components/form-field-multi/long-text';
+import * as SelectMulti from 'front-end/lib/components/form-field-multi/select';
 import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
-import * as DateTime from 'front-end/lib/views/input/datetime';
-import * as LongText from 'front-end/lib/views/input/long-text';
-import * as NumberInput from 'front-end/lib/views/input/number';
-import * as Select from 'front-end/lib/views/input/select';
-import * as ShortText from 'front-end/lib/views/input/short-text';
-import * as Switch from 'front-end/lib/views/input/switch';
+import * as DateTime from 'front-end/lib/views/form-field/datetime';
+import * as LongText from 'front-end/lib/views/form-field/long-text';
+import * as NumberInput from 'front-end/lib/views/form-field/number';
+import * as Select from 'front-end/lib/views/form-field/select';
+import * as ShortText from 'front-end/lib/views/form-field/short-text';
+import * as Switch from 'front-end/lib/views/form-field/switch';
 import { find, get } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
@@ -109,7 +109,7 @@ export function getValues(state: State, includeDeletedAddenda = false): Values {
     gracePeriodDays: state.gracePeriodDays.value,
     buyerContact: state.buyerContact.value ? state.buyerContact.value.value : '',
     programStaffContact: state.programStaffContact.value ? state.programStaffContact.value.value : '',
-    categories: SelectMulti.getValues(state.categories),
+    categories: SelectMulti.getValuesAsStrings(state.categories),
     attachments: FileMulti.getValues(state.attachments),
     addenda: LongTextMulti.getValuesAsStrings(state.addenda, RfiResource.DELETE_ADDENDUM_TOKEN)
   };
@@ -259,7 +259,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
     }),
     categories: immutable(await SelectMulti.init({
       options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value })),
-      unselectedLabel: 'Select Commodity Code',
+      placeholder: 'Select Commodity Code',
       formFieldMulti: {
         idNamespace: 'rfi-categories',
         label: 'Commodity Code(s)',
@@ -348,7 +348,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
         childUpdate: SelectMulti.update,
         childMsg: msg.value
       })[0];
-      const validatedCategories = validateCategories(SelectMulti.getValues(state.categories), 'Commodity Code');
+      const validatedCategories = validateCategories(SelectMulti.getValuesAsStrings(state.categories), 'Commodity Code');
       state = state.set('categories', SelectMulti.setErrors(state.categories, getInvalidValue(validatedCategories, [])));
       return [state];
     case 'onChangeAttachments':

@@ -6,9 +6,9 @@ import { Route, SharedState } from 'front-end/lib/app/types';
 import * as TableComponent from 'front-end/lib/components/table';
 import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, noPageModal, PageComponent, PageInit, replaceRoute, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import { readManyUsers } from 'front-end/lib/http/api';
+import * as Select from 'front-end/lib/views/form-field/select';
+import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Icon from 'front-end/lib/views/icon';
-import * as Select from 'front-end/lib/views/input/select';
-import * as ShortText from 'front-end/lib/views/input/short-text';
 import Link from 'front-end/lib/views/link';
 import { default as React, ReactElement } from 'react';
 import { Col, Row } from 'reactstrap';
@@ -164,7 +164,9 @@ function userMatchesCategory(user: PublicUser, category: string): boolean {
 
 function userMatchesSearch(user: PublicUser, query: RegExp): boolean {
   const name = profileToName(user.profile);
-  return !!name && !!name.match(query);
+  const matchingName = () => !!name && !!name.match(query);
+  const matchingEntity = () => user.profile.type === UserType.Buyer && !!user.profile.publicSectorEntity.match(query);
+  return matchingName() || matchingEntity();
 }
 
 function updateAndQuery<K extends FormFieldKeys>(state: Immutable<State>, key: K, value: State[K]['value']): Immutable<State> {

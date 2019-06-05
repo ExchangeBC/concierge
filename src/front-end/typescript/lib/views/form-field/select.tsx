@@ -1,16 +1,10 @@
 import { Dispatch, View } from 'front-end/lib/framework';
-import * as FormField from 'front-end/lib/views/form-field';
+import * as FormField from 'front-end/lib/views/form-field/lib';
+import { default as Select, Option, Props as SelectProps, Value } from 'front-end/lib/views/form-field/lib/select';
 import { find } from 'lodash';
 import React from 'react';
-import Select from 'react-select';
-import { Props as SelectProps } from 'react-select/lib/Select';
 
-export interface Option {
-  value: string;
-  label: string;
-}
-
-export type Value = Option | undefined;
+export { Option, Value } from 'front-end/lib/views/form-field/lib/select';
 
 export function setValue(state: State, value?: string): State {
   const newValue = find(state.options, { value }) || undefined;
@@ -51,59 +45,17 @@ export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (value: Value) =>
   };
 }
 
-// TODO create a separate view that abstracts react-select usage.
 const Child: View<ChildProps> = props => {
   const { state, disabled, className, onChange } = props;
-  const selectProps: SelectProps<Value> = {
-    isSearchable: true,
-    isClearable: true,
+  const selectProps: SelectProps = {
     name: state.id,
     id: state.id,
     placeholder: state.placeholder,
     value: state.value,
-    isDisabled: disabled,
+    disabled,
     options: state.options,
-    className: `${className} react-select-container`,
-    classNamePrefix: 'react-select',
-    styles: {
-      control(styles) {
-        return {
-          ...styles,
-          minHeight: undefined,
-          borderWidth: undefined,
-          borderColor: undefined,
-          borderStyle: undefined,
-          boxShadow: undefined,
-          '&:hover': undefined
-        };
-      },
-      placeholder(styles) {
-        return {
-          ...styles,
-          color: undefined
-        };
-      },
-      singleValue(styles) {
-        return {
-          ...styles,
-          color: undefined
-        };
-      },
-      option(styles) {
-        return {
-          ...styles,
-          backgroundColor: undefined,
-          ':active': undefined
-        };
-      }
-    },
-    onChange(value, action) {
-      if (value && Array.isArray(value)) {
-        onChange(value[0]);
-      } else {
-        onChange(value as Value);
-      }
-    }
+    className,
+    onChange
   };
   return (<Select {...selectProps} />);
 };

@@ -1,5 +1,5 @@
 import { Dispatch, View } from 'front-end/lib/framework';
-import * as FormField from 'front-end/lib/views/form-field';
+import * as FormField from 'front-end/lib/views/form-field/lib';
 import React from 'react';
 import { CustomInput } from 'reactstrap';
 

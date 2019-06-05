@@ -1,8 +1,8 @@
 import { Route } from 'front-end/lib/app/types';
+import * as FormFieldMulti from 'front-end/lib/components/form-field-multi/lib';
 import { Component, ComponentViewProps, GlobalComponentMsg, immutable, Immutable, Init, Update, View } from 'front-end/lib/framework';
-import * as FormFieldMulti from 'front-end/lib/views/form-field-multi';
-import * as Input from 'front-end/lib/views/input/input';
-import { ChangeEvent, ChangeEventHandler, default as React } from 'react';
+import * as Input from 'front-end/lib/views/form-field/lib/input';
+import { ChangeEvent, default as React } from 'react';
 import { Button } from 'reactstrap';
 import { bytesToMegabytes } from 'shared/lib';
 import { MAX_MULTIPART_FILES_SIZE } from 'shared/lib/resources/file';
@@ -86,7 +86,7 @@ export function isValid(state: Immutable<State>): boolean {
 type InnerMsg
   = ADT<'add', File>
   | ADT<'remove', number>
-  | ADT<'change', { index: number, value: string }>
+  | ADT<'change', { index: number, value: Value }>
   | ADT<'validate', number>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
@@ -135,7 +135,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'change':
       const changeFields = state.formFieldMulti.fields.map((field, i) => {
         if (i === msg.value.index && field.value.tag === 'new') {
-          field.value.value.name = msg.value.value;
+          field.value = msg.value.value;
         }
         return field;
       });
@@ -160,7 +160,7 @@ interface ExtraChildProps {
   onChangeDebounced(index: number): void;
 }
 
-const Child: View<FormFieldMulti.ChildProps<HTMLInputElement, Value, ExtraChildProps>> = props => {
+const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => {
   const { id, index, className, field, onChange, extraProps, disabled = false } = props;
   const value = field.value.tag === 'new' ? field.value.value.name : field.value.value.originalName;
   const placeholder = field.value.tag === 'new' ? field.value.value.file.name : field.value.value.originalName;
@@ -170,11 +170,17 @@ const Child: View<FormFieldMulti.ChildProps<HTMLInputElement, Value, ExtraChildP
       <Input.View
         id={id}
         type='text'
-        className={className}
+        className={`${className} form-control`}
         value={value}
         placeholder={placeholder}
         disabled={isExistingFile || disabled}
-        onChange={onChange}
+        onChange={event => field.value.tag === 'new' && onChange({
+          tag: 'new',
+          value: {
+            ...field.value.value,
+            name: event.currentTarget.value
+          }
+        })}
         onChangeDebounced={() => extraProps && extraProps.onChangeDebounced(index)} />
     </FormFieldMulti.DefaultChild>
   );
@@ -196,7 +202,7 @@ function AddButton(props: FormFieldMulti.AddButtonProps<File>) {
         type='file'
         className='position-absolute w-100 h-100'
         style={{ top: '0px', left: '0px', opacity: 0 }}
-        value={''}
+        value=''
         onChange={onChange} />
       <Button color='info' size='sm'>
         Add Attachment
@@ -212,18 +218,15 @@ interface Props extends ComponentViewProps<State, Msg> {
 }
 
 export const view: View<Props> = ({ state, dispatch, disabled = false, labelClassName, labelWrapperClassName }) => {
-  const onChange = (index: number): ChangeEventHandler<HTMLInputElement> => event => {
+  const onChange = (index: number): FormFieldMulti.OnChange<Value> => value => {
     dispatch({
       tag: 'change',
-      value: {
-        index,
-        value: event.currentTarget.value
-      }
+      value: { index, value }
     });
   };
   const onAdd = (file: File) => dispatch({ tag: 'add', value: file });
   const onRemove = (index: number) => () => dispatch({ tag: 'remove', value: index });
-  const formFieldProps: FormFieldMulti.Props<HTMLInputElement, Value, File, ExtraChildProps> = {
+  const formFieldProps: FormFieldMulti.Props<File, ExtraChildProps, Value> = {
     state: state.formFieldMulti,
     disabled,
     AddButton,

@@ -1,7 +1,7 @@
 import { Immutable, View } from 'front-end/lib/framework';
 import Icon from 'front-end/lib/views/icon';
 import { cloneDeep, reduce } from 'lodash';
-import { ChangeEventHandler, default as React, ReactElement } from 'react';
+import { default as React, ReactElement } from 'react';
 import { Alert, Button, FormGroup, FormText, Label } from 'reactstrap';
 
 export interface Field<Value> {
@@ -29,6 +29,8 @@ export interface State<Value> {
   }
 }
 
+export type OnChange<Value> = (value: Value) => void;
+
 export function getFieldValues<Value>(state: State<Value>): Value[] {
   return state.fields.map(field => field.value);
 }
@@ -50,13 +52,13 @@ export function isValid<Value>(state: Immutable<State<Value>>): boolean {
   }, true);
 }
 
-export interface ChildProps<ChildElement, Value, ExtraProps> {
+export interface ChildProps<ExtraProps, Value> {
   id: string;
   index: number;
   className: string;
   field: Field<Value>;
   disabled: boolean;
-  onChange: ChangeEventHandler<ChildElement>;
+  onChange: OnChange<Value>;
   extraProps: ExtraProps;
   onRemove(): void;
 }
@@ -65,22 +67,22 @@ export interface AddButtonProps<OnAddParams> {
   onAdd(params?: OnAddParams): void;
 }
 
-export interface Props<ChildElement, Value, OnAddParams, ExtraChildProps> {
+export interface Props<OnAddParams, ChildExtraProps, Value> {
   state: State<Value>;
   disabled?: boolean;
   AddButton: View<AddButtonProps<OnAddParams>>;
   addButtonProps: AddButtonProps<OnAddParams>;
-  Child: View<ChildProps<ChildElement, Value, ExtraChildProps>>;
+  Child: View<ChildProps<ChildExtraProps, Value>>;
   formGroupClassName?: string;
   labelWrapperClassName?: string;
   labelClassName?: string;
-  extraChildProps: ExtraChildProps;
-  onChange(index: number): ChangeEventHandler<ChildElement>;
+  extraChildProps: ChildExtraProps;
+  onChange(index: number): OnChange<Value>;
   onRemove(index: number): () => void;
   toggleHelp?(): void;
 }
 
-const ConditionalHelpToggle: View<Props<any, any, any, any>> = ({ state, toggleHelp, disabled = false }) => {
+const ConditionalHelpToggle: View<Props<any, any, any>> = ({ state, toggleHelp, disabled = false }) => {
   const { help } = state;
   if (help && toggleHelp && !disabled) {
     return (
@@ -98,7 +100,7 @@ const ConditionalHelpToggle: View<Props<any, any, any, any>> = ({ state, toggleH
   }
 };
 
-const ConditionalLabel: View<Props<any, any, any, any>> = ({ state, labelClassName = '' }) => {
+const ConditionalLabel: View<Props<any, any, any>> = ({ state, labelClassName = '' }) => {
   const { label, required } = state;
   if (label) {
     return (
@@ -122,7 +124,7 @@ export function makeDefaultAddButton(text = 'Add'): View<AddButtonProps<void>> {
   };
 }
 
-function ConditionalAddButton<OnAddParams>(props: Props<any, any, OnAddParams, any>) {
+function ConditionalAddButton<OnAddParams>(props: Props<OnAddParams, any, any>) {
   const { AddButton, addButtonProps, disabled = false } = props;
   if (disabled) {
     return null;
@@ -131,7 +133,7 @@ function ConditionalAddButton<OnAddParams>(props: Props<any, any, OnAddParams, a
   }
 }
 
-const ConditionalHelp: View<Props<any, any, any, any>> = ({ state, disabled = false }) => {
+const ConditionalHelp: View<Props<any, any, any>> = ({ state, disabled = false }) => {
   const { help } = state;
   if (help && help.show && !disabled) {
     return (
@@ -159,7 +161,7 @@ const ConditionalFieldErrors: View<Field<any>> = ({ errors }) => {
   }
 }
 
-export function ConditionalRemoveButton<ChildElement, Value>(props: ChildProps<ChildElement, Value, any>) {
+export function ConditionalRemoveButton<Value>(props: ChildProps<any, Value>) {
   if (props.disabled) {
     return null;
   } else {
@@ -178,8 +180,8 @@ export function ConditionalRemoveButton<ChildElement, Value>(props: ChildProps<C
   }
 }
 
-export interface DefaultChildProps<ChildElement, Value, ExtraProps> {
-  childProps: ChildProps<ChildElement, Value, ExtraProps>;
+export interface DefaultChildProps<ExtraProps, Value> {
+  childProps: ChildProps<ExtraProps, Value>;
   children: ReactElement<any> | Array<ReactElement<any>> | string;
 }
 
@@ -188,7 +190,7 @@ export interface DefaultChildProps<ChildElement, Value, ExtraProps> {
  * child component.
  */
 
-export function DefaultChild<ChildElement, Value, ExtraProps>(props: DefaultChildProps<ChildElement, Value, ExtraProps>) {
+export function DefaultChild<ExtraProps, Value>(props: DefaultChildProps<ExtraProps, Value>) {
   const { childProps, children } = props;
   return (
     <div className='d-flex align-items-center'>
@@ -198,13 +200,13 @@ export function DefaultChild<ChildElement, Value, ExtraProps>(props: DefaultChil
   );
 }
 
-function Children<ChildElement, Value, OnAddParams, ExtraChildProps>(props: Props<ChildElement, Value, OnAddParams, ExtraChildProps>) {
+function Children<OnAddParams, ChildExtraProps, Value>(props: Props<OnAddParams, ChildExtraProps, Value>) {
   const { Child, state, onChange, onRemove, formGroupClassName = '', extraChildProps, disabled = false } = props;
   const { fields, idNamespace, reverseFieldOrderInView = false } = state;
   const children = fields.reduce((acc, field, i) => {
     const id = `${idNamespace}-${i}`;
     const invalid = !!field.errors.length;
-    const childClassName = `form-control ${invalid ? 'is-invalid' : ''}`;
+    const childClassName = invalid ? 'is-invalid' : '';
     const child = (
       <FormGroup key={`form-field-multi-child-${i}`} className={formGroupClassName}>
         <Child
@@ -232,7 +234,7 @@ function Children<ChildElement, Value, OnAddParams, ExtraChildProps>(props: Prop
   );
 };
 
-export function view<ChildElement, Value, OnAddParams, ExtraChildProps>(props: Props<ChildElement, Value, OnAddParams, ExtraChildProps>) {
+export function view<OnAddParams, ChildExtraProps, Value>(props: Props<OnAddParams, ChildExtraProps, Value>) {
   const { state, labelWrapperClassName = '' } = props;
   return (
     <FormGroup className={`form-field-${state.idNamespace}`}>

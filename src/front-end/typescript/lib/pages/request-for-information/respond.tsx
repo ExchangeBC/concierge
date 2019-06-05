@@ -1,7 +1,7 @@
 import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import * as FileMulti from 'front-end/lib/components/input/file-multi';
+import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
 import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, replaceRoute, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { uploadFiles } from 'front-end/lib/pages/request-for-information/lib';

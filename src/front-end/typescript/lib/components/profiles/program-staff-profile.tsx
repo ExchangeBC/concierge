@@ -1,8 +1,8 @@
 import { ProfileComponent, ProfileParams, ProfileView } from 'front-end/lib/components/profiles/types';
 import { immutable, Immutable, Init, Update } from 'front-end/lib/framework';
+import * as Select from 'front-end/lib/views/form-field/select';
+import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
-import * as Select from 'front-end/lib/views/input/select';
-import * as ShortText from 'front-end/lib/views/input/short-text';
 import { reduce } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';

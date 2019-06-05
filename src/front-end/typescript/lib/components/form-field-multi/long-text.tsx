@@ -1,9 +1,9 @@
 import { Route } from 'front-end/lib/app/types';
+import * as FormFieldMulti from 'front-end/lib/components/form-field-multi/lib';
 import { Component, ComponentViewProps, GlobalComponentMsg, immutable, Immutable, Init, Update, View } from 'front-end/lib/framework';
-import * as FormFieldMulti from 'front-end/lib/views/form-field-multi';
-import * as TextArea from 'front-end/lib/views/input/text-area';
+import * as TextArea from 'front-end/lib/views/form-field/lib/text-area';
 import { compact } from 'lodash';
-import { ChangeEventHandler, CSSProperties, default as React } from 'react';
+import { CSSProperties, default as React } from 'react';
 import { Label } from 'reactstrap';
 import { ADT, Omit } from 'shared/lib/types';
 
@@ -72,7 +72,7 @@ export function isValid(state: Immutable<State>): boolean {
 type InnerMsg
   = ADT<'add'>
   | ADT<'remove', number>
-  | ADT<'change', { index: number, value: string }>
+  | ADT<'change', { index: number, value: Value }>
   | ADT<'toggleHelp'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
@@ -142,7 +142,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
   }
 };
 
-const ConditionalLabel: View<FormFieldMulti.ChildProps<HTMLTextAreaElement, Value, ExtraChildProps>> = props => {
+const ConditionalLabel: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => {
   const text = props.extraProps.field.label;
   if (text) {
     return (
@@ -156,7 +156,7 @@ const ConditionalLabel: View<FormFieldMulti.ChildProps<HTMLTextAreaElement, Valu
   }
 };
 
-const Child: View<FormFieldMulti.ChildProps<HTMLTextAreaElement, Value, ExtraChildProps>> = props => {
+const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => {
   const { id, extraProps, className, field, onChange, disabled = false } = props;
   if (field.value.tag === 'deleted') { return null; }
   return (
@@ -164,12 +164,15 @@ const Child: View<FormFieldMulti.ChildProps<HTMLTextAreaElement, Value, ExtraChi
       <ConditionalLabel {...props} />
       <TextArea.View
         id={id}
-        className={className}
+        className={`${className} form-control`}
         value={field.value.value}
         placeholder={extraProps.field.placeholder}
         disabled={disabled}
         style={extraProps.field.textAreaStyle}
-        onChange={onChange} />
+        onChange={event => field.value.tag !== 'deleted' && onChange({
+          ...field.value,
+          value: event.currentTarget.value
+        })} />
     </div>
   );
 };
@@ -182,18 +185,15 @@ interface Props extends ComponentViewProps<State, Msg> {
 
 export const view: View<Props> = ({ state, dispatch, disabled = false, labelClassName, labelWrapperClassName }) => {
   const AddButton: View<FormFieldMulti.AddButtonProps<void>> = FormFieldMulti.makeDefaultAddButton(state.addButtonText);
-  const onChange = (index: number): ChangeEventHandler<HTMLTextAreaElement> => event => {
+  const onChange = (index: number): FormFieldMulti.OnChange<Value> => value => {
     dispatch({
       tag: 'change',
-      value: {
-        index,
-        value: event.currentTarget.value
-      }
+      value: { index, value }
     });
   };
   const onAdd = () => dispatch({ tag: 'add', value: undefined });
   const onRemove = (index: number) => () => dispatch({ tag: 'remove', value: index });
-  const formFieldProps: FormFieldMulti.Props<HTMLTextAreaElement, Value, void, ExtraChildProps> = {
+  const formFieldProps: FormFieldMulti.Props<void, ExtraChildProps, Value> = {
     state: state.formFieldMulti,
     disabled,
     AddButton,

@@ -1,9 +1,9 @@
-import * as SelectMulti from 'front-end/lib/components/input/select-multi';
+import * as SelectMulti from 'front-end/lib/components/form-field-multi/select';
 import { ProfileComponent, ProfileParams, ProfileView } from 'front-end/lib/components/profiles/types';
 import { Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
+import * as Select from 'front-end/lib/views/form-field/select';
+import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
-import * as Select from 'front-end/lib/views/input/select';
-import * as ShortText from 'front-end/lib/views/input/short-text';
 import { reduce } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
@@ -69,8 +69,8 @@ export function getValues(state: Immutable<State>): VendorProfile {
     contactPhoneNumber: state.contactPhoneNumber.value || undefined,
     contactPhoneCountryCode: state.contactPhoneCountryCode.value || undefined,
     contactPhoneType: state.contactPhoneType.value && parsePhoneType(state.contactPhoneType.value.value) || undefined,
-    industrySectors: SelectMulti.getValues(state.industrySectors),
-    categories: SelectMulti.getValues(state.categories)
+    industrySectors: SelectMulti.getValuesAsStrings(state.industrySectors),
+    categories: SelectMulti.getValuesAsStrings(state.categories)
   };
 }
 
@@ -257,7 +257,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
     }),
     industrySectors: immutable(await SelectMulti.init({
       options: AVAILABLE_INDUSTRY_SECTORS.toJS().map(value => ({ label: value, value })),
-      unselectedLabel: 'Select Industry Sector',
+      placeholder: 'Select Industry Sector',
       formFieldMulti: {
         idNamespace: 'vendor-industry-sectors',
         label: 'Industry Sector(s)',
@@ -267,7 +267,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
     })),
     categories: immutable(await SelectMulti.init({
       options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value })),
-      unselectedLabel: 'Select an Area of Interest',
+      placeholder: 'Select an Area of Interest',
       formFieldMulti: {
         idNamespace: 'vendor-categories',
         label: 'Area(s) of Interest',
