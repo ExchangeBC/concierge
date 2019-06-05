@@ -84,11 +84,16 @@ export interface State {
   table: Immutable<TableComponent.State<TableCellData>>;
 };
 
+type FormFieldKeys
+  = 'statusFilter'
+  | 'categoryFilter'
+  | 'searchFilter';
+
 export type RouteParams = null;
 
 type InnerMsg
-  = ADT<'statusFilter', string>
-  | ADT<'categoryFilter', string>
+  = ADT<'statusFilter', Select.Value>
+  | ADT<'categoryFilter', Select.Value>
   | ADT<'searchFilter', string>
   | ADT<'table', TableComponent.Msg>;
 
@@ -171,11 +176,9 @@ function rfiMatchesSearch(rfi: PublicRfi, query: RegExp): boolean {
   return !!rfi.latestVersion.title.match(query);
 }
 
-function updateAndQuery(state: Immutable<State>, key?: string, value?: string): Immutable<State> {
+function updateAndQuery<K extends FormFieldKeys>(state: Immutable<State>, key: K, value: State[K]['value']): Immutable<State> {
   // Update state with the filter value.
-  if (key && value !== undefined) {
-    state = state.setIn([key, 'value'], value);
-  }
+  state = state.setIn([key, 'value'], value);
   // Query the list of available RFIs based on all filters' state.
   const statusQuery = state.statusFilter.value.value;
   const categoryQuery = state.categoryFilter.value.value;
@@ -213,7 +216,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value: value.value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   const categoryFilterElement = state.userType !== UserType.ProgramStaff
     ? null

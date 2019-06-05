@@ -66,13 +66,40 @@ const Child: View<ChildProps> = props => {
     value: state.value,
     isDisabled: disabled,
     options: state.options,
-    className: `${className} form-control p-0 react-select`,
-    /*styles: {
-      control() {
+    className: `${className} react-select-container`,
+    classNamePrefix: 'react-select',
+    styles: {
+      control(styles) {
         return {
+          ...styles,
+          minHeight: undefined,
+          borderWidth: undefined,
+          borderColor: undefined,
+          borderStyle: undefined,
+          boxShadow: undefined,
+          '&:hover': undefined
+        };
+      },
+      placeholder(styles) {
+        return {
+          ...styles,
+          color: undefined
+        };
+      },
+      singleValue(styles) {
+        return {
+          ...styles,
+          color: undefined
+        };
+      },
+      option(styles) {
+        return {
+          ...styles,
+          backgroundColor: undefined,
+          ':active': undefined
         };
       }
-    },*/
+    },
     onChange(value, action) {
       if (value) {
         if (Array.isArray(value)) {

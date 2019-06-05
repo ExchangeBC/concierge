@@ -168,7 +168,8 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       };
     });
   const existingBuyerContact = get(existingRfi, ['latestVersion', 'buyerContact'], undefined);
-  const existingProgramStaffContact = get(existingRfi, ['latestVersion', 'programStaffContact'], undefined);
+  const existingProgramStaffContactId = get(existingRfi, ['latestVersion', 'programStaffContact', '_id'], undefined);
+  const existingProgramStaffContact: PublicUser | undefined = find<PublicUser>(programStaff, { _id: existingProgramStaffContactId });
   const descriptionHelpText = 'Suggested sections for this RFI\'s description: \n(1) Business Requirement(s) or Issue(s); \n(2) Brief Ministry Overview; \n(3) Objectives of this RFI; \n(4) Ministry Obligations; and \n(5) Response Instructions.';
   const addendaHelpText = 'Additional information related to this RFI.';
   return {
@@ -329,7 +330,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'onChangeBuyerContact':
       state = updateValue(state, 'buyerContact', msg.value);
       if (!state.publicSectorEntity.value) {
-        const buyer = find(state.buyers, { _id: msg.value.value });
+        const buyer = find<PublicUser>(state.buyers, { _id: msg.value.value });
         if (buyer && buyer.profile.type === UserType.Buyer) {
           state = state.setIn(['publicSectorEntity', 'value'], buyer.profile.publicSectorEntity);
           state = validateValue(state, 'publicSectorEntity', validatePublicSectorEntity);
@@ -464,7 +465,7 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isDisabled = !state.isEditing;
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   const onChangeNumberInput = (tag: any) => NumberInput.makeOnChange(dispatch, value => ({ tag, value }));
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value: value.value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
   const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
   const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeCategories' as const, value }));
   return (
