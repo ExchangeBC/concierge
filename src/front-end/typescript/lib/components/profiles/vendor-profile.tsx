@@ -56,7 +56,7 @@ export function getValues(state: Immutable<State>): VendorProfile {
   return {
     type: UserType.Vendor as UserType.Vendor,
     businessName: state.businessName.value,
-    businessType: parseBusinessType(state.businessType.value.value) || undefined,
+    businessType: state.businessType.value && parseBusinessType(state.businessType.value.value) || undefined,
     businessNumber: state.businessNumber.value || undefined,
     businessStreetAddress: state.businessStreetAddress.value || undefined,
     businessCity: state.businessCity.value || undefined,
@@ -68,7 +68,7 @@ export function getValues(state: Immutable<State>): VendorProfile {
     contactEmail: state.contactEmail.value || undefined,
     contactPhoneNumber: state.contactPhoneNumber.value || undefined,
     contactPhoneCountryCode: state.contactPhoneCountryCode.value || undefined,
-    contactPhoneType: parsePhoneType(state.contactPhoneType.value.value) || undefined,
+    contactPhoneType: state.contactPhoneType.value && parsePhoneType(state.contactPhoneType.value.value) || undefined,
     industrySectors: SelectMulti.getValues(state.industrySectors),
     categories: SelectMulti.getValues(state.categories)
   };
@@ -160,7 +160,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
       id: 'vendor-profile-business-type',
       required: false,
       label: 'Business Type',
-      unselectedLabel: 'Select Type',
+      placeholder: 'Select Type',
       options: [
         { value: BusinessType.Corporation, label: 'Corporation' },
         { value: BusinessType.LimitedLiabilityCompany, label: 'Limited Liability Company' },
@@ -249,7 +249,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
       id: 'vendor-profile-contact-phone-type',
       required: false,
       label: 'Phone Type',
-      unselectedLabel: 'Select Type',
+      placeholder: 'Select Type',
       options: [
         { value: PhoneType.Office, label: 'Office' },
         { value: PhoneType.CellPhone, label: 'Cell Phone' }

@@ -20,7 +20,7 @@ const ProvinceLogo: View<{}> = () => {
       src='/images/bcgov_logo.svg'
       alt='The Province of British Columbia'
       style={{ width: '165px' }}
-      className='mt-4 mt-md-0 order-2 order-md-0' />
+      className='order-2 order-md-0' />
   );
 };
 
@@ -48,7 +48,7 @@ const Links: View<{}> = () => {
   // TODO use the route prop for the Link view
   // TODO add feedback button once ready
   return (
-    <Link href='/feedback' color='light' size='sm' className='ml-md-auto' button outline>Send Feedback</Link>
+    <Link href='/feedback' color='light' size='sm' className='mb-4 mb-md-0 ml-md-auto' button outline>Send Feedback</Link>
   );
 };*/
 

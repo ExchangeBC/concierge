@@ -131,7 +131,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) 
       id: 'rfi-list-filter-status',
       required: false,
       label: 'Status',
-      unselectedLabel: 'All',
+      placeholder: 'All',
       options: [
         { value: RfiStatus.Open, label: rfiStatusToTitleCase(RfiStatus.Open) },
         { value: RfiStatus.Closed, label: rfiStatusToTitleCase(RfiStatus.Closed) }
@@ -141,7 +141,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) 
       id: 'rfi-list-filter-category',
       required: false,
       label: 'Commodity Code',
-      unselectedLabel: 'All',
+      placeholder: 'All',
       options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value }))
     }),
     searchFilter: ShortText.init({
@@ -180,10 +180,10 @@ function updateAndQuery<K extends FormFieldKeys>(state: Immutable<State>, key: K
   // Update state with the filter value.
   state = state.setIn([key, 'value'], value);
   // Query the list of available RFIs based on all filters' state.
-  const statusQuery = state.statusFilter.value.value;
-  const categoryQuery = state.categoryFilter.value.value;
+  const statusQuery = state.statusFilter.value && state.statusFilter.value.value;
+  const categoryQuery = state.categoryFilter.value && state.categoryFilter.value.value;
   const rawSearchQuery = state.searchFilter.value;
-  const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split('').join('.*'), 'i') : null;
+  const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split(/\s+/).join('.*'), 'i') : null;
   const rfis = state.rfis.filter(rfi => {
     let match = true;
     match = match && (!statusQuery || rfiMatchesStatus(rfi, parseRfiStatus(statusQuery)));

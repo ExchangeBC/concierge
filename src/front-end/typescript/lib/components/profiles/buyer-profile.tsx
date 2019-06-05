@@ -65,7 +65,7 @@ export function getValues(state: Immutable<State>): BuyerProfile {
     contactCountry: state.contactCountry.value || undefined,
     contactPhoneNumber: state.contactPhoneNumber.value || undefined,
     contactPhoneCountryCode: state.contactPhoneCountryCode.value || undefined,
-    contactPhoneType: parsePhoneType(state.contactPhoneType.value.value) || undefined,
+    contactPhoneType: state.contactPhoneType.value && parsePhoneType(state.contactPhoneType.value.value) || undefined,
     industrySectors: SelectMulti.getValues(state.industrySectors),
     categories: SelectMulti.getValues(state.categories)
   };
@@ -231,7 +231,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
       id: 'buyer-profile-contact-phone-type',
       required: false,
       label: 'Phone Type',
-      unselectedLabel: 'Select Type',
+      placeholder: 'Select Type',
       options: [
         { value: PhoneType.Office, label: 'Office' },
         { value: PhoneType.CellPhone, label: 'Cell Phone' }

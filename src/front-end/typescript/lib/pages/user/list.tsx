@@ -77,7 +77,7 @@ async function makeInitState(): Promise<State> {
       id: 'user-list-filter-user-type',
       required: false,
       label: 'User Type',
-      unselectedLabel: 'All',
+      placeholder: 'All',
       options: [
         { value: UserType.Buyer, label: userTypeToTitleCase(UserType.Buyer) },
         { value: UserType.Vendor, label: userTypeToTitleCase(UserType.Vendor) },
@@ -88,7 +88,7 @@ async function makeInitState(): Promise<State> {
       id: 'user-list-filter-category',
       required: false,
       label: 'Commodity Code',
-      unselectedLabel: 'All',
+      placeholder: 'All',
       options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value }))
     }),
     searchFilter: ShortText.init({
@@ -171,10 +171,10 @@ function updateAndQuery<K extends FormFieldKeys>(state: Immutable<State>, key: K
   // Update state with the filter value.
   state = state.setIn([key, 'value'], value);
   // Query the list of available users based on all filters' state.
-  const userTypeQuery = state.userTypeFilter.value.value;
-  const categoryQuery = state.categoryFilter.value.value;
+  const userTypeQuery = state.userTypeFilter.value && state.userTypeFilter.value.value;
+  const categoryQuery = state.categoryFilter.value && state.categoryFilter.value.value;
   const rawSearchQuery = state.searchFilter.value;
-  const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split('').join('.*'), 'i') : null;
+  const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split(/\s+/).join('.*'), 'i') : null;
   const users = state.users.filter(user => {
     let match = true;
     match = match && (!userTypeQuery || userMatchesUserType(user, parseUserType(userTypeQuery)));

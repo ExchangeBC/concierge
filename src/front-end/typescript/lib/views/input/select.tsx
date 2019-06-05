@@ -10,10 +10,10 @@ export interface Option {
   label: string;
 }
 
-export type Value = Option;
+export type Value = Option | undefined;
 
 export function setValue(state: State, value?: string): State {
-  const newValue = find(state.options, { value }) || state.options[0];
+  const newValue = find(state.options, { value }) || undefined;
   return {
     ...state,
     value: newValue
@@ -22,7 +22,7 @@ export function setValue(state: State, value?: string): State {
 
 export interface State extends FormField.State<Value> {
   options: Option[];
-  unselectedLabel?: string;
+  placeholder: string;
 }
 
 type ExtraProps = null;
@@ -33,20 +33,15 @@ export interface Props extends Pick<FormField.Props<State, ExtraProps, Value>, '
 
 type ChildProps = FormField.ChildProps<State, ExtraProps, Value>;
 
-interface InitParams extends Pick<State, 'id' | 'required' | 'label' | 'help' | 'options' | 'unselectedLabel'> {
+interface InitParams extends Pick<State, 'id' | 'required' | 'label' | 'help' | 'options' | 'placeholder'> {
   value?: State['value'];
 }
 
 export function init(params: InitParams): State {
-  let { options } = params;
-  if (params.unselectedLabel) {
-    options = [{ value: '', label: params.unselectedLabel }].concat(options);
-  }
   return {
     ...params,
     errors: [],
-    options,
-    value: params.value || options[0]
+    value: params.value
   };
 }
 
@@ -56,13 +51,15 @@ export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (value: Value) =>
   };
 }
 
+// TODO create a separate view that abstracts react-select usage.
 const Child: View<ChildProps> = props => {
   const { state, disabled, className, onChange } = props;
   const selectProps: SelectProps<Value> = {
     isSearchable: true,
-    defaultValue: state.options[0],
+    isClearable: true,
     name: state.id,
     id: state.id,
+    placeholder: state.placeholder,
     value: state.value,
     isDisabled: disabled,
     options: state.options,
@@ -101,12 +98,10 @@ const Child: View<ChildProps> = props => {
       }
     },
     onChange(value, action) {
-      if (value) {
-        if (Array.isArray(value)) {
-          onChange(value[0]);
-        } else {
-          onChange(value as Value);
-        }
+      if (value && Array.isArray(value)) {
+        onChange(value[0]);
+      } else {
+        onChange(value as Value);
       }
     }
   };

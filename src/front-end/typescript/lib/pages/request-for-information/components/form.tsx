@@ -107,8 +107,8 @@ export function getValues(state: State, includeDeletedAddenda = false): Values {
     closingDate: state.closingDate.value,
     closingTime: state.closingTime.value,
     gracePeriodDays: state.gracePeriodDays.value,
-    buyerContact: state.buyerContact.value.value,
-    programStaffContact: state.programStaffContact.value.value,
+    buyerContact: state.buyerContact.value ? state.buyerContact.value.value : '',
+    programStaffContact: state.programStaffContact.value ? state.programStaffContact.value.value : '',
     categories: SelectMulti.getValues(state.categories),
     attachments: FileMulti.getValues(state.attachments),
     addenda: LongTextMulti.getValuesAsStrings(state.addenda, RfiResource.DELETE_ADDENDUM_TOKEN)
@@ -246,7 +246,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       value: existingBuyerContact ? userToOption(existingBuyerContact) : undefined,
       required: true,
       label: `${userTypeToTitleCase(UserType.Buyer)} Contact`,
-      unselectedLabel: `Select ${userTypeToTitleCase(UserType.Buyer)}`,
+      placeholder: `Select ${userTypeToTitleCase(UserType.Buyer)}`,
       options: buyers.map(userToOption)
     }),
     programStaffContact: Select.init({
@@ -254,7 +254,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       value: existingProgramStaffContact ? userToOption(existingProgramStaffContact) : undefined,
       required: true,
       label: `${userTypeToTitleCase(UserType.ProgramStaff)} Contact`,
-      unselectedLabel: `Select ${userTypeToTitleCase(UserType.ProgramStaff)}`,
+      placeholder: `Select ${userTypeToTitleCase(UserType.ProgramStaff)}`,
       options: programStaff.map(userToOption)
     }),
     categories: immutable(await SelectMulti.init({
@@ -330,7 +330,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'onChangeBuyerContact':
       state = updateValue(state, 'buyerContact', msg.value);
       if (!state.publicSectorEntity.value) {
-        const buyer = find<PublicUser>(state.buyers, { _id: msg.value.value });
+        const buyer = msg.value && find<PublicUser>(state.buyers, { _id: msg.value.value });
         if (buyer && buyer.profile.type === UserType.Buyer) {
           state = state.setIn(['publicSectorEntity', 'value'], buyer.profile.publicSectorEntity);
           state = validateValue(state, 'publicSectorEntity', validatePublicSectorEntity);
@@ -412,11 +412,11 @@ function validateClosingDateAndTime(state: Immutable<State>): Immutable<State> {
 }
 
 function validateBuyerContact(raw: Select.Value): Validation<Select.Value> {
-  return raw.value ? valid(raw) : invalid([`Please select a ${userTypeToTitleCase(UserType.Buyer)}.`]);
+  return raw ? valid(raw) : invalid([`Please select a ${userTypeToTitleCase(UserType.Buyer)}.`]);
 }
 
 function validateProgramStaffContact(raw: Select.Value): Validation<Select.Value> {
-  return raw.value ? valid(raw) : invalid([`Please select a ${userTypeToTitleCase(UserType.ProgramStaff)}.`]);
+  return raw ? valid(raw) : invalid([`Please select a ${userTypeToTitleCase(UserType.ProgramStaff)}.`]);
 }
 
 function validateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K, validate: (value: State[K]['value']) => Validation<State[K]['value']>): Immutable<State> {
