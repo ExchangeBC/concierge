@@ -137,14 +137,19 @@ export type GlobalMsg<Route>
 
 export type GlobalComponentMsg<Msg, Route> = Msg | GlobalMsg<Route>;
 
+export function isGlobalMsg<Msg, Route>(msg: GlobalComponentMsg<Msg, Route>): msg is GlobalMsg<Route> {
+  const globalMsg = msg as GlobalMsg<Route>;
+  return globalMsg.tag === '@newRoute' || globalMsg.tag === '@replaceRoute' || globalMsg.tag === '@newUrl' || globalMsg.tag === '@replaceUrl';
+}
+
+export function mapGlobalComponentMsg<MsgA, MsgB, Route>(msg: GlobalComponentMsg<MsgA, Route>, map: (msg: GlobalComponentMsg<MsgA, Route>) => GlobalComponentMsg<MsgB, Route>): GlobalComponentMsg<MsgB, Route> {
+  return isGlobalMsg(msg) ? msg : map(msg);
+}
+
 export function mapGlobalComponentDispatch<ParentMsg, ChildMsg, Route>(dispatch: Dispatch<GlobalComponentMsg<ParentMsg, Route>>, fn: (childMsg: GlobalComponentMsg<ChildMsg, Route>) => GlobalComponentMsg<ParentMsg, Route>): Dispatch<GlobalComponentMsg<ChildMsg, Route>> {
   return childMsg => {
-    const globalMsg = childMsg as GlobalMsg<Route>;
-    if (globalMsg.tag === '@newRoute' || globalMsg.tag === '@replaceRoute' || globalMsg.tag === '@newUrl' || globalMsg.tag === '@replaceUrl') {
-      return dispatch(childMsg as GlobalMsg<Route>);
-    } else {
-      return dispatch(fn(childMsg));
-    }
+    const mappedMsg = mapGlobalComponentMsg(childMsg, fn);
+    return dispatch(mappedMsg);
   };
 }
 
@@ -218,25 +223,29 @@ export function emptyPageBreadcrumbs<Msg>(): PageBreadcrumbs<Msg> {
 
 export interface ModalButton<Msg> {
   text: string;
-  color: 'primary' | 'info';
-  onClickMsg?: Msg;
-  close?: boolean;
+  color: 'primary' | 'info' | 'secondary';
+  msg: Msg;
+  button?: boolean;
 }
 
 export interface PageModal<Msg> {
   title: string;
   body: string;
-  buttons: Array<ModalButton<Msg>>;
+  onCloseMsg: Msg;
+  actions: Array<ModalButton<Msg>>;
 }
 
-export function mapPageModalMsg<MsgA, MsgB>(modal: PageModal<MsgA> | null, mapMsg: (msgA: MsgA) => MsgB): PageModal<MsgB> | null {
+export function mapPageModalMsg<MsgA, MsgB, Route>(modal: PageModal<GlobalComponentMsg<MsgA, Route>> | null, mapMsg: (msgA: GlobalComponentMsg<MsgA, Route>) => GlobalComponentMsg<MsgB, Route>): PageModal<GlobalComponentMsg<MsgB, Route>> | null {
   if (!modal) { return null; }
   return {
     ...modal,
-    buttons: modal.buttons.map(button => ({
-      ...button,
-      onClickMsg: button.onClickMsg && mapMsg(button.onClickMsg)
-    }))
+    onCloseMsg: mapGlobalComponentMsg(modal.onCloseMsg, mapMsg),
+    actions: modal.actions.map(action => {
+      return {
+        ...action,
+        msg: mapGlobalComponentMsg(action.msg, mapMsg)
+      };
+    })
   };
 }
 
@@ -334,12 +343,8 @@ export interface AppComponent<State, Msg, Route> extends Component<null, State, 
 
 export function mapAppDispatch<ParentMsg, ChildMsg, Route>(dispatch: Dispatch<AppMsg<ParentMsg, Route>>, fn: (childMsg: GlobalComponentMsg<ChildMsg, Route>) => AppMsg<ParentMsg, Route>): Dispatch<GlobalComponentMsg<ChildMsg, Route>> {
   return childMsg => {
-    const globalMsg = childMsg as GlobalMsg<Route>;
-    if (globalMsg.tag === '@newRoute' || globalMsg.tag === '@replaceRoute' || globalMsg.tag === '@newUrl' || globalMsg.tag === '@replaceUrl') {
-      return dispatch(childMsg as GlobalMsg<Route>);
-    } else {
-      return dispatch(fn(childMsg));
-    }
+    const mappedMsg = mapGlobalComponentMsg(childMsg, fn);
+    return dispatch(mappedMsg);
   };
 }
 
@@ -427,18 +432,17 @@ export function updateAppChildPage<PS, PM, CS, CM, Route>(params: UpdateChildPag
     return params.setModal(parentState, parentModal);
   };
   setMetadata(newState);
-  setModal(newState);
+  const newStateWithModal = setModal(newState);
   let asyncStateUpdate;
   if (newAsyncState) {
     asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<AppMsg<PM, Route>>) => {
       const newState = await newAsyncState(state, dispatch);
       setMetadata(newState);
-      setModal(newState);
-      return newState;
+      return setModal(newState);
     };
   }
   return [
-    newState,
+    newStateWithModal,
     asyncStateUpdate
   ];
 }

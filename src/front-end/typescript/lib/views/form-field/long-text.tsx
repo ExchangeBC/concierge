@@ -1,9 +1,11 @@
 import { Dispatch, View } from 'front-end/lib/framework';
-import * as FormField from 'front-end/lib/views/form-field';
-import * as TextArea from 'front-end/lib/views/input/text-area';
-import { ChangeEvent, ChangeEventHandler, CSSProperties, default as React, KeyboardEventHandler } from 'react';
+import * as FormField from 'front-end/lib/views/form-field/lib';
+import * as TextArea from 'front-end/lib/views/form-field/lib/text-area';
+import { CSSProperties, default as React, KeyboardEventHandler } from 'react';
 
-export interface State extends FormField.State {
+export type Value = string;
+
+export interface State extends FormField.State<Value> {
   placeholder?: string;
 }
 
@@ -17,9 +19,8 @@ interface ExtraProps {
   style?: CSSProperties;
 }
 
-export interface Props extends Pick<FormField.Props<State, HTMLTextAreaElement, ExtraProps>, 'toggleHelp' | 'disabled'> {
+export interface Props extends Pick<FormField.Props<State, ExtraProps, Value>, 'toggleHelp' | 'disabled' | 'onChange'> {
   state: State;
-  onChange: ChangeEventHandler<HTMLTextAreaElement>;
   onChangeDebounced?: OnChangeDebounced;
   onEnter?: OnEnter;
   style?: CSSProperties;
@@ -37,9 +38,9 @@ export function init(params: Params): State {
   };
 }
 
-export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (event: ChangeEvent<HTMLTextAreaElement>) => Msg): ChangeEventHandler<HTMLTextAreaElement> {
-  return event => {
-    dispatch(fn(event));
+export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (value: Value) => Msg): FormField.OnChange<Value> {
+  return value => {
+    dispatch(fn(value));
   };
 }
 
@@ -49,7 +50,7 @@ function makeOnKeyUp(onEnter?: OnEnter): KeyboardEventHandler<HTMLTextAreaElemen
   };
 };
 
-const Child: View<FormField.ChildProps<State, HTMLTextAreaElement, ExtraProps>> = props => {
+const Child: View<FormField.ChildProps<State, ExtraProps, Value>> = props => {
   const { state, className, onChange, extraProps, disabled } = props;
   return (
     <TextArea.View
@@ -59,7 +60,7 @@ const Child: View<FormField.ChildProps<State, HTMLTextAreaElement, ExtraProps>> 
       className={`${className} form-control`}
       disabled={disabled}
       style={extraProps && extraProps.style}
-      onChange={onChange}
+      onChange={event => onChange(event.currentTarget.value)}
       onChangeDebounced={extraProps && extraProps.onChangeDebounced}
       onKeyUp={extraProps && extraProps.onKeyUp} />
   );
@@ -72,6 +73,12 @@ export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter,
     style
   };
   return (
-    <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={extraProps} disabled={disabled} />
+    <FormField.view
+      Child={Child}
+      state={state}
+      onChange={onChange}
+      toggleHelp={toggleHelp}
+      extraProps={extraProps}
+      disabled={disabled} />
   );
 };

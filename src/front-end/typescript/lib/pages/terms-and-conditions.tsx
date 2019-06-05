@@ -168,7 +168,9 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
         <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={acceptTerms} loading={isLoading} disabled={isDisabled}>
           I Accept
         </LoadingButton>
-        <Link href={getRedirectUrl(state, true)} color='secondary' className='mx-3'>Skip</Link>
+        <Link href={getRedirectUrl(state, true)} color='secondary' className='mx-3'>
+          {state.warnings.length ? 'Cancel' : 'Skip'}
+        </Link>
       </FixedBar>
     );
   }

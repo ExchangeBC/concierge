@@ -28,7 +28,7 @@ interface ButtonProps extends BaseProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-type Props = AnchorProps | ButtonProps;
+export type Props = AnchorProps | ButtonProps;
 
 function AnchorLink(props: AnchorProps) {
   // Initialize props.
@@ -38,8 +38,7 @@ function AnchorLink(props: AnchorProps) {
     className = '',
     disabled = false,
     children,
-    // href defaults to empty string so browser styles work properly.
-    href = '',
+    href = '#',
     route,
     onClick
   } = props;
@@ -55,8 +54,8 @@ function AnchorLink(props: AnchorProps) {
   finalClassName += disabled ? ' disabled' : '';
   finalClassName += color ? ` text-${color}` : '';
   const finalOnClick = onClick && ((e: MouseEvent<HTMLAnchorElement>) => {
-    if (disabled) { e.preventDefault(); }
-    onClick();
+    e.preventDefault();
+    if (!disabled) { onClick(); }
   });
   return (
     <a href={finalHref} onClick={finalOnClick} className={finalClassName}>

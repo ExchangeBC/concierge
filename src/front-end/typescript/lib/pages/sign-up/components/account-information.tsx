@@ -1,8 +1,8 @@
 import { Component, ComponentView, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import { validateConfirmPassword } from 'front-end/lib/validators';
-import { updateField, validateField } from 'front-end/lib/views/form-field';
+import { updateField, validateField } from 'front-end/lib/views/form-field/lib';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
-import * as ShortText from 'front-end/lib/views/input/short-text';
+import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Link from 'front-end/lib/views/link';
 import { default as React } from 'react';
 import { Col, FormGroup, Label, Row } from 'reactstrap';
@@ -147,7 +147,7 @@ const UserTypeToggle: View<{ state: State }> = ({ state }) => {
 }
 
 export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const onChange = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChange = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   return (
     <div>
       <FormSectionHeading text='Account Information' />

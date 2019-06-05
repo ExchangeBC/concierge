@@ -1,9 +1,10 @@
+import { FALLBACK_USER_NAME } from 'front-end/config';
 import { Route } from 'front-end/lib/app/types';
 import { ProfileComponent, ViewerUser } from 'front-end/lib/components/profiles/types';
-import { Component, ComponentView, Dispatch, GlobalComponentMsg, immutable, Immutable, Init, mapComponentDispatch, newRoute, Update, updateComponentChild } from 'front-end/lib/framework';
+import { Component, ComponentView, Dispatch, GlobalComponentMsg, Immutable, immutable, Init, mapComponentDispatch, newRoute, PageComponent, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
-import { updateField, validateField } from 'front-end/lib/views/form-field';
-import * as ShortText from 'front-end/lib/views/input/short-text';
+import { updateField, validateField } from 'front-end/lib/views/form-field/lib';
+import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { isArray } from 'lodash';
@@ -36,7 +37,7 @@ type InnerMsg<ProfileMsg>
   | ADT<'onChangeProfile', ProfileMsg>
   | ADT<'validateEmail'>
   | ADT<'deactivateAccount'>
-  | ADT<'cancelDeactivateAccount'>
+  | ADT<'hideDeactivationConfirmationPrompt'>
   | ADT<'startEditingProfile'>
   | ADT<'cancelEditingProfile'>
   | ADT<'saveProfile'>;
@@ -124,7 +125,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
       case 'onChangeProfile':
         return updateComponentChild({
           state,
-          mapChildMsg: (value: PM) => ({ tag: 'onChangeProfile' as 'onChangeProfile', value }),
+          mapChildMsg: (value: PM) => ({ tag: 'onChangeProfile' as const, value }),
           childStatePath: ['profile'],
           childUpdate: Profile.update,
           childMsg: msg.value
@@ -148,13 +149,13 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
                 // Redirect program staff back to the user list if they deactivate an account.
                 if (state.viewerUser && state.viewerUser.type === UserType.ProgramStaff) {
                   dispatch(newRoute({
-                    tag: 'userList' as 'userList',
+                    tag: 'userList' as const,
                     value: null
                   }));
                 } else {
                   // Otherwise, redirect users to the landing page.
                   dispatch(newRoute({
-                    tag: 'landing' as 'landing',
+                    tag: 'landing' as const,
                     value: null
                   }));
                 }
@@ -167,7 +168,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
           }
         ];
 
-      case 'cancelDeactivateAccount':
+      case 'hideDeactivationConfirmationPrompt':
         return [state.set('promptDeactivationConfirmation', false)];
 
       case 'startEditingProfile':
@@ -235,7 +236,7 @@ function conditionalEmail<PS, PM, P extends ProfileType>(Profile: ProfileCompone
     if (!state.showEmail) {
       return null;
     }
-    const onChangeEmail = ShortText.makeOnChange(dispatch, e => ({ tag: 'onChangeEmail' as 'onChangeEmail', value: e.currentTarget.value }));
+    const onChangeEmail = ShortText.makeOnChange(dispatch, value => ({ tag: 'onChangeEmail' as const, value }));
     const isDisabled = !state.isEditingProfile;
     return (
       <Row className='mb-md-3'>
@@ -312,7 +313,7 @@ function conditionalProfile<PS, PM, P extends ProfileType>(Profile: ProfileCompo
   return props => {
     const { state, dispatch } = props;
     const isDisabled = !state.isEditingProfile;
-    const dispatchProfile: Dispatch<PM> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'onChangeProfile' as 'onChangeProfile', value }));
+    const dispatchProfile: Dispatch<PM> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'onChangeProfile' as const, value }));
     return (
       <div className='pb-5'>
         <Row className='mb-4'>
@@ -400,10 +401,8 @@ function conditionalDeactivateAccount<PS, PM, P extends ProfileType>(Profile: Pr
     if (!state.showDeactivateAccount) {
       return null;
     }
-    const showPrompt = state.promptDeactivationConfirmation;
     const isLoading = state.deactivateLoading > 0;
     const deactivateAccount = () => dispatch({ tag: 'deactivateAccount', value: undefined });
-    const cancelDeactivateAccount = () => dispatch({ tag: 'cancelDeactivateAccount', value: undefined });
     return (
       <div className='py-5 border-top'>
         <Row>
@@ -418,10 +417,9 @@ function conditionalDeactivateAccount<PS, PM, P extends ProfileType>(Profile: Pr
         </Row>
         <Row>
           <Col xs='12'>
-            <LoadingButton onClick={deactivateAccount} color={showPrompt ? 'danger' : 'info'} loading={isLoading} disabled={isLoading}>
-              {showPrompt ? 'Click Again to Confirm' : 'Deactivate Account'}
+            <LoadingButton onClick={deactivateAccount} color='info' loading={isLoading} disabled={isLoading}>
+              Deactivate Account
             </LoadingButton>
-            {showPrompt ? (<Button color='link' className='text-secondary' onClick={cancelDeactivateAccount}>Cancel</Button>) : null}
           </Col>
         </Row>
       </div>
@@ -457,10 +455,35 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
   };
 };
 
-export function component<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Component<Params, State<PS>, Msg<PM>> {
+export function component<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Component<Params, State<PS>, Msg<PM>> & Pick<PageComponent<never, never, State<PS>, Msg<PM>>, 'getModal'> {
   return {
     init: init(Profile),
     update: update(Profile),
-    view: view(Profile)
+    view: view(Profile),
+    getModal(state) {
+      if (!state.promptDeactivationConfirmation) { return null; }
+      const isOwnAccount = !!state.viewerUser && state.viewerUser.id === state.profileUser._id;
+      const your = isOwnAccount ? 'your' : 'this';
+      const you = isOwnAccount ? 'you' : profileToName(state.profileUser.profile) || FALLBACK_USER_NAME;
+      const my = isOwnAccount ? 'my' : 'this';
+      return {
+        title: `Deactivate ${your} account?`,
+        body: `By deactivating ${your} account, ${you} will no longer be able to sign into the Procurment Concierge web application.`,
+        onCloseMsg: { tag: 'hideDeactivationConfirmationPrompt', value: undefined },
+        actions: [
+          {
+            text: `Yes, deactivate ${my} account`,
+            color: 'primary',
+            button: true,
+            msg: { tag: 'deactivateAccount', value: undefined }
+          },
+          {
+            text: 'Cancel',
+            color: 'secondary',
+            msg: { tag: 'hideDeactivationConfirmationPrompt', value: undefined }
+          }
+        ]
+      };
+    }
   };
 };

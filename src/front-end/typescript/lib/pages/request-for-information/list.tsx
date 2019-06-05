@@ -4,9 +4,9 @@ import * as TableComponent from 'front-end/lib/components/table';
 import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, immutable, Immutable, mapComponentDispatch, noPageModal, PageComponent, PageInit, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import { readManyRfis } from 'front-end/lib/http/api';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
+import * as Select from 'front-end/lib/views/form-field/select';
+import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Icon from 'front-end/lib/views/icon';
-import * as Select from 'front-end/lib/views/input/select';
-import * as ShortText from 'front-end/lib/views/input/short-text';
 import Link from 'front-end/lib/views/link';
 import { default as React, ReactElement } from 'react';
 import { Col, Row } from 'reactstrap';
@@ -84,11 +84,16 @@ export interface State {
   table: Immutable<TableComponent.State<TableCellData>>;
 };
 
+type FormFieldKeys
+  = 'statusFilter'
+  | 'categoryFilter'
+  | 'searchFilter';
+
 export type RouteParams = null;
 
 type InnerMsg
-  = ADT<'statusFilter', string>
-  | ADT<'categoryFilter', string>
+  = ADT<'statusFilter', Select.Value>
+  | ADT<'categoryFilter', Select.Value>
   | ADT<'searchFilter', string>
   | ADT<'table', TableComponent.Msg>;
 
@@ -124,10 +129,9 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) 
     visibleRfis: rfis,
     statusFilter: Select.init({
       id: 'rfi-list-filter-status',
-      value: '',
       required: false,
       label: 'Status',
-      unselectedLabel: 'All',
+      placeholder: 'All',
       options: [
         { value: RfiStatus.Open, label: rfiStatusToTitleCase(RfiStatus.Open) },
         { value: RfiStatus.Closed, label: rfiStatusToTitleCase(RfiStatus.Closed) }
@@ -135,10 +139,9 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) 
     }),
     categoryFilter: Select.init({
       id: 'rfi-list-filter-category',
-      value: '',
       required: false,
       label: 'Commodity Code',
-      unselectedLabel: 'All',
+      placeholder: 'All',
       options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value }))
     }),
     searchFilter: ShortText.init({
@@ -170,19 +173,17 @@ function rfiMatchesCategory(rfi: PublicRfi, category: string): boolean {
 }
 
 function rfiMatchesSearch(rfi: PublicRfi, query: RegExp): boolean {
-  return !!rfi.latestVersion.title.match(query);
+  return !!rfi.latestVersion.title.match(query) || !!rfi.latestVersion.publicSectorEntity.match(query);
 }
 
-function updateAndQuery(state: Immutable<State>, key?: string, value?: string): Immutable<State> {
+function updateAndQuery<K extends FormFieldKeys>(state: Immutable<State>, key: K, value: State[K]['value']): Immutable<State> {
   // Update state with the filter value.
-  if (key && value !== undefined) {
-    state = state.setIn([key, 'value'], value);
-  }
+  state = state.setIn([key, 'value'], value);
   // Query the list of available RFIs based on all filters' state.
-  const statusQuery = state.statusFilter.value;
-  const categoryQuery = state.categoryFilter.value;
+  const statusQuery = state.statusFilter.value && state.statusFilter.value.value;
+  const categoryQuery = state.categoryFilter.value && state.categoryFilter.value.value;
   const rawSearchQuery = state.searchFilter.value;
-  const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split('').join('.*'), 'i') : null;
+  const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split(/\s+/).join('.*'), 'i') : null;
   const rfis = state.rfis.filter(rfi => {
     let match = true;
     match = match && (!statusQuery || rfiMatchesStatus(rfi, parseRfiStatus(statusQuery)));
@@ -215,8 +216,8 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   const categoryFilterElement = state.userType !== UserType.ProgramStaff
     ? null
     : (

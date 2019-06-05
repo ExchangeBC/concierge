@@ -14,3 +14,5 @@ export const init = component.init;
 export const update = component.update;
 
 export const view = component.view;
+
+export const getModal = component.getModal;

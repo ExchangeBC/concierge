@@ -1,20 +1,21 @@
-import * as FileMulti from 'front-end/lib/components/input/file-multi';
-import * as LongTextMulti from 'front-end/lib/components/input/long-text-multi';
-import * as SelectMulti from 'front-end/lib/components/input/select-multi';
+import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
+import * as FormFieldMulti from 'front-end/lib/components/form-field-multi/lib/index';
+import * as LongTextMulti from 'front-end/lib/components/form-field-multi/long-text';
+import * as SelectMulti from 'front-end/lib/components/form-field-multi/select';
 import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
+import * as DateTime from 'front-end/lib/views/form-field/datetime';
+import * as LongText from 'front-end/lib/views/form-field/long-text';
+import * as NumberInput from 'front-end/lib/views/form-field/number';
+import * as Select from 'front-end/lib/views/form-field/select';
+import * as ShortText from 'front-end/lib/views/form-field/short-text';
+import * as Switch from 'front-end/lib/views/form-field/switch';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
-import * as DateTime from 'front-end/lib/views/input/datetime';
-import * as LongText from 'front-end/lib/views/input/long-text';
-import * as NumberInput from 'front-end/lib/views/input/number';
-import * as Select from 'front-end/lib/views/input/select';
-import * as ShortText from 'front-end/lib/views/input/short-text';
-import * as Switch from 'front-end/lib/views/input/switch';
 import { find, get } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
-import { getNumber, getString, rawFormatDate } from 'shared/lib';
+import { getString, rawFormatDate } from 'shared/lib';
 import * as FileResource from 'shared/lib/resources/file';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { PublicRfi } from 'shared/lib/resources/request-for-information';
@@ -46,8 +47,8 @@ export type Msg
   | ADT<'onChangeClosingDate', string>
   | ADT<'onChangeClosingTime', string>
   | ADT<'onChangeGracePeriodDays', NumberInput.Value>
-  | ADT<'onChangeBuyerContact', string>
-  | ADT<'onChangeProgramStaffContact', string>
+  | ADT<'onChangeBuyerContact', Select.Value>
+  | ADT<'onChangeProgramStaffContact', Select.Value>
   | ADT<'onChangeCategories', SelectMulti.Msg>
   | ADT<'onChangeAttachments', FileMulti.Msg>
   | ADT<'onChangeAddenda', LongTextMulti.Msg>
@@ -107,9 +108,9 @@ export function getValues(state: State, includeDeletedAddenda = false): Values {
     closingDate: state.closingDate.value,
     closingTime: state.closingTime.value,
     gracePeriodDays: state.gracePeriodDays.value,
-    buyerContact: state.buyerContact.value,
-    programStaffContact: state.programStaffContact.value,
-    categories: SelectMulti.getValues(state.categories),
+    buyerContact: state.buyerContact.value ? state.buyerContact.value.value : '',
+    programStaffContact: state.programStaffContact.value ? state.programStaffContact.value.value : '',
+    categories: SelectMulti.getValuesAsStrings(state.categories),
     attachments: FileMulti.getValues(state.attachments),
     addenda: LongTextMulti.getValuesAsStrings(state.addenda, RfiResource.DELETE_ADDENDUM_TOKEN)
   };
@@ -152,9 +153,9 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
   const closingDateValue = rawClosingAt ? rawFormatDate(new Date(rawClosingAt), 'YYYY-MM-DD', false) : '';
   const closingTimeValue = rawClosingAt ? rawFormatDate(new Date(rawClosingAt), 'HH:mm', false) : DEFAULT_CLOSING_TIME;
   const existingCategoryFields = get(existingRfi, ['latestVersion', 'categories'], [])
-    .map((value: string, index: number) => {
+    .map((value: string, index: number): FormFieldMulti.Field<SelectMulti.Value> => {
       return {
-        value,
+        value: { label: value, value },
         errors: [],
         removable: index !== 0
       };
@@ -167,6 +168,9 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
         removable: true
       };
     });
+  const existingBuyerContact = get(existingRfi, ['latestVersion', 'buyerContact'], undefined);
+  const existingProgramStaffContactId = get(existingRfi, ['latestVersion', 'programStaffContact', '_id'], undefined);
+  const existingProgramStaffContact: PublicUser | undefined = find<PublicUser>(programStaff, { _id: existingProgramStaffContactId });
   const descriptionHelpText = 'Suggested sections for this RFI\'s description: \n(1) Business Requirement(s) or Issue(s); \n(2) Brief Ministry Overview; \n(3) Objectives of this RFI; \n(4) Ministry Obligations; and \n(5) Response Instructions.';
   const addendaHelpText = 'Additional information related to this RFI.';
   return {
@@ -240,29 +244,29 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
     }),
     buyerContact: Select.init({
       id: 'rfi-buyer-contact',
-      value: getRfiString(['buyerContact', '_id']),
+      value: existingBuyerContact ? userToOption(existingBuyerContact) : undefined,
       required: true,
       label: `${userTypeToTitleCase(UserType.Buyer)} Contact`,
-      unselectedLabel: `Select ${userTypeToTitleCase(UserType.Buyer)}`,
+      placeholder: `Select ${userTypeToTitleCase(UserType.Buyer)}`,
       options: buyers.map(userToOption)
     }),
     programStaffContact: Select.init({
       id: 'rfi-program-staff-contact',
-      value: getRfiString(['programStaffContact', '_id']),
+      value: existingProgramStaffContact ? userToOption(existingProgramStaffContact) : undefined,
       required: true,
       label: `${userTypeToTitleCase(UserType.ProgramStaff)} Contact`,
-      unselectedLabel: `Select ${userTypeToTitleCase(UserType.ProgramStaff)}`,
+      placeholder: `Select ${userTypeToTitleCase(UserType.ProgramStaff)}`,
       options: programStaff.map(userToOption)
     }),
     categories: immutable(await SelectMulti.init({
       options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value })),
-      unselectedLabel: 'Select Commodity Code',
+      placeholder: 'Select Commodity Code',
       formFieldMulti: {
         idNamespace: 'rfi-categories',
         label: 'Commodity Code(s)',
         required: true,
         fields: existingCategoryFields.length ? existingCategoryFields : [{
-          value: '',
+          value: undefined,
           errors: [],
           removable: false
         }]
@@ -327,7 +331,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'onChangeBuyerContact':
       state = updateValue(state, 'buyerContact', msg.value);
       if (!state.publicSectorEntity.value) {
-        const buyer = find(state.buyers, { _id: msg.value });
+        const buyer = msg.value && find<PublicUser>(state.buyers, { _id: msg.value.value });
         if (buyer && buyer.profile.type === UserType.Buyer) {
           state = state.setIn(['publicSectorEntity', 'value'], buyer.profile.publicSectorEntity);
           state = validateValue(state, 'publicSectorEntity', validatePublicSectorEntity);
@@ -345,7 +349,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
         childUpdate: SelectMulti.update,
         childMsg: msg.value
       })[0];
-      const validatedCategories = validateCategories(SelectMulti.getValues(state.categories), 'Commodity Code');
+      const validatedCategories = validateCategories(SelectMulti.getValuesAsStrings(state.categories), 'Commodity Code');
       state = state.set('categories', SelectMulti.setErrors(state.categories, getInvalidValue(validatedCategories, [])));
       return [state];
     case 'onChangeAttachments':
@@ -408,11 +412,11 @@ function validateClosingDateAndTime(state: Immutable<State>): Immutable<State> {
   return validateValue(state, 'closingTime', v => validateClosingTime(v, state.closingDate.value));
 }
 
-function validateBuyerContact(raw: string): Validation<string> {
+function validateBuyerContact(raw: Select.Value): Validation<Select.Value> {
   return raw ? valid(raw) : invalid([`Please select a ${userTypeToTitleCase(UserType.Buyer)}.`]);
 }
 
-function validateProgramStaffContact(raw: string): Validation<string> {
+function validateProgramStaffContact(raw: Select.Value): Validation<Select.Value> {
   return raw ? valid(raw) : invalid([`Please select a ${userTypeToTitleCase(UserType.ProgramStaff)}.`]);
 }
 
@@ -453,16 +457,16 @@ export function isValid(state: State): boolean {
     attachments,
     addenda
   } = state;
-  const providedRequiredFields = !!(rfiNumber.value && title.value && publicSectorEntity.value && description.value && closingDate.value && closingTime.value && gracePeriodDays.value && buyerContact.value && programStaffContact.value);
+  const providedRequiredFields = !!(rfiNumber.value && title.value && publicSectorEntity.value && description.value && closingDate.value && closingTime.value && gracePeriodDays.value !== undefined && buyerContact.value && programStaffContact.value);
   const noValidationErrors = !(rfiNumber.errors.length || title.errors.length || publicSectorEntity.errors.length || description.errors.length || closingDate.errors.length || closingTime.errors.length || gracePeriodDays.errors.length || buyerContact.errors.length || programStaffContact.errors.length);
   return providedRequiredFields && noValidationErrors && SelectMulti.isValid(categories) && FileMulti.isValid(attachments) && LongTextMulti.isValid(addenda);
 }
 
 const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isDisabled = !state.isEditing;
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
-  const onChangeNumberInput = (tag: any) => NumberInput.makeOnChange(dispatch, e => ({ tag, value: getNumber(e.currentTarget, 'value', undefined) }));
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeNumberInput = (tag: any) => NumberInput.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
   const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
   const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeCategories' as const, value }));
   return (
@@ -553,8 +557,8 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isDisabled = !state.isEditing;
-  const onChangeLongText = (tag: any) => LongText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
-  const onChangeSwitch = (tag: any) => Switch.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.checked }));
+  const onChangeLongText = (tag: any) => LongText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeSwitch = (tag: any) => Switch.makeOnChange(dispatch, value => ({ tag, value }));
   const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
   const toggleHelp = (value: HelpFieldName) => () => dispatch({ tag: 'toggleHelp', value });
   return (

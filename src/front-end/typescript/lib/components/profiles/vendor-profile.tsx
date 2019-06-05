@@ -1,9 +1,9 @@
-import * as SelectMulti from 'front-end/lib/components/input/select-multi';
+import * as SelectMulti from 'front-end/lib/components/form-field-multi/select';
 import { ProfileComponent, ProfileParams, ProfileView } from 'front-end/lib/components/profiles/types';
 import { Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
+import * as Select from 'front-end/lib/views/form-field/select';
+import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
-import * as Select from 'front-end/lib/views/input/select';
-import * as ShortText from 'front-end/lib/views/input/short-text';
 import { reduce } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
@@ -36,11 +36,27 @@ export interface State {
   categories: Immutable<SelectMulti.State>;
 }
 
+type FormFieldKeys
+  = 'businessName'
+  | 'businessType'
+  | 'businessNumber'
+  | 'businessStreetAddress'
+  | 'businessCity'
+  | 'businessProvince'
+  | 'businessPostalCode'
+  | 'businessCountry'
+  | 'contactName'
+  | 'contactPositionTitle'
+  | 'contactEmail'
+  | 'contactPhoneNumber'
+  | 'contactPhoneCountryCode'
+  | 'contactPhoneType';
+
 export function getValues(state: Immutable<State>): VendorProfile {
   return {
     type: UserType.Vendor as UserType.Vendor,
     businessName: state.businessName.value,
-    businessType: parseBusinessType(state.businessType.value) || undefined,
+    businessType: state.businessType.value && parseBusinessType(state.businessType.value.value) || undefined,
     businessNumber: state.businessNumber.value || undefined,
     businessStreetAddress: state.businessStreetAddress.value || undefined,
     businessCity: state.businessCity.value || undefined,
@@ -52,16 +68,16 @@ export function getValues(state: Immutable<State>): VendorProfile {
     contactEmail: state.contactEmail.value || undefined,
     contactPhoneNumber: state.contactPhoneNumber.value || undefined,
     contactPhoneCountryCode: state.contactPhoneCountryCode.value || undefined,
-    contactPhoneType: parsePhoneType(state.contactPhoneType.value) || undefined,
-    industrySectors: SelectMulti.getValues(state.industrySectors),
-    categories: SelectMulti.getValues(state.categories)
+    contactPhoneType: state.contactPhoneType.value && parsePhoneType(state.contactPhoneType.value.value) || undefined,
+    industrySectors: SelectMulti.getValuesAsStrings(state.industrySectors),
+    categories: SelectMulti.getValuesAsStrings(state.categories)
   };
 }
 
 export function setValues(state: Immutable<State>, profile: VendorProfile): Immutable<State> {
   return state
     .setIn(['businessName', 'value'], profile.businessName || '')
-    .setIn(['businessType', 'value'], profile.businessType || '')
+    .set('businessType', Select.setValue(state.businessType, profile.businessType))
     .setIn(['businessNumber', 'value'], profile.businessNumber || '')
     .setIn(['businessStreetAddress', 'value'], profile.businessStreetAddress || '')
     .setIn(['businessCity', 'value'], profile.businessCity || '')
@@ -73,7 +89,7 @@ export function setValues(state: Immutable<State>, profile: VendorProfile): Immu
     .setIn(['contactEmail', 'value'], profile.contactEmail || '')
     .setIn(['contactPhoneNumber', 'value'], profile.contactPhoneNumber || '')
     .setIn(['contactPhoneCountryCode', 'value'], profile.contactPhoneCountryCode || '')
-    .setIn(['contactPhoneType', 'value'], profile.contactPhoneType || '')
+    .set('contactPhoneType', Select.setValue(state.contactPhoneType, profile.contactPhoneType))
     .set('industrySectors', SelectMulti.setValues(state.industrySectors, profile.industrySectors || []))
     .set('categories', SelectMulti.setValues(state.categories, profile.categories || []));
 }
@@ -111,7 +127,7 @@ export function isValid(state: Immutable<State>): boolean {
 
 export type Msg
   = ADT<'businessName', string>
-  | ADT<'businessType', string>
+  | ADT<'businessType', Select.Value>
   | ADT<'businessNumber', string>
   | ADT<'businessStreetAddress', string>
   | ADT<'businessCity', string>
@@ -123,7 +139,7 @@ export type Msg
   | ADT<'contactEmail', string>
   | ADT<'contactPhoneNumber', string>
   | ADT<'contactPhoneCountryCode', string>
-  | ADT<'contactPhoneType', string>
+  | ADT<'contactPhoneType', Select.Value>
   | ADT<'industrySectors', SelectMulti.Msg>
   | ADT<'categories', SelectMulti.Msg>
   | ADT<'validate'>;
@@ -142,10 +158,9 @@ export const init: Init<Params, State> = async ({ profile }) => {
     }),
     businessType: Select.init({
       id: 'vendor-profile-business-type',
-      value: '',
       required: false,
       label: 'Business Type',
-      unselectedLabel: 'Select Type',
+      placeholder: 'Select Type',
       options: [
         { value: BusinessType.Corporation, label: 'Corporation' },
         { value: BusinessType.LimitedLiabilityCompany, label: 'Limited Liability Company' },
@@ -232,10 +247,9 @@ export const init: Init<Params, State> = async ({ profile }) => {
     }),
     contactPhoneType: Select.init({
       id: 'vendor-profile-contact-phone-type',
-      value: '',
       required: false,
       label: 'Phone Type',
-      unselectedLabel: 'Select Type',
+      placeholder: 'Select Type',
       options: [
         { value: PhoneType.Office, label: 'Office' },
         { value: PhoneType.CellPhone, label: 'Cell Phone' }
@@ -243,7 +257,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
     }),
     industrySectors: immutable(await SelectMulti.init({
       options: AVAILABLE_INDUSTRY_SECTORS.toJS().map(value => ({ label: value, value })),
-      unselectedLabel: 'Select Industry Sector',
+      placeholder: 'Select Industry Sector',
       formFieldMulti: {
         idNamespace: 'vendor-industry-sectors',
         label: 'Industry Sector(s)',
@@ -253,7 +267,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
     })),
     categories: immutable(await SelectMulti.init({
       options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value })),
-      unselectedLabel: 'Select an Area of Interest',
+      placeholder: 'Select an Area of Interest',
       formFieldMulti: {
         idNamespace: 'vendor-categories',
         label: 'Area(s) of Interest',
@@ -324,7 +338,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
   }
 };
 
-function updateValue(state: Immutable<State>, key: string, value: string): Immutable<State> {
+function updateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K, value: State[K]['value']): Immutable<State> {
   return state.setIn([key, 'value'], value);
 }
 
@@ -345,8 +359,8 @@ function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<
 }
 
 export const BusinessInformation: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
   const validate = () => dispatch({ tag: 'validate', value: undefined });
   return (
     <div className='mt-3 mt-md-0'>
@@ -421,8 +435,8 @@ export const BusinessInformation: ProfileView<State, Msg> = ({ state, dispatch, 
 };
 
 export const ContactInformation: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
   const validate = () => dispatch({ tag: 'validate', value: undefined });
   return (
     <div className='mt-3'>

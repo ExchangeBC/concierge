@@ -1,7 +1,7 @@
 import { UpdateState } from 'front-end/lib';
 import router from 'front-end/lib/app/router';
 import { Route } from 'front-end/lib/app/types';
-import * as FileMulti from 'front-end/lib/components/input/file-multi';
+import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
 import { Dispatch, GlobalComponentMsg, Immutable, UpdateReturnValue } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as RfiForm from 'front-end/lib/pages/request-for-information/components/form';

@@ -3,8 +3,8 @@ import { isSignedOut } from 'front-end/lib/access-control';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, newRoute, noPageModal, PageComponent, PageInit, replaceRoute, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
-import { updateField, validateField } from 'front-end/lib/views/form-field';
-import * as ShortText from 'front-end/lib/views/input/short-text';
+import { updateField, validateField } from 'front-end/lib/views/form-field/lib';
+import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
@@ -104,7 +104,7 @@ function isValid(state: State): boolean {
 
 const view: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
-  const onChange = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChange = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   const isLoading = state.loading > 0;
   const isDisabled = isLoading || !isValid(state);
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
