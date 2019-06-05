@@ -134,7 +134,7 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
     <FixedBar>
-      <LoadingButton color='secondary' onClick={submit} loading={isLoading} disabled={isDisabled}>
+      <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled}>
         Send Feedback
       </LoadingButton>
       <Link route={cancelRoute} color='secondary' className='mx-3'>Cancel</Link>
