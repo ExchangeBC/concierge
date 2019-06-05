@@ -1,15 +1,16 @@
 import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
+import * as FormFieldMulti from 'front-end/lib/components/form-field-multi/lib/index';
 import * as LongTextMulti from 'front-end/lib/components/form-field-multi/long-text';
 import * as SelectMulti from 'front-end/lib/components/form-field-multi/select';
 import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
-import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as DateTime from 'front-end/lib/views/form-field/datetime';
 import * as LongText from 'front-end/lib/views/form-field/long-text';
 import * as NumberInput from 'front-end/lib/views/form-field/number';
 import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import * as Switch from 'front-end/lib/views/form-field/switch';
+import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import { find, get } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
@@ -152,9 +153,9 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
   const closingDateValue = rawClosingAt ? rawFormatDate(new Date(rawClosingAt), 'YYYY-MM-DD', false) : '';
   const closingTimeValue = rawClosingAt ? rawFormatDate(new Date(rawClosingAt), 'HH:mm', false) : DEFAULT_CLOSING_TIME;
   const existingCategoryFields = get(existingRfi, ['latestVersion', 'categories'], [])
-    .map((value: string, index: number) => {
+    .map((value: string, index: number): FormFieldMulti.Field<SelectMulti.Value> => {
       return {
-        value,
+        value: { label: value, value },
         errors: [],
         removable: index !== 0
       };
@@ -265,7 +266,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
         label: 'Commodity Code(s)',
         required: true,
         fields: existingCategoryFields.length ? existingCategoryFields : [{
-          value: '',
+          value: undefined,
           errors: [],
           removable: false
         }]

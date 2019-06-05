@@ -123,8 +123,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
           return {
             ...field,
             value: {
-              ...field.value,
-              value: msg.value.value
+              ...msg.value.value
             }
           };
         }
@@ -159,13 +158,14 @@ const ConditionalLabel: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> 
 const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => {
   const { id, extraProps, className, field, onChange, disabled = false } = props;
   if (field.value.tag === 'deleted') { return null; }
+  const value: string = field.value.value;
   return (
     <div>
       <ConditionalLabel {...props} />
       <TextArea.View
         id={id}
         className={`${className} form-control`}
-        value={field.value.value}
+        value={value}
         placeholder={extraProps.field.placeholder}
         disabled={disabled}
         style={extraProps.field.textAreaStyle}
