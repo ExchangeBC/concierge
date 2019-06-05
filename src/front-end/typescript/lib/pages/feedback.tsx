@@ -59,7 +59,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         state,
         async (state, dispatch) => {
           const validatedRating = validateRating(state.rating);
-          if (validatedRating.tag === 'invalid') {
+          if (!isValid(state) || validatedRating.tag === 'invalid') {
             return stopLoading(state);
           }
           const result = await api.createFeedback({
@@ -71,10 +71,10 @@ const update: Update<State, Msg> = ({ state, msg }) => {
             case 'valid':
               // Route to feedback submitted notice
               dispatch(newRoute({
-                tag: 'notice' as 'notice',
+                tag: 'notice' as const,
                 value: {
                   noticeId: {
-                    tag: 'feedbackSubmitted' as 'feedbackSubmitted',
+                    tag: 'feedbackSubmitted' as const,
                     value: undefined
                   }
                 }
@@ -130,7 +130,7 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   const isLoading = state.loading > 0;
   const isDisabled = isLoading || !isValid(state);
-  const cancelRoute: Route = { tag: 'landing' as 'landing', value: null };
+  const cancelRoute: Route = { tag: 'landing', value: null };
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
     <FixedBar>
@@ -170,7 +170,7 @@ const view: ComponentView<State, Msg> = props => {
             state={state.feedbackText}
             onChange={onChangeFeedbackText}
             onChangeDebounced={validate}
-            style={{ width: '100%', minHeight: '10rem' }} />
+            style={{ width: '100%', height: '25vh', minHeight: '10rem' }} />
         </Col>
       </Row>
     </div>
