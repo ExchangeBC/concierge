@@ -2,9 +2,9 @@ import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from
 import { Route, SharedState } from 'front-end/lib/app/types';
 import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, newRoute, noPageModal, PageComponent, PageInit, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
-import { updateField, validateField } from 'front-end/lib/views/form-field';
+import { updateField, validateField } from 'front-end/lib/views/form-field/lib';
+import * as LongText from 'front-end/lib/views/form-field/long-text';
 import Icon from 'front-end/lib/views/icon';
-import * as LongText from 'front-end/lib/views/input/long-text';
 import FixedBar from 'front-end/lib/views/layout/fixed-bar';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
@@ -35,7 +35,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async () => {
     rating: undefined,
     feedbackText: LongText.init({
       id: 'feedback-text',
-      required: false,
+      required: true,
       placeholder: 'Describe your experience here.',
       label: 'Please describe your experience.'
     })
@@ -100,15 +100,27 @@ function isValid(state: State): boolean {
 const RatingSelector: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   const setRating = (value: Rating) => () => dispatch({ tag: 'onChangeRating', value });
-  const isGood = state.rating === 'good';
-  const isMeh = state.rating === 'meh';
-  const isBad = state.rating === 'bad';
+  const isRating = (rating: Rating) => state.rating === rating;
+  const iconProps = (rating: Rating, iconName: 'good-rating' | 'meh-rating' | 'bad-rating', activeColor: 'success' | 'warning' | 'danger' | 'secondary') => {
+    const isActive = isRating(rating);
+    return {
+      className: `${rating === 'good' || rating === 'meh' ? 'mr-4' : ''} ${isActive ? '' : 'text-hover-gray-700'}`,
+      width: 2.5,
+      height: 2.5,
+      onClick: isActive ? undefined : setRating(rating),
+      color: isActive ? activeColor : 'secondary',
+      name: iconName,
+      style: {
+        cursor: isActive ? 'default' : 'pointer'
+      }
+    };
+  };
   return (
     <Row className='mb-4'>
       <Col xs='12' className='d-flex'>
-        <Icon className='mr-4' name='good-rating' color={isGood ? 'success' : 'secondary'} width={2.5} height={2.5} onClick={setRating('good')} />
-        <Icon className='mr-4' name='meh-rating' color={isMeh ? 'warning' : 'secondary'} width={2.5} height={2.5} onClick={setRating('meh')} />
-        <Icon name='bad-rating' color={isBad ? 'danger' : 'secondary'} width={2.5} height={2.5} onClick={setRating('bad')} />
+        <Icon {...iconProps('good', 'good-rating', 'success')} />
+        <Icon {...iconProps('meh', 'meh-rating', 'warning')} />
+        <Icon {...iconProps('bad', 'bad-rating', 'danger')} />
       </Col>
     </Row>
   );
@@ -132,24 +144,33 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
 
 const view: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
-  const onChange = (tag: any) => LongText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChangeFeedbackText = LongText.makeOnChange(dispatch, value => ({ tag: 'onChangeFeedbackText' as const, value }));
   const validate = () => dispatch({ tag: 'validateFeedback', value: undefined })
   return (
     <div>
       <Row>
         <Col xs='12'>
           <h1>Send Feedback</h1>
-          <label>How would you rate your experience?</label>
         </Col>
       </Row>
-      <RatingSelector {...props} />
+      <Row className='mb-3'>
+        <Col xs='12' md='8'>
+          <p>Your feedback is important to us. Please use this form to share your thoughts with the Procurement Concierge Program's staff.</p>
+        </Col>
+      </Row>
       <Row>
         <Col xs='12'>
+          <label className='font-weight-bold'>How would you rate your experience?<span className='text-info'>*</span></label>
+          <RatingSelector {...props} />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12' md='10'>
           <LongText.view
             state={state.feedbackText}
-            onChange={onChange('onChangeFeedbackText')}
+            onChange={onChangeFeedbackText}
             onChangeDebounced={validate}
-            style={{ width: '50vw', height: '25vh', minHeight: '150px' }} />
+            style={{ width: '100%', minHeight: '10rem' }} />
         </Col>
       </Row>
     </div>

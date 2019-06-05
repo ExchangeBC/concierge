@@ -105,8 +105,10 @@ const ConditionalLabel: View<Props<any, any, any>> = ({ state, labelClassName = 
   if (label) {
     return (
       <Label className={`mb-0 mr-3 ${required ? 'font-weight-bold' : ''} ${labelClassName}`}>
-        {label}
-        {required ? (<span className='text-info'>*</span>) : null }
+        <span>
+          {label}
+          {required ? (<span className='text-info'>*</span>) : null }
+        </span>
       </Label>
     );
   } else {

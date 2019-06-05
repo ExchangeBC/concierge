@@ -44,13 +44,11 @@ const Links: View<{}> = () => {
   );
 };
 
-/*const FeedbackButton: View<{}> = () => {
-  // TODO use the route prop for the Link view
-  // TODO add feedback button once ready
+const FeedbackButton: View<{}> = () => {
   return (
-    <Link href='/feedback' color='light' size='sm' className='mb-4 mb-md-0 ml-md-auto' button outline>Send Feedback</Link>
+    <Link route={{ tag: 'feedback', value: null }} color='light' size='sm' className='mb-4 mb-md-0 ml-md-auto' button outline>Send Feedback</Link>
   );
-};*/
+};
 
 const Footer: View<{}> = () => {
   return (
@@ -60,6 +58,7 @@ const Footer: View<{}> = () => {
           <Col xs='12' className='d-flex flex-column flex-md-row flex-md-wrap align-items-center'>
             <ProvinceLogo />
             <Links />
+            <FeedbackButton />
           </Col>
         </Row>
       </Container>
