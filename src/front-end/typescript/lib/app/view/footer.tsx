@@ -10,7 +10,7 @@ export interface State {
 
 const Sep: View<{}> = () => {
   return (
-    <span className='pt-2 pt-lg-0 px-lg-2'><span className='d-none d-lg-inline'>|</span></span>
+    <span className='pt-2 pt-md-0 px-md-1 px-lg-2' style={{ opacity: 0.5 }}><span className='d-none d-md-inline'>|</span></span>
   );
 };
 
@@ -20,13 +20,13 @@ const ProvinceLogo: View<{}> = () => {
       src='/images/bcgov_logo.svg'
       alt='The Province of British Columbia'
       style={{ width: '165px' }}
-      className='mt-4 mt-lg-0 order-2 order-lg-0' />
+      className='mt-4 mt-md-0 order-2 order-md-0' />
   );
 };
 
 const Links: View<{}> = () => {
   return (
-    <div className='d-flex flex-column flex-lg-row flex-lg-nowrap justify-content-lg-start align-items-center mb-3 mb-lg-0 font-size-small'>
+    <div className='d-flex flex-column flex-md-row flex-md-nowrap justify-content-md-start align-items-center mb-3 mb-md-0 font-size-small'>
       <Link route={{ tag: 'landing', value: null }} color='light'>Home</Link>
       <Sep />
       <Link route={{ tag: 'markdown', value: { documentId: 'about' }}} color='light'>About</Link>
@@ -44,22 +44,22 @@ const Links: View<{}> = () => {
   );
 };
 
-const FeedbackButton: View<{}> = () => {
+/*const FeedbackButton: View<{}> = () => {
   // TODO use the route prop for the Link view
+  // TODO add feedback button once ready
   return (
-    <Link href='/feedback' color='light' size='sm' className='ml-lg-auto' button outline>Send Feedback</Link>
+    <Link href='/feedback' color='light' size='sm' className='ml-md-auto' button outline>Send Feedback</Link>
   );
-};
+};*/
 
 const Footer: View<{}> = () => {
   return (
     <footer className='w-100 bg-info text-light border-top-gov'>
       <Container className='py-4'>
         <Row>
-          <Col xs='12' className='d-flex flex-column flex-lg-row flex-lg-wrap align-items-center'>
+          <Col xs='12' className='d-flex flex-column flex-md-row flex-md-wrap align-items-center'>
             <ProvinceLogo />
             <Links />
-            <FeedbackButton />
           </Col>
         </Row>
       </Container>
