@@ -19,7 +19,7 @@ export function validateTitle(raw: string): Validation<string> {
 }
 
 export function validateDescription(raw: string): Validation<string> {
-  return validateGenericString(raw, 'RFI Description', 1, 20000);
+  return validateGenericString(raw, 'RFI Description', 1, 30000);
 }
 
 export function validatePublicSectorEntity(raw: string): Validation<string> {
