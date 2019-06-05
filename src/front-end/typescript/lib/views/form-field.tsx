@@ -1,10 +1,10 @@
 import { Immutable, View } from 'front-end/lib/framework';
 import Icon from 'front-end/lib/views/icon';
-import { default as React, FormEventHandler } from 'react';
+import React from 'react';
 import { Alert, FormGroup, FormText, Label } from 'reactstrap';
 import { getInvalidValue, getValidValue, Validation } from 'shared/lib/validators';
 
-export interface State<Value = string> {
+export interface State<Value> {
   value: Value;
   id: string;
   required: boolean;
@@ -16,22 +16,24 @@ export interface State<Value = string> {
   }
 }
 
-export interface ChildProps<State, ChildElement, ExtraProps> {
+export type OnChange<Value> = (value: Value) => void;
+
+export interface ChildProps<State, ExtraProps, Value> {
   state: State;
   disabled: boolean;
-  onChange: FormEventHandler<ChildElement>;
   className: string;
-  extraProps?: ExtraProps;
+  extraProps: ExtraProps;
+  onChange(value: Value): void;
 }
 
-export interface Props<ChildState extends State<Value>, ChildElement, ChildExtraProps, Value = string> {
+export interface Props<ChildState extends State<Value>, ChildExtraProps, Value> {
   state: ChildState;
   disabled?: boolean;
-  Child: View<ChildProps<ChildState, ChildElement, ChildExtraProps>>;
-  onChange: FormEventHandler<ChildElement>;
+  Child: View<ChildProps<ChildState, ChildExtraProps, Value>>;
   labelClassName?: string;
-  extraProps?: ChildExtraProps;
+  extraProps: ChildExtraProps;
   toggleHelp?(): void;
+  onChange(value: Value): void;
 }
 
 const ConditionalHelpToggle: View<Props<any, any, any>> = ({ state, toggleHelp, disabled = false }) => {
@@ -96,7 +98,7 @@ const ConditionalErrors: View<State<any>> = ({ errors }) => {
   }
 }
 
-export function view<ChildState extends State<Value>, ChildElement, ChildExtraProps, Value>(props: Props<ChildState, ChildElement, ChildExtraProps, Value>) {
+export function view<ChildState extends State<Value>, ChildExtraProps, Value>(props: Props<ChildState, ChildExtraProps, Value>) {
   const { state, disabled = false, Child, onChange, extraProps } = props;
   const invalid = !!state.errors.length;
   const className = invalid ? 'is-invalid' : '';

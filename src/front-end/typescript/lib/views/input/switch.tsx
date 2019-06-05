@@ -1,20 +1,21 @@
 import { Dispatch, View } from 'front-end/lib/framework';
 import * as FormField from 'front-end/lib/views/form-field';
-import { default as React, FormEventHandler, SyntheticEvent } from 'react';
+import React from 'react';
 import { CustomInput } from 'reactstrap';
 
-export interface State extends FormField.State<boolean> {
+export type Value = boolean;
+
+export interface State extends FormField.State<Value> {
   inlineLabel: string;
 }
 
 type ExtraProps = null;
 
-export interface Props extends Pick<FormField.Props<State, HTMLInputElement, undefined, boolean>, 'toggleHelp' | 'labelClassName' | 'disabled'> {
+export interface Props extends Pick<FormField.Props<State, null, Value>, 'toggleHelp' | 'labelClassName' | 'disabled' | 'onChange'> {
   state: State;
-  onChange: FormEventHandler<HTMLInputElement>;
 }
 
-type ChildProps = FormField.ChildProps<State, HTMLInputElement, ExtraProps>;
+type ChildProps = FormField.ChildProps<State, ExtraProps, Value>;
 
 type InitParams = Pick<State, 'id' | 'value' | 'label' | 'help' | 'inlineLabel'>;
 
@@ -26,9 +27,9 @@ export function init(params: InitParams): State {
   };
 }
 
-export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (event: SyntheticEvent<HTMLInputElement>) => Msg): FormEventHandler<HTMLInputElement> {
-  return event => {
-    dispatch(fn(event));
+export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (value: Value) => Msg): FormField.OnChange<Value> {
+  return value => {
+    dispatch(fn(value));
   };
 }
 
@@ -43,7 +44,7 @@ const Child: View<ChildProps> = props => {
       type='checkbox'
       label={state.inlineLabel}
       className={className}
-      onChange={onChange} />
+      onChange={event => onChange(event.currentTarget.checked)} />
   );
 };
 

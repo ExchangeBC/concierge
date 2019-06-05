@@ -130,7 +130,7 @@ function isValid(state: State): boolean {
 
 const view: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
-  const onChange = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChange = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   const isLoading = state.loading > 0;
   const isDisabled = isLoading || !isValid(state);
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });

@@ -70,7 +70,6 @@ async function makeInitState(): Promise<State> {
     visibleUsers: [],
     userTypeFilter: Select.init({
       id: 'user-list-filter-user-type',
-      value: '',
       required: false,
       label: 'User Type',
       unselectedLabel: 'All',
@@ -82,7 +81,6 @@ async function makeInitState(): Promise<State> {
     }),
     categoryFilter: Select.init({
       id: 'user-list-filter-category',
-      value: '',
       required: false,
       label: 'Commodity Code',
       unselectedLabel: 'All',
@@ -170,8 +168,8 @@ function updateAndQuery(state: Immutable<State>, key?: string, value?: string): 
     state = state.setIn([key, 'value'], value);
   }
   // Query the list of available users based on all filters' state.
-  const userTypeQuery = state.userTypeFilter.value;
-  const categoryQuery = state.categoryFilter.value;
+  const userTypeQuery = state.userTypeFilter.value.value;
+  const categoryQuery = state.categoryFilter.value.value;
   const rawSearchQuery = state.searchFilter.value;
   const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split('').join('.*'), 'i') : null;
   const users = state.users.filter(user => {
@@ -206,8 +204,8 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value: value.value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   return (
     <div>
       <Row>

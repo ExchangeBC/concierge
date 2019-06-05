@@ -35,6 +35,21 @@ export interface State {
   categories: Immutable<SelectMulti.State>;
 }
 
+type FormFieldKeys
+  = 'firstName'
+  | 'lastName'
+  | 'positionTitle'
+  | 'publicSectorEntity'
+  | 'branch'
+  | 'contactStreetAddress'
+  | 'contactCity'
+  | 'contactProvince'
+  | 'contactPostalCode'
+  | 'contactCountry'
+  | 'contactPhoneNumber'
+  | 'contactPhoneCountryCode'
+  | 'contactPhoneType';
+
 export function getValues(state: Immutable<State>): BuyerProfile {
   return {
     type: UserType.Buyer as UserType.Buyer,
@@ -50,7 +65,7 @@ export function getValues(state: Immutable<State>): BuyerProfile {
     contactCountry: state.contactCountry.value || undefined,
     contactPhoneNumber: state.contactPhoneNumber.value || undefined,
     contactPhoneCountryCode: state.contactPhoneCountryCode.value || undefined,
-    contactPhoneType: parsePhoneType(state.contactPhoneType.value) || undefined,
+    contactPhoneType: parsePhoneType(state.contactPhoneType.value.value) || undefined,
     industrySectors: SelectMulti.getValues(state.industrySectors),
     categories: SelectMulti.getValues(state.categories)
   };
@@ -70,7 +85,7 @@ export function setValues(state: Immutable<State>, profile: BuyerProfile): Immut
     .setIn(['contactCountry', 'value'], profile.contactCountry || '')
     .setIn(['contactPhoneNumber', 'value'], profile.contactPhoneNumber || '')
     .setIn(['contactPhoneCountryCode', 'value'], profile.contactPhoneCountryCode || '')
-    .setIn(['contactPhoneType', 'value'], profile.contactPhoneType || '')
+    .set('contactPhoneType', Select.setValue(state.contactPhoneType, profile.contactPhoneType))
     .set('industrySectors', SelectMulti.setValues(state.industrySectors, profile.industrySectors || []))
     .set('categories', SelectMulti.setValues(state.categories, profile.categories || []));
 }
@@ -118,7 +133,7 @@ export type Msg
   | ADT<'contactCountry', string>
   | ADT<'contactPhoneNumber', string>
   | ADT<'contactPhoneCountryCode', string>
-  | ADT<'contactPhoneType', string>
+  | ADT<'contactPhoneType', Select.Value>
   | ADT<'industrySectors', SelectMulti.Msg>
   | ADT<'categories', SelectMulti.Msg>
   | ADT<'validate'>;
@@ -214,7 +229,6 @@ export const init: Init<Params, State> = async ({ profile }) => {
     }),
     contactPhoneType: Select.init({
       id: 'buyer-profile-contact-phone-type',
-      value: '',
       required: false,
       label: 'Phone Type',
       unselectedLabel: 'Select Type',
@@ -304,7 +318,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
   }
 };
 
-function updateValue(state: Immutable<State>, key: string, value: string): Immutable<State> {
+function updateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K, value: State[K]['value']): Immutable<State> {
   return state.setIn([key, 'value'], value);
 }
 
@@ -325,7 +339,7 @@ function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<
 }
 
 export const BuyerInformation: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   const validate = () => dispatch({ tag: 'validate', value: undefined });
   return (
     <div className='mt-3 mt-md-0'>
@@ -376,8 +390,8 @@ export const BuyerInformation: ProfileView<State, Msg> = ({ state, dispatch, dis
 };
 
 export const ContactInformation: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
   const validate = () => dispatch({ tag: 'validate', value: undefined });
   return (
     <div className='mt-3'>

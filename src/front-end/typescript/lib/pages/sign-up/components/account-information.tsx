@@ -147,7 +147,7 @@ const UserTypeToggle: View<{ state: State }> = ({ state }) => {
 }
 
 export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const onChange = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChange = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   return (
     <div>
       <FormSectionHeading text='Account Information' />

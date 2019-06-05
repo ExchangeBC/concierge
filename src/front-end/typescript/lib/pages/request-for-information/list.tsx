@@ -124,7 +124,6 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) 
     visibleRfis: rfis,
     statusFilter: Select.init({
       id: 'rfi-list-filter-status',
-      value: '',
       required: false,
       label: 'Status',
       unselectedLabel: 'All',
@@ -135,7 +134,6 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) 
     }),
     categoryFilter: Select.init({
       id: 'rfi-list-filter-category',
-      value: '',
       required: false,
       label: 'Commodity Code',
       unselectedLabel: 'All',
@@ -179,8 +177,8 @@ function updateAndQuery(state: Immutable<State>, key?: string, value?: string): 
     state = state.setIn([key, 'value'], value);
   }
   // Query the list of available RFIs based on all filters' state.
-  const statusQuery = state.statusFilter.value;
-  const categoryQuery = state.categoryFilter.value;
+  const statusQuery = state.statusFilter.value.value;
+  const categoryQuery = state.categoryFilter.value.value;
   const rawSearchQuery = state.searchFilter.value;
   const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split('').join('.*'), 'i') : null;
   const rfis = state.rfis.filter(rfi => {
@@ -215,8 +213,8 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value: value.value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   const categoryFilterElement = state.userType !== UserType.ProgramStaff
     ? null
     : (

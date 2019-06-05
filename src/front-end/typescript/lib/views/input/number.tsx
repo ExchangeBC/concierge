@@ -1,8 +1,9 @@
 import { Dispatch, View } from 'front-end/lib/framework';
 import * as FormField from 'front-end/lib/views/form-field';
 import * as Input from 'front-end/lib/views/input/input';
-import { ChangeEvent, ChangeEventHandler, default as React, KeyboardEventHandler } from 'react';
+import { default as React, KeyboardEventHandler } from 'react';
 import { InputGroup, InputGroupAddon } from 'reactstrap';
+import { getNumber } from 'shared/lib';
 
 export type Value = number | undefined;
 
@@ -25,9 +26,8 @@ interface ExtraProps {
   addon?: Addon;
 }
 
-export interface Props extends Pick<FormField.Props<State, HTMLInputElement, ExtraProps, Value>, 'toggleHelp' | 'disabled'> {
+export interface Props extends Pick<FormField.Props<State, ExtraProps, Value>, 'toggleHelp' | 'disabled' | 'onChange'> {
   state: State;
-  onChange: ChangeEventHandler<HTMLInputElement>;
   onChangeDebounced?: Input.OnChangeDebounced;
   onEnter?: OnEnter;
   addon?: Addon;
@@ -42,7 +42,7 @@ export function init(params: Params): State {
   };
 }
 
-export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (event: ChangeEvent<HTMLInputElement>) => Msg): ChangeEventHandler<HTMLInputElement> {
+export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (value: Value) => Msg): FormField.OnChange<Value> {
   return event => {
     dispatch(fn(event));
   };
@@ -54,9 +54,9 @@ function makeOnKeyUp(onEnter?: OnEnter): KeyboardEventHandler<HTMLInputElement> 
   };
 };
 
-const Child: View<FormField.ChildProps<State, HTMLInputElement, ExtraProps>> = props => {
+const Child: View<FormField.ChildProps<State, ExtraProps, Value>> = props => {
   const { state, disabled, className, onChange, extraProps } = props;
-  const addon: Addon | undefined = extraProps && extraProps.addon;
+  const addon: Addon | undefined = extraProps.addon;
   return (
     <InputGroup>
       <Input.View
@@ -68,9 +68,9 @@ const Child: View<FormField.ChildProps<State, HTMLInputElement, ExtraProps>> = p
         placeholder={state.placeholder}
         min={state.min}
         max={state.max}
-        onChange={onChange}
-        onChangeDebounced={extraProps && extraProps.onChangeDebounced}
-        onKeyUp={extraProps && extraProps.onKeyUp} />
+        onChange={event => onChange(getNumber(event.currentTarget, 'value', undefined))}
+        onChangeDebounced={extraProps.onChangeDebounced}
+        onKeyUp={extraProps.onKeyUp} />
       {addon ? (<InputGroupAddon addonType={addon.type}>{addon.text}</InputGroupAddon>) : null}
     </InputGroup>
   );
@@ -83,7 +83,7 @@ export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter,
     addon
   };
   return (
-    <FormField.view<State, HTMLInputElement, ExtraProps, Value>
+    <FormField.view<State, ExtraProps, Value>
       Child={Child}
       state={state}
       onChange={onChange}

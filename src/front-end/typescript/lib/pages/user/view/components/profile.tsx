@@ -125,7 +125,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
       case 'onChangeProfile':
         return updateComponentChild({
           state,
-          mapChildMsg: (value: PM) => ({ tag: 'onChangeProfile' as 'onChangeProfile', value }),
+          mapChildMsg: (value: PM) => ({ tag: 'onChangeProfile' as const, value }),
           childStatePath: ['profile'],
           childUpdate: Profile.update,
           childMsg: msg.value
@@ -149,13 +149,13 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
                 // Redirect program staff back to the user list if they deactivate an account.
                 if (state.viewerUser && state.viewerUser.type === UserType.ProgramStaff) {
                   dispatch(newRoute({
-                    tag: 'userList' as 'userList',
+                    tag: 'userList' as const,
                     value: null
                   }));
                 } else {
                   // Otherwise, redirect users to the landing page.
                   dispatch(newRoute({
-                    tag: 'landing' as 'landing',
+                    tag: 'landing' as const,
                     value: null
                   }));
                 }
@@ -236,7 +236,7 @@ function conditionalEmail<PS, PM, P extends ProfileType>(Profile: ProfileCompone
     if (!state.showEmail) {
       return null;
     }
-    const onChangeEmail = ShortText.makeOnChange(dispatch, e => ({ tag: 'onChangeEmail' as 'onChangeEmail', value: e.currentTarget.value }));
+    const onChangeEmail = ShortText.makeOnChange(dispatch, value => ({ tag: 'onChangeEmail' as const, value }));
     const isDisabled = !state.isEditingProfile;
     return (
       <Row className='mb-md-3'>
@@ -313,7 +313,7 @@ function conditionalProfile<PS, PM, P extends ProfileType>(Profile: ProfileCompo
   return props => {
     const { state, dispatch } = props;
     const isDisabled = !state.isEditingProfile;
-    const dispatchProfile: Dispatch<PM> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'onChangeProfile' as 'onChangeProfile', value }));
+    const dispatchProfile: Dispatch<PM> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'onChangeProfile' as const, value }));
     return (
       <div className='pb-5'>
         <Row className='mb-4'>

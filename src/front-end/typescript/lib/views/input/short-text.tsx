@@ -1,9 +1,11 @@
 import { Dispatch, View } from 'front-end/lib/framework';
 import * as FormField from 'front-end/lib/views/form-field';
 import * as Input from 'front-end/lib/views/input/input';
-import { ChangeEvent, ChangeEventHandler, default as React, KeyboardEventHandler } from 'react';
+import { default as React, KeyboardEventHandler } from 'react';
 
-export interface State extends FormField.State {
+export type Value = string;
+
+export interface State extends FormField.State<Value> {
   type: 'text' | 'email' | 'password';
   placeholder?: string;
 }
@@ -17,9 +19,8 @@ interface ExtraProps {
   autoFocus?: boolean;
 }
 
-export interface Props extends Pick<FormField.Props<State, HTMLInputElement, ExtraProps>, 'toggleHelp' | 'disabled'> {
+export interface Props extends Pick<FormField.Props<State, ExtraProps, Value>, 'toggleHelp' | 'disabled' | 'onChange'> {
   state: State;
-  onChange: ChangeEventHandler<HTMLInputElement>;
   onChangeDebounced?: Input.OnChangeDebounced;
   onEnter?: OnEnter;
   inputClassName?: string;
@@ -27,7 +28,7 @@ export interface Props extends Pick<FormField.Props<State, HTMLInputElement, Ext
 }
 
 interface Params extends Pick<State, 'id' | 'required' | 'type' | 'label' | 'placeholder' | 'help'> {
-  value?: string;
+  value?: Value;
 }
 
 export function init(params: Params): State {
@@ -38,9 +39,9 @@ export function init(params: Params): State {
   };
 }
 
-export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (event: ChangeEvent<HTMLInputElement>) => Msg): ChangeEventHandler<HTMLInputElement> {
-  return event => {
-    dispatch(fn(event));
+export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (value: Value) => Msg): FormField.OnChange<Value> {
+  return value => {
+    dispatch(fn(value));
   };
 }
 
@@ -50,10 +51,10 @@ function makeOnKeyUp(onEnter?: OnEnter): KeyboardEventHandler<HTMLInputElement> 
   };
 };
 
-const Child: View<FormField.ChildProps<State, HTMLInputElement, ExtraProps>> = props => {
+const Child: View<FormField.ChildProps<State, ExtraProps, Value>> = props => {
   const { state, disabled, className, onChange, extraProps } = props;
-  const inputClassName: string = (extraProps && extraProps.inputClassName) || '';
-  const autoFocus: boolean = !disabled && !!(extraProps && extraProps.autoFocus);
+  const inputClassName: string = extraProps.inputClassName || '';
+  const autoFocus: boolean = !disabled && !!extraProps.autoFocus;
   return (
     <Input.View
       id={state.id}
@@ -63,9 +64,9 @@ const Child: View<FormField.ChildProps<State, HTMLInputElement, ExtraProps>> = p
       className={`${className} ${inputClassName} form-control`}
       disabled={disabled}
       autoFocus={autoFocus}
-      onChange={onChange}
-      onChangeDebounced={extraProps && extraProps.onChangeDebounced}
-      onKeyUp={extraProps && extraProps.onKeyUp} />
+      onChange={event => onChange(event.currentTarget.value)}
+      onChangeDebounced={extraProps.onChangeDebounced}
+      onKeyUp={extraProps.onKeyUp} />
   );
 };
 
@@ -77,6 +78,12 @@ export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter,
     autoFocus
   };
   return (
-    <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={extraProps} disabled={disabled} />
+    <FormField.view
+      Child={Child}
+      state={state}
+      onChange={onChange}
+      toggleHelp={toggleHelp}
+      extraProps={extraProps}
+      disabled={disabled} />
   );
 };

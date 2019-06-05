@@ -152,7 +152,6 @@ pre {
 }
 
 label {
-  @extend .font-size-small;
   @extend .py-1;
 
   .custom-checkbox & {
