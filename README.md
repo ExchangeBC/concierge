@@ -194,6 +194,7 @@ As a convenience, developers can refer to `sample.env` as a guide.
 | `MAILER_PORT` | SMTP server port for transactional emails in production. |
 | `MAILER_FROM` | The sender for transactional emails. |
 | `MAILER_ROOT_URL` | The domain used for links in transactional email bodies. |
+| `CONTACT_EMAIL` | The Procurement Transformation team's contact email address. |
 
 ## Deployment
 
