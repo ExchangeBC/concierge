@@ -142,17 +142,6 @@ export const getSession = withCurrentSession(HttpMethod.Get);
 
 export const deleteSession = withCurrentSession(HttpMethod.Delete);
 
-export async function createFeedback(body: FeedbackResource.CreateRequestBody): Promise<ValidOrInvalid<FeedbackResource.PublicFeedback, FeedbackResource.CreateValidationErrors>> {
-  const response = await request(HttpMethod.Post, 'feedback', body);
-  switch (response.status) {
-    case 201:
-      const rawFeedback = body as RawFeedback;
-      return valid(rawFeedbackToFeedback(rawFeedback));
-    default:
-      return invalid(response.data as FeedbackResource.CreateValidationErrors);
-  }
-}
-
 export interface RawFeedback extends Omit<FeedbackResource.PublicFeedback, 'createdAt'> {
   createdAt: string;
 }
@@ -162,6 +151,17 @@ function rawFeedbackToFeedback(raw: RawFeedback): FeedbackResource.PublicFeedbac
     ...raw,
     createdAt: new Date(raw.createdAt)
   };
+}
+
+export async function createFeedback(body: FeedbackResource.CreateRequestBody): Promise<ValidOrInvalid<FeedbackResource.PublicFeedback, FeedbackResource.CreateValidationErrors>> {
+  const response = await request(HttpMethod.Post, 'feedback', body);
+  switch (response.status) {
+    case 201:
+      const rawFeedback = body as RawFeedback;
+      return valid(rawFeedbackToFeedback(rawFeedback));
+    default:
+      return invalid(response.data as FeedbackResource.CreateValidationErrors);
+  }
 }
 
 export async function createForgotPasswordToken(body: ForgotPasswordTokenResource.CreateRequestBody): Promise<ValidOrInvalid<null, null>> {
