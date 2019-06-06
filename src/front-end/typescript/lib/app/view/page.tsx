@@ -71,7 +71,7 @@ function ViewAlertsAndBreadcrumbs<PageMsg>(props: ViewAlertsAndBreadcrumbsProps<
     : hasAlerts
     ? 'pt-5'
     : '';
-  className = `${className} ${hasBreadcrumbs ? 'mb-md-n4' : ''} ${hasAlerts ? 'mb-n4' : ''}`;
+  className = `${className} ${hasBreadcrumbs && hasAlerts ? 'pt-5' : ''} ${hasBreadcrumbs ? 'mb-md-n4' : ''} ${hasAlerts ? 'mb-n4' : ''}`;
   return (
     <Container className={className}>
       <ViewBreadcrumbs dispatchPage={dispatchPage} breadcrumbs={breadcrumbs} />
