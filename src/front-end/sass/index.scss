@@ -1,7 +1,63 @@
+// Custom Bootstrap variable overrides.
+
+$grid-breakpoints: (
+  xs: 0,
+  sm: 570px,
+  md: 900px,
+  lg: 1100px,
+  xl: 1400px 
+);
+
+$container-max-widths: (
+  sm: 530px,
+  md: 860px,
+  lg: 1060px,
+  xl: 1060px // Maximum container width fixed at lg size.
+);
+
+$spacer: 1rem;
+
+$spacers: (
+	n6: ($spacer * -4),
+	n7: ($spacer * -5),
+	6: ($spacer * 4),
+	7: ($spacer * 5)
+);
+
+$grid-gutter-width: $spacer * 2;
+
+// Theme colors.
+// Bootstrap updates the theme map based on these variables,
+// so we don't need to update the map at all.
+$primary: #0c99d6;
+$info: #003366;
+$warn: #FCBA19;
+$danger: #DC3545;
+$success: #28A745;
+$info-alt: #38598A;
+
+$theme-colors: (
+  'info-alt': $info-alt
+);
+
+$enable-validation-icons: false;
+
+// Custom variables.
+
+$fixed-bar-height: 71px;
+
+// Import Bootstrap.
+
+@import 'node_modules/bootstrap/scss/bootstrap.scss';
+
 // Global styles.
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  background: $info;
 }
 
 body {
@@ -27,56 +83,23 @@ input[type="time"] {
   }
 }
 
-// Custom Bootstrap variable overrides.
+.app {
+  filter: grayscale(0);
+  transition: filter 240ms;
 
-$grid-breakpoints: (
-  xs: 0,
-  sm: 570px,
-  md: 900px,
-  lg: 1100px,
-  xl: 1400px 
-);
+  &.in-transition {
+    filter: grayscale(0.2);
+    pointer-events: none;
+  }
+}
 
-$container-max-widths: (
-  sm: 530px,
-  md: 860px,
-  lg: 1060px,
-  xl: 1060px // Maximum container width fixed at lg size.
-);
+.navbar .transition-indicator {
+  display: none;
 
-$spacer: 1rem;
-
-$spacers: (
-	m0: 0,
-	m1: ($spacer * -0.25),
-	m2: ($spacer * -0.5),
-	m3: $spacer * -1,
-	m4: ($spacer * -1.5),
-	m5: ($spacer * -3),
-	m6: ($spacer * -4),
-	m7: ($spacer * -5),
-	6: ($spacer * 4),
-	7: ($spacer * 5)
-);
-
-// Theme colors.
-// Bootstrap updates the theme map based on these variables,
-// so we don't need to update the map at all.
-$primary: #0c99d6;
-$info: #0f4c8b;
-$warn: #fcb817;
-$danger: #DC3545;
-$success: #28A745;
-
-$enable-validation-icons: false;
-
-// Custom variables.
-
-$fixed-bar-height: 71px;
-
-// Import Bootstrap.
-
-@import 'node_modules/bootstrap/scss/bootstrap.scss';
+  .in-transition & {
+    display: block;
+  }
+}
 
 // Custom Bootstrap style overrides.
 
@@ -99,13 +122,85 @@ a {
   }
 }
 
+.blockquote {
+  margin-left: $spacer;
+  padding-left: $spacer;
+  border-left: 2px solid $gray-200;
+}
+
+blockquote {
+  @extend .blockquote;
+}
+
+table {
+  @extend .table;
+
+  thead {
+    @extend .small;
+    @extend .text-secondary;
+    @extend .text-uppercase;
+    @extend .font-weight-bold;
+    @extend .bg-light;
+  }
+}
+
+pre {
+  @extend .bg-light;
+  @extend .p-3;
+  @extend .border;
+  @extend .rounded;
+}
+
+label {
+  @extend .py-1;
+
+  .custom-checkbox & {
+    @extend .font-size-base;
+    @extend .py-0;
+  }
+}
+
+nav.navbar .nav-link:hover {
+  text-decoration: underline;
+}
+
 // Custom utilities.
+
+.font-size-small {
+  font-size: $font-size-sm;
+}
+
+.font-size-base {
+  font-size: $font-size-base;
+}
+
+.font-size-large {
+  font-size: $font-size-lg;
+}
+
+.text-decoration-underline {
+  text-decoration: underline !important;
+}
 
 // Create classes for each of the text colors
 // that apply the color when the element is being hovered.
 // .text-hover-primary, .text-hover-danger, etc.
 @each $color, $value in $theme-colors {
   .text-hover-#{$color} {
+    @include hover {
+      color: $value !important;
+    }
+  }
+}
+@each $color, $value in $colors {
+  .text-hover-#{$color} {
+    @include hover {
+      color: $value !important;
+    }
+  }
+}
+@each $color, $value in $grays {
+  .text-hover-gray-#{$color} {
     @include hover {
       color: $value !important;
     }
@@ -133,20 +228,127 @@ a {
   height: $fixed-bar-height;
 }
 
-.in-transition {
+.border-bottom-gov {
+  border-bottom: 2px solid $warn;
+}
 
-  .transition-hide {
-    display: none;
-  }
+.border-top-gov {
+  border-top: 2px solid $warn;
 }
 
 // Custom components
+
+.react-select-container {
+  flex-grow: 1;
+
+  // Handle validation states.
+  @each $state, $data in $form-validation-states {
+    $color: map-get($data, color);
+    $icon: map-get($data, icon);
+
+		&.is-#{$state} {
+
+      .react-select__control {
+        border-color: $color;
+
+        @if $enable-validation-icons {
+          padding-right: $input-height-inner;
+          background-image: $icon;
+          background-repeat: no-repeat;
+          background-position: center right $input-height-inner-quarter;
+          background-size: $input-height-inner-half $input-height-inner-half;
+        }
+
+        &--is-focused {
+          border-color: $color;
+          box-shadow: 0 0 0 $input-focus-width rgba($color, .25);
+        }
+
+        ~ .#{$state}-feedback,
+        ~ .#{$state}-tooltip {
+          display: block;
+        }
+      }
+    }
+  }
+
+  // Standard control styles.
+  .react-select {
+
+    &__control {
+      @extend .form-control;
+      @extend .p-0;
+      display: flex;
+
+      &--is-disabled {
+        background-color: $input-disabled-bg;
+        opacity: 1;
+
+        .react-select__placeholder {
+          opacity: 0;
+        }
+      }
+
+      &--is-focused {
+        // Copied from:
+        // https://github.com/twbs/bootstrap/blob/de1a6e3201a2f047c5abd2430795be32d37e9a35/scss/mixins/_forms.scss#L15
+        color: $input-focus-color;
+        background-color: $input-focus-bg;
+        border-color: $input-focus-border-color;
+        outline: 0;
+        // Avoid using mixin so we can pass custom focus shadow properly
+        @if $enable-shadows {
+          box-shadow: $input-box-shadow, $input-focus-box-shadow;
+        } @else {
+          box-shadow: $input-focus-box-shadow;
+        }
+      }
+    }
+
+    &__placeholder {
+      color: $input-placeholder-color;
+    }
+
+    &__option {
+      color: $input-color;
+
+      &--is-focused {
+        background: $input-btn-focus-color;
+      }
+
+      &--is-selected {
+        background: rgba($component-active-bg, 0.75) !important;
+        color: $white;
+      }
+    }
+  }
+}
 
 .markdown {
   
   img {
     max-width: 100%;
   }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+
+    &:not(:first-child) {
+      margin-top: 2*$spacer;
+    }
+  }
+
+  blockquote,
+  table,
+  pre {
+    margin-top: 2*$spacer;
+    margin-bottom: 2*$spacer;
+  }
+
 }
 
 // Custom page overrides.

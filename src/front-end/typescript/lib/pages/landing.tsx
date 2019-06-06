@@ -1,6 +1,6 @@
 import { makePageMetadata } from 'front-end/lib';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, PageComponent, PageInit, Update, View } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, noPageModal, PageComponent, PageInit, Update, View } from 'front-end/lib/framework';
 import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
 import React from 'react';
@@ -122,7 +122,7 @@ const UserPersonas: ComponentView<State, Msg> = ({ state, dispatch }) => {
               </li>
             </ul>
           </Col>
-          <Col xs='12' md='4' className='bg-info py-6 px-4 text-light mt-md-m3 mb-md-3 d-flex flex-column align-items-start shadow'>
+          <Col xs='12' md='4' className='bg-info py-6 px-4 text-light mt-md-n3 mb-md-3 d-flex flex-column align-items-start shadow'>
             <h4 className='mb-3'>
               Want to learn more?
             </h4>
@@ -221,5 +221,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getMetadata() {
     return makePageMetadata('Welcome');
   },
-  getAlerts: emptyPageAlerts
+  getAlerts: emptyPageAlerts,
+  getBreadcrumbs: emptyPageBreadcrumbs,
+  getModal: noPageModal
 };

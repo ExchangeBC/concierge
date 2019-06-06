@@ -1,8 +1,8 @@
 import { ProfileComponent, ProfileParams, ProfileView } from 'front-end/lib/components/profiles/types';
 import { immutable, Immutable, Init, Update } from 'front-end/lib/framework';
+import * as Select from 'front-end/lib/views/form-field/select';
+import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
-import * as Select from 'front-end/lib/views/input/select';
-import * as ShortText from 'front-end/lib/views/input/short-text';
 import { reduce } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
@@ -28,6 +28,19 @@ export interface State {
   contactPhoneType: Select.State;
 }
 
+type FormFieldKeys
+  = 'firstName'
+  | 'lastName'
+  | 'positionTitle'
+  | 'contactStreetAddress'
+  | 'contactCity'
+  | 'contactProvince'
+  | 'contactPostalCode'
+  | 'contactCountry'
+  | 'contactPhoneNumber'
+  | 'contactPhoneCountryCode'
+  | 'contactPhoneType';
+
 export function getValues(state: Immutable<State>): ProgramStaffProfile {
   return {
     type: UserType.ProgramStaff as UserType.ProgramStaff,
@@ -41,7 +54,7 @@ export function getValues(state: Immutable<State>): ProgramStaffProfile {
     contactCountry: state.contactCountry.value || undefined,
     contactPhoneNumber: state.contactPhoneNumber.value || undefined,
     contactPhoneCountryCode: state.contactPhoneCountryCode.value || undefined,
-    contactPhoneType: parsePhoneType(state.contactPhoneType.value) || undefined
+    contactPhoneType: state.contactPhoneType.value && parsePhoneType(state.contactPhoneType.value.value) || undefined
   };
 }
 
@@ -57,7 +70,7 @@ export function setValues(state: Immutable<State>, profile: ProgramStaffProfile)
     .setIn(['contactCountry', 'value'], profile.contactCountry || '')
     .setIn(['contactPhoneNumber', 'value'], profile.contactPhoneNumber || '')
     .setIn(['contactPhoneCountryCode', 'value'], profile.contactPhoneCountryCode || '')
-    .setIn(['contactPhoneType', 'value'], profile.contactPhoneType || '');
+    .set('contactPhoneType', Select.setValue(state.contactPhoneType, profile.contactPhoneType));
 }
 
 export function setErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
@@ -97,7 +110,7 @@ export type Msg
   | ADT<'contactCountry', string>
   | ADT<'contactPhoneNumber', string>
   | ADT<'contactPhoneCountryCode', string>
-  | ADT<'contactPhoneType', string>
+  | ADT<'contactPhoneType', Select.Value>
   | ADT<'validate'>;
 
 export type Params = ProfileParams<ProgramStaffProfile>;
@@ -177,10 +190,9 @@ export const init: Init<Params, State> = async ({ profile }) => {
     }),
     contactPhoneType: Select.init({
       id: 'program-staff-profile-contact-phone-type',
-      value: '',
       required: false,
       label: 'Phone Type',
-      unselectedLabel: 'Select Type',
+      placeholder: 'Select Type',
       options: [
         { value: PhoneType.Office, label: 'Office' },
         { value: PhoneType.CellPhone, label: 'Cell Phone' }
@@ -225,7 +237,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
   }
 };
 
-function updateValue(state: Immutable<State>, key: string, value: string): Immutable<State> {
+function updateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K, value: State[K]['value']): Immutable<State> {
   return state.setIn([key, 'value'], value);
 }
 
@@ -246,7 +258,7 @@ function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<
 }
 
 export const ProgramStaffInformation: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   const validate = () => dispatch({ tag: 'validate', value: undefined });
   return (
     <div className='mt-3 mt-md-0'>
@@ -281,8 +293,8 @@ export const ProgramStaffInformation: ProfileView<State, Msg> = ({ state, dispat
 };
 
 export const ContactInformation: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
   const validate = () => dispatch({ tag: 'validate', value: undefined });
   return (
     <div className='mt-3'>

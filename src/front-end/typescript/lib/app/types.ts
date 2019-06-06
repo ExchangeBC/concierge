@@ -1,10 +1,10 @@
-import { AppMsg, Immutable } from 'front-end/lib/framework';
+import { AppMsg, Immutable, PageModal } from 'front-end/lib/framework';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
+import * as PageFeedback from 'front-end/lib/pages/feedback';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageMarkdown from 'front-end/lib/pages/markdown';
 import * as PageNotice from 'front-end/lib/pages/notice';
-import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
 import * as PageRequestForInformationEdit from 'front-end/lib/pages/request-for-information/edit';
 import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
@@ -18,7 +18,8 @@ import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
-import * as PageUserList from 'front-end/lib/pages/user-list';
+import * as PageUserList from 'front-end/lib/pages/user/list';
+import * as PageUserView from 'front-end/lib/pages/user/view';
 import { PublicSession } from 'shared/lib/resources/session';
 import { ADT } from 'shared/lib/types';
 
@@ -35,7 +36,7 @@ export type Route
   | ADT<'resetPassword', PageResetPassword.RouteParams>
   | ADT<'forgotPassword', PageForgotPassword.RouteParams>
   | ADT<'termsAndConditions', PageTermsAndConditions.RouteParams>
-  | ADT<'profile', PageProfile.RouteParams>
+  | ADT<'userView', PageUserView.RouteParams>
   | ADT<'userList', PageUserList.RouteParams>
   | ADT<'requestForInformationCreate', PageRequestForInformationCreate.RouteParams>
   | ADT<'requestForInformationEdit', PageRequestForInformationEdit.RouteParams>
@@ -44,7 +45,8 @@ export type Route
   | ADT<'requestForInformationRespond', PageRequestForInformationRespond.RouteParams>
   | ADT<'requestForInformationList', PageRequestForInformationList.RouteParams>
   | ADT<'markdown', PageMarkdown.RouteParams>
-  | ADT<'notice', PageNotice.RouteParams>;
+  | ADT<'notice', PageNotice.RouteParams>
+  | ADT<'feedback', PageFeedback.RouteParams>;
 
 export interface SharedState {
   session?: Session;
@@ -57,6 +59,10 @@ export interface State {
   inTransition: boolean;
   shared: SharedState;
   activeRoute: Route;
+  modal: {
+    open: boolean;
+    content: PageModal<Msg>;
+  },
   pages: {
     landing?: Immutable<PageLanding.State>;
     signIn?: Immutable<PageSignIn.State>;
@@ -68,7 +74,7 @@ export interface State {
     resetPassword?: Immutable<PageResetPassword.State>;
     forgotPassword?: Immutable<PageForgotPassword.State>;
     termsAndConditions?: Immutable<PageTermsAndConditions.State>;
-    profile?: Immutable<PageProfile.State>;
+    userView?: Immutable<PageUserView.State>;
     userList?: Immutable<PageUserList.State>;
     requestForInformationCreate?: Immutable<PageRequestForInformationCreate.State>;
     requestForInformationEdit?: Immutable<PageRequestForInformationEdit.State>;
@@ -78,11 +84,14 @@ export interface State {
     requestForInformationList?: Immutable<PageRequestForInformationList.State>;
     markdown?: Immutable<PageMarkdown.State>;
     notice?: Immutable<PageNotice.State>;
+    feedback?: Immutable<PageFeedback.State>;
   };
 }
 
 type InnerMsg
-  = ADT<'toggleIsNavOpen', boolean | undefined >
+  = ADT<'noop'>
+  | ADT<'toggleIsNavOpen', boolean | undefined >
+  | ADT<'toggleModal', undefined>
   | ADT<'pageLanding', PageLanding.Msg>
   | ADT<'pageSignIn', PageSignIn.Msg>
   | ADT<'pageSignUpBuyer', PageSignUpBuyer.Msg>
@@ -93,7 +102,7 @@ type InnerMsg
   | ADT<'pageResetPassword', PageResetPassword.Msg>
   | ADT<'pageForgotPassword', PageForgotPassword.Msg>
   | ADT<'pageTermsAndConditions', PageTermsAndConditions.Msg>
-  | ADT<'pageProfile', PageProfile.Msg>
+  | ADT<'pageUserView', PageUserView.Msg>
   | ADT<'pageUserList', PageUserList.Msg>
   | ADT<'pageRequestForInformationCreate', PageRequestForInformationCreate.Msg>
   | ADT<'pageRequestForInformationEdit', PageRequestForInformationEdit.Msg>
@@ -102,6 +111,7 @@ type InnerMsg
   | ADT<'pageRequestForInformationRespond', PageRequestForInformationRespond.Msg>
   | ADT<'pageRequestForInformationList', PageRequestForInformationList.Msg>
   | ADT<'pageMarkdown', PageMarkdown.Msg>
-  | ADT<'pageNotice', PageNotice.Msg>;
+  | ADT<'pageNotice', PageNotice.Msg>
+  | ADT<'pageFeedback', PageFeedback.Msg>
 
 export type Msg = AppMsg<InnerMsg, Route>;

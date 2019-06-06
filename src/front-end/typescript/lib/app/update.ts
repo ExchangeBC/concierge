@@ -1,12 +1,12 @@
 import { Msg, Route, Session, State } from 'front-end/lib/app/types';
-import { Dispatch, Immutable, initAppChildPage, Update, updateAppChildPage } from 'front-end/lib/framework';
+import { Dispatch, Immutable, initAppChildPage, PageModal, Update, updateAppChildPage } from 'front-end/lib/framework';
 import { getSession } from 'front-end/lib/http/api';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
+import * as PageFeedback from 'front-end/lib/pages/feedback';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageMarkdown from 'front-end/lib/pages/markdown';
 import * as PageNotice from 'front-end/lib/pages/notice';
-import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
 import * as PageRequestForInformationEdit from 'front-end/lib/pages/request-for-information/edit';
 import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
@@ -20,12 +20,13 @@ import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
-import * as PageUserList from 'front-end/lib/pages/user-list';
+import * as PageUserList from 'front-end/lib/pages/user/list';
+import * as PageUserView from 'front-end/lib/pages/user/view';
 import { ValidOrInvalid } from 'shared/lib/validators';
 
 function setSession(state: Immutable<State>, validated: ValidOrInvalid<Session, null>): Immutable<State> {
-  return state.set('shared', {
-    session: validated.tag === 'valid' ? validated.value : undefined
+return state.set('shared', {
+  session: validated.tag === 'valid' ? validated.value : undefined
   });
 };
 
@@ -38,18 +39,30 @@ function endTransition(state: Immutable<State>): Immutable<State> {
 }
 
 async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route: Route): Promise<Immutable<State>> {
+  const defaultPageInitParams = {
+    state,
+    dispatch,
+    getSharedState(state: Immutable<State>) {
+      return state.shared;
+    },
+    setModal(state: Immutable<State>, modal: PageModal<Msg>) {
+      state = state.setIn(['modal', 'open'], !!modal);
+      return modal
+        ? state.setIn(['modal', 'content'], modal)
+        : state;
+    }
+  };
+
   switch (route.tag) {
 
     case 'landing':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'landing'],
         childRouteParams: route.value,
         childInit: PageLanding.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageLanding.component.getMetadata,
+        childGetModal: PageLanding.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageLanding' as 'pageLanding', value };
         }
@@ -57,14 +70,12 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'signIn':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'signIn'],
         childRouteParams: route.value,
         childInit: PageSignIn.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageSignIn.component.getMetadata,
+        childGetModal: PageSignIn.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageSignIn' as 'pageSignIn', value };
         }
@@ -72,14 +83,12 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'signUpBuyer':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'signUpBuyer'],
         childRouteParams: route.value,
         childInit: PageSignUpBuyer.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageSignUpBuyer.component.getMetadata,
+        childGetModal: PageSignUpBuyer.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageSignUpBuyer' as 'pageSignUpBuyer', value };
         }
@@ -87,14 +96,12 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'signUpVendor':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'signUpVendor'],
         childRouteParams: route.value,
         childInit: PageSignUpVendor.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageSignUpVendor.component.getMetadata,
+        childGetModal: PageSignUpVendor.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageSignUpVendor' as 'pageSignUpVendor', value };
         }
@@ -102,14 +109,12 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'signUpProgramStaff':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'signUpProgramStaff'],
         childRouteParams: route.value,
         childInit: PageSignUpProgramStaff.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageSignUpProgramStaff.component.getMetadata,
+        childGetModal: PageSignUpProgramStaff.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageSignUpProgramStaff' as 'pageSignUpProgramStaff', value };
         }
@@ -117,14 +122,12 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'signOut':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'signOut'],
         childRouteParams: route.value,
         childInit: PageSignOut.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageSignOut.component.getMetadata,
+        childGetModal: PageSignOut.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageSignOut' as 'pageSignOut', value };
         }
@@ -132,14 +135,12 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'changePassword':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'changePassword'],
         childRouteParams: route.value,
         childInit: PageChangePassword.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageChangePassword.component.getMetadata,
+        childGetModal: PageChangePassword.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageChangePassword' as 'pageChangePassword', value };
         }
@@ -147,14 +148,12 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'resetPassword':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'resetPassword'],
         childRouteParams: route.value,
         childInit: PageResetPassword.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageResetPassword.component.getMetadata,
+        childGetModal: PageResetPassword.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageResetPassword' as 'pageResetPassword', value };
         }
@@ -162,14 +161,12 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'forgotPassword':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'forgotPassword'],
         childRouteParams: route.value,
         childInit: PageForgotPassword.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageForgotPassword.component.getMetadata,
+        childGetModal: PageForgotPassword.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageForgotPassword' as 'pageForgotPassword', value };
         }
@@ -177,44 +174,38 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'termsAndConditions':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'termsAndConditions'],
         childRouteParams: route.value,
         childInit: PageTermsAndConditions.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageTermsAndConditions.component.getMetadata,
+        childGetModal: PageTermsAndConditions.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageTermsAndConditions' as 'pageTermsAndConditions', value };
         }
       });
 
-    case 'profile':
+    case 'userView':
       return await initAppChildPage({
-        state,
-        dispatch,
-        childStatePath: ['pages', 'profile'],
+        ...defaultPageInitParams,
+        childStatePath: ['pages', 'userView'],
         childRouteParams: route.value,
-        childInit: PageProfile.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childInit: PageUserView.component.init,
+        childGetMetadata: PageUserView.component.getMetadata,
+        childGetModal: PageUserView.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageProfile' as 'pageProfile', value };
+          return { tag: 'pageUserView' as 'pageUserView', value };
         }
       });
 
     case 'userList':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'userList'],
         childRouteParams: route.value,
         childInit: PageUserList.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageUserList.component.getMetadata,
+        childGetModal: PageUserList.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageUserList' as 'pageUserList', value };
         }
@@ -222,14 +213,12 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'requestForInformationCreate':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'requestForInformationCreate'],
         childRouteParams: route.value,
         childInit: PageRequestForInformationCreate.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageRequestForInformationCreate.component.getMetadata,
+        childGetModal: PageRequestForInformationCreate.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageRequestForInformationCreate' as 'pageRequestForInformationCreate', value };
         }
@@ -237,14 +226,12 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'requestForInformationEdit':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'requestForInformationEdit'],
         childRouteParams: route.value,
         childInit: PageRequestForInformationEdit.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageRequestForInformationEdit.component.getMetadata,
+        childGetModal: PageRequestForInformationEdit.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageRequestForInformationEdit' as 'pageRequestForInformationEdit', value };
         }
@@ -252,14 +239,12 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'requestForInformationView':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'requestForInformationView'],
         childRouteParams: route.value,
         childInit: PageRequestForInformationView.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageRequestForInformationView.component.getMetadata,
+        childGetModal: PageRequestForInformationView.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageRequestForInformationView' as 'pageRequestForInformationView', value };
         }
@@ -267,14 +252,12 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'requestForInformationPreview':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'requestForInformationPreview'],
         childRouteParams: route.value,
         childInit: PageRequestForInformationPreview.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageRequestForInformationPreview.component.getMetadata,
+        childGetModal: PageRequestForInformationPreview.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageRequestForInformationPreview' as 'pageRequestForInformationPreview', value };
         }
@@ -282,14 +265,12 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'requestForInformationRespond':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'requestForInformationRespond'],
         childRouteParams: route.value,
         childInit: PageRequestForInformationRespond.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageRequestForInformationRespond.component.getMetadata,
+        childGetModal: PageRequestForInformationRespond.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageRequestForInformationRespond' as 'pageRequestForInformationRespond', value };
         }
@@ -297,14 +278,12 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'requestForInformationList':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'requestForInformationList'],
         childRouteParams: route.value,
         childInit: PageRequestForInformationList.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageRequestForInformationList.component.getMetadata,
+        childGetModal: PageRequestForInformationList.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageRequestForInformationList' as 'pageRequestForInformationList', value };
         }
@@ -312,14 +291,12 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'markdown':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'markdown'],
         childRouteParams: route.value,
         childInit: PageMarkdown.component.init,
-        getSharedState(state) {
-          return state.shared;
-        },
+        childGetMetadata: PageMarkdown.component.getMetadata,
+        childGetModal: PageMarkdown.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageMarkdown' as 'pageMarkdown', value };
         }
@@ -327,16 +304,30 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 
     case 'notice':
       return await initAppChildPage({
-        state,
-        dispatch,
+        ...defaultPageInitParams,
         childStatePath: ['pages', 'notice'],
         childRouteParams: route.value,
         childInit: PageNotice.component.init,
+        childGetMetadata: PageNotice.component.getMetadata,
+        childGetModal: PageNotice.component.getModal,
+        mapChildMsg(value) {
+          return { tag: 'pageNotice' as 'pageNotice', value };
+        }
+      });
+
+    case 'feedback':
+      return await initAppChildPage({
+        ...defaultPageInitParams,
+        childStatePath: ['pages', 'feedback'],
+        childRouteParams: route.value,
+        childInit: PageFeedback.component.init,
+        childGetMetadata: PageFeedback.component.getMetadata,
+        childGetModal: PageFeedback.component.getModal,
         getSharedState(state) {
           return state.shared;
         },
         mapChildMsg(value) {
-          return { tag: 'pageNotice' as 'pageNotice', value };
+          return { tag: 'pageFeedback' as 'pageFeedback', value };
         }
       });
 
@@ -344,7 +335,20 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
 }
 
 const update: Update<State, Msg> = ({ state, msg }) => {
+  const defaultPageUpdateParams = {
+    state,
+    setModal(state: Immutable<State>, modal: PageModal<Msg>) {
+      state = state.setIn(['modal', 'open'], !!modal);
+      return modal
+        ? state.setIn(['modal', 'content'], modal)
+        : state;
+    }
+  };
+
   switch (msg.tag) {
+
+    case 'noop':
+      return [state];
 
     case '@incomingRoute':
       const incomingRoute: Route = msg.value;
@@ -377,203 +381,237 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'toggleIsNavOpen':
       return [state.set('isNavOpen', msg.value === undefined ? !state.isNavOpen : msg.value)];
 
+    case 'toggleModal':
+      return [state.setIn(['modal', 'open'], !state.modal.open)];
+
     case 'pageLanding':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageLanding', value }),
         childStatePath: ['pages', 'landing'],
         childUpdate: PageLanding.component.update,
         childGetMetadata: PageLanding.component.getMetadata,
+        childGetModal: PageLanding.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageSignIn':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageSignIn', value }),
         childStatePath: ['pages', 'signIn'],
         childUpdate: PageSignIn.component.update,
         childGetMetadata: PageSignIn.component.getMetadata,
+        childGetModal: PageSignIn.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageSignUpBuyer':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageSignUpBuyer', value }),
         childStatePath: ['pages', 'signUpBuyer'],
         childUpdate: PageSignUpBuyer.component.update,
         childGetMetadata: PageSignUpBuyer.component.getMetadata,
+        childGetModal: PageSignUpBuyer.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageSignUpVendor':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageSignUpVendor', value }),
         childStatePath: ['pages', 'signUpVendor'],
         childUpdate: PageSignUpVendor.component.update,
         childGetMetadata: PageSignUpVendor.component.getMetadata,
+        childGetModal: PageSignUpVendor.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageSignUpProgramStaff':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageSignUpProgramStaff', value }),
         childStatePath: ['pages', 'signUpProgramStaff'],
         childUpdate: PageSignUpProgramStaff.component.update,
         childGetMetadata: PageSignUpProgramStaff.component.getMetadata,
+        childGetModal: PageSignUpProgramStaff.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageSignOut':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageSignOut', value }),
         childStatePath: ['pages', 'signOut'],
         childUpdate: PageSignOut.component.update,
         childGetMetadata: PageSignOut.component.getMetadata,
+        childGetModal: PageSignOut.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageChangePassword':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageChangePassword', value }),
         childStatePath: ['pages', 'changePassword'],
         childUpdate: PageChangePassword.component.update,
         childGetMetadata: PageChangePassword.component.getMetadata,
+        childGetModal: PageChangePassword.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageResetPassword':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageResetPassword', value }),
         childStatePath: ['pages', 'resetPassword'],
         childUpdate: PageResetPassword.component.update,
         childGetMetadata: PageResetPassword.component.getMetadata,
+        childGetModal: PageResetPassword.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageForgotPassword':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageForgotPassword', value }),
         childStatePath: ['pages', 'forgotPassword'],
         childUpdate: PageForgotPassword.component.update,
         childGetMetadata: PageForgotPassword.component.getMetadata,
+        childGetModal: PageForgotPassword.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageTermsAndConditions':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageTermsAndConditions', value }),
         childStatePath: ['pages', 'termsAndConditions'],
         childUpdate: PageTermsAndConditions.component.update,
         childGetMetadata: PageTermsAndConditions.component.getMetadata,
+        childGetModal: PageTermsAndConditions.component.getModal,
         childMsg: msg.value
       });
 
-    case 'pageProfile':
+    case 'pageUserView':
       return updateAppChildPage({
-        state,
-        mapChildMsg: value => ({ tag: 'pageProfile', value }),
-        childStatePath: ['pages', 'profile'],
-        childUpdate: PageProfile.component.update,
-        childGetMetadata: PageProfile.component.getMetadata,
+        ...defaultPageUpdateParams,
+        mapChildMsg: value => ({ tag: 'pageUserView', value }),
+        childStatePath: ['pages', 'userView'],
+        childUpdate: PageUserView.component.update,
+        childGetMetadata: PageUserView.component.getMetadata,
+        childGetModal: PageUserView.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageUserList':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageUserList', value }),
         childStatePath: ['pages', 'userList'],
         childUpdate: PageUserList.component.update,
         childGetMetadata: PageUserList.component.getMetadata,
+        childGetModal: PageUserList.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageRequestForInformationCreate':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageRequestForInformationCreate', value }),
         childStatePath: ['pages', 'requestForInformationCreate'],
         childUpdate: PageRequestForInformationCreate.component.update,
         childGetMetadata: PageRequestForInformationCreate.component.getMetadata,
+        childGetModal: PageRequestForInformationCreate.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageRequestForInformationEdit':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageRequestForInformationEdit', value }),
         childStatePath: ['pages', 'requestForInformationEdit'],
         childUpdate: PageRequestForInformationEdit.component.update,
         childGetMetadata: PageRequestForInformationEdit.component.getMetadata,
+        childGetModal: PageRequestForInformationEdit.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageRequestForInformationView':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageRequestForInformationView', value }),
         childStatePath: ['pages', 'requestForInformationView'],
         childUpdate: PageRequestForInformationView.component.update,
         childGetMetadata: PageRequestForInformationView.component.getMetadata,
+        childGetModal: PageRequestForInformationView.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageRequestForInformationPreview':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageRequestForInformationPreview', value }),
         childStatePath: ['pages', 'requestForInformationPreview'],
         childUpdate: PageRequestForInformationPreview.component.update,
         childGetMetadata: PageRequestForInformationPreview.component.getMetadata,
+        childGetModal: PageRequestForInformationPreview.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageRequestForInformationRespond':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageRequestForInformationRespond', value }),
         childStatePath: ['pages', 'requestForInformationRespond'],
         childUpdate: PageRequestForInformationRespond.component.update,
         childGetMetadata: PageRequestForInformationRespond.component.getMetadata,
+        childGetModal: PageRequestForInformationRespond.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageRequestForInformationList':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageRequestForInformationList', value }),
         childStatePath: ['pages', 'requestForInformationList'],
         childUpdate: PageRequestForInformationList.component.update,
         childGetMetadata: PageRequestForInformationList.component.getMetadata,
+        childGetModal: PageRequestForInformationList.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageMarkdown':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageMarkdown', value }),
         childStatePath: ['pages', 'markdown'],
         childUpdate: PageMarkdown.component.update,
         childGetMetadata: PageMarkdown.component.getMetadata,
+        childGetModal: PageMarkdown.component.getModal,
         childMsg: msg.value
       });
 
     case 'pageNotice':
       return updateAppChildPage({
-        state,
+        ...defaultPageUpdateParams,
         mapChildMsg: value => ({ tag: 'pageNotice', value }),
         childStatePath: ['pages', 'notice'],
         childUpdate: PageNotice.component.update,
         childGetMetadata: PageNotice.component.getMetadata,
+        childGetModal: PageNotice.component.getModal,
+        childMsg: msg.value
+      });
+
+    case 'pageFeedback':
+      return updateAppChildPage({
+        ...defaultPageUpdateParams,
+        mapChildMsg: value => ({ tag: 'pageFeedback', value }),
+        childStatePath: ['pages', 'feedback'],
+        childUpdate: PageFeedback.component.update,
+        childGetMetadata: PageFeedback.component.getMetadata,
+        childGetModal: PageFeedback.component.getModal,
         childMsg: msg.value
       });
 

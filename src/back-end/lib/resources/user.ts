@@ -223,6 +223,7 @@ const resource: Resource = {
 
   update(Models) {
     const UserModel = Models.User as UserSchema.Model;
+    const SessionModel = Models.Session as SessionSchema.Model;
     return {
       async transformRequest(request) {
         // TODO bad request response if body is not json
@@ -250,7 +251,17 @@ const resource: Resource = {
           case 'valid':
             const user = validatedBody.value;
             await user.save();
-            return basicResponse(200, request.session, makeJsonResponseBody(UserSchema.makePublicUser(user)));
+            // Update the session's cache of the user's email.
+            let responseSession = request.session;
+            if (request.body.email) {
+              const session = await SessionModel.findById(request.session._id);
+              if (session && session.user) {
+                session.set('user.email', user.email);
+                await session.save();
+                responseSession = session.toJSON();
+              }
+            }
+            return basicResponse(200, responseSession, makeJsonResponseBody(UserSchema.makePublicUser(user)));
         }
       }
     };

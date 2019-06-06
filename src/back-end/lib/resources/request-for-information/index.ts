@@ -7,20 +7,21 @@ import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateFileIdArray, validateUserId } from 'back-end/lib/validators';
 import { get, isObject } from 'lodash';
-import { getString, getStringArray } from 'shared/lib';
+import { getNumber, getString, getStringArray } from 'shared/lib';
 import { CreateRequestBody, CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicRfi, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
 import { PaginatedList, UserType } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, valid, validateBoolean, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
-import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
+import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validateGracePeriodDays, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
 
 async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, body: CreateRequestBody, session: Session): Promise<ValidOrInvalid<RfiSchema.Version, CreateValidationErrors>> {
   // Get raw values.
   const createdBy = getString(session.user, 'id');
-  const { rfiNumber, title, publicSectorEntity, description, discoveryDay, closingDate, closingTime, buyerContact, programStaffContact, categories, attachments, addenda } = body;
+  const { rfiNumber, title, publicSectorEntity, description, discoveryDay, closingDate, closingTime, gracePeriodDays, buyerContact, programStaffContact, categories, attachments, addenda } = body;
   // Validate individual values.
   const validatedCreatedBy = await validateUserId(UserModel, createdBy, UserType.ProgramStaff);
   const validatedClosingDate = validateClosingDate(closingDate);
   const validatedClosingTime = validateClosingTime(closingTime, getValidValue(validatedClosingDate, ''));
+  const validatedGracePeriodDays = validateGracePeriodDays(gracePeriodDays);
   const validatedRfiNumber = validateRfiNumber(rfiNumber);
   const validatedTitle = validateTitle(title);
   const validatedDescription = validateDescription(description);
@@ -33,13 +34,14 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
   const validatedBuyerContact = await validateUserId(UserModel, buyerContact, UserType.Buyer, true);
   const validatedProgramStaffContact = await validateUserId(UserModel, programStaffContact, UserType.ProgramStaff);
   // Check if the payload is valid.
-  if (allValid([validatedCreatedBy, validatedClosingDate, validatedClosingTime, validatedRfiNumber, validatedTitle, validatedDescription, validatedPublicSectorEntity, validatedNumCategories, validatedCategories, validatedDiscoveryDay, validatedAddenda, validatedAttachments, validatedBuyerContact, validatedProgramStaffContact])) {
+  if (allValid([validatedCreatedBy, validatedClosingDate, validatedClosingTime, validatedGracePeriodDays, validatedRfiNumber, validatedTitle, validatedDescription, validatedPublicSectorEntity, validatedNumCategories, validatedCategories, validatedDiscoveryDay, validatedAddenda, validatedAttachments, validatedBuyerContact, validatedProgramStaffContact])) {
     // If everything is valid, return the version.
     const createdAt = new Date();
     const version: RfiSchema.Version = {
       createdAt,
       createdBy: (validatedCreatedBy.value as InstanceType<UserSchema.Model>)._id,
       closingAt: new Date(`${validatedClosingDate.value} ${validatedClosingTime.value}`),
+      gracePeriodDays: (validatedGracePeriodDays.value as number),
       rfiNumber: validatedRfiNumber.value as string,
       title: validatedTitle.value as string,
       description: validatedDescription.value as string,
@@ -64,6 +66,7 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
       permissions: validatedCreatedBy.tag === 'invalid' ? [permissions.ERROR_MESSAGE] : undefined,
       closingDate: getInvalidValue(validatedClosingDate, undefined),
       closingTime: getInvalidValue(validatedClosingTime, undefined),
+      gracePeriodDays: getInvalidValue(validatedGracePeriodDays, undefined),
       rfiNumber: getInvalidValue(validatedRfiNumber, undefined),
       title: getInvalidValue(validatedTitle, undefined),
       description: getInvalidValue(validatedDescription, undefined),
@@ -109,6 +112,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
           return {
             closingDate: getString(body, 'closingDate'),
             closingTime: getString(body, 'closingTime'),
+            gracePeriodDays: getNumber(body, 'gracePeriodDays', undefined),
             rfiNumber: getString(body, 'rfiNumber'),
             title: getString(body, 'title'),
             description: getString(body, 'description'),
@@ -221,6 +225,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
           return {
             closingDate: getString(body, 'closingDate'),
             closingTime: getString(body, 'closingTime'),
+            gracePeriodDays: getNumber(body, 'gracePeriodDays', -1),
             rfiNumber: getString(body, 'rfiNumber'),
             title: getString(body, 'title'),
             description: getString(body, 'description'),

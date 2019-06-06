@@ -1,14 +1,16 @@
-import * as FileMulti from 'front-end/lib/components/input/file-multi';
-import * as LongTextMulti from 'front-end/lib/components/input/long-text-multi';
-import * as SelectMulti from 'front-end/lib/components/input/select-multi';
+import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
+import * as FormFieldMulti from 'front-end/lib/components/form-field-multi/lib/index';
+import * as LongTextMulti from 'front-end/lib/components/form-field-multi/long-text';
+import * as SelectMulti from 'front-end/lib/components/form-field-multi/select';
 import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
+import * as DateTime from 'front-end/lib/views/form-field/datetime';
+import * as LongText from 'front-end/lib/views/form-field/long-text';
+import * as NumberInput from 'front-end/lib/views/form-field/number';
+import * as Select from 'front-end/lib/views/form-field/select';
+import * as ShortText from 'front-end/lib/views/form-field/short-text';
+import * as Switch from 'front-end/lib/views/form-field/switch';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
-import * as DateTime from 'front-end/lib/views/input/datetime';
-import * as LongText from 'front-end/lib/views/input/long-text';
-import * as Select from 'front-end/lib/views/input/select';
-import * as ShortText from 'front-end/lib/views/input/short-text';
-import * as Switch from 'front-end/lib/views/input/switch';
 import { find, get } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
@@ -20,15 +22,21 @@ import { PublicRfi } from 'shared/lib/resources/request-for-information';
 import { PublicUser } from 'shared/lib/resources/user';
 import { Addendum, ADT, Omit, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
 import { getInvalidValue, invalid, valid, validateCategories, Validation } from 'shared/lib/validators';
-import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
+import { MAX_GRACE_PERIOD_DAYS, MIN_GRACE_PERIOD_DAYS, validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validateGracePeriodDays, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
 
 const FALLBACK_NAME = 'No Name Provided';
 const DEFAULT_CLOSING_TIME = '14:00';
+
+export const GLOBAL_ERROR_MESSAGE = 'Please fix the errors below, and try submitting the form again.';
 
 export interface Params {
   isEditing: boolean;
   existingRfi?: PublicRfi;
 }
+
+type HelpFieldName
+  = 'description'
+  | 'addenda';
 
 export type Msg
   = ADT<'onChangeRfiNumber', string>
@@ -38,8 +46,9 @@ export type Msg
   | ADT<'onChangeDiscoveryDay', boolean>
   | ADT<'onChangeClosingDate', string>
   | ADT<'onChangeClosingTime', string>
-  | ADT<'onChangeBuyerContact', string>
-  | ADT<'onChangeProgramStaffContact', string>
+  | ADT<'onChangeGracePeriodDays', NumberInput.Value>
+  | ADT<'onChangeBuyerContact', Select.Value>
+  | ADT<'onChangeProgramStaffContact', Select.Value>
   | ADT<'onChangeCategories', SelectMulti.Msg>
   | ADT<'onChangeAttachments', FileMulti.Msg>
   | ADT<'onChangeAddenda', LongTextMulti.Msg>
@@ -49,7 +58,21 @@ export type Msg
   | ADT<'validateDescription'>
   | ADT<'validateDiscoveryDay'>
   | ADT<'validateClosingDate'>
-  | ADT<'validateClosingTime'>;
+  | ADT<'validateClosingTime'>
+  | ADT<'validateGracePeriodDays'>
+  | ADT<'toggleHelp', HelpFieldName>;
+
+type FormFieldKeys
+  = 'rfiNumber'
+  | 'title'
+  | 'publicSectorEntity'
+  | 'description'
+  | 'discoveryDay'
+  | 'closingDate'
+  | 'closingTime'
+  | 'gracePeriodDays'
+  | 'buyerContact'
+  | 'programStaffContact';
 
 export interface State {
   loading: number;
@@ -63,6 +86,7 @@ export interface State {
   discoveryDay: Switch.State;
   closingDate: DateTime.State;
   closingTime: DateTime.State;
+  gracePeriodDays: NumberInput.State;
   buyerContact: Select.State;
   programStaffContact: Select.State;
   categories: Immutable<SelectMulti.State>;
@@ -83,9 +107,10 @@ export function getValues(state: State, includeDeletedAddenda = false): Values {
     discoveryDay: state.discoveryDay.value,
     closingDate: state.closingDate.value,
     closingTime: state.closingTime.value,
-    buyerContact: state.buyerContact.value,
-    programStaffContact: state.programStaffContact.value,
-    categories: SelectMulti.getValues(state.categories),
+    gracePeriodDays: state.gracePeriodDays.value,
+    buyerContact: state.buyerContact.value ? state.buyerContact.value.value : '',
+    programStaffContact: state.programStaffContact.value ? state.programStaffContact.value.value : '',
+    categories: SelectMulti.getValuesAsStrings(state.categories),
     attachments: FileMulti.getValues(state.attachments),
     addenda: LongTextMulti.getValuesAsStrings(state.addenda, RfiResource.DELETE_ADDENDUM_TOKEN)
   };
@@ -128,9 +153,9 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
   const closingDateValue = rawClosingAt ? rawFormatDate(new Date(rawClosingAt), 'YYYY-MM-DD', false) : '';
   const closingTimeValue = rawClosingAt ? rawFormatDate(new Date(rawClosingAt), 'HH:mm', false) : DEFAULT_CLOSING_TIME;
   const existingCategoryFields = get(existingRfi, ['latestVersion', 'categories'], [])
-    .map((value: string, index: number) => {
+    .map((value: string, index: number): FormFieldMulti.Field<SelectMulti.Value> => {
       return {
-        value,
+        value: { label: value, value },
         errors: [],
         removable: index !== 0
       };
@@ -143,6 +168,11 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
         removable: true
       };
     });
+  const existingBuyerContact = get(existingRfi, ['latestVersion', 'buyerContact'], undefined);
+  const existingProgramStaffContactId = get(existingRfi, ['latestVersion', 'programStaffContact', '_id'], undefined);
+  const existingProgramStaffContact: PublicUser | undefined = find<PublicUser>(programStaff, { _id: existingProgramStaffContactId });
+  const descriptionHelpText = 'Suggested sections for this RFI\'s description: \n(1) Business Requirement(s) or Issue(s); \n(2) Brief Ministry Overview; \n(3) Objectives of this RFI; \n(4) Ministry Obligations; and \n(5) Response Instructions.';
+  const addendaHelpText = 'Additional information related to this RFI.';
   return {
     loading: 0,
     isEditing,
@@ -176,8 +206,12 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       id: 'rfi-description',
       required: true,
       label: 'RFI Description',
-      placeholder: 'Suggested sections for an RFI\'s description:\n- Business Requirement(s) or Issue(s);\n- Brief Ministry Overview;\n- Objectives of the RFI;\n- Ministry Obligations; and,\n- Response Instructions.',
-      value: getRfiString('description')
+      placeholder: descriptionHelpText,
+      value: getRfiString('description'),
+      help: {
+        text: descriptionHelpText,
+        show: false
+      }
     }),
     discoveryDay: Switch.init({
       id: 'rfi-discovery-day',
@@ -199,31 +233,40 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       label: 'Closing Time',
       value: closingTimeValue
     }),
+    gracePeriodDays: NumberInput.init({
+      id: 'rfi-grace-period-days',
+      required: true,
+      label: 'Late Response Grace Period',
+      placeholder: '#',
+      value: get(existingRfi, ['latestVersion', 'gracePeriodDays'], 2),
+      min: String(MIN_GRACE_PERIOD_DAYS),
+      max: String(MAX_GRACE_PERIOD_DAYS)
+    }),
     buyerContact: Select.init({
       id: 'rfi-buyer-contact',
-      value: getRfiString(['buyerContact', '_id']),
+      value: existingBuyerContact ? userToOption(existingBuyerContact) : undefined,
       required: true,
       label: `${userTypeToTitleCase(UserType.Buyer)} Contact`,
-      unselectedLabel: `Select ${userTypeToTitleCase(UserType.Buyer)}`,
+      placeholder: `Select ${userTypeToTitleCase(UserType.Buyer)}`,
       options: buyers.map(userToOption)
     }),
     programStaffContact: Select.init({
       id: 'rfi-program-staff-contact',
-      value: getRfiString(['programStaffContact', '_id']),
+      value: existingProgramStaffContact ? userToOption(existingProgramStaffContact) : undefined,
       required: true,
       label: `${userTypeToTitleCase(UserType.ProgramStaff)} Contact`,
-      unselectedLabel: `Select ${userTypeToTitleCase(UserType.ProgramStaff)}`,
+      placeholder: `Select ${userTypeToTitleCase(UserType.ProgramStaff)}`,
       options: programStaff.map(userToOption)
     }),
     categories: immutable(await SelectMulti.init({
       options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value })),
-      unselectedLabel: 'Select Commodity Code',
+      placeholder: 'Select Commodity Code',
       formFieldMulti: {
         idNamespace: 'rfi-categories',
         label: 'Commodity Code(s)',
         required: true,
         fields: existingCategoryFields.length ? existingCategoryFields : [{
-          value: '',
+          value: undefined,
           errors: [],
           removable: false
         }]
@@ -233,7 +276,6 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       formFieldMulti: {
         idNamespace: 'rfi-categories',
         label: 'Attachments (Optional)',
-        labelClassName: 'h3 mb-4',
         required: false,
         fields: get(existingRfi, ['latestVersion', 'attachments'], [])
           .map((attachment: FileResource.PublicFile) => {
@@ -248,7 +290,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       addButtonText: 'Add Addendum',
       field: {
         label: 'Addendum',
-        placeholder: 'Additional information related to the RFI.',
+        placeholder: addendaHelpText,
         textAreaStyle: {
           height: '120px'
         }
@@ -256,10 +298,13 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       formFieldMulti: {
         idNamespace: 'rfi-addenda',
         label: 'Addenda (Optional)',
-        labelClassName: 'h3 mb-4',
         required: false,
         reverseFieldOrderInView: true,
-        fields: existingAddenda
+        fields: existingAddenda,
+        help: {
+          text: addendaHelpText,
+          show: false
+        }
       }
     }))
   };
@@ -268,23 +313,25 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
 export const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'onChangeRfiNumber':
-      return [updateStringValue(state, 'rfiNumber', msg.value)];
+      return [updateValue(state, 'rfiNumber', msg.value)];
     case 'onChangeTitle':
-      return [updateStringValue(state, 'title', msg.value)];
+      return [updateValue(state, 'title', msg.value)];
     case 'onChangePublicSectorEntity':
-      return [updateStringValue(state, 'publicSectorEntity', msg.value)];
+      return [updateValue(state, 'publicSectorEntity', msg.value)];
     case 'onChangeDescription':
-      return [updateStringValue(state, 'description', msg.value)];
+      return [updateValue(state, 'description', msg.value)];
     case 'onChangeDiscoveryDay':
-      return [updateBooleanValue(state, 'discoveryDay', msg.value)];
+      return [updateValue(state, 'discoveryDay', msg.value)];
     case 'onChangeClosingDate':
-      return [updateStringValue(state, 'closingDate', msg.value)];
+      return [updateValue(state, 'closingDate', msg.value)];
     case 'onChangeClosingTime':
-      return [updateStringValue(state, 'closingTime', msg.value)];
+      return [updateValue(state, 'closingTime', msg.value)];
+    case 'onChangeGracePeriodDays':
+      return [updateValue(state, 'gracePeriodDays', msg.value)];
     case 'onChangeBuyerContact':
-      state = updateStringValue(state, 'buyerContact', msg.value);
+      state = updateValue(state, 'buyerContact', msg.value);
       if (!state.publicSectorEntity.value) {
-        const buyer = find(state.buyers, { _id: msg.value });
+        const buyer = msg.value && find<PublicUser>(state.buyers, { _id: msg.value.value });
         if (buyer && buyer.profile.type === UserType.Buyer) {
           state = state.setIn(['publicSectorEntity', 'value'], buyer.profile.publicSectorEntity);
           state = validateValue(state, 'publicSectorEntity', validatePublicSectorEntity);
@@ -292,7 +339,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       }
       return [validateValue(state, 'buyerContact', validateBuyerContact)];
     case 'onChangeProgramStaffContact':
-      state = updateStringValue(state, 'programStaffContact', msg.value);
+      state = updateValue(state, 'programStaffContact', msg.value);
       return [validateValue(state, 'programStaffContact', validateProgramStaffContact)];
     case 'onChangeCategories':
       state = updateComponentChild({
@@ -302,7 +349,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
         childUpdate: SelectMulti.update,
         childMsg: msg.value
       })[0];
-      const validatedCategories = validateCategories(SelectMulti.getValues(state.categories), 'Commodity Code');
+      const validatedCategories = validateCategories(SelectMulti.getValuesAsStrings(state.categories), 'Commodity Code');
       state = state.set('categories', SelectMulti.setErrors(state.categories, getInvalidValue(validatedCategories, [])));
       return [state];
     case 'onChangeAttachments':
@@ -340,16 +387,23 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       return [validateClosingDateAndTime(state)];
     case 'validateClosingTime':
       return [validateClosingDateAndTime(state)];
+    case 'validateGracePeriodDays':
+      return [validateValue(state, 'gracePeriodDays', validateGracePeriodDays)];
+    case 'toggleHelp':
+      return [(() => {
+        switch (msg.value) {
+          case 'description':
+            return state.setIn(['description', 'help', 'show'], !state.getIn(['description', 'help', 'show']));
+          case 'addenda':
+            return state.setIn(['addenda', 'help', 'show'], !state.getIn(['addenda', 'help', 'show']));
+        }
+      })()];
     default:
       return [state];
   }
 };
 
-function updateStringValue(state: Immutable<State>, key: string, value: string): Immutable<State> {
-  return state.setIn([key, 'value'], value);
-}
-
-function updateBooleanValue(state: Immutable<State>, key: string, value: boolean): Immutable<State> {
+function updateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K, value: State[K]['value']): Immutable<State> {
   return state.setIn([key, 'value'], value);
 }
 
@@ -358,24 +412,24 @@ function validateClosingDateAndTime(state: Immutable<State>): Immutable<State> {
   return validateValue(state, 'closingTime', v => validateClosingTime(v, state.closingDate.value));
 }
 
-function validateBuyerContact(raw: string): Validation<string> {
+function validateBuyerContact(raw: Select.Value): Validation<Select.Value> {
   return raw ? valid(raw) : invalid([`Please select a ${userTypeToTitleCase(UserType.Buyer)}.`]);
 }
 
-function validateProgramStaffContact(raw: string): Validation<string> {
+function validateProgramStaffContact(raw: Select.Value): Validation<Select.Value> {
   return raw ? valid(raw) : invalid([`Please select a ${userTypeToTitleCase(UserType.ProgramStaff)}.`]);
 }
 
-function validateValue(state: Immutable<State>, key: keyof State, validate: (value: string) => Validation<any>): Immutable<State> {
+function validateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K, validate: (value: State[K]['value']) => Validation<State[K]['value']>): Immutable<State> {
   const validation = validate(state.getIn([key, 'value']));
   return state.setIn([key, 'errors'], getInvalidValue(validation, []));
 }
 
 export function setErrors(state: Immutable<State>, errors: RfiResource.CreateValidationErrors): Immutable<State> {
   return state
-    // TODO use separate error fields.
     .setIn(['closingDate', 'errors'], errors.closingDate || [])
     .setIn(['closingTime', 'errors'], errors.closingTime || [])
+    .setIn(['gracePeriodDays', 'errors'], errors.gracePeriodDays || [])
     .setIn(['rfiNumber', 'errors'], errors.rfiNumber || [])
     .setIn(['title', 'errors'], errors.title || [])
     .setIn(['description', 'errors'], errors.description || [])
@@ -396,23 +450,25 @@ export function isValid(state: State): boolean {
     description,
     closingDate,
     closingTime,
+    gracePeriodDays,
     buyerContact,
     programStaffContact,
     categories,
     attachments,
     addenda
   } = state;
-  const providedRequiredFields = !!(rfiNumber.value && title.value && publicSectorEntity.value && description.value && closingDate.value && closingTime.value && buyerContact.value && programStaffContact.value);
-  const noValidationErrors = !(rfiNumber.errors.length || title.errors.length || publicSectorEntity.errors.length || description.errors.length || closingDate.errors.length || closingTime.errors.length || buyerContact.errors.length || programStaffContact.errors.length);
+  const providedRequiredFields = !!(rfiNumber.value && title.value && publicSectorEntity.value && description.value && closingDate.value && closingTime.value && gracePeriodDays.value !== undefined && buyerContact.value && programStaffContact.value);
+  const noValidationErrors = !(rfiNumber.errors.length || title.errors.length || publicSectorEntity.errors.length || description.errors.length || closingDate.errors.length || closingTime.errors.length || gracePeriodDays.errors.length || buyerContact.errors.length || programStaffContact.errors.length);
   return providedRequiredFields && noValidationErrors && SelectMulti.isValid(categories) && FileMulti.isValid(attachments) && LongTextMulti.isValid(addenda);
 }
 
 const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isDisabled = !state.isEditing;
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeNumberInput = (tag: any) => NumberInput.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
   const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
-  const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeCategories' as 'onChangeCategories', value }));
+  const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeCategories' as const, value }));
   return (
     <div className='mb-4'>
       <Row>
@@ -421,12 +477,13 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='4'>
+        <Col xs='12' md='5' lg='4'>
           <ShortText.view
             state={state.rfiNumber}
             disabled={isDisabled}
             onChangeDebounced={onChangeDebounced('validateRfiNumber')}
-            onChange={onChangeShortText('onChangeRfiNumber')} />
+            onChange={onChangeShortText('onChangeRfiNumber')}
+            autoFocus />
         </Col>
       </Row>
       <Row>
@@ -470,19 +527,28 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='3' lg='2'>
+        <Col xs='12' md='3'>
           <DateTime.view
             state={state.closingDate}
             disabled={isDisabled}
             onChangeDebounced={onChangeDebounced('validateClosingDate')}
             onChange={onChangeShortText('onChangeClosingDate')} />
         </Col>
-        <Col xs='12' md='2'>
+        <Col xs='12' md='3' lg='2'>
           <DateTime.view
             state={state.closingTime}
             disabled={isDisabled}
             onChangeDebounced={onChangeDebounced('validateClosingTime')}
             onChange={onChangeShortText('onChangeClosingTime')} />
+        </Col>
+        <Col xs='12' md='4' lg='3'>
+          <NumberInput.view
+            state={state.gracePeriodDays}
+            disabled={isDisabled}
+            onChangeDebounced={onChangeDebounced('validateGracePeriodDays')}
+            onChange={onChangeNumberInput('onChangeGracePeriodDays')}
+            addon={{ type: 'append', text: 'Days' }}
+          />
         </Col>
       </Row>
     </div>
@@ -491,9 +557,10 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isDisabled = !state.isEditing;
-  const onChangeLongText = (tag: any) => LongText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
-  const onChangeSwitch = (tag: any) => Switch.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.checked }));
+  const onChangeLongText = (tag: any) => LongText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeSwitch = (tag: any) => Switch.makeOnChange(dispatch, value => ({ tag, value }));
   const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
+  const toggleHelp = (value: HelpFieldName) => () => dispatch({ tag: 'toggleHelp', value });
   return (
     <div className='mb-4'>
       <Row>
@@ -510,6 +577,7 @@ const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
             disabled={isDisabled}
             onChangeDebounced={onChangeDebounced('validateDescription')}
             onChange={onChangeLongText('onChangeDescription')}
+            toggleHelp={toggleHelp('description')}
             style={{ height: '50vh', minHeight: '400px' }} />
         </Col>
       </Row>
@@ -528,7 +596,7 @@ const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 const Attachments: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isDisabled = !state.isEditing;
-  const dispatchAttachments: Dispatch<FileMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeAttachments' as 'onChangeAttachments', value }));
+  const dispatchAttachments: Dispatch<FileMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeAttachments' as const, value }));
   return (
     <div className='pb-4 border-bottom mb-5'>
       <Row className='mb-3'>
@@ -536,7 +604,9 @@ const Attachments: ComponentView<State, Msg> = ({ state, dispatch }) => {
           <FileMulti.view
             state={state.attachments}
             dispatch={dispatchAttachments}
-            disabled={isDisabled} />
+            disabled={isDisabled}
+            labelClassName='h3'
+            labelWrapperClassName='mb-4' />
         </Col>
       </Row>
     </div>
@@ -545,7 +615,7 @@ const Attachments: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 const Addenda: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isDisabled = !state.isEditing;
-  const dispatchAddenda: Dispatch<LongTextMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeAddenda' as 'onChangeAddenda', value }));
+  const dispatchAddenda: Dispatch<LongTextMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeAddenda' as const, value }));
   return (
     <div className='mb-4'>
       <Row>
@@ -553,7 +623,9 @@ const Addenda: ComponentView<State, Msg> = ({ state, dispatch }) => {
           <LongTextMulti.view
             state={state.addenda}
             dispatch={dispatchAddenda}
-            disabled={isDisabled} />
+            disabled={isDisabled}
+            labelClassName='h3'
+            labelWrapperClassName='mb-4' />
         </Col>
       </Row>
     </div>

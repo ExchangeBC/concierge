@@ -3,7 +3,6 @@ import { start } from 'front-end/lib/framework';
 import { set } from 'lodash';
 
 const element = document.getElementById('main') || document.body;
-// TODO use environment variables.
 const debug = process.env.NODE_ENV === 'development';
 start(app, element, debug)
   .then(stateManager => {

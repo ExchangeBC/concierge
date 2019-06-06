@@ -114,6 +114,15 @@ const router: Router<Route> = {
       }
     },
     {
+      path: '/feedback',
+      makeRoute() {
+        return {
+          tag: 'feedback',
+          value: null
+        }
+      }
+    },
+    {
       path: '/terms-and-conditions',
       makeRoute({ query }) {
         const rawWarningId = getQueryParamString(query, 'warningId');
@@ -128,10 +137,10 @@ const router: Router<Route> = {
       }
     },
     {
-      path: '/profiles/:userId',
+      path: '/users/:userId',
       makeRoute({ params }) {
         return {
-          tag: 'profile',
+          tag: 'userView',
           value: {
             profileUserId: getParamString(params, 'userId')
           }
@@ -361,6 +370,20 @@ const router: Router<Route> = {
       }
     },
     {
+      path: '/notice/feedback-submitted',
+      makeRoute() {
+        return {
+          tag: 'notice',
+          value: {
+            noticeId: {
+              tag: 'feedbackSubmitted',
+              value: undefined
+            }
+          }
+        }
+      }
+    },
+    {
       path: '*',
       makeRoute() {
         return {
@@ -400,6 +423,8 @@ const router: Router<Route> = {
         return `/reset-password/${route.value.forgotPasswordToken}/${route.value.userId}`;
       case 'forgotPassword':
         return '/forgot-password';
+      case 'feedback':
+        return '/feedback';
       case 'termsAndConditions':
         const tcRedirectOnAccept = route.value.redirectOnAccept;
         const tcRedirectOnSkip = route.value.redirectOnSkip;
@@ -410,8 +435,8 @@ const router: Router<Route> = {
         if (tcWarningId) { tcQueryParams.push(`warningId=${encodeURIComponent(tcWarningId)}`); }
         const tcQueryString = tcQueryParams.join('&');
         return `/terms-and-conditions?${tcQueryString}`;
-      case 'profile':
-        return `/profiles/${route.value.profileUserId}`;
+      case 'userView':
+        return `/users/${route.value.profileUserId}`;
       case 'userList':
         return '/users';
       case 'requestForInformationCreate':
@@ -460,6 +485,8 @@ const router: Router<Route> = {
               return '/notice/forgot-password';
             case 'notFound':
               return '/not-found';
+            case 'feedbackSubmitted':
+              return '/notice/feedback-submitted'
           }
         })();
     }

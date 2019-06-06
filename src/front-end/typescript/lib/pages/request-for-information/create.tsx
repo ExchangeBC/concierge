@@ -2,7 +2,7 @@ import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from
 import { isUserType } from 'front-end/lib/access-control';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, replaceRoute, Update, updateComponentChild } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, immutable, Immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, replaceRoute, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as RfiForm from 'front-end/lib/pages/request-for-information/components/form';
 import { createAndShowPreview, makeRequestBody } from 'front-end/lib/pages/request-for-information/lib';
@@ -19,6 +19,9 @@ export type RouteParams = null;
 export type InnerMsg
   = ADT<'rfiForm', RfiForm.Msg>
   | ADT<'preview'>
+  | ADT<'hideCancelConfirmationPrompt'>
+  | ADT<'showCancelConfirmationPrompt'>
+  | ADT<'hidePublishConfirmationPrompt'>
   | ADT<'publish'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
@@ -26,6 +29,9 @@ export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 export interface State {
   previewLoading: number;
   publishLoading: number;
+  hasTriedPublishing: boolean;
+  promptCancelConfirmation: boolean;
+  promptPublishConfirmation: boolean;
   rfiForm: Immutable<RfiForm.State>
 };
 
@@ -33,6 +39,9 @@ async function makeInitState(): Promise<State> {
   return {
     previewLoading: 0,
     publishLoading: 0,
+    hasTriedPublishing: false,
+    promptCancelConfirmation: false,
+    promptPublishConfirmation: false,
     rfiForm: immutable(await RfiForm.init({
       isEditing: true
     }))
@@ -46,7 +55,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
 
   async fail({ routeParams, dispatch }) {
     dispatch(replaceRoute({
-      tag: 'signIn' as 'signIn',
+      tag: 'signIn' as const,
       value: {
         redirectOnSuccess: router.routeToUrl({
           tag: 'requestForInformationCreate',
@@ -87,7 +96,19 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           return state.set('rfiForm', rfiForm);
         }
       });
+    case 'hideCancelConfirmationPrompt':
+      return [state.set('promptCancelConfirmation', false)];
+    case 'showCancelConfirmationPrompt':
+      return [state.set('promptCancelConfirmation', true)];
+    case 'hidePublishConfirmationPrompt':
+      return [state.set('promptPublishConfirmation', false)];
     case 'publish':
+      state = state.set('hasTriedPublishing', true);
+      if (!state.promptPublishConfirmation) {
+        return [state.set('promptPublishConfirmation', true)];
+      } else {
+        state = state.set('promptPublishConfirmation', false);
+      }
       return [
         startPublishLoading(state),
         async (state, dispatch) => {
@@ -102,7 +123,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               switch (result.tag) {
                 case 'valid':
                   dispatch(newRoute({
-                    tag: 'requestForInformationEdit' as 'requestForInformationEdit',
+                    tag: 'requestForInformationEdit' as const,
                     value: {
                       rfiId: result.value._id
                     }
@@ -110,6 +131,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                   break;
                 case 'invalid':
                   state = fail(state, result.value);
+                  if (window.scrollTo) { window.scrollTo(0, 0); }
                   break;
               }
               break;
@@ -126,7 +148,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const cancelRoute: Route = { tag: 'requestForInformationList' as 'requestForInformationList', value: null };
+  const showCancelConfirmationPrompt = () => dispatch({ tag: 'showCancelConfirmationPrompt', value: undefined });
   const preview = () => dispatch({ tag: 'preview', value: undefined });
   const publish = () => dispatch({ tag: 'publish', value: undefined });
   const isPreviewLoading = state.previewLoading > 0;
@@ -141,13 +163,13 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <LoadingButton color='info'  onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
         Preview RFI
       </LoadingButton>
-      <Link route={cancelRoute} color='secondary' disabled={isLoading} className='mx-3'>Cancel</Link>
+      <Link onClick={showCancelConfirmationPrompt} color='secondary' disabled={isLoading}>Cancel</Link>
     </FixedBar>
   );
 };
 
 const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const dispatchRfiForm: Dispatch<RfiForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'rfiForm' as 'rfiForm', value }));
+  const dispatchRfiForm: Dispatch<RfiForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'rfiForm' as const, value }));
   return (
     <Container className='mb-5 flex-grow-1'>
       <Row>
@@ -170,8 +192,62 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   update,
   view,
   viewBottomBar,
-  getAlerts: emptyPageAlerts,
+  getAlerts(state) {
+    return {
+      ...emptyPageAlerts(),
+      errors: state.hasTriedPublishing && !RfiForm.isValid(state.rfiForm)
+        ? [RfiForm.GLOBAL_ERROR_MESSAGE]
+        : []
+    };
+  },
   getMetadata() {
     return makePageMetadata('Create a Request for Information');
+  },
+  getBreadcrumbs: emptyPageBreadcrumbs,
+  getModal(state) {
+    if (state.promptPublishConfirmation) {
+      return {
+        title: 'Publish this RFI?',
+        body: 'This RFI will be visible to the public once it has been published.',
+        onCloseMsg: { tag: 'hidePublishConfirmationPrompt', value: undefined },
+        actions: [
+          {
+            text: 'Yes, publish RFI',
+            color: 'primary',
+            button: true,
+            msg: { tag: 'publish', value: undefined }
+          },
+          {
+            text: 'Cancel',
+            color: 'secondary',
+            msg: { tag: 'hidePublishConfirmationPrompt', value: undefined }
+          }
+        ]
+      };
+    } else if (state.promptCancelConfirmation) {
+      return {
+        title: 'Cancel creating an RFI?',
+        body: 'Any information that you may have entered will be lost if you choose to cancel.',
+        onCloseMsg: { tag: 'hideCancelConfirmationPrompt', value: undefined },
+        actions: [
+          {
+            text: 'Yes, I want to cancel',
+            color: 'primary',
+            button: true,
+            msg: newRoute({
+              tag: 'requestForInformationList',
+              value: null
+            })
+          },
+          {
+            text: 'Go Back',
+            color: 'secondary',
+            msg: { tag: 'hideCancelConfirmationPrompt', value: undefined }
+          }
+        ]
+      };
+    } else {
+      return null;
+    }
   }
 };

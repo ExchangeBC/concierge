@@ -23,11 +23,12 @@ interface AnchorProps extends BaseProps {
 
 interface ButtonProps extends BaseProps {
   button: true;
+  outline?: boolean;
   color?: ButtonColor;
   size?: 'sm' | 'md' | 'lg';
 }
 
-type Props = AnchorProps | ButtonProps;
+export type Props = AnchorProps | ButtonProps;
 
 function AnchorLink(props: AnchorProps) {
   // Initialize props.
@@ -37,12 +38,12 @@ function AnchorLink(props: AnchorProps) {
     className = '',
     disabled = false,
     children,
-    href,
+    href = '#',
     route,
     onClick
   } = props;
   // Give precedence to the `route` prop over the `href` prop.
-  const finalHref: string | undefined
+  const finalHref: string
     = disabled
     ? ''
     : route
@@ -53,8 +54,8 @@ function AnchorLink(props: AnchorProps) {
   finalClassName += disabled ? ' disabled' : '';
   finalClassName += color ? ` text-${color}` : '';
   const finalOnClick = onClick && ((e: MouseEvent<HTMLAnchorElement>) => {
-    if (disabled) { e.preventDefault(); }
-    onClick();
+    e.preventDefault();
+    if (!disabled) { onClick(); }
   });
   return (
     <a href={finalHref} onClick={finalOnClick} className={finalClassName}>
@@ -67,13 +68,14 @@ function ButtonLink(props: ButtonProps) {
   const {
     color,
     size = 'md',
-    className = ''
+    className = '',
+    outline = false
   } = props;
   const anchorProps: AnchorProps = {
     ...props,
     button: false,
     color: undefined,
-    className: `${className} btn btn-${size} ${color ? `btn-${color}` : ''}`
+    className: `${className} btn btn-${size} ${color ? `btn-${outline ? 'outline-' : ''}${color}` : ''}`
   };
   return (
     <AnchorLink {...anchorProps} />

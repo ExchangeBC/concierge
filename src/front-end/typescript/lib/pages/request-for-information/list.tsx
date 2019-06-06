@@ -1,12 +1,12 @@
 import { makePageMetadata } from 'front-end/lib';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import * as TableComponent from 'front-end/lib/components/table';
-import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, PageComponent, PageInit, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, immutable, Immutable, mapComponentDispatch, noPageModal, PageComponent, PageInit, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import { readManyRfis } from 'front-end/lib/http/api';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
+import * as Select from 'front-end/lib/views/form-field/select';
+import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Icon from 'front-end/lib/views/icon';
-import * as Select from 'front-end/lib/views/input/select';
-import * as ShortText from 'front-end/lib/views/input/short-text';
 import Link from 'front-end/lib/views/link';
 import { default as React, ReactElement } from 'react';
 import { Col, Row } from 'reactstrap';
@@ -25,7 +25,8 @@ type TableCellData
   = ADT<'rfiNumber', string>
   | ADT<'publishDate', Date>
   | ADT<'status', RfiStatus>
-  | ADT<'title', { rfiId: string, text: string, edit: boolean }>
+  | ADT<'programStaffTitle', { rfiId: string, text: string }>
+  | ADT<'nonProgramStaffTitle', { rfiId: string, text: string, entity: string }>
   | ADT<'publicSectorEntity', string>
   | ADT<'lastUpdated', Date>
   | ADT<'closingDate', Date>
@@ -35,18 +36,24 @@ const Table: TableComponent.TableComponent<TableCellData> = TableComponent.compo
 
 const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
   const wrap = (child: string | null | ReactElement<any>, wrapText = false, center = false) => {
-    return (<td className={`${wrapText ? 'text-wrap' : ''} ${center ? 'text-center' : ''}`}>{child}</td>);
+    return (<td className={`${wrapText ? 'text-wrap' : ''} ${center ? 'text-center' : ''} align-middle`}>{child}</td>);
   };
   switch (data.tag) {
     case 'rfiNumber':
       return wrap(data.value);
-    case 'title':
-      const routeParams = { rfiId: data.value.rfiId };
-      const rfiRoute: Route
-        = data.value.edit
-        ? { tag: 'requestForInformationEdit', value: routeParams }
-        : { tag: 'requestForInformationView', value: routeParams };
-      return wrap((<Link route={rfiRoute}>{data.value.text}</Link>), true);
+    case 'programStaffTitle':
+      return wrap((
+        <Link route={{ tag: 'requestForInformationEdit', value: { rfiId: data.value.rfiId }}} className='mb-1'>
+          {data.value.text}
+        </Link>
+      ), true);
+    case 'nonProgramStaffTitle':
+      return wrap((
+        <div>
+          <Link route={{ tag: 'requestForInformationView', value: { rfiId: data.value.rfiId }}}>{data.value.text}</Link>
+          <div className='small text-uppercase text-secondary mt-n1'>{data.value.entity}</div>
+        </div>
+      ), true);
     case 'publicSectorEntity':
       return wrap(data.value, true);
     case 'status':
@@ -77,11 +84,16 @@ export interface State {
   table: Immutable<TableComponent.State<TableCellData>>;
 };
 
+type FormFieldKeys
+  = 'statusFilter'
+  | 'categoryFilter'
+  | 'searchFilter';
+
 export type RouteParams = null;
 
 type InnerMsg
-  = ADT<'statusFilter', string>
-  | ADT<'categoryFilter', string>
+  = ADT<'statusFilter', Select.Value>
+  | ADT<'categoryFilter', Select.Value>
   | ADT<'searchFilter', string>
   | ADT<'table', TableComponent.Msg>;
 
@@ -117,10 +129,9 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) 
     visibleRfis: rfis,
     statusFilter: Select.init({
       id: 'rfi-list-filter-status',
-      value: '',
       required: false,
       label: 'Status',
-      unselectedLabel: 'All',
+      placeholder: 'All',
       options: [
         { value: RfiStatus.Open, label: rfiStatusToTitleCase(RfiStatus.Open) },
         { value: RfiStatus.Closed, label: rfiStatusToTitleCase(RfiStatus.Closed) }
@@ -128,10 +139,9 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) 
     }),
     categoryFilter: Select.init({
       id: 'rfi-list-filter-category',
-      value: '',
       required: false,
       label: 'Commodity Code',
-      unselectedLabel: 'All',
+      placeholder: 'All',
       options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value }))
     }),
     searchFilter: ShortText.init({
@@ -163,19 +173,17 @@ function rfiMatchesCategory(rfi: PublicRfi, category: string): boolean {
 }
 
 function rfiMatchesSearch(rfi: PublicRfi, query: RegExp): boolean {
-  return !!rfi.latestVersion.title.match(query);
+  return !!rfi.latestVersion.title.match(query) || !!rfi.latestVersion.publicSectorEntity.match(query);
 }
 
-function updateAndQuery(state: Immutable<State>, key?: string, value?: string): Immutable<State> {
+function updateAndQuery<K extends FormFieldKeys>(state: Immutable<State>, key: K, value: State[K]['value']): Immutable<State> {
   // Update state with the filter value.
-  if (key && value !== undefined) {
-    state = state.setIn([key, 'value'], value);
-  }
+  state = state.setIn([key, 'value'], value);
   // Query the list of available RFIs based on all filters' state.
-  const statusQuery = state.statusFilter.value;
-  const categoryQuery = state.categoryFilter.value;
+  const statusQuery = state.statusFilter.value && state.statusFilter.value.value;
+  const categoryQuery = state.categoryFilter.value && state.categoryFilter.value.value;
   const rawSearchQuery = state.searchFilter.value;
-  const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split('').join('.*'), 'i') : null;
+  const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split(/\s+/).join('.*'), 'i') : null;
   const rfis = state.rfis.filter(rfi => {
     let match = true;
     match = match && (!statusQuery || rfiMatchesStatus(rfi, parseRfiStatus(statusQuery)));
@@ -197,7 +205,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'table':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'table' as 'table', value }),
+        mapChildMsg: value => ({ tag: 'table' as const, value }),
         childStatePath: ['table'],
         childUpdate: Table.update,
         childMsg: msg.value
@@ -208,8 +216,8 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, e => ({ tag, value: e.currentTarget.value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   const categoryFilterElement = state.userType !== UserType.ProgramStaff
     ? null
     : (
@@ -220,19 +228,28 @@ const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
         </Col>
       );
   return (
-    <Row className='d-none d-md-flex align-items-end'>
-      <Col xs='12' md='3'>
-        <Select.view
-          state={state.statusFilter}
-          onChange={onChangeSelect('statusFilter')} />
-      </Col>
-      {categoryFilterElement}
-      <Col xs='12' md='4' className='ml-md-auto'>
-        <ShortText.view
-          state={state.searchFilter}
-          onChange={onChangeShortText('searchFilter')} />
-      </Col>
-    </Row>
+    <div>
+      <Row>
+        <Col xs='12'>
+          <h6 className='text-secondary mb-3 d-none d-md-block'>
+            Filter By:
+          </h6>
+        </Col>
+      </Row>
+      <Row className='d-none d-md-flex align-items-end'>
+        <Col xs='12' md='3'>
+          <Select.view
+            state={state.statusFilter}
+            onChange={onChangeSelect('statusFilter')} />
+        </Col>
+        {categoryFilterElement}
+        <Col xs='12' md='4' className='ml-md-auto'>
+          <ShortText.view
+            state={state.searchFilter}
+            onChange={onChangeShortText('searchFilter')} />
+        </Col>
+      </Row>
+    </div>
   );
 };
 
@@ -324,20 +341,19 @@ function programStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.TDSp
   return rfis.map(rfi => {
     const version = rfi.latestVersion;
     return [
-      TableComponent.makeTDSpec({ tag: 'rfiNumber' as 'rfiNumber', value: version.rfiNumber }),
-      TableComponent.makeTDSpec({ tag: 'status' as 'status', value: rfi.status }),
+      TableComponent.makeTDSpec({ tag: 'rfiNumber' as const, value: version.rfiNumber }),
+      TableComponent.makeTDSpec({ tag: 'status' as const, value: rfi.status }),
       TableComponent.makeTDSpec({
-        tag: 'title' as 'title',
+        tag: 'programStaffTitle' as const,
         value: {
           rfiId: rfi._id,
-          text: version.title,
-          edit: true
+          text: version.title
         }
       }),
-      TableComponent.makeTDSpec({ tag: 'publicSectorEntity' as 'publicSectorEntity', value: version.publicSectorEntity }),
-      TableComponent.makeTDSpec({ tag: 'lastUpdated' as 'lastUpdated', value: version.createdAt }),
-      TableComponent.makeTDSpec({ tag: 'closingDate' as 'closingDate', value: version.closingAt }),
-      TableComponent.makeTDSpec({ tag: 'discoveryDay' as 'discoveryDay', value: [version.discoveryDay, rfi] as [boolean, PublicRfi] })
+      TableComponent.makeTDSpec({ tag: 'publicSectorEntity' as const, value: version.publicSectorEntity }),
+      TableComponent.makeTDSpec({ tag: 'lastUpdated' as const, value: version.createdAt }),
+      TableComponent.makeTDSpec({ tag: 'closingDate' as const, value: version.closingAt }),
+      TableComponent.makeTDSpec({ tag: 'discoveryDay' as const, value: [version.discoveryDay, rfi] as [boolean, PublicRfi] })
     ];
   });
 }
@@ -346,20 +362,20 @@ function nonProgramStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.T
   return rfis.map(rfi => {
     const version = rfi.latestVersion;
     return [
-      TableComponent.makeTDSpec({ tag: 'rfiNumber' as 'rfiNumber', value: version.rfiNumber }),
-      TableComponent.makeTDSpec({ tag: 'publishDate' as 'publishDate', value: rfi.publishedAt }),
-      TableComponent.makeTDSpec({ tag: 'status' as 'status', value: rfi.status }),
+      TableComponent.makeTDSpec({ tag: 'rfiNumber' as const, value: version.rfiNumber }),
+      TableComponent.makeTDSpec({ tag: 'publishDate' as const, value: rfi.publishedAt }),
+      TableComponent.makeTDSpec({ tag: 'status' as const, value: rfi.status }),
       TableComponent.makeTDSpec({
-        tag: 'title' as 'title',
+        tag: 'nonProgramStaffTitle' as const,
         value: {
           rfiId: rfi._id,
           text: version.title,
-          edit: false
+          entity: version.publicSectorEntity
         }
       }),
-      TableComponent.makeTDSpec({ tag: 'closingDate' as 'closingDate', value: version.closingAt }),
-      TableComponent.makeTDSpec({ tag: 'discoveryDay' as 'discoveryDay', value: [version.discoveryDay, rfi] as [boolean, PublicRfi] }),
-      TableComponent.makeTDSpec({ tag: 'lastUpdated' as 'lastUpdated', value: version.createdAt })
+      TableComponent.makeTDSpec({ tag: 'closingDate' as const, value: version.closingAt }),
+      TableComponent.makeTDSpec({ tag: 'discoveryDay' as const, value: [version.discoveryDay, rfi] as [boolean, PublicRfi] }),
+      TableComponent.makeTDSpec({ tag: 'lastUpdated' as const, value: version.createdAt })
     ];
   });
 }
@@ -370,7 +386,7 @@ const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isProgramStaff = state.userType === UserType.ProgramStaff;
   const headCells = isProgramStaff ? programStaffTableHeadCells : nonProgramStaffTableHeadCells;
   const bodyRows = isProgramStaff ? programStaffTableBodyRows(state.visibleRfis) : nonProgramStaffTableBodyRows(state.visibleRfis);
-  const dispatchTable: Dispatch<TableComponent.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as 'table', value }));
+  const dispatchTable: Dispatch<TableComponent.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
   return (
     <Table.view
       className='text-nowrap'
@@ -420,5 +436,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getAlerts: emptyPageAlerts,
   getMetadata() {
     return makePageMetadata('Requests for Information');
-  }
+  },
+  getBreadcrumbs: emptyPageBreadcrumbs,
+  getModal: noPageModal
 };

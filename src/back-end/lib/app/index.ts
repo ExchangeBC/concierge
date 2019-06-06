@@ -3,6 +3,7 @@ import * as crud from 'back-end/lib/crud';
 import loggerHook from 'back-end/lib/hooks/logger';
 import basicAuth from 'back-end/lib/map-routes/basic-auth';
 import DiscoveryDayResponseResource from 'back-end/lib/resources/discovery-day-response';
+import FeedbackResource from 'back-end/lib/resources/feedback';
 import FileResource from 'back-end/lib/resources/file';
 import FileBlobResource from 'back-end/lib/resources/file-blob';
 import ForgotPasswordTokenResource from 'back-end/lib/resources/forgot-password-token';
@@ -13,6 +14,7 @@ import SessionResource from 'back-end/lib/resources/session';
 import UserResource from 'back-end/lib/resources/user';
 import FrontEndRouter from 'back-end/lib/routers/front-end';
 import StatusRouter from 'back-end/lib/routers/status';
+import * as FeedbackSchema from 'back-end/lib/schemas/feedback';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
@@ -36,6 +38,7 @@ export function createModels(): AvailableModels {
   return {
     Session: mongoose.model('Session', SessionSchema.schema),
     User: mongoose.model('User', UserSchema.schema),
+    Feedback: mongoose.model('Feedback', FeedbackSchema.schema),
     ForgotPasswordToken: mongoose.model('ForgotPasswordToken', ForgotPasswordTokenSchema.schema),
     File: mongoose.model('File', FileSchema.schema),
     Rfi: mongoose.model('Rfi', RfiSchema.schema),
@@ -62,6 +65,7 @@ export function createRouter(params: CreateRouterParams): Router<SupportedReques
     UserResource,
     SessionResource,
     ForgotPasswordTokenResource,
+    FeedbackResource,
     FileResource,
     FileBlobResource,
     RfiResource,

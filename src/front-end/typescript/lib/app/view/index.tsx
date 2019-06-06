@@ -1,14 +1,15 @@
 import { LIVE_SITE_DOMAIN } from 'front-end/config';
-import { Msg, Route, SharedState, State } from 'front-end/lib/app/types';
+import { Msg, Route, State } from 'front-end/lib/app/types';
 import Footer from 'front-end/lib/app/view/footer';
 import Nav from 'front-end/lib/app/view/nav';
-import { AppMsg, ComponentView, Dispatch, GlobalComponentMsg, Immutable, mapAppDispatch, newRoute, PageAlerts, PageComponent, PageContainerOptions, View } from 'front-end/lib/framework';
+import ViewPage from 'front-end/lib/app/view/page';
+import { AppMsg, ComponentView, Dispatch, View } from 'front-end/lib/framework';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
+import * as PageFeedback from 'front-end/lib/pages/feedback';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageMarkdown from 'front-end/lib/pages/markdown';
 import * as PageNotice from 'front-end/lib/pages/notice';
-import * as PageProfile from 'front-end/lib/pages/profile';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
 import * as PageRequestForInformationEdit from 'front-end/lib/pages/request-for-information/edit';
 import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
@@ -22,94 +23,44 @@ import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
-import * as PageUserList from 'front-end/lib/pages/user-list';
-import PageContainer from 'front-end/lib/views/layout/page-container';
-import { default as React, ReactElement } from 'react';
-import { Alert, Col, Container, Row } from 'reactstrap';
+import * as PageUserList from 'front-end/lib/pages/user/list';
+import * as PageUserView from 'front-end/lib/pages/user/view';
+import Link from 'front-end/lib/views/link';
+import { default as React } from 'react';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
-interface ViewAlertProps {
-  messages: string[];
-  color: 'info' | 'warning' | 'danger';
-  className?: string;
-}
-
-const ViewAlert: View<ViewAlertProps> = ({ messages, color, className }) => {
-  if (messages.length) {
-    return (
-      <Alert color={color} className={className} >{messages.map(text => (<div>{text}</div>))}</Alert>
-    );
-  } else {
-    return null;
-  }
-}
-
-interface ViewAlertsProps {
-  alerts: PageAlerts;
-  containerOptions: PageContainerOptions;
-}
-
-const ViewAlerts: View<ViewAlertsProps> = ({ alerts, containerOptions }) => {
-  const { info, warnings, errors } = alerts;
-  const hasAlerts = !!(info.length || warnings.length || errors.length);
-  const child = (
-    <Row className={`${containerOptions.paddingTop === false && hasAlerts ? 'pt-5' : ''} ${hasAlerts ? 'pb-5' : ''}`}>
-      <Col xs='12'>
-        <ViewAlert messages={info} color='info' />
-        <ViewAlert messages={warnings} color='warning' />
-        <ViewAlert messages={errors} color='danger' className='mb-0' />
-      </Col>
-    </Row>
-  );
-  if (containerOptions.fullWidth) {
-    return (
-      <Container>
-        {child}
-      </Container>
-    );
-  } else {
-    return child;
-  }
-};
-
-interface ViewPageProps<PageState, PageMsg> {
+interface ViewModalProps {
+  modal: State['modal'];
   dispatch: Dispatch<AppMsg<Msg, Route>>;
-  pageState?: Immutable<PageState>;
-  component: PageComponent<never, SharedState, PageState, GlobalComponentMsg<PageMsg, Route>>;
-  mapPageMsg(msg: GlobalComponentMsg<PageMsg, Route>): Msg;
 }
 
-function ViewPage<PageState, PageMsg>(props: ViewPageProps<PageState, PageMsg>): ReactElement<ViewPageProps<PageState, PageMsg>> {
-  const { dispatch, pageState, mapPageMsg, component } = props;
-  const { viewBottomBar, containerOptions = {} } = component;
-  if (pageState) {
-    const dispatchPage: Dispatch<GlobalComponentMsg<PageMsg, Route>> = mapAppDispatch(dispatch, mapPageMsg);
-    const viewProps = {
-      dispatch: dispatchPage,
-      state: pageState
-    };
-    const bottomBar = viewBottomBar ? viewBottomBar(viewProps) : null;
-    return (
-      <div className='d-flex flex-column flex-grow-1'>
-        <PageContainer {...containerOptions}>
-          <ViewAlerts alerts={component.getAlerts(pageState)} containerOptions={containerOptions} />
-          <component.view dispatch={dispatchPage} state={pageState} />
-        </PageContainer>
-        {bottomBar}
-      </div>
-    );
-  } else {
-    dispatch(newRoute({
-      tag: 'notice' as 'notice',
-      value: {
-        noticeId: {
-          tag: 'notFound' as 'notFound',
-          value: undefined
-        }
-      }
-    }));
-    return (<div></div>);
-  }
-}
+const ViewModal: View<ViewModalProps> = ({ dispatch, modal }) => {
+  const { open, content } = modal;
+  const toggle = () => dispatch({ tag: 'toggleModal', value: undefined });
+  // TODO reverse button order using flex for md and above.
+  // TODO custom X icon
+  return (
+    <Modal isOpen={open} toggle={toggle}>
+      <ModalHeader toggle={toggle}>{content.title}</ModalHeader>
+      <ModalBody>{content.body}</ModalBody>
+      <ModalFooter className='d-flex flex-md-row-reverse justify-content-start align-items-center'>
+        {content.actions.map(({ button, text, color, msg }, i) => {
+          const props = {
+            key: `modal-action-${i}`,
+            color,
+            onClick: () => dispatch(msg),
+            className: i === 0 ? 'mx-0' : 'ml-3 mr-0 ml-md-0 mr-md-3'
+          };
+          if (button) {
+            return (<Link button {...props}>{text}</Link>);
+          } else {
+            return (<Link {...props}>{text}</Link>);
+          }
+        })}
+      </ModalFooter>
+    </Modal>
+  );
+};
 
 const ViewActiveRoute: ComponentView<State, Msg> = ({ state, dispatch }) => {
   switch (state.activeRoute.tag) {
@@ -195,6 +146,15 @@ const ViewActiveRoute: ComponentView<State, Msg> = ({ state, dispatch }) => {
           component={PageForgotPassword.component} />
       );
 
+    case 'feedback':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.feedback}
+          mapPageMsg={value => ({ tag: 'pageFeedback', value })}
+          component={PageFeedback.component} />
+      )
+
     case 'termsAndConditions':
       return (
         <ViewPage
@@ -204,13 +164,13 @@ const ViewActiveRoute: ComponentView<State, Msg> = ({ state, dispatch }) => {
           component={PageTermsAndConditions.component} />
       );
 
-    case 'profile':
+    case 'userView':
       return (
         <ViewPage
           dispatch={dispatch}
-          pageState={state.pages.profile}
-          mapPageMsg={value => ({ tag: 'pageProfile', value })}
-          component={PageProfile.component} />
+          pageState={state.pages.userView}
+          mapPageMsg={value => ({ tag: 'pageUserView', value })}
+          component={PageUserView.component} />
       );
 
     case 'userList':
@@ -312,11 +272,12 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   } else {
     const toggleIsNavOpen = (value?: boolean) => dispatch({ tag: 'toggleIsNavOpen', value });
     return (
-      <div className={`route-${state.activeRoute.tag} ${state.inTransition ? 'in-transition' : ''} d-flex flex-column`} style={{ minHeight: '100vh' }}>
+      <div className={`route-${state.activeRoute.tag} ${state.inTransition ? 'in-transition' : ''} app d-flex flex-column`} style={{ minHeight: '100vh' }}>
         {isLiveSite() ? null : <TestEnvironmentBanner />}
         <Nav session={state.shared.session} activeRoute={state.activeRoute} isOpen={state.isNavOpen} toggleIsOpen={toggleIsNavOpen} />
         <ViewActiveRoute state={state} dispatch={dispatch} />
         <Footer />
+        <ViewModal dispatch={dispatch} modal={state.modal} />
       </div>
     );
   }

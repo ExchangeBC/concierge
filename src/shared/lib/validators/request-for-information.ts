@@ -1,4 +1,4 @@
-import { ArrayValidation, valid, validateArray, validateDate, validateDatetime, validateGenericString, validateTime, Validation } from 'shared/lib/validators';
+import { ArrayValidation, valid, validateArray, validateDate, validateDatetime, validateGenericString, validateInteger, validateTime, Validation } from 'shared/lib/validators';
 
 /**
  * Function to validate whether a string is a valid
@@ -61,4 +61,12 @@ export function validateClosingTime(rawTime: string, rawDate: string): Validatio
     case 'invalid':
       return validation;
   }
+}
+
+export const MIN_GRACE_PERIOD_DAYS = 0;
+export const MAX_GRACE_PERIOD_DAYS = 100;
+
+export function validateGracePeriodDays(days?: number): Validation<number> {
+  days = days === undefined ? -1 : days;
+  return validateInteger(days, 'The number of grace period days', MIN_GRACE_PERIOD_DAYS, MAX_GRACE_PERIOD_DAYS);
 }

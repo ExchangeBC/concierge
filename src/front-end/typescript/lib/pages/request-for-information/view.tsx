@@ -1,7 +1,7 @@
 import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newRoute, PageComponent, PageInit, Update, View } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newRoute, PageBreadcrumbs, PageComponent, PageInit, Update, View } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
@@ -18,7 +18,8 @@ import { compareDates, formatDate, formatTime } from 'shared/lib';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as FileResource from 'shared/lib/resources/file';
 import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
-import { PublicRfi, RFI_EXPIRY_WINDOW_DAYS, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
+import { PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
+import { PublicSessionUser } from 'shared/lib/resources/session';
 import { Addendum, ADT, RfiStatus, UserType } from 'shared/lib/types';
 
 const ERROR_MESSAGE = 'The Request for Information you are looking for is not available.';
@@ -31,19 +32,23 @@ export interface RouteParams {
 }
 
 export type InnerMsg
-  = ADT<'respondToDiscoveryDay'>;
+  = ADT<'hideResponseConfirmationPrompt'>
+  | ADT<'respondToRfi'>
+  | ADT<'respondToDiscoveryDay'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export interface State {
   respondToDiscoveryDayLoading: number;
+  respondToRfiLoading: number;
   infoAlerts: string[];
   preview: boolean;
-  // TODO refactor how userType, rfi and ddr exist on state
+  promptResponseConfirmation: boolean;
+  // TODO refactor how sessionUser, rfi and ddr exist on state
   // once we have better session retrieval in the front-end.
   // See pages/request-for-information/request.tsx for a good example
   // of handling valid/invalid state initialization for pages.
-  userType?: UserType;
+  sessionUser?: PublicSessionUser;
   rfi?: PublicRfi;
   ddr?: DdrResource.PublicDiscoveryDayResponse;
 };
@@ -51,12 +56,14 @@ export interface State {
 const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParams, shared }) => {
   const { rfiId, preview = false } = routeParams;
   const { session } = shared;
-  const userType = session && session.user && session.user.type;
+  const sessionUser = session && session.user;
   const defaultState: State = {
     respondToDiscoveryDayLoading: 0,
+    respondToRfiLoading: 0,
     infoAlerts: [],
     preview,
-    userType
+    promptResponseConfirmation: false,
+    sessionUser
   };
   const rfiResult = preview ? await api.readOneRfiPreview(rfiId) : await api.readOneRfi(rfiId);
   switch (rfiResult.tag) {
@@ -67,7 +74,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
       // Determine if the user has already sent a Discovery Day Response,
       // if they are a Vendor.
       let ddr: DdrResource.PublicDiscoveryDayResponse | undefined;
-      if (userType === UserType.Vendor) {
+      if (sessionUser && sessionUser.type === UserType.Vendor) {
         const ddrResult = await api.readOneDdr(rfi._id);
         if (ddrResult.tag === 'valid') {
           ddr = ddrResult.value;
@@ -80,10 +87,10 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
       } else {
         // Use `mightViewResponseButtons` to only show response-related infoAlerts
         // to unauthenticated users and Vendor.
-        const mightViewResponseButtons = userType === UserType.Vendor || !userType;
+        const mightViewResponseButtons = sessionUser && sessionUser.type === UserType.Vendor || !sessionUser;
         const rfiStatus = rfiToRfiStatus(rfi);
         if (mightViewResponseButtons && rfiStatus === RfiStatus.Closed) {
-          infoAlerts.push(`This RFI is still accepting responses up to ${RFI_EXPIRY_WINDOW_DAYS} calendar days after the closing date and time.`);
+          infoAlerts.push(`This RFI is still accepting responses up to ${rfi.latestVersion.gracePeriodDays} calendar days after the closing date and time.`);
         }
         if (mightViewResponseButtons && rfiStatus === RfiStatus.Expired) {
           infoAlerts.push('This RFI is no longer accepting responses.');
@@ -104,12 +111,42 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
   }
 };
 
+const startRespondToRfiLoading: UpdateState<State> = makeStartLoading('respondToRfiLoading');
+const stopRespondToRfiLoading: UpdateState<State> = makeStopLoading('respondToRfiLoading');
 const startRespondToDiscoveryDayLoading: UpdateState<State> = makeStartLoading('respondToDiscoveryDayLoading');
 const stopRespondToDiscoveryDayLoading: UpdateState<State> = makeStopLoading('respondToDiscoveryDayLoading');
 
 const update: Update<State, Msg> = ({ state, msg }) => {
   if (!state.rfi) { return [state]; }
   switch (msg.tag) {
+    case 'hideResponseConfirmationPrompt':
+      return [state.set('promptResponseConfirmation', false)];
+    case 'respondToRfi':
+      return [
+        startRespondToRfiLoading(state),
+        async (state, dispatch) => {
+          const redirect = (state: Immutable<State>) => {
+            if (state.rfi) {
+              dispatch(newRoute({
+                tag: 'requestForInformationRespond',
+                value: {
+                  rfiId: state.rfi._id
+                }
+              }));
+            }
+            return state;
+          };
+          state = stopRespondToRfiLoading(state);
+          if (state.promptResponseConfirmation) { return redirect(state); }
+          if (!state.sessionUser) { return redirect(state); }
+          const user = await api.readOneUser(state.sessionUser.id);
+          if (user.tag === 'invalid') { return redirect(state); }
+          const acceptedTerms = !!user.value.acceptedTermsAt;
+          // Ask the user to accept the terms first.
+          if (acceptedTerms) { return redirect(state); }
+          return state.set('promptResponseConfirmation', true);
+        }
+      ];
     case 'respondToDiscoveryDay':
       return [
         startRespondToDiscoveryDayLoading(state),
@@ -123,11 +160,8 @@ const update: Update<State, Msg> = ({ state, msg }) => {
             }
           };
           const thisUrl = router.routeToUrl(thisRoute);
-          // TODO once we refactor how page's do auth and get session information,
-          // we should clean up this code.
-          const session = await api.getSession();
           // Redirect the user to the sign-in form.
-          if (session.tag === 'invalid' || !session.value.user) {
+          if (!state.sessionUser) {
             dispatch(newRoute({
               tag: 'signIn' as 'signIn',
               value: {
@@ -137,8 +171,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
             return finish(state);
           }
           // Do nothing when the API fails to return the user data, as this shouldn't happen.
-          // TODO figure out what to do for UX.
-          const user = await api.readOneUser(session.value.user.id);
+          const user = await api.readOneUser(state.sessionUser.id);
           if (user.tag === 'invalid') { return finish(state); }
           const acceptedTerms = !!user.value.acceptedTermsAt;
           // Ask the user to accept the terms first.
@@ -222,7 +255,7 @@ const Description: View<{ value: string }> = ({ value }) => {
   return (
     <Row className='mt-5 pt-5 border-top'>
       <Col xs='12'>
-        <Markdown source={value} />
+        <Markdown source={value} openLinksInNewTabs />
       </Col>
     </Row>
   );
@@ -258,7 +291,7 @@ const Addenda: View<{ addenda: Addendum[] }> = ({ addenda }) => {
     return (
       <div key={`view-rfi-addendum-${i}`} className={`pb-${i === addenda.length - 1 ? '0' : '4'} w-100`}>
         <Col xs='12' md={{ size: 10, offset: 1 }} className={i !== 0 ? 'pt-4 border-top' : ''}>
-          <p className='mb-2'>{addendum.description}</p>
+          <Markdown source={addendum.description} className='mb-2' openLinksInNewTabs />
         </Col>
         <Col xs='12' md={{ size: 10, offset: 1 }} className='d-flex flex-column flex-md-row justify-content-between text-secondary'>
           <small>{publishedDateToString(addendum.createdAt)}</small>
@@ -306,20 +339,15 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
   if (state.preview || !state.rfi) { return null; }
   // Only show these buttons for Vendors and unauthenticated users.
   const rfiStatus = rfiToRfiStatus(state.rfi);
-  if (!showButtons(rfiStatus, state.userType)) { return null; }
+  if (!showButtons(rfiStatus, state.sessionUser && state.sessionUser.type)) { return null; }
   const version = state.rfi.latestVersion;
   const alreadyRespondedToDiscoveryDay = !!state.ddr;
   const respondToDiscoveryDay = () => !alreadyRespondedToDiscoveryDay && dispatch({ tag: 'respondToDiscoveryDay', value: undefined });
   const isLoading = state.respondToDiscoveryDayLoading > 0;
-  const respondToRfiRoute: Route = {
-    tag: 'requestForInformationRespond',
-    value: {
-      rfiId: state.rfi._id
-    }
-  };
+  const respondToRfi = () => dispatch({ tag: 'respondToRfi', value: undefined });
   return (
     <FixedBar>
-      <Link route={respondToRfiRoute} button color='primary' disabled={isLoading} className='text-nowrap'>
+      <Link onClick={respondToRfi} button color='primary' disabled={isLoading} className='text-nowrap'>
         Respond to RFI
       </Link>
       {rfiStatus === RfiStatus.Open
@@ -379,5 +407,41 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
       ? 'Request for Information Preview'
       : 'Request for Information';
     return makePageMetadata(title);
+  },
+  getBreadcrumbs(state) {
+    const breadcrumbs: PageBreadcrumbs<Msg> = [{
+      text: 'RFIs',
+      onClickMsg: newRoute({
+        tag: 'requestForInformationList',
+        value: null
+      })
+    }];
+    if (state.rfi) {
+      breadcrumbs.push({
+        text: state.rfi.latestVersion.rfiNumber
+      });
+    }
+    return breadcrumbs;
+  },
+  getModal(state) {
+    if (!state.promptResponseConfirmation || !state.rfi) { return null; }
+    return {
+      title: 'Review the Terms and Conditions?',
+      body: 'You must accept the Procurement Concierge Terms and Conditions in order to respond to this Request for Information.',
+      onCloseMsg: { tag: 'hideResponseConfirmationPrompt', value: undefined },
+      actions: [
+        {
+          text: 'Yes, review Terms and Conditions',
+          color: 'primary',
+          button: true,
+          msg: { tag: 'respondToRfi', value: undefined }
+        },
+        {
+          text: 'Go Back',
+          color: 'secondary',
+          msg: { tag: 'hideResponseConfirmationPrompt', value: undefined }
+        }
+      ]
+    };
   }
 };

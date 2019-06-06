@@ -117,7 +117,7 @@ export type AuthLevel<UserType>
  * Returns `null` if the parse fails.
  */
 
-export function parseAuthLevel<UserType>(raw: object, parseOneUserType: (raw: string) => UserType | null): AuthLevel<UserType> | null {
+export function parseAuthLevel<UserType>(raw: any, parseOneUserType: (raw: string) => UserType | null): AuthLevel<UserType> | null {
   switch (get(raw, 'tag')) {
     case 'any':
       return { tag: 'any', value: undefined };
@@ -219,21 +219,15 @@ export interface VendorProfile {
 
 export type Profile = BuyerProfile | ProgramStaffProfile | VendorProfile;
 
-export function profileToName(profile: Profile): string | null {
+export function profileToName(profile: Profile): string {
   switch (profile.type) {
     case UserType.Buyer:
     case UserType.ProgramStaff:
       const firstName = profile.firstName;
       const lastName = profile.lastName;
-      if (firstName && lastName) {
-        return `${firstName} ${lastName}`;
-      } else if (firstName) {
-        return firstName;
-      } else {
-        return null;
-      }
+      return `${firstName} ${lastName}`;
     case UserType.Vendor:
-      return profile.businessName || null;
+      return profile.businessName;
   }
 }
 
@@ -269,5 +263,18 @@ export function rfiStatusToTitleCase(s: RfiStatus): string {
     case RfiStatus.Closed:
     case RfiStatus.Expired:
       return 'Closed';
+  }
+}
+
+export type Rating = 'good' | 'neutral' | 'bad';
+
+export function ratingToTitleCase(rating: Rating): string {
+  switch (rating) {
+    case 'good':
+      return 'Good';
+    case 'neutral':
+      return 'Neutral';
+    case 'bad':
+      return 'Bad';
   }
 }

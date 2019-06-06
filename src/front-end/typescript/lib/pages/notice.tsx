@@ -1,6 +1,6 @@
 import { makePageMetadata } from 'front-end/lib';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, PageComponent, PageInit, Update } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, noPageModal, PageComponent, PageInit, Update } from 'front-end/lib/framework';
 import Link from 'front-end/lib/views/link';
 import React from 'react';
 import { Col, Row } from 'reactstrap';
@@ -13,6 +13,7 @@ export type NoticeId
   | ADT<'changePassword'>
   | ADT<'resetPassword'>
   | ADT<'forgotPassword'>
+  | ADT<'feedbackSubmitted'>
   | ADT<'rfiResponseSubmitted', RfiId>
   | ADT<'rfiNonVendorResponse', RfiId>
   | ADT<'rfiExpiredResponse', RfiId>;
@@ -64,6 +65,19 @@ function noticeIdToState(noticeId: NoticeId): State {
           }
         }
       };
+
+    case 'feedbackSubmitted':
+      return {
+        title: 'Feedback Sent',
+        body: 'You have successfully sent your feedback. Thank you!',
+        button: {
+          text: 'Return to the Home Page',
+          route: {
+            tag: 'landing',
+            value: null
+          }
+        }
+      }
 
     case 'rfiResponseSubmitted':
       return {
@@ -176,5 +190,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getAlerts: emptyPageAlerts,
   getMetadata({ title }) {
     return makePageMetadata(title);
-  }
+  },
+  getBreadcrumbs: emptyPageBreadcrumbs,
+  getModal: noPageModal
 };

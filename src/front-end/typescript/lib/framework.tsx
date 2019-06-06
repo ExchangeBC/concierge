@@ -137,14 +137,19 @@ export type GlobalMsg<Route>
 
 export type GlobalComponentMsg<Msg, Route> = Msg | GlobalMsg<Route>;
 
+export function isGlobalMsg<Msg, Route>(msg: GlobalComponentMsg<Msg, Route>): msg is GlobalMsg<Route> {
+  const globalMsg = msg as GlobalMsg<Route>;
+  return globalMsg.tag === '@newRoute' || globalMsg.tag === '@replaceRoute' || globalMsg.tag === '@newUrl' || globalMsg.tag === '@replaceUrl';
+}
+
+export function mapGlobalComponentMsg<MsgA, MsgB, Route>(msg: GlobalComponentMsg<MsgA, Route>, map: (msg: GlobalComponentMsg<MsgA, Route>) => GlobalComponentMsg<MsgB, Route>): GlobalComponentMsg<MsgB, Route> {
+  return isGlobalMsg(msg) ? msg : map(msg);
+}
+
 export function mapGlobalComponentDispatch<ParentMsg, ChildMsg, Route>(dispatch: Dispatch<GlobalComponentMsg<ParentMsg, Route>>, fn: (childMsg: GlobalComponentMsg<ChildMsg, Route>) => GlobalComponentMsg<ParentMsg, Route>): Dispatch<GlobalComponentMsg<ChildMsg, Route>> {
   return childMsg => {
-    const globalMsg = childMsg as GlobalMsg<Route>;
-    if (globalMsg.tag === '@newRoute' || globalMsg.tag === '@replaceRoute' || globalMsg.tag === '@newUrl' || globalMsg.tag === '@replaceUrl') {
-      return dispatch(childMsg as GlobalMsg<Route>);
-    } else {
-      return dispatch(fn(childMsg));
-    }
+    const mappedMsg = mapGlobalComponentMsg(childMsg, fn);
+    return dispatch(mappedMsg);
   };
 }
 
@@ -185,19 +190,13 @@ export interface PageMetadata {
   title: string;
 }
 
+export type PageGetMetadata<State> = (state: Immutable<State>) => PageMetadata;
+
 export interface PageAlerts {
   info: string[];
   warnings: string[];
   errors: string[];
 }
-
-export interface PageContainerOptions {
-  fullWidth?: boolean;
-  paddingTop?: boolean;
-  paddingBottom?: boolean;
-}
-
-export type PageGetMetadata<State> = (state: Immutable<State>) => PageMetadata;
 
 export type PageGetAlerts<State> = (state: Immutable<State>) => PageAlerts;
 
@@ -209,6 +208,59 @@ export function emptyPageAlerts(): PageAlerts {
   };
 }
 
+export interface PageBreadcrumb<Msg> {
+  text: string;
+  onClickMsg?: Msg;
+}
+
+export type PageBreadcrumbs<Msg> = Array<PageBreadcrumb<Msg>>;
+
+export type PageGetBreadcrumbs<State, Msg> = (state: Immutable<State>) => PageBreadcrumbs<Msg>;
+
+export function emptyPageBreadcrumbs<Msg>(): PageBreadcrumbs<Msg> {
+  return [];
+}
+
+export interface ModalButton<Msg> {
+  text: string;
+  color: 'primary' | 'info' | 'secondary';
+  msg: Msg;
+  button?: boolean;
+}
+
+export interface PageModal<Msg> {
+  title: string;
+  body: string;
+  onCloseMsg: Msg;
+  actions: Array<ModalButton<Msg>>;
+}
+
+export function mapPageModalMsg<MsgA, MsgB, Route>(modal: PageModal<GlobalComponentMsg<MsgA, Route>> | null, mapMsg: (msgA: GlobalComponentMsg<MsgA, Route>) => GlobalComponentMsg<MsgB, Route>): PageModal<GlobalComponentMsg<MsgB, Route>> | null {
+  if (!modal) { return null; }
+  return {
+    ...modal,
+    onCloseMsg: mapGlobalComponentMsg(modal.onCloseMsg, mapMsg),
+    actions: modal.actions.map(action => {
+      return {
+        ...action,
+        msg: mapGlobalComponentMsg(action.msg, mapMsg)
+      };
+    })
+  };
+}
+
+export type PageGetModal<State, Msg> = (state: Immutable<State>) => PageModal<Msg> | null;
+
+export function noPageModal<Msg>() {
+  return null;
+}
+
+export interface PageContainerOptions {
+  fullWidth?: boolean;
+  paddingTop?: boolean;
+  paddingBottom?: boolean;
+}
+
 export interface PageComponent<RouteParams, SharedState, State, Msg, Props extends ComponentViewProps<State, Msg> = ComponentViewProps<State, Msg>> {
   init: PageInit<RouteParams, SharedState, State, Msg>;
   update: Update<State, Msg>;
@@ -217,6 +269,8 @@ export interface PageComponent<RouteParams, SharedState, State, Msg, Props exten
   containerOptions?: PageContainerOptions;
   getMetadata: PageGetMetadata<State>;
   getAlerts: PageGetAlerts<State>;
+  getBreadcrumbs: PageGetBreadcrumbs<State, Msg>;
+  getModal: PageGetModal<State, Msg>;
 }
 
 export function setPageMetadata(metadata: PageMetadata): void {
@@ -289,23 +343,22 @@ export interface AppComponent<State, Msg, Route> extends Component<null, State, 
 
 export function mapAppDispatch<ParentMsg, ChildMsg, Route>(dispatch: Dispatch<AppMsg<ParentMsg, Route>>, fn: (childMsg: GlobalComponentMsg<ChildMsg, Route>) => AppMsg<ParentMsg, Route>): Dispatch<GlobalComponentMsg<ChildMsg, Route>> {
   return childMsg => {
-    const globalMsg = childMsg as GlobalMsg<Route>;
-    if (globalMsg.tag === '@newRoute' || globalMsg.tag === '@replaceRoute' || globalMsg.tag === '@newUrl' || globalMsg.tag === '@replaceUrl') {
-      return dispatch(childMsg as GlobalMsg<Route>);
-    } else {
-      return dispatch(fn(childMsg));
-    }
+    const mappedMsg = mapGlobalComponentMsg(childMsg, fn);
+    return dispatch(mappedMsg);
   };
 }
 
-interface InitAppChildPageParams<ParentState, ParentMsg, ChildRouteParams, ChildState, ChildMsg, SharedState, Route> {
+export interface InitAppChildPageParams<ParentState, ParentMsg, ChildRouteParams, ChildState, ChildMsg, SharedState> {
   state: Immutable<ParentState>;
-  dispatch: Dispatch<AppMsg<ParentMsg, Route>>;
+  dispatch: Dispatch<ParentMsg>;
   childStatePath: string[];
   childRouteParams: ChildRouteParams;
-  childInit: PageInit<ChildRouteParams, SharedState, ChildState, GlobalComponentMsg<ChildMsg, Route>>;
+  childInit: PageInit<ChildRouteParams, SharedState, ChildState, ChildMsg>;
+  childGetMetadata: PageGetMetadata<ChildState>;
+  childGetModal: PageGetModal<ChildState, ChildMsg>;
   getSharedState(state: Immutable<ParentState>): SharedState;
-  mapChildMsg(msg: GlobalComponentMsg<ChildMsg, Route>): ParentMsg;
+  mapChildMsg(msg: ChildMsg): ParentMsg;
+  setModal(state: Immutable<ParentState>, modal: PageModal<ParentMsg> | null): Immutable<ParentState>;
 }
 
 /**
@@ -313,13 +366,17 @@ interface InitAppChildPageParams<ParentState, ParentMsg, ChildRouteParams, Child
  * in an AppComponent's update function.
  */
 
-export async function initAppChildPage<ParentState, ParentMsg, ChildRouteParams, ChildState, ChildMsg, SharedState, Route>(params: InitAppChildPageParams<ParentState, ParentMsg, ChildRouteParams, ChildState, ChildMsg, SharedState, Route>): Promise<Immutable<ParentState>> {
+export async function initAppChildPage<ParentState, ParentMsg, ChildRouteParams, ChildState, ChildMsg, SharedState, Route>(params: InitAppChildPageParams<ParentState, AppMsg<ParentMsg, Route>, ChildRouteParams, ChildState, GlobalComponentMsg<ChildMsg, Route>, SharedState>): Promise<Immutable<ParentState>> {
   const childState = immutable(await params.childInit({
     routeParams: params.childRouteParams,
     shared: params.getSharedState(params.state),
     dispatch: mapAppDispatch(params.dispatch, params.mapChildMsg)
   }));
-  return params.state.setIn(params.childStatePath, childState);
+  setPageMetadata(params.childGetMetadata(childState));
+  const childModal = params.childGetModal(childState);
+  const parentModal = mapPageModalMsg(childModal, params.mapChildMsg);
+  const parentState = params.state.setIn(params.childStatePath, childState);
+  return params.setModal(parentState, parentModal);
 }
 
 /**
@@ -352,6 +409,8 @@ export function updateAppChild<PS, PM, CS, CM, Route>(params: UpdateChildParams<
 
 export interface UpdateChildPageParams<PS, PM, CS, CM> extends UpdateChildParams<PS, PM, CS, CM> {
   childGetMetadata: PageGetMetadata<CS>;
+  childGetModal: PageGetModal<CS, CM>;
+  setModal(state: Immutable<PS>, modal: PageModal<PM> | null): Immutable<PS>;
 }
 
 /**
@@ -361,22 +420,29 @@ export interface UpdateChildPageParams<PS, PM, CS, CM> extends UpdateChildParams
 
 export function updateAppChildPage<PS, PM, CS, CM, Route>(params: UpdateChildPageParams<PS, AppMsg<PM, Route>, CS, GlobalComponentMsg<CM, Route>>): UpdateReturnValue<PS, AppMsg<PM, Route>> {
   const [newState, newAsyncState] = updateAppChild(params);
-  const setMetadata = (state: PS) => {
-    const pageState = newState.getIn(params.childStatePath);
+  const setMetadata = (parentState: Immutable<PS>) => {
+    const pageState = parentState.getIn(params.childStatePath);
     const metadata = params.childGetMetadata(pageState);
     setPageMetadata(metadata);
   };
+  const setModal = (parentState: Immutable<PS>): Immutable<PS>  => {
+    const pageState = parentState.getIn(params.childStatePath);
+    const childModal = params.childGetModal(pageState);
+    const parentModal = mapPageModalMsg(childModal, params.mapChildMsg);
+    return params.setModal(parentState, parentModal);
+  };
   setMetadata(newState);
+  const newStateWithModal = setModal(newState);
   let asyncStateUpdate;
   if (newAsyncState) {
     asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<AppMsg<PM, Route>>) => {
       const newState = await newAsyncState(state, dispatch);
       setMetadata(newState);
-      return newState;
+      return setModal(newState);
     };
   }
   return [
-    newState,
+    newStateWithModal,
     asyncStateUpdate
   ];
 }

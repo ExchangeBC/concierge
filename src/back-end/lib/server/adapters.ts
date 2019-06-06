@@ -16,22 +16,23 @@ import { HttpMethod } from 'shared/lib/types';
 
 const SESSION_COOKIE_NAME = 'sid';
 
-export interface AdapterRunParams<SupportedRequestBodies, SupportedResponseBodies, Session> {
+export interface AdapterRunParams<SupportedRequestBodies, SupportedResponseBodies, FileUploadMetadata, Session> {
   router: Router<SupportedRequestBodies, SupportedResponseBodies, Session>;
   sessionIdToSession: SessionIdToSession<Session>;
   sessionToSessionId: SessionToSessionId<Session>;
   host: string;
   port: number;
   maxMultipartFilesSize: number;
+  parseFileUploadMetadata(raw: any): FileUploadMetadata;
 }
 
-export type Adapter<App, SupportedRequestBodies, SupportedResponseBodies, Session> = (params: AdapterRunParams<SupportedRequestBodies, SupportedResponseBodies, Session>) => App;
+export type Adapter<App, SupportedRequestBodies, SupportedResponseBodies, FileUploadMetadata, Session> = (params: AdapterRunParams<SupportedRequestBodies, SupportedResponseBodies, FileUploadMetadata, Session>) => App;
 
-export type ExpressRequestBodies = JsonRequestBody | FileRequestBody;
+export type ExpressRequestBodies<FileUploadMetadata> = JsonRequestBody | FileRequestBody<FileUploadMetadata>;
 
 export type ExpressResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody | ErrorResponseBody;
 
-export type ExpressAdapter<Session> = Adapter<expressLib.Application, ExpressRequestBodies, ExpressResponseBodies, Session>;
+export type ExpressAdapter<Session, FileUploadMetadata> = Adapter<expressLib.Application, ExpressRequestBodies<FileUploadMetadata>, ExpressResponseBodies, FileUploadMetadata, Session>;
 
 function incomingHeaderMatches(headers: IncomingHttpHeaders, header: string, value: string): boolean {
   header = castArray(headers[header] || '').join(' ');
@@ -46,11 +47,10 @@ function incomingHeaderMatches(headers: IncomingHttpHeaders, header: string, val
  *
  * `name` must be the user-defined name of the file.
  *
- * `authLevel` is an optional field containing a JSON string defining
- * access control to the file.
+ * `metadata` is an optional field containing a JSON string
  */
 
-function parseMultipartRequest(maxSize: number, expressReq: expressLib.Request): Promise<FileRequestBody> {
+function parseMultipartRequest<FileUploadMetadata>(maxSize: number, parseFileUploadMetadata: (raw: any) => FileUploadMetadata, expressReq: expressLib.Request): Promise<FileRequestBody<FileUploadMetadata>> {
   return new Promise((resolve, reject) => {
     // Reject the promise if the content length is too large.
     const contentLength = expressReq.get('content-length') || maxSize + 1;
@@ -59,12 +59,12 @@ function parseMultipartRequest(maxSize: number, expressReq: expressLib.Request):
     }
     // Parse the request.
     let filePath: string | undefined;
-    let authLevel = '';
+    let metadata = '';
     let fileName = '';
     const form = new multiparty.Form();
     // Listen for files and fields.
     // We only want to receive one file, so we disregard all other files.
-    // We only want the (optional) authLevel field, so we disregard all other fields.
+    // We only want the (optional) metadata field, so we disregard all other fields.
     form.on('part', part => {
       part.on('error', error => reject(error));
       // We expect the file's field to have the name `file`.
@@ -73,12 +73,12 @@ function parseMultipartRequest(maxSize: number, expressReq: expressLib.Request):
         const tmpPath = path.join(TMP_DIR, new mongoose.Types.ObjectId().toString());
         part.pipe(createWriteStream(tmpPath));
         filePath = tmpPath;
-      } else if (part.name === 'authLevel' && !part.filename && !authLevel) {
+      } else if (part.name === 'metadata' && !part.filename && !metadata) {
         part.setEncoding('utf8');
-        part.on('data', chunk => authLevel += chunk);
+        part.on('data', chunk => metadata += chunk);
         // No need to listen to 'end' event as the multiparty form won't end until the
         // entire request body has been processed.
-      } else if (part.name === 'name' && !part.filename && !authLevel) {
+      } else if (part.name === 'name' && !part.filename && !metadata) {
         part.setEncoding('utf8');
         part.on('data', chunk => fileName += chunk);
         // No need to listen to 'end' event as the multiparty form won't end until the
@@ -92,18 +92,18 @@ function parseMultipartRequest(maxSize: number, expressReq: expressLib.Request):
     form.on('error', error => reject(error));
     // Resolve the promise once the request has finished parsing.
     form.on('close', () => {
-      if (filePath && authLevel && fileName) {
-        const parsedAuthLevel = parseJsonSafely(authLevel);
-        switch (parsedAuthLevel.tag) {
+      if (filePath && metadata && fileName) {
+        const jsonMetadata = parseJsonSafely(metadata);
+        switch (jsonMetadata.tag) {
           case 'valid':
             resolve(makeFileRequestBody({
               name: fileName,
               path: filePath,
-              authLevel: parsedAuthLevel.value as object
+              metadata: parseFileUploadMetadata(jsonMetadata.value)
             }));
             break;
           case 'invalid':
-            reject(new Error('Invalid `authLevel` field.'));
+            reject(new Error('Invalid `metadata` field.'));
             break;
         }
       } else if (filePath && fileName) {
@@ -120,10 +120,10 @@ function parseMultipartRequest(maxSize: number, expressReq: expressLib.Request):
   });
 }
 
-export function express<Session>(): ExpressAdapter<Session> {
+export function express<Session, FileUploadMetadata>(): ExpressAdapter<Session, FileUploadMetadata> {
   const logger = makeDomainLogger(consoleAdapter, 'adapter:express');
 
-  return ({ router, sessionIdToSession, sessionToSessionId, host, port, maxMultipartFilesSize }) => {
+  return ({ router, sessionIdToSession, sessionToSessionId, host, port, maxMultipartFilesSize, parseFileUploadMetadata }) => {
     function respond(response: Response<ExpressResponseBodies, Session>, expressRes: expressLib.Response): void {
       expressRes
         .status(response.code)
@@ -160,7 +160,7 @@ export function express<Session>(): ExpressAdapter<Session> {
       }
     }
 
-    function makeExpressRequestHandler(route: Route<ExpressRequestBodies, any, ExpressResponseBodies, any, Session>): expressLib.RequestHandler {
+    function makeExpressRequestHandler(route: Route<ExpressRequestBodies<FileUploadMetadata>, any, ExpressResponseBodies, any, Session>): expressLib.RequestHandler {
       function asyncHandler(fn: (request: expressLib.Request, expressRes: expressLib.Response, next: expressLib.NextFunction) => Promise<void>): expressLib.RequestHandler {
         return (expressReq, expressRes, next) => {
           fn(expressReq, expressRes, next)
@@ -184,16 +184,16 @@ export function express<Session>(): ExpressAdapter<Session> {
         const session = await sessionIdToSession(sessionId);
         // Set up the request body.
         const headers = expressReq.headers;
-        let body: ExpressRequestBodies = makeJsonRequestBody(null);
+        let body: ExpressRequestBodies<FileUploadMetadata> = makeJsonRequestBody(null);
         if (method !== HttpMethod.Get && incomingHeaderMatches(headers, 'content-type', 'application/json')) {
           body = makeJsonRequestBody(expressReq.body);
         } else if (method !== HttpMethod.Get && incomingHeaderMatches(headers, 'content-type', 'multipart')) {
           // TODO handle file size error.
-          body = await parseMultipartRequest(maxMultipartFilesSize, expressReq);
+          body = await parseMultipartRequest(maxMultipartFilesSize, parseFileUploadMetadata, expressReq);
         }
         // Create the initial request.
         const requestId = new mongoose.Types.ObjectId();
-        let request: Request<ExpressRequestBodies, Session> = {
+        let request: Request<ExpressRequestBodies<FileUploadMetadata>, Session> = {
           id: requestId,
           path: expressReq.path,
           method,

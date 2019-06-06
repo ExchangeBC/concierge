@@ -10,6 +10,15 @@ const init: Init<null, State> = async () => {
       session: undefined
     },
     activeRoute: { tag: 'landing', value: null },
+    modal: {
+      open: false,
+      content: {
+        title: '',
+        body: '',
+        onCloseMsg: { tag: 'noop', value: undefined },
+        actions: []
+      }
+    },
     pages: {}
   };
 };
