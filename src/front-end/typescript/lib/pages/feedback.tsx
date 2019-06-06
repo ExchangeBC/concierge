@@ -101,10 +101,10 @@ const RatingSelector: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   const setRating = (value: Rating) => () => dispatch({ tag: 'onChangeRating', value });
   const isRating = (rating: Rating) => state.rating === rating;
-  const iconProps = (rating: Rating, iconName: 'good-rating' | 'meh-rating' | 'bad-rating', activeColor: 'success' | 'warning' | 'danger' | 'secondary') => {
+  const iconProps = (rating: Rating, iconName: 'rating-good' | 'rating-neutral' | 'rating-bad', activeColor: 'success' | 'warning' | 'danger' | 'secondary') => {
     const isActive = isRating(rating);
     return {
-      className: `${rating === 'good' || rating === 'meh' ? 'mr-4' : ''} ${isActive ? '' : 'text-hover-gray-700'}`,
+      className: `${rating === 'good' || rating === 'neutral' ? 'mr-4' : ''} ${isActive ? '' : 'text-hover-gray-700'}`,
       width: 2.5,
       height: 2.5,
       onClick: isActive ? undefined : setRating(rating),
@@ -118,9 +118,9 @@ const RatingSelector: ComponentView<State, Msg> = props => {
   return (
     <Row className='mb-4'>
       <Col xs='12' className='d-flex'>
-        <Icon {...iconProps('good', 'good-rating', 'success')} />
-        <Icon {...iconProps('meh', 'meh-rating', 'warning')} />
-        <Icon {...iconProps('bad', 'bad-rating', 'danger')} />
+        <Icon {...iconProps('good', 'rating-good', 'success')} />
+        <Icon {...iconProps('neutral', 'rating-neutral', 'warning')} />
+        <Icon {...iconProps('bad', 'rating-bad', 'danger')} />
       </Col>
     </Row>
   );

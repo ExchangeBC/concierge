@@ -1,4 +1,4 @@
-import { FEEDBACK_MAIL_ADDRESS } from 'back-end/config';
+import { CONTACT_EMAIL } from 'back-end/config';
 import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
 import * as notifications from 'back-end/lib/mailer/notifications';
@@ -56,14 +56,14 @@ export const resource: Resource = {
 
         await feedback.save();
 
-        // Send email to configured FEEDBACK_MAIL_ADDRESS
+        // Send email to configured CONTACT_EMAIL
         try {
           await notifications.createFeedback({
-            feedbackEmail: FEEDBACK_MAIL_ADDRESS,
+            feedbackEmail: CONTACT_EMAIL,
             feedbackResponse: FeedbackSchema.makePublicFeedback(feedback)
           });
         } catch (error) {
-          request.logger.error(`unable to send notification email to configured feedback email address: ${FEEDBACK_MAIL_ADDRESS}`, {
+          request.logger.error(`unable to send notification email to configured contact email address: ${CONTACT_EMAIL}`, {
             ...makeErrorResponseBody(error)
           });
         }

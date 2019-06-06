@@ -5,10 +5,10 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { PublicFeedback } from 'shared/lib/resources/feedback';
 import { PublicRfiResponse } from 'shared/lib/resources/request-for-information/response';
-import { profileToName } from 'shared/lib/types';
+import { profileToName, ratingToTitleCase, userTypeToTitleCase } from 'shared/lib/types';
 
-const TEMPLATE_PATH = resolve(__dirname, './templates/notification.ejs');
-const TEMPLATE = readFileSync(TEMPLATE_PATH, 'utf8');
+const GENERIC_TEMPLATE_PATH = resolve(__dirname, './templates/notification.ejs');
+const GENERIC_TEMPLATE = readFileSync(GENERIC_TEMPLATE_PATH, 'utf8');
 
 const FEEDBACK_TEMPLATE_PATH = resolve(__dirname, './templates/feedback.ejs');
 const FEEDBACK_TEMPLATE = readFileSync(FEEDBACK_TEMPLATE_PATH, 'utf8');
@@ -35,7 +35,7 @@ interface MakeNotificationParams {
 }
 
 function makeNotificationHtml(params: MakeNotificationParams): string {
-  return ejs.render(TEMPLATE, {
+  return ejs.render(GENERIC_TEMPLATE, {
     data: {
       ...params,
       logo: {
@@ -45,18 +45,20 @@ function makeNotificationHtml(params: MakeNotificationParams): string {
       }
     }
   }, {
-    filename: TEMPLATE_PATH
+    filename: GENERIC_TEMPLATE_PATH
   });
 }
 
 interface MakeFeedbackParams {
-  feedback: PublicFeedback
+  rating: string;
+  text: string;
+  userType?: string;
 }
 
 function makeFeedbackHtml(params: MakeFeedbackParams) {
   return ejs.render(FEEDBACK_TEMPLATE, {
     data: {
-      ...params,
+      feedback: params,
       logo: {
         href: makeUrl(''),
         src: makeUrl('images/logo.svg'),
@@ -209,7 +211,9 @@ export async function createFeedback(params: CreateFeedbackEmailParams): Promise
     to: feedbackEmail,
     subject,
     html: makeFeedbackHtml({
-      feedback: feedbackResponse
+      rating: ratingToTitleCase(feedbackResponse.rating),
+      text: feedbackResponse.text,
+      userType: feedbackResponse.userType && userTypeToTitleCase(feedbackResponse.userType)
     })
   });
 }

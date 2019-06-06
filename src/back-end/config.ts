@@ -91,7 +91,7 @@ export const MAILER_FROM = get('MAILER_FROM', `Procurement Concierge Program <${
 
 export const MAILER_ROOT_URL = get('MAILER_ROOT_URL', 'https://procurementconcierge.gov.bc.ca').replace(/\/*$/, '');
 
-export const FEEDBACK_MAIL_ADDRESS = get('FEEDBACK_MAIL_ADDRESS', '');
+export const CONTACT_EMAIL = get('CONTACT_EMAIL', '');
 
 function isPositiveInteger(n: number): boolean {
   return !isNaN(n) && !!n && n >= 0 && Math.abs(n % 1) === 0;
@@ -187,13 +187,17 @@ export function getConfigErrors(): string[] {
     ]);
   }
 
-  if (!MAILER_FROM || !MAILER_FROM.match(/^[^<>@]+<[^@]+@[^@]+.[^@]+>$/)) {
+  if (!MAILER_FROM || !MAILER_FROM.match(/^[^<>@]+<[^@]+@[^@]+\.[^@]+>$/)) {
     errors.push('MAILER_FROM must be specified using the format: "Name <email@domain.tld>".');
   }
 
   const mailerRootUrl = url.parse(MAILER_ROOT_URL);
   if (!MAILER_ROOT_URL || !mailerRootUrl.protocol || !mailerRootUrl.host) {
     errors.push('MAILER_ROOT_URL must be specified as a valid URL with a protocol and host.');
+  }
+
+  if (!CONTACT_EMAIL || !CONTACT_EMAIL.match(/^[^@]+@[^@]+\.[^@]+$/)) {
+    errors.push('CONTACT_EMAIL must be specified as a valid email address.');
   }
 
   return errors;

@@ -15,7 +15,7 @@
     "back-end:typecheck": "npx tsc --project src/back-end && echo Typecheck Successful\n",
     "back-end:test": "node tests/back-end/index.js",
     "back-end:start": "cd src/back-end && npx ts-node --require tsconfig-paths/register --project tsconfig.json index.ts",
-    "back-end:watch": "cd src/back-end && npx nodemon --watch . --watch ../shared --ext ts,tsx,json --exec \"ts-node --require tsconfig-paths/register --project tsconfig.json index.ts\"",
+    "back-end:watch": "cd src/back-end && npx nodemon --watch . --watch ../shared --ext ts,tsx,json,ejs --exec \"ts-node --require tsconfig-paths/register --project tsconfig.json index.ts\"",
     "back-end:typedoc": "npx typedoc --name 'Concierge Back-End' --tsconfig src/back-end/tsconfig.json --out typedoc/back-end src/back-end",
     "shared:typedoc": "npx typedoc --name 'Concierge Shared' --tsconfig src/shared/tsconfig.json --out typedoc/shared src/shared",
     "migrations:create": "npx migrate --chdir migrations --template-file template.ts --migrations-dir migrations create",

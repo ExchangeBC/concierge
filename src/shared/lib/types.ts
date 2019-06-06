@@ -266,4 +266,15 @@ export function rfiStatusToTitleCase(s: RfiStatus): string {
   }
 }
 
-export type Rating = 'good' | 'meh' | 'bad';
+export type Rating = 'good' | 'neutral' | 'bad';
+
+export function ratingToTitleCase(rating: Rating): string {
+  switch (rating) {
+    case 'good':
+      return 'Good';
+    case 'neutral':
+      return 'Neutral';
+    case 'bad':
+      return 'Bad';
+  }
+}

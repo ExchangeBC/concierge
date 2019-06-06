@@ -11,7 +11,7 @@ export function validateRating(rating: string | undefined): Validation<Rating> {
     }
     switch (rating) {
       case 'good':
-      case 'meh':
+      case 'neutral':
       case 'bad':
         return valid(rating as Rating)
       default:
