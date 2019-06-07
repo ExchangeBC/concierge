@@ -147,6 +147,18 @@ const router: Router<Route> = {
         };
       }
     },
+    // Alias the /users/:userId route for backward compatibility.
+    {
+      path: '/profiles/:userId',
+      makeRoute({ params }) {
+        return {
+          tag: 'userView',
+          value: {
+            profileUserId: getParamString(params, 'userId')
+          }
+        };
+      }
+    },
     {
       path: '/users',
       makeRoute() {

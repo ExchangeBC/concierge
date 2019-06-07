@@ -145,7 +145,7 @@ export async function createRfiResponseProgramStaff(params: CreateRfiResponsePro
             },
             {
               name: `Vendor Profile (${vendorName})`,
-              href: `${MAILER_ROOT_URL}/profiles/${rfiResponse.createdBy._id}`
+              href: `${MAILER_ROOT_URL}/users/${rfiResponse.createdBy._id}`
             }
           ]
         },
@@ -190,7 +190,7 @@ export async function createDdrProgramStaff(params: CreateDdrProgramStaffParams)
             },
             {
               name: `Vendor Profile (${vendorName})`,
-              href: `${MAILER_ROOT_URL}/profiles/${vendorId}`
+              href: `${MAILER_ROOT_URL}/users/${vendorId}`
             }
           ]
         }
