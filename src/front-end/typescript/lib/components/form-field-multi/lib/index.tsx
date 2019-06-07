@@ -139,7 +139,7 @@ const ConditionalHelp: View<Props<any, any, any>> = ({ state, disabled = false }
   const { help } = state;
   if (help && help.show && !disabled) {
     return (
-      <Alert color='info'>
+      <Alert color='primary'>
         {help.text}
       </Alert>
     );

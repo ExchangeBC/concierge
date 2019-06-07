@@ -44,7 +44,7 @@ const CallToActionButton: View<{ signedIn: boolean, userType?: UserType }> = ({ 
     text = 'View RFIs';
   }
   return (
-    <Link button route={route} size='lg' color='info'>{text}</Link>
+    <Link button route={route} size='lg' color='info-alt'>{text}</Link>
   );
 };
 
@@ -129,7 +129,7 @@ const UserPersonas: ComponentView<State, Msg> = ({ state, dispatch }) => {
             <p>
               Learn how to use the Procurement Concierge Program's Web Application.
             </p>
-            <Link button route={{ tag: 'markdown', value: { documentId: 'guide' } }} color='info' className='mt-4 d-block mt-auto'>Read the Guide</Link>
+            <Link button route={{ tag: 'markdown', value: { documentId: 'guide' } }} color='info-alt' className='mt-4 d-block mt-auto'>Read the Guide</Link>
           </Col>
         </Row>
       </Container>

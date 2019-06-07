@@ -30,17 +30,18 @@ $grid-gutter-width: $spacer * 2;
 // Bootstrap updates the theme map based on these variables,
 // so we don't need to update the map at all.
 $primary: #003366;
-$info: #0c99d6;
+$info: #38598A;
 $warn: #FCBA19;
 $danger: #DC3545;
 $success: #28A745;
-$info-alt: #38598A;
+$info-alt: #0c99d6;
 
 $theme-colors: (
   'info-alt': $info-alt
 );
 
-$link-color: $info;
+$component-active-bg: $info;
+$link-color: $info-alt;
 
 $enable-validation-icons: false;
 

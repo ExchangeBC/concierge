@@ -117,7 +117,7 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
           <Link nav route={signInRoute} color='white' onClick={onClick} className='px-0 px-md-3'>Sign In</Link>
         </NavItem>
         <NavItem>
-          <Link button route={signUpRoute} color='info' onClick={onClick} className='mt-2 mt-md-0'>Sign Up</Link>
+          <Link button route={signUpRoute} color='info-alt' onClick={onClick} className='mt-2 mt-md-0'>Sign Up</Link>
         </NavItem>
       </Nav>
     );
@@ -136,7 +136,7 @@ const Navigation: View<Props> = props => {
           <NavbarBrand href='/'>
             <img src='/images/logo.svg' style={{ height: '2.25rem' }} alt='Procurement Concierge Program' />
           </NavbarBrand>
-          <Spinner size='sm' color='info-alt' className='transition-indicator d-md-none' />
+          <Spinner size='sm' color='info' className='transition-indicator d-md-none' />
           <NavbarToggler className='ml-auto' onClick={() => props.toggleIsOpen()} />
           <Collapse isOpen={props.isOpen} className='py-3 py-md-0' navbar>
             <ContextualLinks {...props} className='d-md-none' />
@@ -144,7 +144,7 @@ const Navigation: View<Props> = props => {
           </Collapse>
         </Container>
       </Navbar>
-      <Navbar expand='sm' className='bg-info-alt d-none d-md-block shadow border-bottom'>
+      <Navbar expand='sm' className='bg-info d-none d-md-block shadow border-bottom'>
         <Container className='pl-0 d-flex justify-content-between'>
           <ContextualLinks {...props} />
           <Spinner size='sm' color='primary' className='transition-indicator' />

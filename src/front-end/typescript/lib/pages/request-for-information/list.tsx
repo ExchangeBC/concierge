@@ -402,7 +402,7 @@ const ConditionalCreateButton: ComponentView<State, Msg> = ({ state, dispatch })
   if (state.userType !== UserType.ProgramStaff) { return null; }
   return (
     <Col xs='12' md='auto'>
-      <Link route={{ tag: 'requestForInformationCreate', value: null }} button color='info'>Create an RFI</Link>
+      <Link route={{ tag: 'requestForInformationCreate', value: null }} button color='primary'>Create an RFI</Link>
     </Col>
   );
 }

@@ -318,7 +318,7 @@ const view: ComponentView<State, Msg> = props => {
           <h1 className='mb-3 mb-md-0'>Concierge Users</h1>
         </Col>
         <Col xs='12' md='auto'>
-          <Link route={{ tag: 'signUpProgramStaff', value: {} }} button color='info'>Create a Program Staff Account</Link>
+          <Link route={{ tag: 'signUpProgramStaff', value: {} }} button color='primary'>Create a Program Staff Account</Link>
         </Col>
       </Row>
       <Row className='mb-3 d-none d-md-flex'>
