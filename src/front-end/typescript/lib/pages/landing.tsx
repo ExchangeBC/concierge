@@ -55,7 +55,7 @@ const Hero: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Row>
           <Col xs='12' md={{ size: 8, offset: 1 }} lg='7' >
             <h1 className='text-uppercase font-weight-bold mb-4'>
-              <span className='text-primary'>Transforming</span> how government interacts with <span className='text-primary'>the marketplace</span>.
+              <span className='text-info'>Transforming</span> how government interacts with <span className='text-info'>the marketplace</span>.
             </h1>
           </Col>
         </Row>
