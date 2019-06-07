@@ -134,7 +134,7 @@ const Navigation: View<Props> = props => {
       <Navbar expand='md' dark color='primary' className='navbar border-bottom-gov'>
         <Container className='px-sm-3'>
           <NavbarBrand href='/'>
-            <img src='/images/logo.svg' style={{ height: '2.25rem' }} alt='Procurement Concierge Program' />
+            <img src='/images/logo.svg' style={{ height: '2rem' }} alt='Procurement Concierge Program' />
           </NavbarBrand>
           <Spinner size='sm' color='info' className='transition-indicator d-md-none' />
           <NavbarToggler className='ml-auto' onClick={() => props.toggleIsOpen()} />

@@ -10,7 +10,7 @@ import FixedBar from 'front-end/lib/views/layout/fixed-bar';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
-import { Col, Container, Row } from 'reactstrap';
+import { Col, Row } from 'reactstrap';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { ADT, UserType } from 'shared/lib/types';
 
@@ -171,7 +171,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
 const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const dispatchRfiForm: Dispatch<RfiForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'rfiForm' as const, value }));
   return (
-    <Container className='mb-5 flex-grow-1'>
+    <div className='mb-5 flex-grow-1'>
       <Row>
         <Col xs='12' md='10'>
           <h1>Create a Request for Information (RFI)</h1>
@@ -183,7 +183,7 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
         </Col>
       </Row>
       <RfiForm.view state={state.rfiForm} dispatch={dispatchRfiForm} />
-    </Container>
+    </div>
   );
 };
 

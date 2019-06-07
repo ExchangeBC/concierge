@@ -51,7 +51,7 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
       return wrap((
         <div>
           <Link route={{ tag: 'requestForInformationView', value: { rfiId: data.value.rfiId }}}>{data.value.text}</Link>
-          <div className='small text-uppercase text-secondary mt-n1'>{data.value.entity}</div>
+          <div className='small text-uppercase text-secondary pt-1' style={{ lineHeight: '1.25rem' }}>{data.value.entity}</div>
         </div>
       ), true);
     case 'publicSectorEntity':
