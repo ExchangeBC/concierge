@@ -1,3 +1,4 @@
+import { CONTACT_EMAIL } from 'front-end/config';
 import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
@@ -23,7 +24,6 @@ import { PublicSessionUser } from 'shared/lib/resources/session';
 import { Addendum, ADT, RfiStatus, UserType } from 'shared/lib/types';
 
 const ERROR_MESSAGE = 'The Request for Information you are looking for is not available.';
-const CONTACT_EMAIL = 'Procurement.Concierge@gov.bc.ca';
 const ATTACHMENTS_ID = 'attachments';
 
 export interface RouteParams {
