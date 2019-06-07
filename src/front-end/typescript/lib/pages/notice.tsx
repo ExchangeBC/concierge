@@ -84,12 +84,10 @@ function noticeIdToState(noticeId: NoticeId): State {
         title: 'Thank you',
         body: 'Your response to this Request for Information has been successfully submitted.',
         button: {
-          text: 'View the RFI Description',
+          text: 'View all RFIs',
           route: {
-            tag: 'requestForInformationView' as 'requestForInformationView',
-            value: {
-              rfiId: noticeId.value
-            }
+            tag: 'requestForInformationList' as const,
+            value: null
           }
         }
       };
@@ -101,7 +99,7 @@ function noticeIdToState(noticeId: NoticeId): State {
         button: {
           text: 'View the RFI Description',
           route: {
-            tag: 'requestForInformationView' as 'requestForInformationView',
+            tag: 'requestForInformationView' as const,
             value: {
               rfiId: noticeId.value
             }
@@ -116,7 +114,7 @@ function noticeIdToState(noticeId: NoticeId): State {
         button: {
           text: 'View the RFI Description',
           route: {
-            tag: 'requestForInformationView' as 'requestForInformationView',
+            tag: 'requestForInformationView' as const,
             value: {
               rfiId: noticeId.value
             }
@@ -155,7 +153,7 @@ const ConditionalButton: ComponentView<State, Msg> = ({ state, dispatch }) => {
     return (
       <Row>
         <Col xs='12'>
-          <Link route={state.button.route} button color='info'>{state.button.text}</Link>
+          <Link route={state.button.route} button color='primary'>{state.button.text}</Link>
         </Col>
       </Row>
     );

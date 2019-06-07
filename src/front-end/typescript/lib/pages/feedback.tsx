@@ -160,7 +160,7 @@ const view: ComponentView<State, Msg> = props => {
       </Row>
       <Row>
         <Col xs='12'>
-          <label className='font-weight-bold'>How would you rate your experience?<span className='text-info'>*</span></label>
+          <label className='font-weight-bold'>How would you rate your experience?<span className='text-primary ml-1'>*</span></label>
           <RatingSelector {...props} />
         </Col>
       </Row>

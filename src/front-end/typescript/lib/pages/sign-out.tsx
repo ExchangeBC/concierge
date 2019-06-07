@@ -39,7 +39,7 @@ const view: ComponentView<State, Msg> = ({ state }) => {
       </Row>
       <Row>
         <Col xs='12'>
-          <Link button href='/' color='secondary'>Return to the Home Page</Link>
+          <Link button href='/' color='primary'>Return to the Home Page</Link>
         </Col>
       </Row>
     </div>
