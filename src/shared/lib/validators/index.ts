@@ -26,25 +26,19 @@ export function invalid<Invalid>(value: Invalid): ValidOrInvalid<any, Invalid> {
   } as ADT<'invalid', Invalid>;
 }
 
-export function allValid(results: Array<ValidOrInvalid<any, any>>): boolean {
+export function allValid(results: Array<ValidOrInvalid<any, any>>): results is Array<ADT<'valid', any>> {
   for (const result of results) {
-    switch (result.tag) {
-      case 'valid':
-        continue;
-      case 'invalid':
-        return false;
+    if (result.tag === 'invalid') {
+      return false;
     }
   }
   return true;
 }
 
-export function allInvalid(results: Array<ValidOrInvalid<any, any>>): boolean {
+export function allInvalid(results: Array<ValidOrInvalid<any, any>>): results is Array<ADT<'invalid', any>> {
   for (const result of results) {
-    switch (result.tag) {
-      case 'valid':
-        return false;
-      case 'invalid':
-        continue;
+    if (result.tag === 'valid') {
+      return false;
     }
   }
   return true;

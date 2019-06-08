@@ -23,7 +23,7 @@ export function getValuesAsStrings(state: Immutable<State>): string[] {
   return getValues(state).map(v => v ? v.value : '');
 };
 
-export function setValues(state: Immutable<State>, values: string[]): Immutable<State> {
+export function setValues(state: Immutable<State>, values: Array<string | undefined>): Immutable<State> {
   return state.set(
     'formFieldMulti',
     FormFieldMulti.setFieldValues(state.formFieldMulti, values.map(v => find(state.options, { value: v })))

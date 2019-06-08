@@ -14,6 +14,12 @@ import { BusinessType, parseBusinessType, parsePhoneType, PhoneType, VendorProfi
 import { ValidOrInvalid } from 'shared/lib/validators';
 import { validateVendorProfile, VendorProfileValidationErrors } from 'shared/lib/validators/vendor-profile';
 
+const DEFAULT_SELECT_MULTI_FIELDS = [{
+  value: undefined,
+  errors: [],
+  removable: false
+}];
+
 export type ValidationErrors = VendorProfileValidationErrors;
 
 export interface State {
@@ -75,6 +81,8 @@ export function getValues(state: Immutable<State>): VendorProfile {
 }
 
 export function setValues(state: Immutable<State>, profile: VendorProfile): Immutable<State> {
+  const industrySectors = profile.industrySectors && profile.industrySectors.length ? profile.industrySectors : [undefined];
+  const categories = profile.categories && profile.categories.length ? profile.categories : [undefined];
   return state
     .setIn(['businessName', 'value'], profile.businessName || '')
     .set('businessType', Select.setValue(state.businessType, profile.businessType))
@@ -90,8 +98,8 @@ export function setValues(state: Immutable<State>, profile: VendorProfile): Immu
     .setIn(['contactPhoneNumber', 'value'], profile.contactPhoneNumber || '')
     .setIn(['contactPhoneCountryCode', 'value'], profile.contactPhoneCountryCode || '')
     .set('contactPhoneType', Select.setValue(state.contactPhoneType, profile.contactPhoneType))
-    .set('industrySectors', SelectMulti.setValues(state.industrySectors, profile.industrySectors || []))
-    .set('categories', SelectMulti.setValues(state.categories, profile.categories || []));
+    .set('industrySectors', SelectMulti.setValues(state.industrySectors, industrySectors))
+    .set('categories', SelectMulti.setValues(state.categories, categories));
 }
 
 export function setErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
@@ -262,7 +270,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
         idNamespace: 'vendor-industry-sectors',
         label: 'Industry Sector(s)',
         required: false,
-        fields: []
+        fields: DEFAULT_SELECT_MULTI_FIELDS
       }
     })),
     categories: immutable(await SelectMulti.init({
@@ -272,7 +280,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
         idNamespace: 'vendor-categories',
         label: 'Area(s) of Interest',
         required: false,
-        fields: []
+        fields: DEFAULT_SELECT_MULTI_FIELDS
       }
     }))
   };

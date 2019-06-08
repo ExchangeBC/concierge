@@ -17,7 +17,9 @@ export interface VendorProfileValidationErrors {
   contactPhoneNumber?: string[];
   contactPhoneCountryCode?: string[];
   contactPhoneType?: string[];
+  numIndustrySectors?: string[];
   industrySectors?: string[][];
+  numCategories?: string[];
   categories?: string[][];
 }
 
@@ -49,9 +51,13 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
   const validatedContactPhoneNumber = optional(validatePhoneNumber, getString(profile, 'contactPhoneNumber'));
   const validatedContactPhoneCountryCode = optional(validatePhoneCountryCode, getString(profile, 'contactPhoneCountryCode'));
   const validatedContactPhoneType = optional(validatePhoneType, getString(profile, 'contactPhoneType'));
-  const validatedIndustrySectors = optional(validateIndustrySectors, getStringArray(profile, 'industrySectors'));
-  const validatedCategories = optional(v => validateCategories(v, 'Area of Interest'), getStringArray(profile, 'categories'));
-  if (allValid([validatedBusinessName, validatedBusinessType, validatedBusinessNumber, validatedBusinessStreetAddress, validatedBusinessCity, validatedBusinessProvince, validatedBusinessPostalCode, validatedBusinessCountry, validatedContactName, validatedContactPositionTitle, validatedContactEmail, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedIndustrySectors, validatedCategories])) {
+  const rawIndustrySectors = getStringArray(profile, 'industrySectors');
+  const validatedNumIndustrySectors = !rawIndustrySectors.length ? invalid(['Please select at least one Industry Sector.']) : valid(null);
+  const validatedIndustrySectors = optional(validateIndustrySectors, rawIndustrySectors);
+  const rawCategories = getStringArray(profile, 'categories');
+  const validatedNumCategories = !rawCategories.length ? invalid(['Please select at least one Area of Interest.']) : valid(null);
+  const validatedCategories = optional(v => validateCategories(v, 'Area of Interest'), rawCategories);
+  if (allValid([validatedBusinessName, validatedBusinessType, validatedBusinessNumber, validatedBusinessStreetAddress, validatedBusinessCity, validatedBusinessProvince, validatedBusinessPostalCode, validatedBusinessCountry, validatedContactName, validatedContactPositionTitle, validatedContactEmail, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedNumIndustrySectors, validatedIndustrySectors, validatedNumCategories, validatedCategories])) {
     return valid({
       type: UserType.Vendor as UserType.Vendor,
       businessName: validatedBusinessName.value as string,
@@ -87,7 +93,9 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
       contactPhoneNumber: getInvalidValue(validatedContactPhoneNumber, [] as string[]),
       contactPhoneCountryCode: getInvalidValue(validatedContactPhoneCountryCode, [] as string[]),
       contactPhoneType: getInvalidValue(validatedContactPhoneType, [] as string[]),
+      numIndustrySectors: getInvalidValue(validatedNumIndustrySectors, undefined),
       industrySectors: getInvalidValue(validatedIndustrySectors, [] as string[][]),
+      numCategories: getInvalidValue(validatedNumCategories, undefined),
       categories: getInvalidValue(validatedCategories, [] as string[][])
     });
   }
