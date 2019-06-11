@@ -122,7 +122,7 @@ const UserPersonas: ComponentView<State, Msg> = ({ state, dispatch }) => {
               </li>
             </ul>
           </Col>
-          <Col xs='12' md='4' className='bg-primary py-6 px-4 text-light mt-md-n3 mb-md-3 d-flex flex-column align-items-start shadow'>
+          <Col xs='12' md='4' className='rounded bg-primary py-6 px-4 text-light mt-md-n3 mb-md-3 d-flex flex-column align-items-start shadow'>
             <h4 className='mb-3'>
               Want to learn more?
             </h4>
