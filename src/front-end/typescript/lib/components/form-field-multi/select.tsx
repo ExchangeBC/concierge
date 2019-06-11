@@ -28,7 +28,14 @@ export function getValuesAsStrings(state: Immutable<State>): string[] {
 export function setValues(state: Immutable<State>, values: Array<string | undefined>): Immutable<State> {
   return state.set(
     'formFieldMulti',
-    FormFieldMulti.setFieldValues(state.formFieldMulti, values.map(v => find(state.options, { value: v })))
+    FormFieldMulti.setFieldValues(state.formFieldMulti, values.map(v => {
+      const found: Option | undefined = find(state.options, { value: v });
+      if (state.isCreatable && !found && v) {
+        return { value: v, label: v };
+      } else {
+        return found;
+      }
+    }))
   );
 };
 
