@@ -1,15 +1,25 @@
 import { MONGO_URL } from 'back-end/config';
-import { MongoClient } from 'mongodb';
+import { Db, MongoClient } from 'mongodb';
 
-export async function connect() {
+interface Connection {
+  client: MongoClient;
+  db: Db;
+}
+
+let connection: Connection | undefined;
+
+export async function connect(): Promise<Connection> {
   if (!MONGO_URL) {
     throw new Error('MONGO_URL is null');
   }
-  const client = await MongoClient.connect(MONGO_URL, {
-    useNewUrlParser: true
-  });
-  return {
-    client,
-    db: client.db()
-  };
+  if (!connection) {
+    const client = await (new MongoClient(MONGO_URL, {
+      useNewUrlParser: true
+    })).connect();
+    connection = {
+      client,
+      db: client.db()
+    };
+  }
+  return connection;
 }

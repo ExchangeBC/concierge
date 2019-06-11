@@ -60,9 +60,8 @@ async function mongoDbStore(): Promise<Store> {
         callback(null);
       } catch (error) {
         callback(error);
-      } finally {
-        await client.close();
       }
+      await client.close();
     }
   };
 

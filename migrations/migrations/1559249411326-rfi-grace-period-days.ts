@@ -11,7 +11,7 @@ const DEFAULT_GRACE_PERIOD_DAYS = 2;
 export const description = `Add the gracePeriodDays property to RFI versions. The default value is ${DEFAULT_GRACE_PERIOD_DAYS} days.`;
 
 export const up: MigrationHook = async () => {
-  const { db, client } = await connect();
+  const { db } = await connect();
   const rfis = db.collection('rfis');
   const docs = await rfis
     // Find RFIs that have versions
@@ -36,11 +36,10 @@ export const up: MigrationHook = async () => {
     await rfis.replaceOne({ _id: doc._id }, doc);
     logger.info('...persisted updated RFI', { rfiId: doc._id });
   }
-  await client.close();
 };
 
 export const down: MigrationHook = async () => {
-  const { db, client } = await connect();
+  const { db } = await connect();
   const rfis = db.collection('rfis');
   const docs = await rfis
     // Find RFIs that have versions
@@ -65,5 +64,4 @@ export const down: MigrationHook = async () => {
     await rfis.replaceOne({ _id: doc._id }, doc);
     logger.info('...persisted updated RFI', { rfiId: doc._id });
   }
-  await client.close();
 };
