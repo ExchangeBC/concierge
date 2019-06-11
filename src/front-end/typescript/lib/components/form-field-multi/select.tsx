@@ -2,6 +2,7 @@ import { Route } from 'front-end/lib/app/types';
 import * as FormFieldMulti from 'front-end/lib/components/form-field-multi/lib';
 import { Component, ComponentViewProps, GlobalComponentMsg, immutable, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import { default as Select, Option, Props as SelectProps, Value } from 'front-end/lib/views/form-field/lib/select';
+import { default as SelectCreatable } from 'front-end/lib/views/form-field/lib/select-creatable';
 import { cloneDeep, find } from 'lodash';
 import React from 'react';
 import { ADT, Omit } from 'shared/lib/types';
@@ -12,6 +13,7 @@ export interface State {
   options: Option[];
   placeholder: string;
   formFieldMulti: Immutable<FormFieldMulti.State<Value>>;
+  isCreatable?: boolean;
 }
 
 export function getValues(state: Immutable<State>): Value[] {
@@ -52,7 +54,7 @@ export interface Params extends Omit<State, 'formFieldMulti'> {
   formFieldMulti: FormFieldMulti.State<Value>;
 }
 
-type ExtraChildProps = Pick<State, 'options' | 'placeholder'>;
+type ExtraChildProps = Pick<State, 'options' | 'placeholder' | 'isCreatable'>;
 
 export const init: Init<Params, State> = async params => {
   return {
@@ -98,7 +100,7 @@ const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => 
   };
   return (
     <FormFieldMulti.DefaultChild childProps={props}>
-      <Select {...selectProps} />
+      {extraProps.isCreatable ? (<SelectCreatable {...selectProps} />) : (<Select {...selectProps} />)}
     </FormFieldMulti.DefaultChild>
   );
 };
@@ -130,7 +132,8 @@ export const view: View<Props> = ({ state, dispatch, disabled = false, labelClas
     onRemove,
     extraChildProps: {
       options: state.options,
-      placeholder: state.placeholder
+      placeholder: state.placeholder,
+      isCreatable: state.isCreatable
     },
     labelClassName,
     labelWrapperClassName

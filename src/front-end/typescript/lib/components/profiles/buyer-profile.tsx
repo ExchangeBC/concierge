@@ -248,6 +248,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
     industrySectors: immutable(await SelectMulti.init({
       options: AVAILABLE_INDUSTRY_SECTORS.toJS().map(value => ({ label: value, value })),
       placeholder: 'Select Industry Sector',
+      isCreatable: true,
       formFieldMulti: {
         idNamespace: 'buyer-industry-sectors',
         label: 'Industry Sector(s)',
@@ -258,6 +259,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
     categories: immutable(await SelectMulti.init({
       options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value })),
       placeholder: 'Select an Area of Interest',
+      isCreatable: true,
       formFieldMulti: {
         idNamespace: 'buyer-categories',
         label: 'Area(s) of Interest',

@@ -1,8 +1,5 @@
-import { Set } from 'immutable';
-import { isEmpty, uniq } from 'lodash';
+import { isEmpty } from 'lodash';
 import moment from 'moment';
-import AVAILABLE_CATEGORIES from 'shared/data/categories';
-import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
 import { compareDates, formatDate, formatDateAndTime, formatTime } from 'shared/lib';
 import { ADT, parsePhoneType, parseUserType, PhoneType, UserType } from 'shared/lib/types';
 
@@ -101,7 +98,7 @@ export function validateNumberString(value: string, name: string, min?: number, 
 export function validateArray<A, B>(raw: A[], validate: (v: A) => Validation<B>): ArrayValidation<B> {
   const validations = raw.map(v => validate(v));
   if (allValid(validations)) {
-    return valid(validations.map(({ value }) => value as B));
+    return valid(validations.map(({ value }) => value));
   } else {
     return invalid(validations.map(validation => getInvalidValue(validation, [])));
   }
@@ -113,33 +110,6 @@ export async function validateArrayAsync<A, B>(raw: A[], validate: (v: A) => Pro
     return valid(validations.map(({ value }) => value as B));
   } else {
     return invalid(validations.map(validation => getInvalidValue(validation, [])));
-  }
-}
-
-export function validateStringInArray(value: string, availableValues: Set<string>, name: string, indefiniteArticle = 'a', caseSensitive = false): Validation<string> {
-  if (!value) {
-    return invalid([`Please select ${indefiniteArticle} ${name}`]);
-  }
-  if (!caseSensitive) {
-    availableValues = availableValues.map(v => v.toUpperCase());
-    value = value.toUpperCase();
-  }
-  if (!availableValues.includes(value)) {
-    return invalid([`"${value}" is not a valid ${name}.`]);
-  } else {
-    return valid(value);
-  }
-}
-
-export function validateStringArray(values: string[], availableValues: Set<string>, name: string, indefiniteArticle = 'a', caseSensitive = false, unique = true): ArrayValidation<string> {
-  const result = validateArray(values, value => {
-    return validateStringInArray(value, availableValues, name, indefiniteArticle, caseSensitive);
-  });
-  switch (result.tag) {
-    case 'valid':
-      return valid(uniq(result.value as string[]));
-    case 'invalid':
-      return result;
   }
 }
 
@@ -277,7 +247,7 @@ export function validatePhoneType(phoneType: string): Validation<PhoneType> {
 }
 
 export function validateCategories(categories: string[], name = 'Category', indefiniteArticle = 'a'): ArrayValidation<string> {
-  return validateStringArray(categories, AVAILABLE_CATEGORIES, name, indefiniteArticle, true, true);
+  return validateArray(categories, raw => validateGenericString(raw, name));
 }
 
 export function validatePositionTitle(positionTitle: string): Validation<string> {
@@ -285,5 +255,5 @@ export function validatePositionTitle(positionTitle: string): Validation<string>
 }
 
 export function validateIndustrySectors(industrySectors: string[]): ArrayValidation<string> {
-  return validateStringArray(industrySectors, AVAILABLE_INDUSTRY_SECTORS, 'Industry Sector', 'an', true, true);
+  return validateArray(industrySectors, raw => validateGenericString(raw, 'Industry Sector'));
 }
