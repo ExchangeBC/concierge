@@ -8,10 +8,11 @@ const logger = makeDomainLogger(consoleAdapter, `migrations:${path.basename(__fi
 
 const USER_TYPE_VENDOR = 'VENDOR';
 const USER_TYPE_BUYER = 'BUYER';
-const DEFAULT_INDUSTRY_SECTORS = ['Other'];
-const DEFAULT_CATEGORIES = ['Other'];
+const DEFAULT_VALUE = 'Other';
+const DEFAULT_INDUSTRY_SECTORS = [DEFAULT_VALUE];
+const DEFAULT_CATEGORIES = [DEFAULT_VALUE];
 
-export const description = 'Enter a concise, meaningful migration description here.';
+export const description = `Set Vendor and Buyer Industry Sectors and Areas of Interest to "${DEFAULT_VALUE}" if they haven't selected any.`;
 
 export const up: MigrationHook = async () => {
   const { db } = await connect();
@@ -29,8 +30,10 @@ export const up: MigrationHook = async () => {
           $or: [
             { 'profile.categories': { $exists: false }},
             { 'profile.categories': { $size: 0 }},
+            { 'profile.categories': { $eq: null }},
             { 'profile.industrySectors': { $exists: false }},
-            { 'profile.industrySectors': { $size: 0 }}
+            { 'profile.industrySectors': { $size: 0 }},
+            { 'profile.industrySectors': { $eq: null }}
           ]
         }
       ]
@@ -62,8 +65,8 @@ export const down: MigrationHook = async () => {
         },
         {
           $or: [
-            { 'profile.categories': { $elemMatch: { $eq: 'Other' }}},
-            { 'profile.industrySectors': { $elemMatch: { $eq: 'Other' }}}
+            { 'profile.categories': { $elemMatch: { $eq: DEFAULT_VALUE }}},
+            { 'profile.industrySectors': { $elemMatch: { $eq: DEFAULT_VALUE }}}
           ]
         }
       ]

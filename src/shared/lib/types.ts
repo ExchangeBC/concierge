@@ -207,7 +207,7 @@ export interface VendorProfile {
   businessProvince?: string;
   businessPostalCode?: string;
   businessCountry?: string;
-  contactName?: string;
+  contactName: string;
   contactPositionTitle?: string;
   contactEmail?: string;
   contactPhoneNumber?: string;

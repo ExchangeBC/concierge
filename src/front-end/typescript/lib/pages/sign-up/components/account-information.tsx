@@ -1,8 +1,8 @@
 import { Component, ComponentView, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import { validateConfirmPassword } from 'front-end/lib/validators';
 import { updateField, validateField } from 'front-end/lib/views/form-field/lib';
-import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
+import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import Link from 'front-end/lib/views/link';
 import { default as React } from 'react';
 import { Col, FormGroup, Label, Row } from 'reactstrap';
@@ -137,7 +137,7 @@ const UserTypeToggle: View<{ state: State }> = ({ state }) => {
           I am a...
           <span className='text-info'>*</span>
         </Label>
-        <FormGroup check inline className='mb-3'>
+        <FormGroup check inline className='mb-3 text-nowrap'>
           <UserTypeRadio state={state} userType={UserType.Buyer} />
           <UserTypeRadio state={state} userType={UserType.Vendor} />
         </FormGroup>

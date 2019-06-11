@@ -45,7 +45,7 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
   const validatedBusinessProvince = optional(validateProvince, getString(profile, 'businessProvince'));
   const validatedBusinessPostalCode = optional(validatePostalCode, getString(profile, 'businessPostalCode'));
   const validatedBusinessCountry = optional(validateCountry, getString(profile, 'businessCountry'));
-  const validatedContactName = optional(validateContactName, getString(profile, 'contactName'));
+  const validatedContactName = validateContactName(getString(profile, 'contactName'));
   const validatedContactPositionTitle = optional(validatePositionTitle, getString(profile, 'contactPositionTitle'));
   const validatedContactEmail = optional(validateEmail, getString(profile, 'contactEmail'));
   const validatedContactPhoneNumber = optional(validatePhoneNumber, getString(profile, 'contactPhoneNumber'));
@@ -68,7 +68,7 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
       businessProvince: getValidValue(validatedBusinessProvince, undefined),
       businessPostalCode: getValidValue(validatedBusinessPostalCode, undefined),
       businessCountry: getValidValue(validatedBusinessCountry, undefined),
-      contactName: getValidValue(validatedContactName, undefined),
+      contactName: getValidValue(validatedContactName, ''),
       contactPositionTitle: getValidValue(validatedContactPositionTitle, undefined),
       contactEmail: getValidValue(validatedContactEmail, undefined),
       contactPhoneNumber: getValidValue(validatedContactPhoneNumber, undefined),

@@ -69,7 +69,7 @@ export function getValues(state: Immutable<State>): VendorProfile {
     businessProvince: state.businessProvince.value || undefined,
     businessPostalCode: state.businessPostalCode.value || undefined,
     businessCountry: state.businessCountry.value || undefined,
-    contactName: state.contactName.value || undefined,
+    contactName: state.contactName.value || '',
     contactPositionTitle: state.contactPositionTitle.value || undefined,
     contactEmail: state.contactEmail.value || undefined,
     contactPhoneNumber: state.contactPhoneNumber.value || undefined,
@@ -126,7 +126,7 @@ export function setErrors(state: Immutable<State>, errors: ValidationErrors): Im
 }
 
 export function isValid(state: Immutable<State>): boolean {
-  const providedRequiredFields = !!state.businessName.value;
+  const providedRequiredFields = !!state.businessName.value && !!state.contactName.value;
   const noValidationErrors = reduce(state.validationErrors, (acc: boolean, v: string[] | string[][] | undefined, k: string) => {
     return acc && (!v || !v.length);
   }, true);
@@ -161,8 +161,8 @@ export const init: Init<Params, State> = async ({ profile }) => {
       id: 'vendor-profile-business-name',
       type: 'text',
       required: true,
-      label: 'Name',
-      placeholder: 'Name'
+      label: 'Business Name',
+      placeholder: 'Business Name'
     }),
     businessType: Select.init({
       id: 'vendor-profile-business-type',
@@ -221,9 +221,9 @@ export const init: Init<Params, State> = async ({ profile }) => {
     contactName: ShortText.init({
       id: 'vendor-profile-contact-name',
       type: 'text',
-      required: false,
-      label: 'Name',
-      placeholder: 'Name'
+      required: true,
+      label: 'Contact Name',
+      placeholder: 'Contact Name'
     }),
     contactPositionTitle: ShortText.init({
       id: 'vendor-profile-contact-position-title',
