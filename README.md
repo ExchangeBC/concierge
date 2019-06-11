@@ -229,7 +229,9 @@ Using an environment's deployment shell, run `npm run migrations:up` or `npm run
 
 ### Backups
 
-Automated backups are currently performed once per day at 12:00 AM UTC.  A rolling set of 7 backups is kept (1 weeks worth), and as each new backup that is created it replaces the oldest in the set.  The automated backups are completed using the BC Developers' Exchange Backup Utility located here: https://github.com/BCDevExchange/devexUtils/tree/master/backup.  Backups are stored in OpenShift on a separate provisioned volume.  For instructions on how to deploy and configure the MongoDB backup utility to your OpenShift project, please refer to: https://github.com/BCDevExchange/devexUtils/blob/master/openshift/README.md.  
+Automated backups are currently performed once per day at 12:00 AM UTC.  A rolling set of 7 backups is kept (1 weeks worth), and as each new backup that is created it replaces the oldest in the set.  The automated backups are completed using the BC Developers' Exchange Backup Utility located here: https://github.com/BCDevExchange/devexUtils/tree/master/backup.  
+
+Backups are stored in OpenShift on a separate provisioned volume.  For instructions on how to deploy and configure the MongoDB backup utility to your OpenShift project, please refer to: https://github.com/BCDevExchange/devexUtils/blob/master/openshift/README.md.  
 
 #### Restoring from Backup
 
