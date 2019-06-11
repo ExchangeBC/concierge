@@ -16,6 +16,7 @@ import * as PageRequestForInformationView from 'front-end/lib/pages/request-for-
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
+import * as PageSignUp from 'front-end/lib/pages/sign-up';
 import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
@@ -64,7 +65,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageLanding.component.getMetadata,
         childGetModal: PageLanding.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageLanding' as 'pageLanding', value };
+          return { tag: 'pageLanding' as const, value };
         }
       });
 
@@ -77,7 +78,20 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageSignIn.component.getMetadata,
         childGetModal: PageSignIn.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageSignIn' as 'pageSignIn', value };
+          return { tag: 'pageSignIn' as const, value };
+        }
+      });
+
+    case 'signUp':
+      return await initAppChildPage({
+        ...defaultPageInitParams,
+        childStatePath: ['pages', 'signUp'],
+        childRouteParams: route.value,
+        childInit: PageSignUp.component.init,
+        childGetMetadata: PageSignUp.component.getMetadata,
+        childGetModal: PageSignUp.component.getModal,
+        mapChildMsg(value) {
+          return { tag: 'pageSignUp' as const, value };
         }
       });
 
@@ -90,7 +104,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageSignUpBuyer.component.getMetadata,
         childGetModal: PageSignUpBuyer.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageSignUpBuyer' as 'pageSignUpBuyer', value };
+          return { tag: 'pageSignUpBuyer' as const, value };
         }
       });
 
@@ -103,7 +117,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageSignUpVendor.component.getMetadata,
         childGetModal: PageSignUpVendor.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageSignUpVendor' as 'pageSignUpVendor', value };
+          return { tag: 'pageSignUpVendor' as const, value };
         }
       });
 
@@ -116,7 +130,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageSignUpProgramStaff.component.getMetadata,
         childGetModal: PageSignUpProgramStaff.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageSignUpProgramStaff' as 'pageSignUpProgramStaff', value };
+          return { tag: 'pageSignUpProgramStaff' as const, value };
         }
       });
 
@@ -129,7 +143,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageSignOut.component.getMetadata,
         childGetModal: PageSignOut.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageSignOut' as 'pageSignOut', value };
+          return { tag: 'pageSignOut' as const, value };
         }
       });
 
@@ -142,7 +156,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageChangePassword.component.getMetadata,
         childGetModal: PageChangePassword.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageChangePassword' as 'pageChangePassword', value };
+          return { tag: 'pageChangePassword' as const, value };
         }
       });
 
@@ -155,7 +169,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageResetPassword.component.getMetadata,
         childGetModal: PageResetPassword.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageResetPassword' as 'pageResetPassword', value };
+          return { tag: 'pageResetPassword' as const, value };
         }
       });
 
@@ -168,7 +182,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageForgotPassword.component.getMetadata,
         childGetModal: PageForgotPassword.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageForgotPassword' as 'pageForgotPassword', value };
+          return { tag: 'pageForgotPassword' as const, value };
         }
       });
 
@@ -181,7 +195,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageTermsAndConditions.component.getMetadata,
         childGetModal: PageTermsAndConditions.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageTermsAndConditions' as 'pageTermsAndConditions', value };
+          return { tag: 'pageTermsAndConditions' as const, value };
         }
       });
 
@@ -194,7 +208,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageUserView.component.getMetadata,
         childGetModal: PageUserView.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageUserView' as 'pageUserView', value };
+          return { tag: 'pageUserView' as const, value };
         }
       });
 
@@ -207,7 +221,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageUserList.component.getMetadata,
         childGetModal: PageUserList.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageUserList' as 'pageUserList', value };
+          return { tag: 'pageUserList' as const, value };
         }
       });
 
@@ -220,7 +234,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageRequestForInformationCreate.component.getMetadata,
         childGetModal: PageRequestForInformationCreate.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageRequestForInformationCreate' as 'pageRequestForInformationCreate', value };
+          return { tag: 'pageRequestForInformationCreate' as const, value };
         }
       });
 
@@ -233,7 +247,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageRequestForInformationEdit.component.getMetadata,
         childGetModal: PageRequestForInformationEdit.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageRequestForInformationEdit' as 'pageRequestForInformationEdit', value };
+          return { tag: 'pageRequestForInformationEdit' as const, value };
         }
       });
 
@@ -246,7 +260,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageRequestForInformationView.component.getMetadata,
         childGetModal: PageRequestForInformationView.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageRequestForInformationView' as 'pageRequestForInformationView', value };
+          return { tag: 'pageRequestForInformationView' as const, value };
         }
       });
 
@@ -259,7 +273,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageRequestForInformationPreview.component.getMetadata,
         childGetModal: PageRequestForInformationPreview.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageRequestForInformationPreview' as 'pageRequestForInformationPreview', value };
+          return { tag: 'pageRequestForInformationPreview' as const, value };
         }
       });
 
@@ -272,7 +286,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageRequestForInformationRespond.component.getMetadata,
         childGetModal: PageRequestForInformationRespond.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageRequestForInformationRespond' as 'pageRequestForInformationRespond', value };
+          return { tag: 'pageRequestForInformationRespond' as const, value };
         }
       });
 
@@ -285,7 +299,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageRequestForInformationList.component.getMetadata,
         childGetModal: PageRequestForInformationList.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageRequestForInformationList' as 'pageRequestForInformationList', value };
+          return { tag: 'pageRequestForInformationList' as const, value };
         }
       });
 
@@ -298,7 +312,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageMarkdown.component.getMetadata,
         childGetModal: PageMarkdown.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageMarkdown' as 'pageMarkdown', value };
+          return { tag: 'pageMarkdown' as const, value };
         }
       });
 
@@ -311,7 +325,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetMetadata: PageNotice.component.getMetadata,
         childGetModal: PageNotice.component.getModal,
         mapChildMsg(value) {
-          return { tag: 'pageNotice' as 'pageNotice', value };
+          return { tag: 'pageNotice' as const, value };
         }
       });
 
@@ -327,7 +341,7 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
           return state.shared;
         },
         mapChildMsg(value) {
-          return { tag: 'pageFeedback' as 'pageFeedback', value };
+          return { tag: 'pageFeedback' as const, value };
         }
       });
 
@@ -403,6 +417,17 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         childUpdate: PageSignIn.component.update,
         childGetMetadata: PageSignIn.component.getMetadata,
         childGetModal: PageSignIn.component.getModal,
+        childMsg: msg.value
+      });
+
+    case 'pageSignUp':
+      return updateAppChildPage({
+        ...defaultPageUpdateParams,
+        mapChildMsg: value => ({ tag: 'pageSignUp', value }),
+        childStatePath: ['pages', 'signUp'],
+        childUpdate: PageSignUp.component.update,
+        childGetMetadata: PageSignUp.component.getMetadata,
+        childGetModal: PageSignUp.component.getModal,
         childMsg: msg.value
       });
 

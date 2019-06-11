@@ -42,8 +42,8 @@ const router: Router<Route> = {
       path: '/sign-up',
       makeRoute() {
         return {
-          tag: 'signUpBuyer',
-          value: {}
+          tag: 'signUp',
+          value: null
         };
       }
     },
@@ -421,6 +421,8 @@ const router: Router<Route> = {
         if (siRedirectOnSuccess) { siQueryParams.push(`redirectOnSuccess=${encodeURIComponent(siRedirectOnSuccess)}`); }
         const siQueryString = siQueryParams.join('&');
         return `/sign-in?${siQueryString}`;
+      case 'signUp':
+        return '/sign-up';
       case 'signUpBuyer':
         return '/sign-up/buyer';
       case 'signUpVendor':

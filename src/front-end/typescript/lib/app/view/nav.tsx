@@ -110,7 +110,7 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
     );
   } else {
     const signInRoute: Route = { tag: 'signIn', value: {} };
-    const signUpRoute: Route = { tag: 'signUpBuyer', value: {} };
+    const signUpRoute: Route = { tag: 'signUp', value: null };
     return (
       <Nav navbar className='ml-md-auto'>
         <NavItem>

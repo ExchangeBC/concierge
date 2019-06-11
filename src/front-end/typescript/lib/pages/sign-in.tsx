@@ -65,7 +65,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedOut({
 
   async fail({ dispatch }) {
     dispatch(replaceRoute({
-      tag: 'requestForInformationList' as 'requestForInformationList',
+      tag: 'requestForInformationList' as const,
       value: null
     }));
     return initState;
@@ -104,7 +104,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                 dispatch(replaceUrl(state.redirectOnSuccess));
               } else {
                 dispatch(replaceRoute({
-                  tag: 'requestForInformationList' as 'requestForInformationList',
+                  tag: 'requestForInformationList' as const,
                   value: null
                 }));
               }
@@ -145,7 +145,7 @@ const view: ComponentView<State, Msg> = props => {
         <Col xs='12' md='8'>
           <p>
             Welcome back to the Concierge. If you don't already have an account,{' '}
-            <a href='/sign-up' className='text-primary'>sign up here</a>.
+            <Link route={{ tag: 'signUp', value: null }}>sign up here</Link>.
           </p>
         </Col>
       </Row>

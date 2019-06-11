@@ -14,6 +14,7 @@ import * as PageRequestForInformationView from 'front-end/lib/pages/request-for-
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
+import * as PageSignUp from 'front-end/lib/pages/sign-up';
 import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
@@ -28,6 +29,7 @@ export type Session = PublicSession;
 export type Route
   = ADT<'landing', PageLanding.RouteParams>
   | ADT<'signIn', PageSignIn.RouteParams>
+  | ADT<'signUp', PageSignUp.RouteParams>
   | ADT<'signUpBuyer', PageSignUpBuyer.RouteParams>
   | ADT<'signUpVendor', PageSignUpVendor.RouteParams>
   | ADT<'signUpProgramStaff', PageSignUpProgramStaff.RouteParams>
@@ -66,6 +68,7 @@ export interface State {
   pages: {
     landing?: Immutable<PageLanding.State>;
     signIn?: Immutable<PageSignIn.State>;
+    signUp?: Immutable<PageSignUp.State>;
     signUpBuyer?: Immutable<PageSignUpBuyer.State>;
     signUpVendor?: Immutable<PageSignUpVendor.State>;
     signUpProgramStaff?: Immutable<PageSignUpProgramStaff.State>;
@@ -94,6 +97,7 @@ type InnerMsg
   | ADT<'toggleModal', undefined>
   | ADT<'pageLanding', PageLanding.Msg>
   | ADT<'pageSignIn', PageSignIn.Msg>
+  | ADT<'pageSignUp', PageSignUp.Msg>
   | ADT<'pageSignUpBuyer', PageSignUpBuyer.Msg>
   | ADT<'pageSignUpVendor', PageSignUpVendor.Msg>
   | ADT<'pageSignUpProgramStaff', PageSignUpProgramStaff.Msg>

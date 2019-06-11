@@ -170,6 +170,10 @@ nav.navbar .nav-link:hover {
   text-decoration: underline;
 }
 
+.card-body {
+  @extend .p-4;
+}
+
 // Custom utilities.
 
 .font-size-small {

@@ -19,6 +19,7 @@ import * as PageRequestForInformationView from 'front-end/lib/pages/request-for-
 import * as PageResetPassword from 'front-end/lib/pages/reset-password';
 import * as PageSignIn from 'front-end/lib/pages/sign-in';
 import * as PageSignOut from 'front-end/lib/pages/sign-out';
+import * as PageSignUp from 'front-end/lib/pages/sign-up';
 import * as PageSignUpBuyer from 'front-end/lib/pages/sign-up/buyer';
 import * as PageSignUpProgramStaff from 'front-end/lib/pages/sign-up/program-staff';
 import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
@@ -81,6 +82,15 @@ const ViewActiveRoute: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.signIn}
           mapPageMsg={value => ({ tag: 'pageSignIn', value })}
           component={PageSignIn.component} />
+      );
+
+    case 'signUp':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.signUp}
+          mapPageMsg={value => ({ tag: 'pageSignUp', value })}
+          component={PageSignUp.component} />
       );
 
     case 'signUpBuyer':
