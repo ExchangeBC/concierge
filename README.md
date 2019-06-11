@@ -227,8 +227,18 @@ To deploy to the Production environment, merge the `develop` branch into the `ma
 
 Using an environment's deployment shell, run `npm run migrations:up` or `npm run migrations:down` in the root of this repository's directory.
 
+### Backups
+
+Automated backups are currently performed once per day at 12:00 AM UTC.  A rolling set of 7 backups is kept (1 weeks worth), and as each new backup that is created it replaces the oldest in the set.  The automated backups are completed using the BC Developers' Exchange Backup Utility located here: https://github.com/BCDevExchange/devexUtils/tree/master/backup.  Backups are stored in OpenShift on a separate provisioned volume.  For instructions on how to deploy and configure the MongoDB backup utility to your OpenShift project, please refer to: https://github.com/BCDevExchange/devexUtils/blob/master/openshift/README.md.  
+
+#### Restoring from Backup
+
+In the unfortunate event that you need to restore your data from a backup archive, you will need to use the following command:
+
+`mongorestore -u admin -p $MONGODB_ADMIN_PASSWORD --authenticationDatabase=admin --gzip --archive="/path/to/backup/archive"`
+
 ## Team
 
-The Procurement Concierge is currently operated by the BC Developers Exchange within the Government of British Columbia.
+The Procurement Concierge is currently operated by the BC Developers' Exchange within the Government of British Columbia.
 
 This project was originally built by the digital product development team at [Real Folk](https://www.realfolk.io).
