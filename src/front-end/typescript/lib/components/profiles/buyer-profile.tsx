@@ -78,8 +78,8 @@ export function getValues(state: Immutable<State>): BuyerProfile {
 }
 
 export function setValues(state: Immutable<State>, profile: BuyerProfile): Immutable<State> {
-  const industrySectors = profile.industrySectors && profile.industrySectors.length ? profile.industrySectors : [undefined];
-  const categories = profile.categories && profile.categories.length ? profile.categories : [undefined];
+  const industrySectors = profile.industrySectors.length ? profile.industrySectors : [undefined];
+  const categories = profile.categories.length ? profile.categories : [undefined];
   return state
     .setIn(['firstName', 'value'], profile.firstName || '')
     .setIn(['lastName', 'value'], profile.lastName || '')

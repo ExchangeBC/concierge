@@ -81,8 +81,8 @@ export function getValues(state: Immutable<State>): VendorProfile {
 }
 
 export function setValues(state: Immutable<State>, profile: VendorProfile): Immutable<State> {
-  const industrySectors = profile.industrySectors && profile.industrySectors.length ? profile.industrySectors : [undefined];
-  const categories = profile.categories && profile.categories.length ? profile.categories : [undefined];
+  const industrySectors = profile.industrySectors.length ? profile.industrySectors : [undefined];
+  const categories = profile.categories.length ? profile.categories : [undefined];
   return state
     .setIn(['businessName', 'value'], profile.businessName || '')
     .set('businessType', Select.setValue(state.businessType, profile.businessType))

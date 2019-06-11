@@ -1,6 +1,6 @@
 import { Immutable, View } from 'front-end/lib/framework';
 import Icon from 'front-end/lib/views/icon';
-import { cloneDeep, reduce } from 'lodash';
+import { cloneDeep, get, reduce } from 'lodash';
 import { default as React, ReactElement } from 'react';
 import { Alert, Button, FormGroup, FormText, Label } from 'reactstrap';
 
@@ -36,7 +36,12 @@ export function getFieldValues<Value>(state: State<Value>): Value[] {
 }
 
 export function setFieldValues<Value>(state: Immutable<State<Value>>, values: Value[]): Immutable<State<Value>> {
-  const fields = values.map((value, i) => makeField(value));
+  const fields = values.map((value, i) => {
+    return {
+      ...makeField(value),
+      removable: get(state.fields, [i, 'removable'], true)
+    };
+  });
   return state.set('fields', fields);
 }
 

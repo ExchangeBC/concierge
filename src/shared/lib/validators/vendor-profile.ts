@@ -53,10 +53,10 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
   const validatedContactPhoneType = optional(validatePhoneType, getString(profile, 'contactPhoneType'));
   const rawIndustrySectors = getStringArray(profile, 'industrySectors');
   const validatedNumIndustrySectors = !rawIndustrySectors.length ? invalid(['Please select at least one Industry Sector.']) : valid(null);
-  const validatedIndustrySectors = optional(validateIndustrySectors, rawIndustrySectors);
+  const validatedIndustrySectors = validateIndustrySectors(rawIndustrySectors);
   const rawCategories = getStringArray(profile, 'categories');
   const validatedNumCategories = !rawCategories.length ? invalid(['Please select at least one Area of Interest.']) : valid(null);
-  const validatedCategories = optional(v => validateCategories(v, 'Area of Interest'), rawCategories);
+  const validatedCategories = validateCategories(rawCategories, 'Area of Interest');
   if (allValid([validatedBusinessName, validatedBusinessType, validatedBusinessNumber, validatedBusinessStreetAddress, validatedBusinessCity, validatedBusinessProvince, validatedBusinessPostalCode, validatedBusinessCountry, validatedContactName, validatedContactPositionTitle, validatedContactEmail, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedNumIndustrySectors, validatedIndustrySectors, validatedNumCategories, validatedCategories])) {
     return valid({
       type: UserType.Vendor as UserType.Vendor,
@@ -74,8 +74,8 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
       contactPhoneNumber: getValidValue(validatedContactPhoneNumber, undefined),
       contactPhoneCountryCode: getValidValue(validatedContactPhoneCountryCode, undefined),
       contactPhoneType: getValidValue(validatedContactPhoneType, undefined),
-      industrySectors: getValidValue(validatedIndustrySectors, undefined),
-      categories: getValidValue(validatedCategories, undefined)
+      industrySectors: getValidValue(validatedIndustrySectors, []),
+      categories: getValidValue(validatedCategories, [])
     });
   } else {
     return invalid({

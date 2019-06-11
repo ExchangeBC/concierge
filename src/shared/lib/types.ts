@@ -178,8 +178,8 @@ export interface BuyerProfile {
   contactPhoneNumber?: string;
   contactPhoneCountryCode?: string;
   contactPhoneType?: PhoneType;
-  industrySectors?: string[];
-  categories?: string[];
+  industrySectors: string[];
+  categories: string[];
 }
 
 export interface ProgramStaffProfile {
@@ -213,8 +213,8 @@ export interface VendorProfile {
   contactPhoneNumber?: string;
   contactPhoneCountryCode?: string;
   contactPhoneType?: PhoneType;
-  industrySectors?: string[];
-  categories?: string[];
+  industrySectors: string[];
+  categories: string[];
 }
 
 export type Profile = BuyerProfile | ProgramStaffProfile | VendorProfile;
