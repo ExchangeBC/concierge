@@ -43,6 +43,7 @@ const view: ComponentView<State, Msg> = props => {
     <div>
       <Row>
         <Col xs='12'>
+          <div className='small text-secondary font-weight-bold text-uppercase'>Step 1 of 4</div>
           <h1>Let's Get Started!</h1>
         </Col>
       </Row>

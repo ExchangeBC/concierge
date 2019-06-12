@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "esnext",
     "moduleResolution": "node",
+    "noErrorTruncation": true,
     "allowJs": true,
     "noEmit": true,
     "strict": true,

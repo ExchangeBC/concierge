@@ -31,7 +31,7 @@ export interface UpdateParams<State, Msg> {
 
 export type Update<State, Msg> = (params: UpdateParams<State, Msg>) => UpdateReturnValue<State, Msg>;
 
-interface UpdateChildParams<ParentState, ParentMsg, ChildState, ChildMsg> {
+export interface UpdateChildParams<ParentState, ParentMsg, ChildState, ChildMsg> {
   state: Immutable<ParentState>;
   childStatePath: string[];
   childUpdate: Update<ChildState, ChildMsg>;

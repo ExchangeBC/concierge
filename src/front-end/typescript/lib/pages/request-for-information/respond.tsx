@@ -10,7 +10,7 @@ import FixedBar from 'front-end/lib/views/layout/fixed-bar';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
-import { Col, Container, Row } from 'reactstrap';
+import { Col, Row } from 'reactstrap';
 import { PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
 import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, Omit, RfiStatus, UserType } from 'shared/lib/types';
@@ -328,7 +328,7 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const { rfi, attachments } = validState;
   const version = rfi.latestVersion;
   return (
-    <Container className='flex-grow-1'>
+    <div>
       <Row className='mb-5'>
         <Col xs='12' className='d-flex flex-column'>
           <h1>Respond to RFI Number: {version.rfiNumber}</h1>
@@ -343,7 +343,7 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
       {!atLeastOneAttachmentAdded(attachments)
         ? (<Row><Col xs='12'>Please add at least one attachment.</Col></Row>)
         : null}
-    </Container>
+    </div>
   );
 };
 

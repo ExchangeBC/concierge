@@ -76,7 +76,7 @@ function init<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
           value: {
             redirectOnSuccess: router.routeToUrl({
               tag: 'signUpProgramStaff',
-              value: routeParams
+              value: null
             })
           }
         }));

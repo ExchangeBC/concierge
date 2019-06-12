@@ -70,7 +70,7 @@ const router: Router<Route> = {
       makeRoute() {
         return {
           tag: 'signUpProgramStaff',
-          value: {}
+          value: null
         };
       }
     },

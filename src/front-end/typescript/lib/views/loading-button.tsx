@@ -24,8 +24,9 @@ const Children: View<Props> = ({ loading, children, spinnerColor = 'light' }) =>
 };
 
 const LoadingButton: View<Props> = props => {
+  const className = `${props.className || ''} text-nowrap`;
   return (
-    <Button color={props.color} size={props.size || 'md'} onClick={props.onClick || noop} disabled={props.disabled} className={props.className || '' }>
+    <Button color={props.color} size={props.size || 'md'} onClick={props.onClick || noop} disabled={props.disabled} className={className}>
       <Children {...props} />
     </Button>
   );
