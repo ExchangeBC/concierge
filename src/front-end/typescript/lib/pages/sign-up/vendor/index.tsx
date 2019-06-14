@@ -1,5 +1,6 @@
 import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { makePageMetadata } from 'front-end/lib';
+import router from 'front-end/lib/app/router';
 import * as SelectMulti from 'front-end/lib/components/form-field-multi/select';
 import { emptyPageAlerts, immutable, newRoute } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
@@ -75,9 +76,16 @@ const onNext: ControllerHook = state => {
           const result = await api.createUser(user);
           switch (result.tag) {
             case 'valid':
-              dispatch(newRoute({
+              const rfiListUrl = router.routeToUrl({
                 tag: 'requestForInformationList',
                 value: null
+              });
+              dispatch(newRoute({
+                tag: 'termsAndConditions' as const,
+                value: {
+                  redirectOnAccept: rfiListUrl,
+                  redirectOnSkip: rfiListUrl
+                }
               }));
               return state;
             case 'invalid':
