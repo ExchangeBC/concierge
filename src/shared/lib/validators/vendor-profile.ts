@@ -1,6 +1,6 @@
 import { getString, getStringArray } from 'shared/lib';
 import { BusinessType, parseBusinessType, UserType, VendorProfile } from 'shared/lib/types';
-import { allValid, getInvalidValue, getValidValue, invalid, optional, valid, validateBusinessName, validateCategories, validateCity, validateContactName, validateCountry, validateEmail, validateGenericString, validateIndustrySectors, validatePhoneCountryCode, validatePhoneNumber, validatePhoneType, validatePositionTitle, validatePostalCode, validateProvince, validateStreetAddress, Validation, ValidOrInvalid } from './';
+import { allValid, getInvalidValue, getValidValue, invalid, optional, valid, validateBusinessName, validateCategories, validateCity, validateContactName, validateCountry, validateEmail, validateGenericString, validateHeadOfficeLocation, validateIndigenousOwnership, validateIndustrySectors, validateNumberOfEmployees, validatePhoneCountryCode, validatePhoneNumber, validatePhoneType, validatePositionTitle, validatePostalCode, validateProvince, validateSignUpReason, validateStreetAddress, Validation, ValidOrInvalid } from './';
 
 export interface VendorProfileValidationErrors {
   businessName?: string[];
@@ -21,6 +21,10 @@ export interface VendorProfileValidationErrors {
   industrySectors?: string[][];
   numCategories?: string[];
   categories?: string[][];
+  numberOfEmployees?: string[];
+  indigenousOwnership?: string[];
+  headOfficeLocation?: string[];
+  signUpReason?: string[];
 }
 
 export function validateBusinessType(userType: string): Validation<BusinessType> {
@@ -57,7 +61,11 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
   const rawCategories = getStringArray(profile, 'categories');
   const validatedNumCategories = !rawCategories.length ? invalid(['Please select at least one Area of Interest.']) : valid(null);
   const validatedCategories = validateCategories(rawCategories, 'Area of Interest');
-  if (allValid([validatedBusinessName, validatedBusinessType, validatedBusinessNumber, validatedBusinessStreetAddress, validatedBusinessCity, validatedBusinessProvince, validatedBusinessPostalCode, validatedBusinessCountry, validatedContactName, validatedContactPositionTitle, validatedContactEmail, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedNumIndustrySectors, validatedIndustrySectors, validatedNumCategories, validatedCategories])) {
+  const validatedNumberOfEmployees = validateNumberOfEmployees(getString(profile, 'numberOfEmployees'));
+  const validatedIndigenousOwnership = validateIndigenousOwnership(getString(profile, 'indigenousOwnership'));
+  const validatedHeadOfficeLocation = validateHeadOfficeLocation(getString(profile, 'headOfficeLocation'));
+  const validatedSignUpReason = validateSignUpReason(getString(profile, 'signUpReason'));
+  if (allValid([validatedBusinessName, validatedBusinessType, validatedBusinessNumber, validatedBusinessStreetAddress, validatedBusinessCity, validatedBusinessProvince, validatedBusinessPostalCode, validatedBusinessCountry, validatedContactName, validatedContactPositionTitle, validatedContactEmail, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedNumIndustrySectors, validatedIndustrySectors, validatedNumCategories, validatedCategories, validatedIndigenousOwnership, validatedNumberOfEmployees, validatedHeadOfficeLocation, validatedSignUpReason])) {
     return valid({
       type: UserType.Vendor as UserType.Vendor,
       businessName: validatedBusinessName.value as string,
@@ -75,28 +83,36 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
       contactPhoneCountryCode: getValidValue(validatedContactPhoneCountryCode, undefined),
       contactPhoneType: getValidValue(validatedContactPhoneType, undefined),
       industrySectors: getValidValue(validatedIndustrySectors, []),
-      categories: getValidValue(validatedCategories, [])
+      categories: getValidValue(validatedCategories, []),
+      numberOfEmployees: getValidValue(validatedNumberOfEmployees, undefined),
+      indigenousOwnership: getValidValue(validatedIndigenousOwnership, undefined),
+      headOfficeLocation: getValidValue(validatedHeadOfficeLocation, undefined),
+      signUpReason: getValidValue(validatedSignUpReason, undefined)
     });
   } else {
     return invalid({
-      businessName: getInvalidValue(validatedBusinessName, [] as string[]),
-      businessType: getInvalidValue(validatedBusinessType, [] as string[]),
-      businessNumber: getInvalidValue(validatedBusinessNumber, [] as string[]),
-      businessStreetAddress: getInvalidValue(validatedBusinessStreetAddress, [] as string[]),
-      businessCity: getInvalidValue(validatedBusinessCity, [] as string[]),
-      businessProvince: getInvalidValue(validatedBusinessProvince, [] as string[]),
-      businessPostalCode: getInvalidValue(validatedBusinessPostalCode, [] as string[]),
-      businessCountry: getInvalidValue(validatedBusinessCountry, [] as string[]),
-      contactName: getInvalidValue(validatedContactName, [] as string[]),
-      contactPositionTitle: getInvalidValue(validatedContactPositionTitle, [] as string[]),
-      contactEmail: getInvalidValue(validatedContactEmail, [] as string[]),
-      contactPhoneNumber: getInvalidValue(validatedContactPhoneNumber, [] as string[]),
-      contactPhoneCountryCode: getInvalidValue(validatedContactPhoneCountryCode, [] as string[]),
-      contactPhoneType: getInvalidValue(validatedContactPhoneType, [] as string[]),
+      businessName: getInvalidValue(validatedBusinessName, undefined),
+      businessType: getInvalidValue(validatedBusinessType, undefined),
+      businessNumber: getInvalidValue(validatedBusinessNumber, undefined),
+      businessStreetAddress: getInvalidValue(validatedBusinessStreetAddress, undefined),
+      businessCity: getInvalidValue(validatedBusinessCity, undefined),
+      businessProvince: getInvalidValue(validatedBusinessProvince, undefined),
+      businessPostalCode: getInvalidValue(validatedBusinessPostalCode, undefined),
+      businessCountry: getInvalidValue(validatedBusinessCountry, undefined),
+      contactName: getInvalidValue(validatedContactName, undefined),
+      contactPositionTitle: getInvalidValue(validatedContactPositionTitle, undefined),
+      contactEmail: getInvalidValue(validatedContactEmail, undefined),
+      contactPhoneNumber: getInvalidValue(validatedContactPhoneNumber, undefined),
+      contactPhoneCountryCode: getInvalidValue(validatedContactPhoneCountryCode, undefined),
+      contactPhoneType: getInvalidValue(validatedContactPhoneType, undefined),
       numIndustrySectors: getInvalidValue(validatedNumIndustrySectors, undefined),
-      industrySectors: getInvalidValue(validatedIndustrySectors, [] as string[][]),
+      industrySectors: getInvalidValue(validatedIndustrySectors, undefined),
       numCategories: getInvalidValue(validatedNumCategories, undefined),
-      categories: getInvalidValue(validatedCategories, [] as string[][])
+      categories: getInvalidValue(validatedCategories, undefined),
+      numberOfEmployees: getInvalidValue(validatedNumberOfEmployees, undefined),
+      indigenousOwnership: getInvalidValue(validatedIndigenousOwnership, undefined),
+      headOfficeLocation: getInvalidValue(validatedHeadOfficeLocation, undefined),
+      signUpReason: getInvalidValue(validatedSignUpReason, undefined)
     });
   }
 }

@@ -32,7 +32,7 @@ export interface RouteParams {
 }
 
 const rfiListRoute: Route = {
-  tag: 'requestForInformationList' as 'requestForInformationList',
+  tag: 'requestForInformationList' as const,
   value: null
 };
 
@@ -72,7 +72,7 @@ function init<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
       userTypes: [UserType.ProgramStaff],
       async fail({ routeParams, dispatch }) {
         dispatch(replaceRoute({
-          tag: 'signIn' as 'signIn',
+          tag: 'signIn' as const,
           value: {
             redirectOnSuccess: router.routeToUrl({
               tag: 'signUpProgramStaff',
@@ -102,7 +102,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
       case 'accountInformation':
         return updateComponentChild({
           state,
-          mapChildMsg: value => ({ tag: 'accountInformation' as 'accountInformation', value }),
+          mapChildMsg: value => ({ tag: 'accountInformation' as const, value }),
           childStatePath: ['accountInformation'],
           childUpdate: AccountInformation.update,
           childMsg: msg.value
@@ -110,7 +110,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
       case 'profile':
         return updateComponentChild({
           state,
-          mapChildMsg: (value: PM) => ({ tag: 'profile' as 'profile', value }),
+          mapChildMsg: (value: PM) => ({ tag: 'profile' as const, value }),
           childStatePath: ['profile'],
           childUpdate: Profile.update,
           childMsg: msg.value
@@ -133,7 +133,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
                 // Redirect Program Staff to the created user's profile.
                 if (result.value.profile.type === UserType.ProgramStaff) {
                   dispatch(newRoute({
-                    tag: 'userView' as 'userView',
+                    tag: 'userView' as const,
                     value: {
                       profileUserId: result.value._id
                     }
@@ -143,7 +143,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
                   // should be prompted to accept the terms and conditions.
                   const rfiListUrl = router.routeToUrl(rfiListRoute);
                   dispatch(newRoute({
-                    tag: 'termsAndConditions' as 'termsAndConditions',
+                    tag: 'termsAndConditions' as const,
                     value: {
                       redirectOnAccept: rfiListUrl,
                       redirectOnSkip: rfiListUrl
@@ -204,7 +204,7 @@ function viewBottomBar<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
     const isDisabled = isLoading || !isValid(state, Profile);
     const isProgramStaff = Profile.userType === UserType.ProgramStaff;
     const createAccount = () => !isDisabled && dispatch({ tag: 'createAccount', value: undefined });
-    const cancelRoute: Route = isProgramStaff ? { tag: 'userList' as 'userList', value: null } : { tag: 'landing' as 'landing', value: null };
+    const cancelRoute: Route = isProgramStaff ? { tag: 'userList' as const, value: null } : { tag: 'landing' as const, value: null };
     return (
       <FixedBar>
         <LoadingButton color='primary' onClick={createAccount} loading={isLoading} disabled={isDisabled}>
@@ -218,8 +218,8 @@ function viewBottomBar<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
 
 function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
   return ({ state, dispatch }) => {
-    const dispatchAccountInformation: Dispatch<AccountInformation.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'accountInformation' as 'accountInformation', value }));
-    const dispatchProfile: Dispatch<PM> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'profile' as 'profile', value }));
+    const dispatchAccountInformation: Dispatch<AccountInformation.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'accountInformation' as const, value }));
+    const dispatchProfile: Dispatch<PM> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'profile' as const, value }));
     return (
       <div>
         <Row>

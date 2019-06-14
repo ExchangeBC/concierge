@@ -8,17 +8,15 @@ import { reduce } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
+import AVAILABLE_HEAD_OFFICE_LOCATIONS from 'shared/data/head-office-locations';
+import AVAILABLE_INDIGENOUS_OWNERSHIP from 'shared/data/indigenous-ownership';
 import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
+import AVAILABLE_NUMBER_OF_EMPLOYEES from 'shared/data/number-of-employees';
+import AVAILABLE_SIGN_UP_REASONS from 'shared/data/sign-up-reasons';
 import { ADT, UserType } from 'shared/lib/types';
 import { BusinessType, parseBusinessType, parsePhoneType, PhoneType, VendorProfile } from 'shared/lib/types';
 import { ValidOrInvalid } from 'shared/lib/validators';
 import { validateVendorProfile, VendorProfileValidationErrors } from 'shared/lib/validators/vendor-profile';
-
-const DEFAULT_SELECT_MULTI_FIELDS = [{
-  value: undefined,
-  errors: [],
-  removable: false
-}];
 
 export type ValidationErrors = VendorProfileValidationErrors;
 
@@ -40,6 +38,10 @@ export interface State {
   contactPhoneType: Select.State;
   industrySectors: Immutable<SelectMulti.State>;
   categories: Immutable<SelectMulti.State>;
+  numberOfEmployees: Select.State;
+  indigenousOwnership: Select.State;
+  headOfficeLocation: Select.State;
+  signUpReason: Select.State;
 }
 
 type FormFieldKeys
@@ -56,7 +58,11 @@ type FormFieldKeys
   | 'contactEmail'
   | 'contactPhoneNumber'
   | 'contactPhoneCountryCode'
-  | 'contactPhoneType';
+  | 'contactPhoneType'
+  | 'numberOfEmployees'
+  | 'indigenousOwnership'
+  | 'headOfficeLocation'
+  | 'signUpReason';
 
 export function getValues(state: Immutable<State>): VendorProfile {
   return {
@@ -76,7 +82,11 @@ export function getValues(state: Immutable<State>): VendorProfile {
     contactPhoneCountryCode: state.contactPhoneCountryCode.value || undefined,
     contactPhoneType: state.contactPhoneType.value && parsePhoneType(state.contactPhoneType.value.value) || undefined,
     industrySectors: SelectMulti.getValuesAsStrings(state.industrySectors),
-    categories: SelectMulti.getValuesAsStrings(state.categories)
+    categories: SelectMulti.getValuesAsStrings(state.categories),
+    numberOfEmployees: state.numberOfEmployees.value && state.numberOfEmployees.value.value || undefined,
+    indigenousOwnership: state.indigenousOwnership.value && state.indigenousOwnership.value.value || undefined,
+    headOfficeLocation: state.headOfficeLocation.value && state.headOfficeLocation.value.value || undefined,
+    signUpReason: state.signUpReason.value && state.signUpReason.value.value || undefined
   };
 }
 
@@ -99,7 +109,11 @@ export function setValues(state: Immutable<State>, profile: VendorProfile): Immu
     .setIn(['contactPhoneCountryCode', 'value'], profile.contactPhoneCountryCode || '')
     .set('contactPhoneType', Select.setValue(state.contactPhoneType, profile.contactPhoneType))
     .set('industrySectors', SelectMulti.setValues(state.industrySectors, industrySectors))
-    .set('categories', SelectMulti.setValues(state.categories, categories));
+    .set('categories', SelectMulti.setValues(state.categories, categories))
+    .set('numberOfEmployees', Select.setValue(state.numberOfEmployees, profile.numberOfEmployees))
+    .set('indigenousOwnership', Select.setValue(state.indigenousOwnership, profile.indigenousOwnership))
+    .set('headOfficeLocation', Select.setValue(state.headOfficeLocation, profile.headOfficeLocation))
+    .set('signUpReason', Select.setValue(state.signUpReason, profile.signUpReason));
 }
 
 export function setErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
@@ -122,7 +136,11 @@ export function setErrors(state: Immutable<State>, errors: ValidationErrors): Im
     .setIn(['contactPhoneCountryCode', 'errors'], errors.contactPhoneCountryCode || [])
     .setIn(['contactPhoneType', 'errors'], errors.contactPhoneType || [])
     .set('industrySectors', SelectMulti.setErrors(state.industrySectors, errors.industrySectors || []))
-    .set('categories', SelectMulti.setErrors(state.categories, errors.categories || []));
+    .set('categories', SelectMulti.setErrors(state.categories, errors.categories || []))
+    .setIn(['numberOfEmployees', 'errors'], errors.numberOfEmployees || [])
+    .setIn(['indigenousOwnership', 'errors'], errors.indigenousOwnership || [])
+    .setIn(['headOfficeLocation', 'errors'], errors.headOfficeLocation || [])
+    .setIn(['signUpReason', 'errors'], errors.signUpReason || []);
 }
 
 export function isValid(state: Immutable<State>): boolean {
@@ -150,7 +168,11 @@ export type Msg
   | ADT<'contactPhoneType', Select.Value>
   | ADT<'industrySectors', SelectMulti.Msg>
   | ADT<'categories', SelectMulti.Msg>
-  | ADT<'validate'>;
+  | ADT<'validate'>
+  | ADT<'numberOfEmployees', Select.Value>
+  | ADT<'indigenousOwnership', Select.Value>
+  | ADT<'headOfficeLocation', Select.Value>
+  | ADT<'signUpReason', Select.Value>;
 
 export type Params = ProfileParams<VendorProfile>;
 
@@ -271,7 +293,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
         idNamespace: 'vendor-industry-sectors',
         label: 'Industry Sector(s)',
         required: false,
-        fields: DEFAULT_SELECT_MULTI_FIELDS
+        fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
       }
     })),
     categories: immutable(await SelectMulti.init({
@@ -282,9 +304,38 @@ export const init: Init<Params, State> = async ({ profile }) => {
         idNamespace: 'vendor-categories',
         label: 'Area(s) of Interest',
         required: false,
-        fields: DEFAULT_SELECT_MULTI_FIELDS
+        fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
       }
-    }))
+    })),
+    numberOfEmployees: Select.init({
+      id: 'vendor-profile-number-of-employees',
+      required: true,
+      label: 'Number of Employees',
+      placeholder: 'Select Number of Employees',
+      options: AVAILABLE_NUMBER_OF_EMPLOYEES.toJS().map(value => ({ label: value, value }))
+    }),
+    indigenousOwnership: Select.init({
+      id: 'vendor-profile-indigenous-ownership',
+      required: true,
+      label: 'Indigenous Ownership',
+      placeholder: 'Select Indigenous Ownership',
+      options: AVAILABLE_INDIGENOUS_OWNERSHIP.toJS().map(value => ({ label: value, value }))
+    }),
+    headOfficeLocation: Select.init({
+      id: 'vendor-profile-head-office-location',
+      required: true,
+      label: 'Head Office Location',
+      placeholder: 'Select Head Office Location',
+      options: AVAILABLE_HEAD_OFFICE_LOCATIONS.toJS().map(value => ({ label: value, value }))
+    }),
+    signUpReason: Select.init({
+      id: 'vendor-profile-sign-up-reason',
+      required: false,
+      isCreatable: true,
+      label: 'How did you hear about the Procurement Concierge Program?',
+      placeholder: 'Select',
+      options: AVAILABLE_SIGN_UP_REASONS.toJS().map(value => ({ label: value, value }))
+    })
   };
   if (!profile) {
     return state;
@@ -341,6 +392,14 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
         childMsg: msg.value
       })[0];
       return [validateValues(state)];
+    case 'numberOfEmployees':
+      return [validateValues(updateValue(state, 'numberOfEmployees', msg.value))];
+    case 'indigenousOwnership':
+      return [validateValues(updateValue(state, 'indigenousOwnership', msg.value))];
+    case 'headOfficeLocation':
+      return [validateValues(updateValue(state, 'headOfficeLocation', msg.value))];
+    case 'signUpReason':
+      return [validateValues(updateValue(state, 'signUpReason', msg.value))];
     case 'validate':
       return [validateValues(state)];
     default:
@@ -397,6 +456,30 @@ export const BusinessInformation: ProfileView<State, Msg> = ({ state, dispatch, 
             disabled={disabled}
             onChangeDebounced={validate}
             onChange={onChangeShortText('businessNumber')} />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12' md='6'>
+          <Select.view
+            state={state.numberOfEmployees}
+            disabled={disabled}
+            onChange={onChangeSelect('numberOfEmployees')} />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12' md='6'>
+          <Select.view
+            state={state.indigenousOwnership}
+            disabled={disabled}
+            onChange={onChangeSelect('indigenousOwnership')} />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12' md='6'>
+          <Select.view
+            state={state.headOfficeLocation}
+            disabled={disabled}
+            onChange={onChangeSelect('headOfficeLocation')} />
         </Col>
       </Row>
       <Row>
@@ -503,7 +586,7 @@ export const ContactInformation: ProfileView<State, Msg> = ({ state, dispatch, d
 };
 
 export const IndustrySectors: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
-  const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'industrySectors' as 'industrySectors', value }));
+  const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'industrySectors' as const, value }));
   return (
     <Row className='mt-3'>
       <Col xs='12' lg='10'>
@@ -514,13 +597,30 @@ export const IndustrySectors: ProfileView<State, Msg> = ({ state, dispatch, disa
 };
 
 export const Categories: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
-  const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'categories' as 'categories', value }));
+  const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'categories' as const, value }));
   return (
     <Row className='mt-3'>
       <Col xs='12' lg='10'>
         <SelectMulti.view state={state.categories} dispatch={dispatchCategories} disabled={disabled} labelClassName='h3' labelWrapperClassName='mb-3' />
       </Col>
     </Row>
+  );
+};
+
+export const Other: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
+  return (
+    <div className='mt-3'>
+      <FormSectionHeading text='Other' />
+      <Row>
+        <Col xs='12' md='9'>
+          <Select.view
+            state={state.signUpReason}
+            disabled={disabled}
+            onChange={onChangeSelect('signUpReason')} />
+        </Col>
+      </Row>
+    </div>
   );
 };
 
@@ -531,6 +631,7 @@ export const view: ProfileView<State, Msg> = props => {
       <ContactInformation {...props} />
       <IndustrySectors {...props} />
       <Categories {...props} />
+      <Other {...props} />
     </div>
   );
 };

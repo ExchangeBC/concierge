@@ -1,5 +1,5 @@
 import { Set } from 'immutable';
-import industrySectors from './industry-sectors-raw.json';
+import rawData from './industry-sectors-raw.json';
 
-const data: Set<string> = Set(industrySectors).sort((a, b) => a.localeCompare(b));
+const data: Set<string> = Set(rawData).sort((a, b) => a.localeCompare(b));
 export default data;

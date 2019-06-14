@@ -9,6 +9,12 @@ import { ADT, Omit } from 'shared/lib/types';
 
 export { Option, Value } from 'front-end/lib/views/form-field/lib/select';
 
+export const DEFAULT_SELECT_MULTI_FIELDS = [{
+  value: undefined,
+  errors: [],
+  removable: false
+}];
+
 export interface State {
   options: Option[];
   placeholder: string;

@@ -1,5 +1,9 @@
+import { Set } from 'immutable';
 import { isEmpty } from 'lodash';
 import moment from 'moment';
+import AVAILABLE_HEAD_OFFICE_LOCATIONS from 'shared/data/head-office-locations';
+import AVAILABLE_INDIGENOUS_OWNERSHIP from 'shared/data/indigenous-ownership';
+import AVAILABLE_NUMBER_OF_EMPLOYEES from 'shared/data/number-of-employees';
 import { compareDates, formatDate, formatDateAndTime, formatTime } from 'shared/lib';
 import { ADT, parsePhoneType, parseUserType, PhoneType, UserType } from 'shared/lib/types';
 
@@ -59,6 +63,15 @@ export function getInvalidValue<Invalid, Fallback>(result: ValidOrInvalid<any, I
   }
 }
 
+export function mapValid<A, B, C>(value: ValidOrInvalid<A, C>, fn: (a: A) => B): ValidOrInvalid<B, C> {
+  switch (value.tag) {
+    case 'valid':
+      return valid(fn(value.value));
+    case 'invalid':
+      return value;
+  }
+}
+
 // Validate a field only if it is truthy.
 export function optional<Value, Valid, Invalid>(fn: (v: Value) => ValidOrInvalid<Valid, Invalid>, v: Value): ValidOrInvalid<Valid | undefined, Invalid> {
   return isEmpty(v) ? valid(undefined) : fn(v);
@@ -110,6 +123,21 @@ export async function validateArrayAsync<A, B>(raw: A[], validate: (v: A) => Pro
     return valid(validations.map(({ value }) => value as B));
   } else {
     return invalid(validations.map(validation => getInvalidValue(validation, [])));
+  }
+}
+
+export function validateStringInArray(value: string, availableValues: Set<string>, name: string, indefiniteArticle = 'a', caseSensitive = false): Validation<string> {
+  if (!value) {
+    return invalid([`Please select ${indefiniteArticle} ${name}`]);
+  }
+  if (!caseSensitive) {
+    availableValues = availableValues.map(v => v.toUpperCase());
+    value = value.toUpperCase();
+  }
+  if (!availableValues.includes(value)) {
+    return invalid([`"${value}" is not a valid ${name}.`]);
+  } else {
+    return valid(value);
   }
 }
 
@@ -256,4 +284,20 @@ export function validatePositionTitle(positionTitle: string): Validation<string>
 
 export function validateIndustrySectors(industrySectors: string[]): ArrayValidation<string> {
   return validateArray(industrySectors, raw => validateGenericString(raw, 'Industry Sector'));
+}
+
+export function validateIndigenousOwnership(raw: string): Validation<string> {
+  return validateStringInArray(raw, AVAILABLE_INDIGENOUS_OWNERSHIP, 'Indigenous Ownership category', 'an', true);
+}
+
+export function validateNumberOfEmployees(raw: string): Validation<string> {
+  return validateStringInArray(raw, AVAILABLE_NUMBER_OF_EMPLOYEES, 'Number of Employees category', 'a', true);
+}
+
+export function validateHeadOfficeLocation(raw: string): Validation<string> {
+  return validateStringInArray(raw, AVAILABLE_HEAD_OFFICE_LOCATIONS, 'Head Office Location', 'a', true);
+}
+
+export function validateSignUpReason(raw: string): Validation<string | undefined> {
+  return optional(v => validateGenericString(v, 'Sign-Up Reason'), raw);
 }

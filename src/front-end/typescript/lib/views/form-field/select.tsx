@@ -1,6 +1,7 @@
 import { Dispatch, View } from 'front-end/lib/framework';
 import * as FormField from 'front-end/lib/views/form-field/lib';
 import { default as Select, Option, Props as SelectProps, Value } from 'front-end/lib/views/form-field/lib/select';
+import { default as SelectCreatable } from 'front-end/lib/views/form-field/lib/select-creatable';
 import { find } from 'lodash';
 import React from 'react';
 
@@ -17,9 +18,10 @@ export function setValue(state: State, value?: string): State {
 export interface State extends FormField.State<Value> {
   options: Option[];
   placeholder: string;
+  isCreatable?: boolean;
 }
 
-type ExtraProps = null;
+type ExtraProps = Pick<State, 'isCreatable'>;
 
 export interface Props extends Pick<FormField.Props<State, ExtraProps, Value>, 'toggleHelp' | 'disabled' | 'onChange'> {
   state: State;
@@ -27,7 +29,7 @@ export interface Props extends Pick<FormField.Props<State, ExtraProps, Value>, '
 
 type ChildProps = FormField.ChildProps<State, ExtraProps, Value>;
 
-interface InitParams extends Pick<State, 'id' | 'required' | 'label' | 'help' | 'options' | 'placeholder'> {
+interface InitParams extends Pick<State, 'id' | 'required' | 'label' | 'help' | 'options' | 'placeholder' | 'isCreatable'> {
   value?: State['value'];
 }
 
@@ -46,7 +48,7 @@ export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (value: Value) =>
 }
 
 const Child: View<ChildProps> = props => {
-  const { state, disabled, className, onChange } = props;
+  const { state, disabled, className, onChange, extraProps } = props;
   const selectProps: SelectProps = {
     name: state.id,
     id: state.id,
@@ -57,7 +59,7 @@ const Child: View<ChildProps> = props => {
     className,
     onChange
   };
-  return (<Select {...selectProps} />);
+  return extraProps.isCreatable ? (<SelectCreatable {...selectProps} />) : (<Select {...selectProps} />);
 };
 
 export const view: View<Props> = ({ state, onChange, toggleHelp, disabled }) => {
@@ -67,7 +69,7 @@ export const view: View<Props> = ({ state, onChange, toggleHelp, disabled }) => 
       state={state}
       onChange={onChange}
       toggleHelp={toggleHelp}
-      extraProps={null}
+      extraProps={{ isCreatable: state.isCreatable }}
       disabled={disabled} />
   );
 };

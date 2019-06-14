@@ -34,7 +34,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 const CallToActionButton: View<{ signedIn: boolean, userType?: UserType }> = ({ signedIn, userType }) => {
-  let route: Route = { tag: 'signUpBuyer', value: {} };
+  let route: Route = { tag: 'signUp', value: null };
   let text = 'Get Started';
   if (signedIn) {
     route = {

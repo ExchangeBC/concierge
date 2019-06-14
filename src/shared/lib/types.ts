@@ -215,6 +215,10 @@ export interface VendorProfile {
   contactPhoneType?: PhoneType;
   industrySectors: string[];
   categories: string[];
+  numberOfEmployees?: string;
+  indigenousOwnership?: string;
+  headOfficeLocation?: string;
+  signUpReason?: string;
 }
 
 export type Profile = BuyerProfile | ProgramStaffProfile | VendorProfile;

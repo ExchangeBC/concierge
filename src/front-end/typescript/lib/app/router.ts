@@ -61,7 +61,7 @@ const router: Router<Route> = {
       makeRoute() {
         return {
           tag: 'signUpVendor',
-          value: {}
+          value: null
         };
       }
     },

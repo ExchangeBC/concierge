@@ -1,12 +1,10 @@
-import { Component, ComponentView, Immutable, Init, Update, View } from 'front-end/lib/framework';
+import { Component, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
 import { validateConfirmPassword } from 'front-end/lib/validators';
 import { updateField, validateField } from 'front-end/lib/views/form-field/lib';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
-import FormSectionHeading from 'front-end/lib/views/form-section-heading';
-import Link from 'front-end/lib/views/link';
 import { default as React } from 'react';
-import { Col, FormGroup, Label, Row } from 'reactstrap';
-import { ADT, UserType, userTypeToTitleCase } from 'shared/lib/types';
+import { Col, Row } from 'reactstrap';
+import { ADT, UserType } from 'shared/lib/types';
 import { validateEmail, validatePassword } from 'shared/lib/validators';
 
 export interface State {
@@ -43,7 +41,7 @@ export function setErrors(state: Immutable<State>, errors: ValidationErrors): Im
 }
 
 export function isValid(state: Immutable<State>): boolean {
-  return !state.email.errors.length && !state.password.errors.length && !state.confirmPassword.errors.length;
+  return !!(!state.email.errors.length && !state.password.errors.length && !state.confirmPassword.errors.length && state.email.value && state.password.value && state.confirmPassword.value);
 }
 
 export type Msg
@@ -54,13 +52,13 @@ export type Msg
   | ADT<'validatePassword'>
   | ADT<'validateConfirmPassword'>;
 
-export interface Params {
+export type Params = null | {
   userType: UserType;
-}
+};
 
-export const init: Init<Params, State> = async ({ userType }) => {
+export const init: Init<Params, State> = async () => {
   return {
-    userType,
+    userType: UserType.Buyer,
     email: ShortText.init({
       id: 'email',
       required: true,
@@ -107,55 +105,10 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
   }
 };
 
-const UserTypeRadio: View<{ state: State, userType: UserType }> = ({ state, userType }) => {
-  const id = `sign-up-user-type-${userType}`;
-  const isChecked = state.userType === userType;
-  const style = { cursor: 'pointer' };
-  return (
-    <Link href={`/sign-up/${userType.toLowerCase().replace('_', '-')}`} className='custom-radio custom-control pl-0 pr-3 d-flex align-items-center' color='body'>
-      <input
-        id={id}
-        type='radio'
-        name='sign-up-user-type'
-        value={UserType.Vendor}
-        className='form-check-input'
-        checked={isChecked}
-        style={style}
-        readOnly />
-      <Label for={id} className='mb-0' style={style} >{userTypeToTitleCase(userType)}</Label>
-    </Link>
-  );
-};
-
-const UserTypeToggle: View<{ state: State }> = ({ state }) => {
-  if (state.userType === UserType.ProgramStaff) {
-    return null;
-  } else {
-    return (
-      <div>
-        <Label className='font-weight-bold d-block'>
-          I am a...
-          <span className='text-info'>*</span>
-        </Label>
-        <FormGroup check inline className='mb-3 text-nowrap'>
-          <UserTypeRadio state={state} userType={UserType.Buyer} />
-          <UserTypeRadio state={state} userType={UserType.Vendor} />
-        </FormGroup>
-      </div>
-    );
-  }
-}
-
 export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChange = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   return (
     <div>
-      <FormSectionHeading text='Account Information' />
-      <Row>
-        <Col xs='12'>
-          <UserTypeToggle state={state} />
-        </Col>
-      </Row>
       <Row>
         <Col xs='12'>
           <ShortText.view

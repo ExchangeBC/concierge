@@ -1,13 +1,12 @@
 import { ProfileComponent, ProfileParams, ProfileView } from 'front-end/lib/components/profiles/types';
 import { immutable, Immutable, Init, Update } from 'front-end/lib/framework';
-import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import { reduce } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import { ADT, UserType } from 'shared/lib/types';
-import { parsePhoneType, PhoneType, ProgramStaffProfile, userTypeToTitleCase } from 'shared/lib/types';
+import { ProgramStaffProfile, userTypeToTitleCase } from 'shared/lib/types';
 import { ValidOrInvalid } from 'shared/lib/validators';
 import { ProgramStaffProfileValidationErrors, validateProgramStaffProfile } from 'shared/lib/validators/program-staff-profile';
 
@@ -18,43 +17,19 @@ export interface State {
   firstName: ShortText.State;
   lastName: ShortText.State;
   positionTitle: ShortText.State;
-  contactStreetAddress: ShortText.State;
-  contactCity: ShortText.State;
-  contactProvince: ShortText.State;
-  contactPostalCode: ShortText.State;
-  contactCountry: ShortText.State;
-  contactPhoneNumber: ShortText.State;
-  contactPhoneCountryCode: ShortText.State;
-  contactPhoneType: Select.State;
 }
 
 type FormFieldKeys
   = 'firstName'
   | 'lastName'
-  | 'positionTitle'
-  | 'contactStreetAddress'
-  | 'contactCity'
-  | 'contactProvince'
-  | 'contactPostalCode'
-  | 'contactCountry'
-  | 'contactPhoneNumber'
-  | 'contactPhoneCountryCode'
-  | 'contactPhoneType';
+  | 'positionTitle';
 
 export function getValues(state: Immutable<State>): ProgramStaffProfile {
   return {
     type: UserType.ProgramStaff as UserType.ProgramStaff,
     firstName: state.firstName.value,
     lastName: state.lastName.value,
-    positionTitle: state.positionTitle.value,
-    contactStreetAddress: state.contactStreetAddress.value || undefined,
-    contactCity: state.contactCity.value || undefined,
-    contactProvince: state.contactProvince.value || undefined,
-    contactPostalCode: state.contactPostalCode.value || undefined,
-    contactCountry: state.contactCountry.value || undefined,
-    contactPhoneNumber: state.contactPhoneNumber.value || undefined,
-    contactPhoneCountryCode: state.contactPhoneCountryCode.value || undefined,
-    contactPhoneType: state.contactPhoneType.value && parsePhoneType(state.contactPhoneType.value.value) || undefined
+    positionTitle: state.positionTitle.value
   };
 }
 
@@ -62,15 +37,7 @@ export function setValues(state: Immutable<State>, profile: ProgramStaffProfile)
   return state
     .setIn(['firstName', 'value'], profile.firstName || '')
     .setIn(['lastName', 'value'], profile.lastName || '')
-    .setIn(['positionTitle', 'value'], profile.positionTitle || '')
-    .setIn(['contactStreetAddress', 'value'], profile.contactStreetAddress || '')
-    .setIn(['contactCity', 'value'], profile.contactCity || '')
-    .setIn(['contactProvince', 'value'], profile.contactProvince || '')
-    .setIn(['contactPostalCode', 'value'], profile.contactPostalCode || '')
-    .setIn(['contactCountry', 'value'], profile.contactCountry || '')
-    .setIn(['contactPhoneNumber', 'value'], profile.contactPhoneNumber || '')
-    .setIn(['contactPhoneCountryCode', 'value'], profile.contactPhoneCountryCode || '')
-    .set('contactPhoneType', Select.setValue(state.contactPhoneType, profile.contactPhoneType));
+    .setIn(['positionTitle', 'value'], profile.positionTitle || '');
 }
 
 export function setErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
@@ -80,15 +47,7 @@ export function setErrors(state: Immutable<State>, errors: ValidationErrors): Im
     .setIn(['firstName', 'errors'], state.firstName.value ? errors.firstName || [] : [])
     // All other fields are optional.
     .setIn(['lastName', 'errors'], state.lastName.value ? errors.lastName || [] : [])
-    .setIn(['positionTitle', 'errors'], state.positionTitle.value ? errors.positionTitle || [] : [])
-    .setIn(['contactStreetAddress', 'errors'], errors.contactStreetAddress || [])
-    .setIn(['contactCity', 'errors'], errors.contactCity || [])
-    .setIn(['contactProvince', 'errors'], errors.contactProvince || [])
-    .setIn(['contactPostalCode', 'errors'], errors.contactPostalCode || [])
-    .setIn(['contactCountry', 'errors'], errors.contactCountry || [])
-    .setIn(['contactPhoneNumber', 'errors'], errors.contactPhoneNumber || [])
-    .setIn(['contactPhoneCountryCode', 'errors'], errors.contactPhoneCountryCode || [])
-    .setIn(['contactPhoneType', 'errors'], errors.contactPhoneType || []);
+    .setIn(['positionTitle', 'errors'], state.positionTitle.value ? errors.positionTitle || [] : []);
 }
 
 export function isValid(state: Immutable<State>): boolean {
@@ -103,14 +62,6 @@ export type Msg
   = ADT<'firstName', string>
   | ADT<'lastName', string>
   | ADT<'positionTitle', string>
-  | ADT<'contactStreetAddress', string>
-  | ADT<'contactCity', string>
-  | ADT<'contactProvince', string>
-  | ADT<'contactPostalCode', string>
-  | ADT<'contactCountry', string>
-  | ADT<'contactPhoneNumber', string>
-  | ADT<'contactPhoneCountryCode', string>
-  | ADT<'contactPhoneType', Select.Value>
   | ADT<'validate'>;
 
 export type Params = ProfileParams<ProgramStaffProfile>;
@@ -138,65 +89,6 @@ export const init: Init<Params, State> = async ({ profile }) => {
       required: true,
       label: 'Position Title',
       placeholder: 'Position Title'
-    }),
-    contactStreetAddress: ShortText.init({
-      id: 'program-staff-profile-contact-street-address',
-      type: 'text',
-      required: false,
-      label: 'Street Address',
-      placeholder: 'Street Address'
-    }),
-    contactCity: ShortText.init({
-      id: 'program-staff-profile-contact-city',
-      type: 'email',
-      required: false,
-      label: 'City',
-      placeholder: 'City'
-    }),
-    contactProvince: ShortText.init({
-      id: 'program-staff-profile-contact-province',
-      type: 'email',
-      required: false,
-      label: 'Province/State',
-      placeholder: 'Province/State'
-    }),
-    contactPostalCode: ShortText.init({
-      id: 'program-staff-profile-contact-postal-code',
-      type: 'text',
-      required: false,
-      label: 'Postal/Zip Code',
-      placeholder: 'Postal/Zip Code'
-    }),
-    contactCountry: ShortText.init({
-      id: 'program-staff-profile-contact-country',
-      type: 'text',
-      required: false,
-      label: 'Country',
-      placeholder: 'Country'
-    }),
-    contactPhoneNumber: ShortText.init({
-      id: 'program-staff-profile-contact-phone-number',
-      type: 'text',
-      required: false,
-      label: 'Phone Number',
-      placeholder: 'e.g. 888-888-8888'
-    }),
-    contactPhoneCountryCode: ShortText.init({
-      id: 'program-staff-profile-contact-phone-country-code',
-      type: 'text',
-      required: false,
-      label: 'Country Code',
-      placeholder: 'e.g. 1'
-    }),
-    contactPhoneType: Select.init({
-      id: 'program-staff-profile-contact-phone-type',
-      required: false,
-      label: 'Phone Type',
-      placeholder: 'Select Type',
-      options: [
-        { value: PhoneType.Office, label: 'Office' },
-        { value: PhoneType.CellPhone, label: 'Cell Phone' }
-      ]
     })
   };
   if (!profile) {
@@ -214,22 +106,6 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       return [updateValue(state, 'lastName', msg.value)];
     case 'positionTitle':
       return [updateValue(state, 'positionTitle', msg.value)];
-    case 'contactStreetAddress':
-      return [updateValue(state, 'contactStreetAddress', msg.value)];
-    case 'contactCity':
-      return [updateValue(state, 'contactCity', msg.value)];
-    case 'contactProvince':
-      return [updateValue(state, 'contactProvince', msg.value)];
-    case 'contactPostalCode':
-      return [updateValue(state, 'contactPostalCode', msg.value)];
-    case 'contactCountry':
-      return [updateValue(state, 'contactCountry', msg.value)];
-    case 'contactPhoneNumber':
-      return [updateValue(state, 'contactPhoneNumber', msg.value)];
-    case 'contactPhoneCountryCode':
-      return [updateValue(state, 'contactPhoneCountryCode', msg.value)];
-    case 'contactPhoneType':
-      return [validateValues(updateValue(state, 'contactPhoneType', msg.value))];
     case 'validate':
       return [validateValues(state)];
     default:
@@ -292,88 +168,7 @@ export const ProgramStaffInformation: ProfileView<State, Msg> = ({ state, dispat
   );
 };
 
-export const ContactInformation: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
-  const validate = () => dispatch({ tag: 'validate', value: undefined });
-  return (
-    <div className='mt-3'>
-      <FormSectionHeading text='Contact Information (Optional)' />
-      <Row>
-        <Col xs='12'>
-          <ShortText.view
-            state={state.contactStreetAddress}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('contactStreetAddress')} />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='12' md='7'>
-          <ShortText.view
-            state={state.contactCity}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('contactCity')} />
-        </Col>
-        <Col xs='12' md='5'>
-          <ShortText.view
-            state={state.contactProvince}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('contactProvince')} />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='12' md='4'>
-          <ShortText.view
-            state={state.contactPostalCode}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('contactPostalCode')} />
-        </Col>
-        <Col xs='12' md='6'>
-          <ShortText.view
-            state={state.contactCountry}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('contactCountry')} />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='12' md='4'>
-          <ShortText.view
-            state={state.contactPhoneNumber}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('contactPhoneNumber')} />
-        </Col>
-        <Col xs='12' md='4'>
-          <ShortText.view
-            state={state.contactPhoneCountryCode}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('contactPhoneCountryCode')} />
-        </Col>
-        <Col xs='12' md='4'>
-          <Select.view
-            state={state.contactPhoneType}
-            disabled={disabled}
-            onChange={onChangeSelect('contactPhoneType')} />
-        </Col>
-      </Row>
-    </div>
-  );
-};
-
-export const view: ProfileView<State, Msg> = props => {
-  return (
-    <div>
-      <ProgramStaffInformation {...props} />
-      <ContactInformation {...props} />
-    </div>
-  );
-};
+export const view: ProfileView<State, Msg> = ProgramStaffInformation;
 
 export const component: ProfileComponent<State, Msg, ProgramStaffProfile> = {
   init,

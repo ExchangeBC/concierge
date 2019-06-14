@@ -1,39 +1,43 @@
 import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { makePageMetadata } from 'front-end/lib';
+import * as SelectMulti from 'front-end/lib/components/form-field-multi/select';
 import { emptyPageAlerts, immutable, newRoute } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as AccountInformation from 'front-end/lib/pages/sign-up/components/account-information';
 import * as StepsController from 'front-end/lib/pages/sign-up/lib/steps/controller';
 import * as StepZero from 'front-end/lib/pages/sign-up/lib/steps/zero';
-import * as StepOne from 'front-end/lib/pages/sign-up/program-staff/steps/one';
+import * as StepOne from 'front-end/lib/pages/sign-up/vendor/steps/one';
+import * as StepTwo from 'front-end/lib/pages/sign-up/vendor/steps/two';
+import { get } from 'lodash';
 import { UserType, userTypeToTitleCase } from 'shared/lib/types';
 
 const FAILURE_ERROR_MESSAGE = 'Please fix the errors as noted in each step and try submitting the form again.';
 
-export type State = StepsController.State2<StepZero.Params, StepZero.State, StepZero.InnerMsg, StepOne.Params, StepOne.State, StepOne.InnerMsg>;
+export type State = StepsController.State3<StepZero.Params, StepZero.State, StepZero.InnerMsg, StepOne.Params, StepOne.State, StepOne.InnerMsg, StepTwo.Params, StepTwo.State, StepTwo.InnerMsg>;
 
-export type Msg = StepsController.Msg2<StepZero.InnerMsg, StepOne.InnerMsg>;
+export type Msg = StepsController.Msg3<StepZero.InnerMsg, StepOne.InnerMsg, StepTwo.InnerMsg>;
 
 export type RouteParams = null;
 
-type Component = StepsController.Component2<StepZero.Params, StepZero.State, StepZero.InnerMsg, StepOne.Params, StepOne.State, StepOne.InnerMsg, RouteParams>;
+type Component = StepsController.Component3<StepZero.Params, StepZero.State, StepZero.InnerMsg, StepOne.Params, StepOne.State, StepOne.InnerMsg, StepTwo.Params, StepTwo.State, StepTwo.InnerMsg, RouteParams>;
 
-type ControllerHook = StepsController.Hook2<StepZero.Params, StepZero.State, StepZero.InnerMsg, StepOne.Params, StepOne.State, StepOne.InnerMsg>;
+type ControllerHook = StepsController.Hook3<StepZero.Params, StepZero.State, StepZero.InnerMsg, StepOne.Params, StepOne.State, StepOne.InnerMsg, StepTwo.Params, StepTwo.State, StepTwo.InnerMsg>;
 
 const StepZeroComponent = StepZero.makeComponent({
-  userType: UserType.ProgramStaff,
-  stepIndicator: 'Step 1 of 2'
+  userType: UserType.Vendor,
+  stepIndicator: 'Step 2 of 4'
 });
 
 const init: Component['init'] = async () => {
   return {
     loading: 0,
-    pageMetadata: makePageMetadata(`Create a ${userTypeToTitleCase(UserType.ProgramStaff)} Account`),
+    pageMetadata: makePageMetadata(`Create a ${userTypeToTitleCase(UserType.Vendor)} Account`),
     pageAlerts: emptyPageAlerts(),
     currentStep: 'zero',
     steps: {
       zero: { component: StepZeroComponent, state: immutable(await StepZeroComponent.init(null)) },
-      one: { component: StepOne.component, state: immutable(await StepOne.component.init(null)) }
+      one: { component: StepOne.component, state: immutable(await StepOne.component.init(null)) },
+      two: { component: StepTwo.component, state: immutable(await StepTwo.component.init(null)) }
     }
   };
 };
@@ -46,28 +50,34 @@ const onNext: ControllerHook = state => {
     case 'zero':
       return [state.set('currentStep', 'one')];
     case 'one':
+      return [state.set('currentStep', 'two')];
+    case 'two':
       return [
         startLoading(state).set('pageAlerts', emptyPageAlerts()),
         async (state, dispatch) => {
-          const { zero, one } = state.steps;
+          const { zero, one, two } = state.steps;
           const user = {
             ...AccountInformation.getValues(zero.state.accountInformation),
             acceptedTerms: false,
             profile: {
-              type: UserType.ProgramStaff as UserType.ProgramStaff,
-              firstName: one.state.firstName.value,
-              lastName: one.state.lastName.value,
-              positionTitle: one.state.positionTitle.value
+              type: UserType.Vendor as UserType.Vendor,
+              businessName: one.state.businessName.value,
+              businessCity: one.state.businessCity.value,
+              contactName: one.state.contactName.value,
+              numberOfEmployees: get(one.state.numberOfEmployees.value, 'value', ''),
+              indigenousOwnership: get(one.state.indigenousOwnership.value, 'value', ''),
+              headOfficeLocation: get(one.state.headOfficeLocation.value, 'value', ''),
+              industrySectors: SelectMulti.getValuesAsStrings(two.state.industrySectors),
+              categories: SelectMulti.getValuesAsStrings(two.state.categories),
+              signUpReason: get(two.state.signUpReason.value, 'value', '')
             }
           };
           const result = await api.createUser(user);
           switch (result.tag) {
             case 'valid':
               dispatch(newRoute({
-                tag: 'userView' as const,
-                value: {
-                  profileUserId: result.value._id
-                }
+                tag: 'requestForInformationList',
+                value: null
               }));
               return state;
             case 'invalid':
@@ -88,9 +98,20 @@ const onNext: ControllerHook = state => {
 const onBack: ControllerHook = state => {
   switch (state.currentStep) {
     case 'zero':
-      return [state.set('currentStep', 'one')];
+      return [
+        state,
+        async (state, dispatch) => {
+          dispatch({
+            tag: '@newRoute',
+            value: { tag: 'signUp', value: null }
+          });
+          return state;
+        }
+      ];
     case 'one':
       return [state.set('currentStep', 'zero')];
+    case 'two':
+      return [state.set('currentStep', 'one')];
   }
 };
 
@@ -100,7 +121,7 @@ const onCancel: ControllerHook = state => {
     async (state, dispatch) => {
       dispatch({
         tag: '@newRoute',
-        value: { tag: 'userList', value: null }
+        value: { tag: 'landing', value: null }
       });
       return state;
     }
@@ -111,7 +132,7 @@ const onFail: ControllerHook = state => {
   return [state];
 };
 
-export const component: Component = StepsController.makeComponent2({
+export const component: Component = StepsController.makeComponent3({
   init,
   onNext,
   onBack,
