@@ -180,26 +180,26 @@ const view: ComponentView<State, Msg> = makeView({
           </Col>
         </Row>
         <Row>
-          <Col xs='12' md='4'>
+          <Col xs='12' md='5' lg='4'>
             <Select.view
               state={state.numberOfEmployees}
               onChange={onChangeSelect('onChangeNumberOfEmployees')} />
           </Col>
         </Row>
         <Row>
-          <Col xs='12' md='4'>
+          <Col xs='12' md='5' lg='4'>
             <Select.view
               state={state.indigenousOwnership}
               onChange={onChangeSelect('onChangeIndigenousOwnership')} />
           </Col>
         </Row>
         <Row>
-          <Col xs='12' md='4'>
+          <Col xs='12' md='5' lg='4'>
             <Select.view
               state={state.headOfficeLocation}
               onChange={onChangeSelect('onChangeHeadOfficeLocation')} />
           </Col>
-          <Col xs='12' md='3'>
+          <Col xs='12' md='4' lg='3'>
             <ShortText.view
               state={state.businessCity}
               onChangeDebounced={onChangeDebounced('validateBusinessCity')}

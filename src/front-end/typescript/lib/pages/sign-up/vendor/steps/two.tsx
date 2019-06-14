@@ -162,7 +162,7 @@ const view: ComponentView<State, Msg> = makeView({
       <div>
         <IndustrySectors {...props} />
         <Categories {...props} />
-        <Row>
+        <Row className='mt-3'>
           <Col xs='12' md='7' lg='6'>
             <Select.view
               state={state.signUpReason}
