@@ -55,14 +55,16 @@ const onNext: ControllerHook = state => {
         startLoading(state).set('pageAlerts', emptyPageAlerts()),
         async (state, dispatch) => {
           const { zero, one, two } = state.steps;
+          const accountInformation = AccountInformation.getValues(zero.state.accountInformation);
           const user = {
-            ...AccountInformation.getValues(zero.state.accountInformation),
+            ...accountInformation,
             acceptedTerms: false,
             profile: {
               type: UserType.Vendor as UserType.Vendor,
               businessName: one.state.businessName.value,
               businessCity: one.state.businessCity.value,
               contactName: one.state.contactName.value,
+              contactEmail: accountInformation.email,
               numberOfEmployees: get(one.state.numberOfEmployees.value, 'value', ''),
               indigenousOwnership: get(one.state.indigenousOwnership.value, 'value', ''),
               headOfficeLocation: get(one.state.headOfficeLocation.value, 'value', ''),

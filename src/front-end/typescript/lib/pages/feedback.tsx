@@ -79,7 +79,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                   }
                 }
               }));
-              return stopLoading(state);
+              return state;
             case 'invalid':
               state = state.setIn(['feedbackText', 'errors'], result.value.text || []);
               return stopLoading(state);
