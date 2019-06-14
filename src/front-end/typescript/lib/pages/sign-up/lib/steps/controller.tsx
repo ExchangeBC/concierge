@@ -7,6 +7,8 @@ import LoadingButton from 'front-end/lib/views/loading-button';
 import React from 'react';
 import { ADT } from 'shared/lib/types';
 
+export const FAILURE_ERROR_MESSAGE = 'Please fix the errors noted in each step and try submitting the form again.';
+
 // Shared.
 
 interface StepState<Params, State, Msg> {

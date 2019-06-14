@@ -8,8 +8,6 @@ import * as StepZero from 'front-end/lib/pages/sign-up/lib/steps/zero';
 import * as StepOne from 'front-end/lib/pages/sign-up/program-staff/steps/one';
 import { UserType, userTypeToTitleCase } from 'shared/lib/types';
 
-const FAILURE_ERROR_MESSAGE = 'Please fix the errors as noted in each step and try submitting the form again.';
-
 export type State = StepsController.State2<StepZero.Params, StepZero.State, StepZero.InnerMsg, StepOne.Params, StepOne.State, StepOne.InnerMsg>;
 
 export type Msg = StepsController.Msg2<StepZero.InnerMsg, StepOne.InnerMsg>;
@@ -75,7 +73,7 @@ const onNext: ControllerHook = state => {
                 .set('currentStep', 'zero')
                 .set('pageAlerts', {
                   ...emptyPageAlerts(),
-                  errors: [FAILURE_ERROR_MESSAGE]
+                  errors: [StepsController.FAILURE_ERROR_MESSAGE]
                 });
           }
         }

@@ -12,8 +12,6 @@ import * as StepTwo from 'front-end/lib/pages/sign-up/vendor/steps/two';
 import { get } from 'lodash';
 import { UserType, userTypeToTitleCase } from 'shared/lib/types';
 
-const FAILURE_ERROR_MESSAGE = 'Please fix the errors as noted in each step and try submitting the form again.';
-
 export type State = StepsController.State3<StepZero.Params, StepZero.State, StepZero.InnerMsg, StepOne.Params, StepOne.State, StepOne.InnerMsg, StepTwo.Params, StepTwo.State, StepTwo.InnerMsg>;
 
 export type Msg = StepsController.Msg3<StepZero.InnerMsg, StepOne.InnerMsg, StepTwo.InnerMsg>;
@@ -95,7 +93,7 @@ const onNext: ControllerHook = state => {
                 .set('currentStep', 'zero')
                 .set('pageAlerts', {
                   ...emptyPageAlerts(),
-                  errors: [FAILURE_ERROR_MESSAGE]
+                  errors: [StepsController.FAILURE_ERROR_MESSAGE]
                 });
           }
         }
