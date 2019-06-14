@@ -129,7 +129,7 @@ function makeViewBottomBar2<P0, S0, M0, P1, S1, M1, RouteParams>(params: StepsCo
         <LoadingButton color='primary' onClick={nextOnClick} loading={isLoading} disabled={isDisabled} className='text-nowrap'>
           {next}
         </LoadingButton>
-        <Link onClick={cancelOnClick} color='secondary' disabled={isLoading} className='mx-md-3 order-3 order-md-2'>{cancel}</Link>
+        <Link onClick={cancelOnClick} color='secondary' disabled={isLoading} className={`mx-${back ? 'md-' : ''}3 order-3 order-md-2`}>{cancel}</Link>
         {back
           ? (<Link onClick={backOnClick} color='secondary' disabled={isLoading} className='mr-md-auto d-flex flex-nowrap align-items-center order-2 order-md-3 mx-3 mx-md-0'>
               <Icon name='chevron-left' color='secondary' className='d-none d-md-block' />

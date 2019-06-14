@@ -26,8 +26,8 @@ export function validatePublicSectorEntity(value: string): Validation<string> {
   return validateGenericString(value, 'Public Sector Entities');
 }
 
-export function validateBranch(branch: string): Validation<string> {
-  return validateGenericString(branch, 'Branch');
+export function validateBranch(branch: string): Validation<string | undefined> {
+  return optional(b => validateGenericString(b, 'Branch'), branch);
 }
 
 export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfile, BuyerProfileValidationErrors> {
@@ -35,9 +35,9 @@ export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfi
   const validatedLastName = validateLastName(getString(profile, 'lastName'));
   const validatedPositionTitle = validatePositionTitle(getString(profile, 'positionTitle'));
   const validatedPublicSectorEntity = validatePublicSectorEntity(getString(profile, 'publicSectorEntity'));
-  const validatedBranch = optional(validateBranch, getString(profile, 'branch'));
+  const validatedBranch = validateBranch(getString(profile, 'branch'));
   const validatedContactStreetAddress = optional(validateStreetAddress, getString(profile, 'contactStreetAddress'));
-  const validatedContactCity = optional(validateCity, getString(profile, 'contactCity'));
+  const validatedContactCity = validateCity(getString(profile, 'contactCity'));
   const validatedContactProvince = optional(validateProvince, getString(profile, 'contactProvince'));
   const validatedContactPostalCode = optional(validatePostalCode, getString(profile, 'contactPostalCode'));
   const validatedContactCountry = optional(validateCountry, getString(profile, 'contactCountry'));
@@ -59,7 +59,7 @@ export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfi
       publicSectorEntity: validatedPublicSectorEntity.value as string,
       branch: getValidValue(validatedBranch, undefined),
       contactStreetAddress: getValidValue(validatedContactStreetAddress, undefined),
-      contactCity: getValidValue(validatedContactCity, undefined),
+      contactCity: getValidValue(validatedContactCity, ''),
       contactProvince: getValidValue(validatedContactProvince, undefined),
       contactPostalCode: getValidValue(validatedContactPostalCode, undefined),
       contactCountry: getValidValue(validatedContactCountry, undefined),

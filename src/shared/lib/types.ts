@@ -170,16 +170,17 @@ export interface BuyerProfile {
   positionTitle: string;
   publicSectorEntity: string;
   branch?: string;
+  contactCity: string;
+  industrySectors: string[];
+  categories: string[];
+  // Following Buyer contact fields have been deprecated.
   contactStreetAddress?: string;
-  contactCity?: string;
   contactProvince?: string;
   contactPostalCode?: string;
   contactCountry?: string;
   contactPhoneNumber?: string;
   contactPhoneCountryCode?: string;
   contactPhoneType?: PhoneType;
-  industrySectors: string[];
-  categories: string[];
 }
 
 export interface ProgramStaffProfile {
@@ -187,6 +188,7 @@ export interface ProgramStaffProfile {
   firstName: string;
   lastName: string;
   positionTitle: string;
+  // Following Program Staff contact fields have been deprecated.
   contactStreetAddress?: string;
   contactCity?: string;
   contactProvince?: string;

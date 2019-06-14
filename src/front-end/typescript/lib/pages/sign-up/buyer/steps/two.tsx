@@ -1,34 +1,27 @@
 import * as SelectMulti from 'front-end/lib/components/form-field-multi/select';
 import { ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import { IsLoading, IsValid, makeView, StepComponent, StepMsg } from 'front-end/lib/pages/sign-up/lib/steps/step';
-import * as Select from 'front-end/lib/views/form-field/select';
 import { compact, get } from 'lodash';
 import React from 'react';
 import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
-import AVAILABLE_SIGN_UP_REASONS from 'shared/data/sign-up-reasons';
 import { CreateValidationErrors } from 'shared/lib/resources/user';
 import { ADT } from 'shared/lib/types';
-import { ArrayValidation, getInvalidValue, mapValid, validateCategories, validateIndustrySectors, validateSignUpReason, Validation } from 'shared/lib/validators';
+import { ArrayValidation, getInvalidValue, validateCategories, validateIndustrySectors } from 'shared/lib/validators';
 
 export interface State {
   industrySectors: Immutable<SelectMulti.State>;
   categories: Immutable<SelectMulti.State>;
-  signUpReason: Select.State;
 }
 
 type FormFieldMultiKeys
   = 'industrySectors'
   | 'categories';
 
-type FormFieldKeys
-  = 'signUpReason';
-
 export type InnerMsg
   = ADT<'onChangeIndustrySectors', SelectMulti.Msg>
-  | ADT<'onChangeCategories', SelectMulti.Msg>
-  | ADT<'onChangeSignUpReason', Select.Value>;
+  | ADT<'onChangeCategories', SelectMulti.Msg>;
 
 export type Msg = StepMsg<InnerMsg>;
 
@@ -42,7 +35,7 @@ const init: Init<Params, State> = async () => {
       isCreatable: true,
       autoFocus: true,
       formFieldMulti: {
-        idNamespace: 'vendor-industry-sectors',
+        idNamespace: 'buyer-industry-sectors',
         label: 'Industry Sector(s)',
         required: true,
         fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
@@ -53,20 +46,12 @@ const init: Init<Params, State> = async () => {
       placeholder: 'Select an Area of Interest',
       isCreatable: true,
       formFieldMulti: {
-        idNamespace: 'vendor-categories',
+        idNamespace: 'buyer-categories',
         label: 'Area(s) of Interest',
         required: true,
         fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
       }
-    })),
-    signUpReason: Select.init({
-      id: 'vendor-profile-sign-up-reason',
-      required: false,
-      isCreatable: true,
-      label: 'How did you hear about the Procurement Concierge Program?',
-      placeholder: 'Select',
-      options: AVAILABLE_SIGN_UP_REASONS.toJS().map(value => ({ label: value, value }))
-    })
+    }))
   };
 };
 
@@ -90,8 +75,6 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         childMsg: msg.value
       })[0];
       return [validateSelectMulti(state, 'categories', validateCategories)];
-    case 'onChangeSignUpReason':
-      return [validateValue(updateValue(state, 'signUpReason', msg.value), 'signUpReason', validateOption(validateSignUpReason))];
     default:
       return [state];
   }
@@ -103,29 +86,12 @@ function validateSelectMulti<K extends FormFieldMultiKeys>(state: Immutable<Stat
   return state.set(key, SelectMulti.setErrors(state[key], getInvalidValue(validation, [])));
 }
 
-function validateOption(validate: (_: string) => Validation<unknown>): (option: Select.Value) => Validation<Select.Value> {
-  return option => {
-    const raw = option ? option.value : '';
-    return mapValid(validate(raw), () => option);
-  };
-}
-
-function updateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K, value: State[K]['value']): Immutable<State> {
-  return state.setIn([key, 'value'], value);
-}
-
-function validateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K, validate: (value: State[K]['value']) => Validation<State[K]['value']>): Immutable<State> {
-  const validation = validate(state.getIn([key, 'value']));
-  return state.setIn([key, 'errors'], getInvalidValue(validation, []));
-}
-
 const isValid: IsValid<State> = (state) => {
   return !!(
     (compact(SelectMulti.getValuesAsStrings(state.industrySectors))).length &&
     (compact(SelectMulti.getValuesAsStrings(state.categories))).length &&
     SelectMulti.isValid(state.industrySectors) &&
-    SelectMulti.isValid(state.categories) &&
-    !state.signUpReason.errors.length
+    SelectMulti.isValid(state.categories)
   );
 };
 
@@ -157,19 +123,10 @@ const view: ComponentView<State, Msg> = makeView({
   title: 'Other Information',
   stepIndicator: 'Step 4 of 4',
   view(props) {
-    const { state, dispatch } = props;
-    const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
     return (
       <div>
         <IndustrySectors {...props} />
         <Categories {...props} />
-        <Row className='mt-3'>
-          <Col xs='12' md='7' lg='6'>
-            <Select.view
-              state={state.signUpReason}
-              onChange={onChangeSelect('onChangeSignUpReason')} />
-          </Col>
-        </Row>
       </div>
     );
   }
@@ -193,6 +150,5 @@ export default component;
 export function setErrors(state: Immutable<State>, errors: CreateValidationErrors): Immutable<State> {
   return state
     .set('industrySectors', SelectMulti.setErrors(state.industrySectors, get(errors.profile, 'industrySectors', [])))
-    .set('categories', SelectMulti.setErrors(state.categories, get(errors.profile, 'categories', [])))
-    .setIn(['signUpReason', 'errors'], get(errors.profile, 'signUpReason', []));
+    .set('categories', SelectMulti.setErrors(state.categories, get(errors.profile, 'categories', [])));
 }

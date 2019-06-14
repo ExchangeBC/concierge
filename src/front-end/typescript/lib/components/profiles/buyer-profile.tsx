@@ -1,7 +1,6 @@
 import * as SelectMulti from 'front-end/lib/components/form-field-multi/select';
 import { ProfileComponent, ProfileParams, ProfileView } from 'front-end/lib/components/profiles/types';
 import { Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
-import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import { reduce } from 'lodash';
@@ -10,7 +9,7 @@ import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
 import { ADT, UserType } from 'shared/lib/types';
-import { BuyerProfile, parsePhoneType, PhoneType, userTypeToTitleCase } from 'shared/lib/types';
+import { BuyerProfile, userTypeToTitleCase } from 'shared/lib/types';
 import { ValidOrInvalid } from 'shared/lib/validators';
 import { BuyerProfileValidationErrors, validateBuyerProfile } from 'shared/lib/validators/buyer-profile';
 
@@ -29,14 +28,7 @@ export interface State {
   positionTitle: ShortText.State;
   publicSectorEntity: ShortText.State;
   branch: ShortText.State;
-  contactStreetAddress: ShortText.State;
   contactCity: ShortText.State;
-  contactProvince: ShortText.State;
-  contactPostalCode: ShortText.State;
-  contactCountry: ShortText.State;
-  contactPhoneNumber: ShortText.State;
-  contactPhoneCountryCode: ShortText.State;
-  contactPhoneType: Select.State;
   industrySectors: Immutable<SelectMulti.State>;
   categories: Immutable<SelectMulti.State>;
 }
@@ -47,14 +39,7 @@ type FormFieldKeys
   | 'positionTitle'
   | 'publicSectorEntity'
   | 'branch'
-  | 'contactStreetAddress'
-  | 'contactCity'
-  | 'contactProvince'
-  | 'contactPostalCode'
-  | 'contactCountry'
-  | 'contactPhoneNumber'
-  | 'contactPhoneCountryCode'
-  | 'contactPhoneType';
+  | 'contactCity';
 
 export function getValues(state: Immutable<State>): BuyerProfile {
   return {
@@ -64,14 +49,7 @@ export function getValues(state: Immutable<State>): BuyerProfile {
     positionTitle: state.positionTitle.value,
     publicSectorEntity: state.publicSectorEntity.value,
     branch: state.branch.value || undefined,
-    contactStreetAddress: state.contactStreetAddress.value || undefined,
-    contactCity: state.contactCity.value || undefined,
-    contactProvince: state.contactProvince.value || undefined,
-    contactPostalCode: state.contactPostalCode.value || undefined,
-    contactCountry: state.contactCountry.value || undefined,
-    contactPhoneNumber: state.contactPhoneNumber.value || undefined,
-    contactPhoneCountryCode: state.contactPhoneCountryCode.value || undefined,
-    contactPhoneType: state.contactPhoneType.value && parsePhoneType(state.contactPhoneType.value.value) || undefined,
+    contactCity: state.contactCity.value,
     industrySectors: SelectMulti.getValuesAsStrings(state.industrySectors),
     categories: SelectMulti.getValuesAsStrings(state.categories)
   };
@@ -86,14 +64,7 @@ export function setValues(state: Immutable<State>, profile: BuyerProfile): Immut
     .setIn(['positionTitle', 'value'], profile.positionTitle || '')
     .setIn(['publicSectorEntity', 'value'], profile.publicSectorEntity || '')
     .setIn(['branch', 'value'], profile.branch || '')
-    .setIn(['contactStreetAddress', 'value'], profile.contactStreetAddress || '')
     .setIn(['contactCity', 'value'], profile.contactCity || '')
-    .setIn(['contactProvince', 'value'], profile.contactProvince || '')
-    .setIn(['contactPostalCode', 'value'], profile.contactPostalCode || '')
-    .setIn(['contactCountry', 'value'], profile.contactCountry || '')
-    .setIn(['contactPhoneNumber', 'value'], profile.contactPhoneNumber || '')
-    .setIn(['contactPhoneCountryCode', 'value'], profile.contactPhoneCountryCode || '')
-    .set('contactPhoneType', Select.setValue(state.contactPhoneType, profile.contactPhoneType))
     .set('industrySectors', SelectMulti.setValues(state.industrySectors, industrySectors))
     .set('categories', SelectMulti.setValues(state.categories, categories));
 }
@@ -108,14 +79,7 @@ export function setErrors(state: Immutable<State>, errors: ValidationErrors): Im
     .setIn(['positionTitle', 'errors'], state.positionTitle.value ? errors.positionTitle || [] : [])
     .setIn(['publicSectorEntity', 'errors'], state.publicSectorEntity.value ? errors.publicSectorEntity || [] : [])
     .setIn(['branch', 'errors'], errors.branch || [])
-    .setIn(['contactStreetAddress', 'errors'], errors.contactStreetAddress || [])
     .setIn(['contactCity', 'errors'], errors.contactCity || [])
-    .setIn(['contactProvince', 'errors'], errors.contactProvince || [])
-    .setIn(['contactPostalCode', 'errors'], errors.contactPostalCode || [])
-    .setIn(['contactCountry', 'errors'], errors.contactCountry || [])
-    .setIn(['contactPhoneNumber', 'errors'], errors.contactPhoneNumber || [])
-    .setIn(['contactPhoneCountryCode', 'errors'], errors.contactPhoneCountryCode || [])
-    .setIn(['contactPhoneType', 'errors'], errors.contactPhoneType || [])
     .set('industrySectors', SelectMulti.setErrors(state.industrySectors, errors.industrySectors || []))
     .set('categories', SelectMulti.setErrors(state.categories, errors.categories || []));
 }
@@ -134,14 +98,7 @@ export type Msg
   | ADT<'positionTitle', string>
   | ADT<'publicSectorEntity', string>
   | ADT<'branch', string>
-  | ADT<'contactStreetAddress', string>
   | ADT<'contactCity', string>
-  | ADT<'contactProvince', string>
-  | ADT<'contactPostalCode', string>
-  | ADT<'contactCountry', string>
-  | ADT<'contactPhoneNumber', string>
-  | ADT<'contactPhoneCountryCode', string>
-  | ADT<'contactPhoneType', Select.Value>
   | ADT<'industrySectors', SelectMulti.Msg>
   | ADT<'categories', SelectMulti.Msg>
   | ADT<'validate'>;
@@ -186,64 +143,12 @@ export const init: Init<Params, State> = async ({ profile }) => {
       label: 'Branch',
       placeholder: 'Branch'
     }),
-    contactStreetAddress: ShortText.init({
-      id: 'buyer-profile-contact-street-address',
-      type: 'text',
-      required: false,
-      label: 'Street Address',
-      placeholder: 'Street Address'
-    }),
     contactCity: ShortText.init({
       id: 'buyer-profile-contact-city',
       type: 'email',
-      required: false,
+      required: true,
       label: 'City',
       placeholder: 'City'
-    }),
-    contactProvince: ShortText.init({
-      id: 'buyer-profile-contact-province',
-      type: 'email',
-      required: false,
-      label: 'Province/State',
-      placeholder: 'Province/State'
-    }),
-    contactPostalCode: ShortText.init({
-      id: 'buyer-profile-contact-postal-code',
-      type: 'text',
-      required: false,
-      label: 'Postal/Zip Code',
-      placeholder: 'Postal/Zip Code'
-    }),
-    contactCountry: ShortText.init({
-      id: 'buyer-profile-contact-country',
-      type: 'text',
-      required: false,
-      label: 'Country',
-      placeholder: 'Country'
-    }),
-    contactPhoneNumber: ShortText.init({
-      id: 'buyer-profile-contact-phone-number',
-      type: 'text',
-      required: false,
-      label: 'Phone Number',
-      placeholder: 'e.g. 888-888-8888'
-    }),
-    contactPhoneCountryCode: ShortText.init({
-      id: 'buyer-profile-contact-phone-country-code',
-      type: 'text',
-      required: false,
-      label: 'Country Code',
-      placeholder: 'e.g. 1'
-    }),
-    contactPhoneType: Select.init({
-      id: 'buyer-profile-contact-phone-type',
-      required: false,
-      label: 'Phone Type',
-      placeholder: 'Select Type',
-      options: [
-        { value: PhoneType.Office, label: 'Office' },
-        { value: PhoneType.CellPhone, label: 'Cell Phone' }
-      ]
     }),
     industrySectors: immutable(await SelectMulti.init({
       options: AVAILABLE_INDUSTRY_SECTORS.toJS().map(value => ({ label: value, value })),
@@ -252,7 +157,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
       formFieldMulti: {
         idNamespace: 'buyer-industry-sectors',
         label: 'Industry Sector(s)',
-        required: false,
+        required: true,
         fields: DEFAULT_SELECT_MULTI_FIELDS
       }
     })),
@@ -263,7 +168,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
       formFieldMulti: {
         idNamespace: 'buyer-categories',
         label: 'Area(s) of Interest',
-        required: false,
+        required: true,
         fields: DEFAULT_SELECT_MULTI_FIELDS
       }
     }))
@@ -287,22 +192,8 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       return [updateValue(state, 'publicSectorEntity', msg.value)];
     case 'branch':
       return [updateValue(state, 'branch', msg.value)];
-    case 'contactStreetAddress':
-      return [updateValue(state, 'contactStreetAddress', msg.value)];
     case 'contactCity':
       return [updateValue(state, 'contactCity', msg.value)];
-    case 'contactProvince':
-      return [updateValue(state, 'contactProvince', msg.value)];
-    case 'contactPostalCode':
-      return [updateValue(state, 'contactPostalCode', msg.value)];
-    case 'contactCountry':
-      return [updateValue(state, 'contactCountry', msg.value)];
-    case 'contactPhoneNumber':
-      return [updateValue(state, 'contactPhoneNumber', msg.value)];
-    case 'contactPhoneCountryCode':
-      return [updateValue(state, 'contactPhoneCountryCode', msg.value)];
-    case 'contactPhoneType':
-      return [validateValues(updateValue(state, 'contactPhoneType', msg.value))];
     case 'industrySectors':
       state = updateComponentChild({
         state,
@@ -355,14 +246,14 @@ export const BuyerInformation: ProfileView<State, Msg> = ({ state, dispatch, dis
     <div className='mt-3 mt-md-0'>
       <FormSectionHeading text={`${userTypeToTitleCase(UserType.Buyer)} Information`} />
       <Row>
-        <Col xs='12' md='5'>
+        <Col xs='12' md='6'>
           <ShortText.view
             state={state.firstName}
             disabled={disabled}
             onChangeDebounced={validate}
             onChange={onChangeShortText('firstName')} />
         </Col>
-        <Col xs='12' md='5'>
+        <Col xs='12' md='6'>
           <ShortText.view
             state={state.lastName}
             disabled={disabled}
@@ -371,7 +262,7 @@ export const BuyerInformation: ProfileView<State, Msg> = ({ state, dispatch, dis
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='7'>
+        <Col xs='12' md='6'>
           <ShortText.view
             state={state.positionTitle}
             disabled={disabled}
@@ -380,14 +271,14 @@ export const BuyerInformation: ProfileView<State, Msg> = ({ state, dispatch, dis
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='7'>
+        <Col xs='12' md='6'>
           <ShortText.view
             state={state.publicSectorEntity}
             disabled={disabled}
             onChangeDebounced={validate}
             onChange={onChangeShortText('publicSectorEntity')} />
         </Col>
-        <Col xs='12' md='5'>
+        <Col xs='12' md='6'>
           <ShortText.view
             state={state.branch}
             disabled={disabled}
@@ -395,78 +286,13 @@ export const BuyerInformation: ProfileView<State, Msg> = ({ state, dispatch, dis
             onChange={onChangeShortText('branch')} />
         </Col>
       </Row>
-    </div>
-  );
-};
-
-export const ContactInformation: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
-  const validate = () => dispatch({ tag: 'validate', value: undefined });
-  return (
-    <div className='mt-3'>
-      <FormSectionHeading text='Contact Information (Optional)' />
       <Row>
-        <Col xs='12'>
-          <ShortText.view
-            state={state.contactStreetAddress}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('contactStreetAddress')} />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='12' md='7'>
+        <Col xs='12' md='6'>
           <ShortText.view
             state={state.contactCity}
             disabled={disabled}
             onChangeDebounced={validate}
             onChange={onChangeShortText('contactCity')} />
-        </Col>
-        <Col xs='12' md='5'>
-          <ShortText.view
-            state={state.contactProvince}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('contactProvince')} />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='12' md='4'>
-          <ShortText.view
-            state={state.contactPostalCode}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('contactPostalCode')} />
-        </Col>
-        <Col xs='12' md='6'>
-          <ShortText.view
-            state={state.contactCountry}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('contactCountry')} />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='12' md='4'>
-          <ShortText.view
-            state={state.contactPhoneNumber}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('contactPhoneNumber')} />
-        </Col>
-        <Col xs='12' md='4'>
-          <ShortText.view
-            state={state.contactPhoneCountryCode}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('contactPhoneCountryCode')} />
-        </Col>
-        <Col xs='12' md='4'>
-          <Select.view
-            state={state.contactPhoneType}
-            disabled={disabled}
-            onChange={onChangeSelect('contactPhoneType')} />
         </Col>
       </Row>
     </div>
@@ -477,7 +303,7 @@ export const IndustrySectors: ProfileView<State, Msg> = ({ state, dispatch, disa
   const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'industrySectors' as 'industrySectors', value }));
   return (
     <Row className='mt-3'>
-      <Col xs='12' lg='10'>
+      <Col xs='12' md='10'>
         <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} disabled={disabled} labelClassName='h3' labelWrapperClassName='mb-3' />
       </Col>
     </Row>
@@ -488,7 +314,7 @@ export const Categories: ProfileView<State, Msg> = ({ state, dispatch, disabled 
   const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'categories' as 'categories', value }));
   return (
     <Row className='mt-3'>
-      <Col xs='12' lg='10'>
+      <Col xs='12' md='10'>
         <SelectMulti.view state={state.categories} dispatch={dispatchCategories} disabled={disabled} labelClassName='h3' labelWrapperClassName='mb-3' />
       </Col>
     </Row>
@@ -499,7 +325,6 @@ export const view: ProfileView<State, Msg> = props => {
   return (
     <div>
       <BuyerInformation {...props} />
-      <ContactInformation {...props} />
       <IndustrySectors {...props} />
       <Categories {...props} />
     </div>

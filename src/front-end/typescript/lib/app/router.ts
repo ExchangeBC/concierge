@@ -52,7 +52,7 @@ const router: Router<Route> = {
       makeRoute() {
         return {
           tag: 'signUpBuyer',
-          value: {}
+          value: null
         };
       }
     },

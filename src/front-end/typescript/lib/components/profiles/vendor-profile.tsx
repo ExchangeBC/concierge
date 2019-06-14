@@ -292,7 +292,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
       formFieldMulti: {
         idNamespace: 'vendor-industry-sectors',
         label: 'Industry Sector(s)',
-        required: false,
+        required: true,
         fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
       }
     })),
@@ -303,7 +303,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
       formFieldMulti: {
         idNamespace: 'vendor-categories',
         label: 'Area(s) of Interest',
-        required: false,
+        required: true,
         fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
       }
     })),
@@ -589,7 +589,7 @@ export const IndustrySectors: ProfileView<State, Msg> = ({ state, dispatch, disa
   const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'industrySectors' as const, value }));
   return (
     <Row className='mt-3'>
-      <Col xs='12' lg='10'>
+      <Col xs='12' md='10'>
         <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} disabled={disabled} labelClassName='h3' labelWrapperClassName='mb-3' />
       </Col>
     </Row>
@@ -600,7 +600,7 @@ export const Categories: ProfileView<State, Msg> = ({ state, dispatch, disabled 
   const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'categories' as const, value }));
   return (
     <Row className='mt-3'>
-      <Col xs='12' lg='10'>
+      <Col xs='12' md='10'>
         <SelectMulti.view state={state.categories} dispatch={dispatchCategories} disabled={disabled} labelClassName='h3' labelWrapperClassName='mb-3' />
       </Col>
     </Row>
@@ -613,7 +613,7 @@ export const Other: ProfileView<State, Msg> = ({ state, dispatch, disabled = fal
     <div className='mt-3'>
       <FormSectionHeading text='Other' />
       <Row>
-        <Col xs='12' md='9'>
+        <Col xs='12' md='10'>
           <Select.view
             state={state.signUpReason}
             disabled={disabled}

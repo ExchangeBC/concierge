@@ -228,7 +228,10 @@ export default component;
 
 export function setErrors(state: Immutable<State>, errors: CreateValidationErrors): Immutable<State> {
   return state
-    .setIn(['firstName', 'errors'], get(errors.profile, 'firstName', []))
-    .setIn(['lastName', 'errors'], get(errors.profile, 'lastName', []))
-    .setIn(['postitionTitle', 'errors'], get(errors.profile, 'postitionTitle', []));
+    .setIn(['businessName', 'errors'], get(errors.profile, 'businessName', []))
+    .setIn(['businessCity', 'errors'], get(errors.profile, 'businessCity', []))
+    .setIn(['contactName', 'errors'], get(errors.profile, 'contactName', []))
+    .setIn(['numberOfEmployees', 'errors'], get(errors.profile, 'numberOfEmployees', []))
+    .setIn(['indigenousOwnership', 'errors'], get(errors.profile, 'indigenousOwnership', []))
+    .setIn(['headOfficeLocation', 'errors'], get(errors.profile, 'headOfficeLocation', []));
 }
