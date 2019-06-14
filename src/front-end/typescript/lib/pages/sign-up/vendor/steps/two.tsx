@@ -40,10 +40,11 @@ const init: Init<Params, State> = async () => {
       options: AVAILABLE_INDUSTRY_SECTORS.toJS().map(value => ({ label: value, value })),
       placeholder: 'Select Industry Sector',
       isCreatable: true,
+      autoFocus: true,
       formFieldMulti: {
         idNamespace: 'vendor-industry-sectors',
         label: 'Industry Sector(s)',
-        required: false,
+        required: true,
         fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
       }
     })),
@@ -54,7 +55,7 @@ const init: Init<Params, State> = async () => {
       formFieldMulti: {
         idNamespace: 'vendor-categories',
         label: 'Area(s) of Interest',
-        required: false,
+        required: true,
         fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
       }
     })),

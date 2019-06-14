@@ -151,7 +151,7 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
           {formatTermsAndConditionsAgreementDate(state.acceptedTermsAt)}
         </p>
         <Link route={{ tag: 'userView', value: { profileUserId: state.userId } }} className='mr-auto d-none d-md-flex align-items-center' color='secondary'>
-          <Icon name='chevron-left' color='secondary' className='mr-1' />
+          <Icon name='chevron-left' color='secondary' />
           My Profile
         </Link>
       </FixedBar>

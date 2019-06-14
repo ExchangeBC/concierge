@@ -63,6 +63,7 @@ function view(params: MakeComponentParams): ComponentView<State, Msg> {
 export interface MakeComponentParams {
   userType: UserType;
   stepIndicator: string
+  backLabel?: string
 }
 
 export function makeComponent(params: MakeComponentParams): StepComponent<Params, State, InnerMsg> {
@@ -74,7 +75,8 @@ export function makeComponent(params: MakeComponentParams): StepComponent<Params
     isLoading,
     actionLabels: {
       next: 'Next',
-      cancel: 'Cancel'
+      cancel: 'Cancel',
+      back: params.backLabel
     }
   };
 }

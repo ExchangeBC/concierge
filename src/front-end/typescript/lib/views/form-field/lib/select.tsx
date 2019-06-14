@@ -17,6 +17,7 @@ export interface Props {
   placeholder: string;
   value?: Value;
   disabled?: boolean;
+  autoFocus?: boolean;
   options: Option[];
   className?: string;
   onChange: OnChange<Value>;

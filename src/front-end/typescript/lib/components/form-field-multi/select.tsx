@@ -20,6 +20,7 @@ export interface State {
   placeholder: string;
   formFieldMulti: Immutable<FormFieldMulti.State<Value>>;
   isCreatable?: boolean;
+  autoFocus?: boolean;
 }
 
 export function getValues(state: Immutable<State>): Value[] {
@@ -67,7 +68,7 @@ export interface Params extends Omit<State, 'formFieldMulti'> {
   formFieldMulti: FormFieldMulti.State<Value>;
 }
 
-type ExtraChildProps = Pick<State, 'options' | 'placeholder' | 'isCreatable'>;
+type ExtraChildProps = Pick<State, 'options' | 'placeholder' | 'isCreatable' | 'autoFocus'>;
 
 export const init: Init<Params, State> = async params => {
   return {
@@ -107,6 +108,7 @@ const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => 
     placeholder: extraProps.placeholder,
     value: field.value,
     disabled,
+    autoFocus: extraProps.autoFocus,
     options: extraProps.options,
     className,
     onChange
@@ -146,7 +148,8 @@ export const view: View<Props> = ({ state, dispatch, disabled = false, labelClas
     extraChildProps: {
       options: state.options,
       placeholder: state.placeholder,
-      isCreatable: state.isCreatable
+      isCreatable: state.isCreatable,
+      autoFocus: state.autoFocus
     },
     labelClassName,
     labelWrapperClassName

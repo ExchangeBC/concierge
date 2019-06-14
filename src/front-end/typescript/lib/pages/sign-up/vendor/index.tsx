@@ -24,7 +24,8 @@ type ControllerHook = StepsController.Hook3<StepZero.Params, StepZero.State, Ste
 
 const StepZeroComponent = StepZero.makeComponent({
   userType: UserType.Vendor,
-  stepIndicator: 'Step 2 of 4'
+  stepIndicator: 'Step 2 of 4',
+  backLabel: 'Go Back'
 });
 
 const init: Component['init'] = async () => {
