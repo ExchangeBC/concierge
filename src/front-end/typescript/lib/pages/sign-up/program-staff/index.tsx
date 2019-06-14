@@ -64,10 +64,8 @@ const onNext: ControllerHook = state => {
           switch (result.tag) {
             case 'valid':
               dispatch(newRoute({
-                tag: 'userView' as const,
-                value: {
-                  profileUserId: result.value._id
-                }
+                tag: 'userList' as const,
+                value: null
               }));
               return state;
             case 'invalid':

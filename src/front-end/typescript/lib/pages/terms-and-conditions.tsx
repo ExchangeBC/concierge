@@ -1,5 +1,5 @@
 import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
-import { isUserType } from 'front-end/lib/access-control';
+import { isSignedIn } from 'front-end/lib/access-control';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, newUrl, noPageModal, PageComponent, PageInit, replaceRoute, Update } from 'front-end/lib/framework';
@@ -13,7 +13,7 @@ import Markdown from 'front-end/lib/views/markdown';
 import React from 'react';
 import { Col, Container, Row } from 'reactstrap';
 import { formatTermsAndConditionsAgreementDate } from 'shared/lib';
-import { ADT, UserType } from 'shared/lib/types';
+import { ADT } from 'shared/lib/types';
 
 export enum WarningId {
   RfiResponse = 'RFI_RESPONSE',
@@ -68,9 +68,7 @@ const initState: State = {
   userId: ''
 };
 
-const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
-
-  userTypes: [UserType.Buyer, UserType.Vendor],
+const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedIn({
 
   async success({ routeParams, shared }) {
     const { redirectOnAccept, redirectOnSkip, warningId } = routeParams;

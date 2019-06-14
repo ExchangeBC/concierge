@@ -24,7 +24,6 @@ export interface State<ProfileState> {
   profile: Immutable<ProfileState>;
   showEmail: boolean;
   showChangePassword: boolean;
-  showTermsAndConditions: boolean;
   showReviewTermsAndConditionsLink: boolean;
   showDeactivateAccount: boolean;
   isProfileEditable: boolean;
@@ -81,7 +80,6 @@ function init<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
       profile: await resetProfileState(Profile, profileUser),
       showEmail: viewerUserIsOwner || viewerUserIsProgramStaff,
       showChangePassword: viewerUserIsOwner,
-      showTermsAndConditions: (viewerUserIsOwner || viewerUserIsProgramStaff) && !profileUserIsProgramStaff,
       showReviewTermsAndConditionsLink: viewerUserIsOwner,
       showDeactivateAccount: (viewerUserIsOwner && !profileUserIsProgramStaff) || (viewerUserIsProgramStaff && profileUserIsProgramStaff && !viewerUserIsOwner),
       isProfileEditable: viewerUserIsOwner,
@@ -363,9 +361,6 @@ function conditionalChangePassword<PS, PM, P extends ProfileType>(Profile: Profi
 
 function conditionalTermsAndConditions<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
   return ({ state }) => {
-    if (!state.showTermsAndConditions) {
-      return null;
-    }
     let conditionalLink = null;
     if (state.showReviewTermsAndConditionsLink) {
       conditionalLink = (
