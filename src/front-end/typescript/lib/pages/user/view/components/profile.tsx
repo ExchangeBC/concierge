@@ -357,7 +357,7 @@ function conditionalChangePassword<PS, PM, P extends ProfileType>(Profile: Profi
             <h2>Change Password</h2>
           </Col>
         </Row>
-        <Row className='mb-3'>
+        <Row className='mb-4'>
           <Col xs='12'>
             Click the button below to change your password.
           </Col>
@@ -393,7 +393,7 @@ function conditionalTermsAndConditions<PS, PM, P extends ProfileType>(Profile: P
             <h2>Terms & Conditions</h2>
           </Col>
         </Row>
-        <Row className='mb-3'>
+        <Row className='mb-4'>
           <Col xs='12'>
             {formatTermsAndConditionsAgreementDate(state.profileUser.acceptedTermsAt)}
           </Col>
@@ -418,7 +418,7 @@ function conditionalDeactivateAccount<PS, PM, P extends ProfileType>(Profile: Pr
             <h2>Deactivate Account</h2>
           </Col>
         </Row>
-        <Row className='mb-3'>
+        <Row className='mb-4'>
           <Col xs='12'>
             Deactivating your account means that you will no longer be able to access the Concierge.
           </Col>
