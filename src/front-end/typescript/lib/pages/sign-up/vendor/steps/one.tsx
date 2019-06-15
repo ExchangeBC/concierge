@@ -10,7 +10,8 @@ import AVAILABLE_INDIGENOUS_OWNERSHIP from 'shared/data/indigenous-ownership';
 import AVAILABLE_NUMBER_OF_EMPLOYEES from 'shared/data/number-of-employees';
 import { CreateValidationErrors } from 'shared/lib/resources/user';
 import { ADT } from 'shared/lib/types';
-import { getInvalidValue, mapValid, optional, validateBusinessName, validateCity, validateContactName, validateHeadOfficeLocation, validateIndigenousOwnership, validateNumberOfEmployees, Validation } from 'shared/lib/validators';
+import { getInvalidValue, mapValid, validateBusinessName, validateContactName, validateHeadOfficeLocation, validateIndigenousOwnership, validateNumberOfEmployees, Validation } from 'shared/lib/validators';
+import { businessCityIsRequired, validateBusinessCity } from 'shared/lib/validators/vendor-profile';
 
 export interface State {
   businessName: ShortText.State;
@@ -107,17 +108,25 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'onChangeIndigenousOwnership':
       return [validateValue(updateValue(state, 'indigenousOwnership', msg.value), 'indigenousOwnership', validateOption(validateIndigenousOwnership))];
     case 'onChangeHeadOfficeLocation':
-      return [validateValue(updateValue(state, 'headOfficeLocation', msg.value), 'headOfficeLocation', validateOption(validateHeadOfficeLocation))];
+      state = updateValue(state, 'headOfficeLocation', msg.value);
+      state = validateValue(state, 'headOfficeLocation', validateOption(validateHeadOfficeLocation));
+      state = state.setIn(['businessCity', 'required'], businessCityIsRequired(get(msg.value, 'value', '')));
+      state = validateValue(state, 'businessCity', makeValidateBusinessCity(state));
+      return [state];
     case 'validateBusinessName':
       return [validateValue(state, 'businessName', validateBusinessName)];
     case 'validateBusinessCity':
-      return [validateValue(state, 'businessCity', v => mapValid(optional(validateCity, v), w => w || ''))];
+      return [validateValue(state, 'businessCity', makeValidateBusinessCity(state))];
     case 'validateContactName':
       return [validateValue(state, 'contactName', validateContactName)];
     default:
       return [state];
   }
 };
+
+function makeValidateBusinessCity(state: Immutable<State>): (raw: string) => Validation<string> {
+  return v => mapValid(validateBusinessCity(v, get(state.headOfficeLocation.value, 'value', '')), w => w || '');
+}
 
 function validateOption(validate: (_: string) => Validation<unknown>): (option: Select.Value) => Validation<Select.Value> {
   return option => {

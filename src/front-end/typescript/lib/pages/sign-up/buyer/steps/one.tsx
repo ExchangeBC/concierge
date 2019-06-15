@@ -132,7 +132,19 @@ function validateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K,
 }
 
 const isValid: IsValid<State> = (state) => {
-  return !!(!state.firstName.errors.length && !state.lastName.errors.length && !state.positionTitle.errors.length && state.firstName.value && state.lastName.value && state.positionTitle.value);
+  return !!(
+    !state.firstName.errors.length &&
+    !state.lastName.errors.length &&
+    !state.positionTitle.errors.length &&
+    !state.publicSectorEntity.errors.length &&
+    !state.branch.errors.length &&
+    !state.contactCity.errors.length &&
+    state.firstName.value &&
+    state.lastName.value &&
+    state.positionTitle.value &&
+    state.publicSectorEntity.value &&
+    state.contactCity.value
+  );
 };
 
 const isLoading: IsLoading<State> = (state) => false;

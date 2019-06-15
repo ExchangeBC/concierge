@@ -4,7 +4,7 @@ import { Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, upd
 import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
-import { reduce } from 'lodash';
+import { get, reduce } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
@@ -17,6 +17,7 @@ import { ADT, UserType } from 'shared/lib/types';
 import { BusinessType, parseBusinessType, parsePhoneType, PhoneType, VendorProfile } from 'shared/lib/types';
 import { ValidOrInvalid } from 'shared/lib/validators';
 import { validateVendorProfile, VendorProfileValidationErrors } from 'shared/lib/validators/vendor-profile';
+import { businessCityIsRequired } from 'shared/lib/validators/vendor-profile';
 
 export type ValidationErrors = VendorProfileValidationErrors;
 
@@ -397,7 +398,9 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'indigenousOwnership':
       return [validateValues(updateValue(state, 'indigenousOwnership', msg.value))];
     case 'headOfficeLocation':
-      return [validateValues(updateValue(state, 'headOfficeLocation', msg.value))];
+      state = validateValues(updateValue(state, 'headOfficeLocation', msg.value));
+      state = state.setIn(['businessCity', 'required'], businessCityIsRequired(get(msg.value, 'value', '')));
+      return [state];
     case 'signUpReason':
       return [validateValues(updateValue(state, 'signUpReason', msg.value))];
     case 'validate':

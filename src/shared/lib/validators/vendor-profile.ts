@@ -2,6 +2,20 @@ import { getString, getStringArray } from 'shared/lib';
 import { BusinessType, parseBusinessType, UserType, VendorProfile } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, optional, valid, validateBusinessName, validateCategories, validateCity, validateContactName, validateCountry, validateEmail, validateGenericString, validateHeadOfficeLocation, validateIndigenousOwnership, validateIndustrySectors, validateNumberOfEmployees, validatePhoneCountryCode, validatePhoneNumber, validatePhoneType, validatePositionTitle, validatePostalCode, validateProvince, validateSignUpReason, validateStreetAddress, Validation, ValidOrInvalid } from './';
 
+export const HEAD_OFFICE_LOCATION_BC = 'British Columbia';
+
+export function businessCityIsRequired(headOfficeLocation: string): boolean {
+  return headOfficeLocation === HEAD_OFFICE_LOCATION_BC;
+}
+
+export function validateBusinessCity(raw: string, headOfficeLocation: string): Validation<string | undefined> {
+  if (businessCityIsRequired(headOfficeLocation)) {
+    return validateCity(raw);
+  } else {
+    return optional(validateCity, raw);
+  }
+}
+
 export interface VendorProfileValidationErrors {
   businessName?: string[];
   businessType?: string[];
@@ -45,7 +59,6 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
   const validatedBusinessType = optional(validateBusinessType, getString(profile, 'businessType'));
   const validatedBusinessNumber = optional(validateBusinessNumber, getString(profile, 'businessNumber'));
   const validatedBusinessStreetAddress = optional(validateStreetAddress, getString(profile, 'businessStreetAddress'));
-  const validatedBusinessCity = optional(validateCity, getString(profile, 'businessCity'));
   const validatedBusinessProvince = optional(validateProvince, getString(profile, 'businessProvince'));
   const validatedBusinessPostalCode = optional(validatePostalCode, getString(profile, 'businessPostalCode'));
   const validatedBusinessCountry = optional(validateCountry, getString(profile, 'businessCountry'));
@@ -64,6 +77,7 @@ export function validateVendorProfile(profile: object): ValidOrInvalid<VendorPro
   const validatedNumberOfEmployees = validateNumberOfEmployees(getString(profile, 'numberOfEmployees'));
   const validatedIndigenousOwnership = validateIndigenousOwnership(getString(profile, 'indigenousOwnership'));
   const validatedHeadOfficeLocation = validateHeadOfficeLocation(getString(profile, 'headOfficeLocation'));
+  const validatedBusinessCity = validateBusinessCity(getString(profile, 'businessCity'), getValidValue(validatedHeadOfficeLocation, ''));
   const validatedSignUpReason = validateSignUpReason(getString(profile, 'signUpReason'));
   if (allValid([validatedBusinessName, validatedBusinessType, validatedBusinessNumber, validatedBusinessStreetAddress, validatedBusinessCity, validatedBusinessProvince, validatedBusinessPostalCode, validatedBusinessCountry, validatedContactName, validatedContactPositionTitle, validatedContactEmail, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedNumIndustrySectors, validatedIndustrySectors, validatedNumCategories, validatedCategories, validatedIndigenousOwnership, validatedNumberOfEmployees, validatedHeadOfficeLocation, validatedSignUpReason])) {
     return valid({
