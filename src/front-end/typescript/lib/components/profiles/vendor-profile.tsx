@@ -94,7 +94,7 @@ export function getValues(state: Immutable<State>): VendorProfile {
 export function setValues(state: Immutable<State>, profile: VendorProfile): Immutable<State> {
   const industrySectors = profile.industrySectors.length ? profile.industrySectors : [undefined];
   const categories = profile.categories.length ? profile.categories : [undefined];
-  return state
+  state = state
     .setIn(['businessName', 'value'], profile.businessName || '')
     .set('businessType', Select.setValue(state.businessType, profile.businessType))
     .setIn(['businessNumber', 'value'], profile.businessNumber || '')
@@ -115,6 +115,7 @@ export function setValues(state: Immutable<State>, profile: VendorProfile): Immu
     .set('indigenousOwnership', Select.setValue(state.indigenousOwnership, profile.indigenousOwnership))
     .set('headOfficeLocation', Select.setValue(state.headOfficeLocation, profile.headOfficeLocation))
     .set('signUpReason', Select.setValue(state.signUpReason, profile.signUpReason));
+  return state.setIn(['businessCity', 'required'], businessCityIsRequired(get(state.headOfficeLocation.value, 'value', '')));
 }
 
 export function setErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
