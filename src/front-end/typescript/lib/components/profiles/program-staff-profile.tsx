@@ -137,7 +137,7 @@ export const ProgramStaffInformation: ProfileView<State, Msg> = ({ state, dispat
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   const validate = () => dispatch({ tag: 'validate', value: undefined });
   return (
-    <div className='mt-3 mt-md-0'>
+    <div className='mt-4'>
       <FormSectionHeading text={`${userTypeToTitleCase(UserType.ProgramStaff)} Information`} />
       <Row>
         <Col xs='12' md='5'>

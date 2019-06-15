@@ -20,9 +20,9 @@ export interface State<ProfileState> {
   deactivateLoading: number;
   profileUser: PublicUser;
   viewerUser?: ViewerUser;
+  userType: ShortText.State;
   email: ShortText.State;
   profile: Immutable<ProfileState>;
-  showEmail: boolean;
   showChangePassword: boolean;
   showReviewTermsAndConditionsLink: boolean;
   showDeactivateAccount: boolean;
@@ -76,9 +76,15 @@ function init<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
       deactivateLoading: 0,
       profileUser,
       viewerUser,
+      userType: ShortText.init({
+        id: 'profile-user-type',
+        required: false,
+        type: 'text',
+        label: 'Account Type',
+        value: userTypeToTitleCase(profileUser.profile.type)
+      }),
       email: resetEmailState(profileUser),
       profile: await resetProfileState(Profile, profileUser),
-      showEmail: viewerUserIsOwner || viewerUserIsProgramStaff,
       showChangePassword: viewerUserIsOwner,
       showReviewTermsAndConditionsLink: viewerUserIsOwner,
       showDeactivateAccount: (viewerUserIsOwner && !profileUserIsProgramStaff) || (viewerUserIsProgramStaff && profileUserIsProgramStaff && !viewerUserIsOwner),
@@ -231,22 +237,29 @@ function isValid<PS, PM, P extends ProfileType>(state: State<PS>, Profile: Profi
 function conditionalEmail<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
   return props => {
     const { state, dispatch } = props;
-    if (!state.showEmail) {
-      return null;
-    }
     const onChangeEmail = ShortText.makeOnChange(dispatch, value => ({ tag: 'onChangeEmail' as const, value }));
     const isDisabled = !state.isEditingProfile;
     return (
-      <Row className='mb-md-3'>
-        <Col xs='12' md='5'>
-          <ShortText.view
-            state={state.email}
-            disabled={isDisabled}
-            onChangeDebounced={() => dispatch({ tag: 'validateEmail', value: undefined })}
-            onChange={onChangeEmail}
-            autoFocus />
-        </Col>
-      </Row>
+      <div>
+        <Row>
+          <Col xs='12' md='6'>
+            <ShortText.view
+              state={state.userType}
+              onChange={() => null}
+              disabled />
+          </Col>
+        </Row>
+        <Row>
+          <Col xs='12' md='6'>
+            <ShortText.view
+              state={state.email}
+              disabled={isDisabled}
+              onChangeDebounced={() => dispatch({ tag: 'validateEmail', value: undefined })}
+              onChange={onChangeEmail}
+              autoFocus />
+          </Col>
+        </Row>
+      </div>
     );
   };
 }
@@ -431,8 +444,7 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
     const { state } = props;
     const profileName = profileToName(Profile.getValues(state.profile));
     const name: string | null = state.viewerUser && state.viewerUser.id === state.profileUser._id ? 'My' : profileName && `${profileName}'s`;
-    const userType = userTypeToTitleCase(state.profileUser.profile.type);
-    const headingSuffix = `${userType} Profile`;
+    const headingSuffix = 'Profile';
     const heading = name ? `${name} ${headingSuffix}` : headingSuffix;
     return (
       <div>

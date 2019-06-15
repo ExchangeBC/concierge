@@ -436,7 +436,7 @@ export const BusinessInformation: ProfileView<State, Msg> = ({ state, dispatch, 
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
   const validate = () => dispatch({ tag: 'validate', value: undefined });
   return (
-    <div className='mt-3 mt-md-0'>
+    <div className='mt-4'>
       <FormSectionHeading text='Business Information' />
       <Row>
         <Col xs='12'>
@@ -536,7 +536,7 @@ export const ContactInformation: ProfileView<State, Msg> = ({ state, dispatch, d
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
   const validate = () => dispatch({ tag: 'validate', value: undefined });
   return (
-    <div className='mt-3'>
+    <div className='mt-4'>
       <FormSectionHeading text='Contact Information (Optional)' />
       <Row>
         <Col xs='12' md='6'>
@@ -592,7 +592,7 @@ export const ContactInformation: ProfileView<State, Msg> = ({ state, dispatch, d
 export const IndustrySectors: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
   const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'industrySectors' as const, value }));
   return (
-    <Row className='mt-3'>
+    <Row className='mt-4'>
       <Col xs='12' md='10'>
         <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} disabled={disabled} labelClassName='h3' labelWrapperClassName='mb-3' />
       </Col>
@@ -603,7 +603,7 @@ export const IndustrySectors: ProfileView<State, Msg> = ({ state, dispatch, disa
 export const Categories: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
   const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'categories' as const, value }));
   return (
-    <Row className='mt-3'>
+    <Row className='mt-4'>
       <Col xs='12' md='10'>
         <SelectMulti.view state={state.categories} dispatch={dispatchCategories} disabled={disabled} labelClassName='h3' labelWrapperClassName='mb-3' />
       </Col>
@@ -614,7 +614,7 @@ export const Categories: ProfileView<State, Msg> = ({ state, dispatch, disabled 
 export const Other: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
   return (
-    <div className='mt-3'>
+    <div className='mt-4'>
       <FormSectionHeading text='Other' />
       <Row>
         <Col xs='12' md='10'>

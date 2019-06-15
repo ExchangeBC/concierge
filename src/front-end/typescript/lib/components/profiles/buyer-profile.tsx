@@ -243,7 +243,7 @@ export const BuyerInformation: ProfileView<State, Msg> = ({ state, dispatch, dis
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   const validate = () => dispatch({ tag: 'validate', value: undefined });
   return (
-    <div className='mt-3 mt-md-0'>
+    <div className='mt-4'>
       <FormSectionHeading text={`${userTypeToTitleCase(UserType.Buyer)} Information`} />
       <Row>
         <Col xs='12' md='6'>
@@ -302,7 +302,7 @@ export const BuyerInformation: ProfileView<State, Msg> = ({ state, dispatch, dis
 export const IndustrySectors: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
   const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'industrySectors' as 'industrySectors', value }));
   return (
-    <Row className='mt-3'>
+    <Row className='mt-4'>
       <Col xs='12' md='10'>
         <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} disabled={disabled} labelClassName='h3' labelWrapperClassName='mb-3' />
       </Col>
@@ -313,7 +313,7 @@ export const IndustrySectors: ProfileView<State, Msg> = ({ state, dispatch, disa
 export const Categories: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
   const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'categories' as 'categories', value }));
   return (
-    <Row className='mt-3'>
+    <Row className='mt-4'>
       <Col xs='12' md='10'>
         <SelectMulti.view state={state.categories} dispatch={dispatchCategories} disabled={disabled} labelClassName='h3' labelWrapperClassName='mb-3' />
       </Col>
