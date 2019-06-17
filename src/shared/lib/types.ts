@@ -163,6 +163,41 @@ export function parseBusinessType(raw: string): BusinessType | null {
   }
 }
 
+export enum VerificationStatus {
+  Unverified = 'UNVERIFIED',
+  UnderReview = 'UNDER_REVIEW',
+  Verified = 'VERIFIED',
+  Declined = 'DECLINED'
+}
+
+export function parseVerificationStatus(raw: string): VerificationStatus | null {
+  switch (raw.toUpperCase()) {
+    case VerificationStatus.Unverified:
+      return VerificationStatus.Unverified;
+    case VerificationStatus.UnderReview:
+      return VerificationStatus.UnderReview;
+    case VerificationStatus.Verified:
+      return VerificationStatus.Verified;
+    case VerificationStatus.Declined:
+      return VerificationStatus.Declined;
+    default:
+      return null;
+  }
+}
+
+export function verificationStatusToTitleCase(v: VerificationStatus): string {
+  switch (v) {
+    case VerificationStatus.Unverified:
+      return 'Unverified';
+    case VerificationStatus.UnderReview:
+      return 'Under Review';
+    case VerificationStatus.Verified:
+      return 'Verified';
+    case VerificationStatus.Declined:
+      return 'Declined';
+  }
+}
+
 export interface BuyerProfile {
   type: UserType.Buyer;
   firstName: string;
@@ -181,6 +216,7 @@ export interface BuyerProfile {
   contactPhoneNumber?: string;
   contactPhoneCountryCode?: string;
   contactPhoneType?: PhoneType;
+  verificationStatus: VerificationStatus;
 }
 
 export interface ProgramStaffProfile {

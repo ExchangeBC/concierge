@@ -5,7 +5,7 @@ import { includes } from 'lodash';
 import * as mongoose from 'mongoose';
 import mongooseDefault from 'mongoose';
 import { determineRfiStatus } from 'shared/lib/resources/request-for-information';
-import { RfiStatus, UserType } from 'shared/lib/types';
+import { RfiStatus, UserType, VerificationStatus } from 'shared/lib/types';
 import { ArrayValidation, invalid, valid, validateArrayAsync, validateEmail as validateEmailShared, validatePassword as validatePasswordShared, Validation } from 'shared/lib/validators';
 
 interface HasEmail {
@@ -69,7 +69,7 @@ export function validateFileIdArray(FileModel: FileSchema.Model, raw: string[]):
  * and/or whether or not they have accepted the T&Cs.
  */
 
-export async function validateUserId(UserModel: UserSchema.Model, id: string | mongoose.Types.ObjectId, userType?: UserType, acceptedTerms?: boolean): Promise<Validation<InstanceType<UserSchema.Model>>> {
+export async function validateUserId(UserModel: UserSchema.Model, id: string | mongoose.Types.ObjectId, userType?: UserType, acceptedTerms?: boolean, mustBeVerified?: boolean): Promise<Validation<InstanceType<UserSchema.Model>>> {
   const validatedObjectId = typeof id === 'string' ? validateObjectIdString(id) : valid(id);
   switch (validatedObjectId.tag) {
     case 'valid':
@@ -84,6 +84,8 @@ export async function validateUserId(UserModel: UserSchema.Model, id: string | m
         } else {
           return invalid(['User has already accepted terms.']);
         }
+      } else if (user.profile.type === UserType.Buyer && mustBeVerified && user.profile.verificationStatus !== VerificationStatus.Verified) {
+        return invalid(['User has not been verified.']);
       } else {
         return valid(user);
       }

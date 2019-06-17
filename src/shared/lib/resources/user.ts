@@ -1,5 +1,9 @@
-import { Profile } from 'shared/lib/types';
+import { BuyerProfile, Omit, Profile, ProgramStaffProfile, VendorProfile } from 'shared/lib/types';
 import { FullProfileValidationErrors } from 'shared/lib/validators/profile';
+
+type BuyerWithoutVerificationStatus = Omit<BuyerProfile, 'verificationStatus'>;
+
+type BuyerWithOptionalVerificationStatus = Omit<BuyerProfile, 'verificationStatus'> & Partial<Pick<BuyerProfile, 'verificationStatus'>>;
 
 export interface PublicUser {
   _id: string;
@@ -14,7 +18,7 @@ export interface PublicUser {
 export interface CreateRequestBody {
   email: string;
   password: string;
-  profile: Profile;
+  profile: VendorProfile | ProgramStaffProfile | BuyerWithoutVerificationStatus;
   acceptedTerms?: boolean;
 }
 
@@ -30,7 +34,7 @@ export interface UpdateRequestBody {
   email?: string;
   currentPassword?: string;
   newPassword?: string;
-  profile?: Profile;
+  profile?: VendorProfile | ProgramStaffProfile | BuyerWithOptionalVerificationStatus;
   acceptedTerms?: boolean;
 }
 

@@ -31,7 +31,7 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
   const validatedDiscoveryDay = validateBoolean(discoveryDay);
   const validatedAddenda = validateAddendumDescriptions(addenda);
   const validatedAttachments = await validateFileIdArray(FileModel, attachments);
-  const validatedBuyerContact = await validateUserId(UserModel, buyerContact, UserType.Buyer, true);
+  const validatedBuyerContact = await validateUserId(UserModel, buyerContact, UserType.Buyer, true, true);
   const validatedProgramStaffContact = await validateUserId(UserModel, programStaffContact, UserType.ProgramStaff);
   // Check if the payload is valid.
   if (allValid([validatedCreatedBy, validatedClosingDate, validatedClosingTime, validatedGracePeriodDays, validatedRfiNumber, validatedTitle, validatedDescription, validatedPublicSectorEntity, validatedNumCategories, validatedCategories, validatedDiscoveryDay, validatedAddenda, validatedAttachments, validatedBuyerContact, validatedProgramStaffContact])) {

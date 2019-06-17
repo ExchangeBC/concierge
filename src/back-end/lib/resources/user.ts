@@ -10,7 +10,7 @@ import { get, isBoolean, isObject } from 'lodash';
 import * as mongoose from 'mongoose';
 import { getBoolean, getString } from 'shared/lib';
 import { CreateRequestBody, CreateValidationErrors, PublicUser, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/user';
-import { PaginatedList } from 'shared/lib/types';
+import { PaginatedList, UserType, VerificationStatus } from 'shared/lib/types';
 import { allValid, getInvalidValue, invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 import { validateProfile } from 'shared/lib/validators/profile';
 
@@ -50,8 +50,7 @@ async function validateCreateRequestBody(Model: UserSchema.Model, body: CreateRe
   }
 }
 
-// TODO break this up into smaller functions.
-async function validateUpdateRequestBody(Model: UserSchema.Model, body: UpdateRequestBody): Promise<ValidOrInvalid<InstanceType<UserSchema.Model>, UpdateValidationErrors>> {
+async function validateUpdateRequestBody(Model: UserSchema.Model, body: UpdateRequestBody, session: Session): Promise<ValidOrInvalid<InstanceType<UserSchema.Model>, UpdateValidationErrors>> {
   const { id, currentPassword, newPassword, profile, acceptedTerms } = body;
   let { email } = body;
   // Does the user exist? Is their account active?
@@ -99,9 +98,18 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, body: UpdateRe
   }
   // Profile.
   if (profile) {
+    if (user.profile.type === UserType.Buyer && profile.type === UserType.Buyer) {
+      profile.verificationStatus = profile.verificationStatus || user.profile.verificationStatus;
+    }
     const validatedProfile = validateProfile(profile);
     switch (validatedProfile.tag) {
       case 'valid':
+        if (validatedProfile.value.type === UserType.Buyer && user.profile.type === UserType.Buyer && !permissions.isProgramStaff(session) && validatedProfile.value.verificationStatus !== user.profile.verificationStatus) {
+          // Only Program Staff can modify a buyer's verification status.
+          return invalid({
+            profile: ['You cannot change your verification status.']
+          });
+        }
         if (validatedProfile.value.type !== user.profile.type) {
           return invalid({
             profile: ['You cannot change your user\'s profile type.']
@@ -135,11 +143,15 @@ const resource: Resource = {
       async transformRequest(request) {
         // TODO bad request response if body is not json
         const body = request.body.tag === 'json' ? request.body.value : {};
+        const profile = isObject(body.profile) ? body.profile : {};
+        if (profile.type === UserType.Buyer) {
+          profile.verificationStatus = VerificationStatus.Unverified;
+        }
         return {
           email: getString(body, 'email'),
           password: getString(body, 'password'),
           acceptedTerms: getBoolean(body, 'acceptedTerms'),
-          profile: isObject(body.profile) ? body.profile : {}
+          profile
         };
       },
       async respond(request): Promise<Response<CreateResponseBody, Session>> {
@@ -226,7 +238,6 @@ const resource: Resource = {
     const SessionModel = Models.Session as SessionSchema.Model;
     return {
       async transformRequest(request) {
-        // TODO bad request response if body is not json
         const body = request.body.tag === 'json' ? request.body.value : {};
         return {
           id: request.params.id,
@@ -243,7 +254,7 @@ const resource: Resource = {
             permissions: [permissions.ERROR_MESSAGE]
           }));
         }
-        const validatedBody = await validateUpdateRequestBody(UserModel, request.body);
+        const validatedBody = await validateUpdateRequestBody(UserModel, request.body, request.session);
         switch (validatedBody.tag) {
           case 'invalid':
             const invalidCode = validatedBody.value.permissions ? 401 : 400;

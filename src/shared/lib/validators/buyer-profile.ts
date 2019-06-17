@@ -1,5 +1,5 @@
 import { getString, getStringArray } from 'shared/lib';
-import { BuyerProfile, UserType } from 'shared/lib/types';
+import { BuyerProfile, parseVerificationStatus, UserType, VerificationStatus } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, optional, valid, validateCategories, validateCity, validateCountry, validateFirstName, validateGenericString, validateIndustrySectors, validateLastName, validatePhoneCountryCode, validatePhoneNumber, validatePhoneType, validatePositionTitle, validatePostalCode, validateProvince, validateStreetAddress, Validation, ValidOrInvalid } from './';
 
 export interface BuyerProfileValidationErrors {
@@ -30,6 +30,11 @@ export function validateBranch(branch: string): Validation<string | undefined> {
   return optional(b => validateGenericString(b, 'Branch'), branch);
 }
 
+export function validateVerificationStatus(raw: string): Validation<VerificationStatus> {
+  const parsed = parseVerificationStatus(raw);
+  return parsed ? valid(parsed) : invalid([`Verification Status must be one of: ${VerificationStatus.Unverified}, ${VerificationStatus.UnderReview}, ${VerificationStatus.Verified}, ${VerificationStatus.Unverified}.`]);
+}
+
 export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfile, BuyerProfileValidationErrors> {
   const validatedFirstName = validateFirstName(getString(profile, 'firstName'));
   const validatedLastName = validateLastName(getString(profile, 'lastName'));
@@ -50,7 +55,8 @@ export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfi
   const rawCategories = getStringArray(profile, 'categories');
   const validatedNumCategories = !rawCategories.length ? invalid(['Please select at least one Area of Interest.']) : valid(null);
   const validatedCategories = validateCategories(rawCategories, 'Area of Interest');
-  if (allValid([validatedFirstName, validatedLastName, validatedPositionTitle, validatedPublicSectorEntity, validatedBranch, validatedContactStreetAddress, validatedContactCity, validatedContactProvince, validatedContactPostalCode, validatedContactCountry, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedNumIndustrySectors, validatedIndustrySectors, validatedNumCategories, validatedCategories])) {
+  const validatedVerificationStatus = validateVerificationStatus(getString(profile, 'verificationStatus'));
+  if (allValid([validatedFirstName, validatedLastName, validatedPositionTitle, validatedPublicSectorEntity, validatedBranch, validatedContactStreetAddress, validatedContactCity, validatedContactProvince, validatedContactPostalCode, validatedContactCountry, validatedContactPhoneNumber, validatedContactPhoneCountryCode, validatedContactPhoneType, validatedNumIndustrySectors, validatedIndustrySectors, validatedNumCategories, validatedCategories, validatedVerificationStatus])) {
     return valid({
       type: UserType.Buyer as UserType.Buyer,
       firstName: validatedFirstName.value as string,
@@ -67,27 +73,29 @@ export function validateBuyerProfile(profile: object): ValidOrInvalid<BuyerProfi
       contactPhoneCountryCode: getValidValue(validatedContactPhoneCountryCode, undefined),
       contactPhoneType: getValidValue(validatedContactPhoneType, undefined),
       industrySectors: getValidValue(validatedIndustrySectors, []),
-      categories: getValidValue(validatedCategories, [])
+      categories: getValidValue(validatedCategories, []),
+      verificationStatus: getValidValue(validatedVerificationStatus, VerificationStatus.Unverified)
     });
   } else {
     return invalid({
-      firstName: getInvalidValue(validatedFirstName, [] as string[]),
-      lastName: getInvalidValue(validatedLastName, [] as string[]),
-      positionTitle: getInvalidValue(validatedPositionTitle, [] as string[]),
-      publicSectorEntity: getInvalidValue(validatedPublicSectorEntity, [] as string[]),
-      branch: getInvalidValue(validatedBranch, [] as string[]),
-      contactStreetAddress: getInvalidValue(validatedContactStreetAddress, [] as string[]),
-      contactCity: getInvalidValue(validatedContactCity, [] as string[]),
-      contactProvince: getInvalidValue(validatedContactProvince, [] as string[]),
-      contactPostalCode: getInvalidValue(validatedContactPostalCode, [] as string[]),
-      contactCountry: getInvalidValue(validatedContactCountry, [] as string[]),
-      contactPhoneNumber: getInvalidValue(validatedContactPhoneNumber, [] as string[]),
-      contactPhoneCountryCode: getInvalidValue(validatedContactPhoneCountryCode, [] as string[]),
-      contactPhoneType: getInvalidValue(validatedContactPhoneType, [] as string[]),
+      firstName: getInvalidValue(validatedFirstName, []),
+      lastName: getInvalidValue(validatedLastName, []),
+      positionTitle: getInvalidValue(validatedPositionTitle, []),
+      publicSectorEntity: getInvalidValue(validatedPublicSectorEntity, []),
+      branch: getInvalidValue(validatedBranch, []),
+      contactStreetAddress: getInvalidValue(validatedContactStreetAddress, []),
+      contactCity: getInvalidValue(validatedContactCity, []),
+      contactProvince: getInvalidValue(validatedContactProvince, []),
+      contactPostalCode: getInvalidValue(validatedContactPostalCode, []),
+      contactCountry: getInvalidValue(validatedContactCountry, []),
+      contactPhoneNumber: getInvalidValue(validatedContactPhoneNumber, []),
+      contactPhoneCountryCode: getInvalidValue(validatedContactPhoneCountryCode, []),
+      contactPhoneType: getInvalidValue(validatedContactPhoneType, []),
       numIndustrySectors: getInvalidValue(validatedNumIndustrySectors, undefined),
-      industrySectors: getInvalidValue(validatedIndustrySectors, [] as string[][]),
+      industrySectors: getInvalidValue(validatedIndustrySectors, []),
       numCategories: getInvalidValue(validatedNumCategories, undefined),
-      categories: getInvalidValue(validatedCategories, [] as string[][])
+      categories: getInvalidValue(validatedCategories, []),
+      verificationStatus: getInvalidValue(validatedVerificationStatus, [])
     });
   }
 }

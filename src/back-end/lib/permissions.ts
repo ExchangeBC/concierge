@@ -67,7 +67,7 @@ export function readManyUsers(session: Session): boolean {
 }
 
 export function updateUser(session: Session, id: string): boolean {
-  return isOwnAccount(session, id);
+  return isOwnAccount(session, id) || isProgramStaff(session);
 }
 
 export function deleteUser(session: Session, userId: string, userType: UserType): boolean {
