@@ -10,16 +10,19 @@ import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
+import { VerificationStatusIcon } from 'front-end/lib/views/verification-status-badge';
+import { get } from 'lodash';
 import { default as React, ReactElement } from 'react';
 import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import { PublicUser } from 'shared/lib/resources/user';
-import { ADT, parseUserType, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
+import { ADT, parseUserType, profileToName, UserType, userTypeToTitleCase, VerificationStatus } from 'shared/lib/types';
 
 // Define Table component.
 
 type TableCellData
-  = ADT<'userType', UserType>
+  = ADT<'verificationStatus', VerificationStatus | null>
+  | ADT<'userType', UserType>
   | ADT<'name', { userId: string, text: string }>
   | ADT<'publicSectorEntity', string>
   | ADT<'email', string>
@@ -32,6 +35,9 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
     return (<td className={`align-middle ${center ? 'text-center' : ''}`}>{child}</td>);
   };
   switch (data.tag) {
+    case 'verificationStatus':
+      if (!data.value) { return wrap(null); }
+      return wrap((<VerificationStatusIcon verificationStatus={data.value} colored />), true);
     case 'userType':
       return wrap(userTypeToTitleCase(data.value));
     case 'name':
@@ -243,6 +249,12 @@ const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 const tableHeadCells: TableComponent.THSpec[] = [
   {
+    children: 'Status',
+    style: {
+      width: '80px'
+    }
+  },
+  {
     children: 'Type',
     style: {
       width: '180px'
@@ -278,6 +290,7 @@ const tableHeadCells: TableComponent.THSpec[] = [
 function tableBodyRows(users: PublicUser[]): Array<Array<TableComponent.TDSpec<TableCellData>>> {
   return users.map(user => {
     return [
+      TableComponent.makeTDSpec({ tag: 'verificationStatus' as const, value: get(user.profile, 'verificationStatus', null) }),
       TableComponent.makeTDSpec({ tag: 'userType' as const, value: user.profile.type }),
       TableComponent.makeTDSpec({
         tag: 'name' as const,

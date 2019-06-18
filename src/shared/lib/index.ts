@@ -3,13 +3,14 @@ import moment from 'moment-timezone';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
 export function getString(obj: any, keyPath: string | string[], fallback = ''): string {
-  return String(get(obj, keyPath, fallback));
+  const value = get(obj, keyPath);
+  return String(value === undefined || value === null ? fallback : value);
 }
 
 export function getStringArray(obj: any, keyPath: string | string[]): string[] {
   const value: any[] = get(obj, keyPath, []);
   if (!isArray(value)) { return []; }
-  return value.map(v => String(v));
+  return value.map(v => v === undefined || value === null ? '' : String(v));
 }
 
 export function getNumber<Fallback>(obj: any, keyPath: string | string[], fallback: number | Fallback = 0): number | Fallback {

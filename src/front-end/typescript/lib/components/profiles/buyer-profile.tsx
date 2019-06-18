@@ -8,8 +8,7 @@ import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
-import { ADT, UserType } from 'shared/lib/types';
-import { BuyerProfile, userTypeToTitleCase } from 'shared/lib/types';
+import { ADT, BuyerProfile, UserType, userTypeToTitleCase, VerificationStatus } from 'shared/lib/types';
 import { ValidOrInvalid } from 'shared/lib/validators';
 import { BuyerProfileValidationErrors, validateBuyerProfile } from 'shared/lib/validators/buyer-profile';
 
@@ -31,6 +30,7 @@ export interface State {
   contactCity: ShortText.State;
   industrySectors: Immutable<SelectMulti.State>;
   categories: Immutable<SelectMulti.State>;
+  verificationStatus: VerificationStatus;
 }
 
 type FormFieldKeys
@@ -51,7 +51,8 @@ export function getValues(state: Immutable<State>): BuyerProfile {
     branch: state.branch.value || undefined,
     contactCity: state.contactCity.value,
     industrySectors: SelectMulti.getValuesAsStrings(state.industrySectors),
-    categories: SelectMulti.getValuesAsStrings(state.categories)
+    categories: SelectMulti.getValuesAsStrings(state.categories),
+    verificationStatus: state.verificationStatus
   };
 }
 
@@ -66,7 +67,8 @@ export function setValues(state: Immutable<State>, profile: BuyerProfile): Immut
     .setIn(['branch', 'value'], profile.branch || '')
     .setIn(['contactCity', 'value'], profile.contactCity || '')
     .set('industrySectors', SelectMulti.setValues(state.industrySectors, industrySectors))
-    .set('categories', SelectMulti.setValues(state.categories, categories));
+    .set('categories', SelectMulti.setValues(state.categories, categories))
+    .set('verificationStatus', profile.verificationStatus);
 }
 
 export function setErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
@@ -171,7 +173,8 @@ export const init: Init<Params, State> = async ({ profile }) => {
         required: true,
         fields: DEFAULT_SELECT_MULTI_FIELDS
       }
-    }))
+    })),
+    verificationStatus: VerificationStatus.Unverified
   };
   if (!profile) {
     return state;

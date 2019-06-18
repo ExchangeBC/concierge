@@ -116,8 +116,8 @@ input[type="time"] {
 .btn,
 button {
 
-  &.disabled:not(.btn-link),
-  &:disabled:not(.btn-link) {
+  &.disabled:not(.btn-link):not(.dropdown-item),
+  &:disabled:not(.btn-link):not(.dropdown-item) {
     background-color: $secondary;
     border-color: $secondary;
   }

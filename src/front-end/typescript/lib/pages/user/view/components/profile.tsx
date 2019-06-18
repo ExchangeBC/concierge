@@ -1,4 +1,5 @@
 import { FALLBACK_USER_NAME } from 'front-end/config';
+import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { Route } from 'front-end/lib/app/types';
 import { ProfileComponent, ViewerUser } from 'front-end/lib/components/profiles/types';
 import { Component, ComponentView, Dispatch, GlobalComponentMsg, Immutable, immutable, Init, mapComponentDispatch, newRoute, PageComponent, Update, updateComponentChild } from 'front-end/lib/framework';
@@ -7,17 +8,19 @@ import { updateField, validateField } from 'front-end/lib/views/form-field/lib';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
+import VerificationStatusBadge from 'front-end/lib/views/verification-status-badge';
 import { isArray } from 'lodash';
 import { default as React } from 'react';
-import { Button, Col, Row } from 'reactstrap';
+import { Button, Col, DropdownItem, DropdownMenu, DropdownToggle, Row, Spinner, UncontrolledButtonDropdown } from 'reactstrap';
 import { formatTermsAndConditionsAgreementDate } from 'shared/lib';
 import { PublicUser } from 'shared/lib/resources/user';
-import { ADT, Profile as ProfileType, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
+import { ADT, Profile as ProfileType, profileToName, UserType, userTypeToTitleCase, VerificationStatus, verificationStatusToTitleCase } from 'shared/lib/types';
 import { validateEmail } from 'shared/lib/validators';
 
 export interface State<ProfileState> {
   profileLoading: number;
   deactivateLoading: number;
+  verificationStatusLoading: number;
   profileUser: PublicUser;
   viewerUser?: ViewerUser;
   userType: ShortText.State;
@@ -39,7 +42,8 @@ type InnerMsg<ProfileMsg>
   | ADT<'hideDeactivationConfirmationPrompt'>
   | ADT<'startEditingProfile'>
   | ADT<'cancelEditingProfile'>
-  | ADT<'saveProfile'>;
+  | ADT<'saveProfile'>
+  | ADT<'setVerificationStatus', VerificationStatus>;
 
 export type Msg<ProfileMsg> = GlobalComponentMsg<InnerMsg<ProfileMsg>, Route>;
 
@@ -74,6 +78,7 @@ function init<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
     return {
       profileLoading: 0,
       deactivateLoading: 0,
+      verificationStatusLoading: 0,
       profileUser,
       viewerUser,
       userType: ShortText.init({
@@ -110,6 +115,9 @@ function startDeactivateLoading<PS>(state: Immutable<State<PS>>): Immutable<Stat
 function stopDeactivateLoading<PS>(state: Immutable<State<PS>>): Immutable<State<PS>> {
   return state.set('deactivateLoading', Math.max(state.deactivateLoading - 1, 0));
 }
+
+const startVerificationStatusLoading: UpdateState<State<any>> = makeStartLoading('verificationStatusLoading');
+const stopVerificationStatusLoading: UpdateState<State<any>> = makeStopLoading('verificationStatusLoading');
 
 function startEditingProfile<PS>(state: Immutable<State<PS>>): Immutable<State<PS>> {
   return state.set('isEditingProfile', true);
@@ -193,7 +201,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
         state = startProfileLoading(state);
         return [
           state,
-          async () => {
+          async state => {
             const result = await api.updateUser({
               id: state.profileUser._id,
               email: state.email.value,
@@ -219,11 +227,47 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
           }
         ];
 
+      case 'setVerificationStatus':
+        const verificationStatus = getVerificationStatus(state);
+        if (!verificationStatus) { return [state]; }
+        state = startVerificationStatusLoading(state);
+        return [
+          state,
+          async (state, dispatch) => {
+            const userResult = await api.readOneUser(state.profileUser._id);
+            if (userResult.tag === 'invalid') { return state; }
+            state = state.set('profileUser', userResult.value);
+            const profile = state.profileUser.profile;
+            if (profile.type !== UserType.Buyer) { return state; }
+            const result = await api.updateUser({
+              id: state.profileUser._id,
+              email: state.profileUser.email,
+              profile: {
+                ...profile,
+                verificationStatus: msg.value
+              }
+            });
+            if (result.tag === 'valid') {
+              state = state
+                .set('profileUser', result.value)
+                .set('email', resetEmailState(result.value))
+                .set('profile', await resetProfileState(Profile, result.value));
+            }
+            state = stopVerificationStatusLoading(state);
+            return state;
+          }
+        ];
+
       default:
         return [state];
     }
   };
 };
+
+function getVerificationStatus<PS>(state: Immutable<State<PS>>): VerificationStatus | null {
+  const viewerUserIsProgramStaff = !!state.viewerUser && state.viewerUser.type === UserType.ProgramStaff;
+  return viewerUserIsProgramStaff && state.profileUser.profile.type === UserType.Buyer ? state.profileUser.profile.verificationStatus : null;
+}
 
 function isInvalid<PS, PM, P extends ProfileType>(state: State<PS>, Profile: ProfileComponent<PS, PM, P>): boolean {
   return !!state.email.errors.length || !Profile.isValid(state.profile);
@@ -232,6 +276,59 @@ function isInvalid<PS, PM, P extends ProfileType>(state: State<PS>, Profile: Pro
 function isValid<PS, PM, P extends ProfileType>(state: State<PS>, Profile: ProfileComponent<PS, PM, P>): boolean {
   const providedRequiredFields = !!state.email.value;
   return providedRequiredFields && !isInvalid(state, Profile);
+}
+
+function conditionalVerificationStatusBadge<PS, PM>(): ComponentView<State<PS>, Msg<PM>> {
+  return props => {
+    const { state } = props;
+    const buyerStatus = getVerificationStatus(state);
+    if (buyerStatus) {
+      return (
+        <VerificationStatusBadge
+          verificationStatus={buyerStatus}
+          className='ml-2' />
+      );
+    } else {
+      return null;
+    }
+  };
+}
+
+const ALL_STATUSES = [
+  VerificationStatus.Unverified,
+  VerificationStatus.UnderReview,
+  VerificationStatus.Verified,
+  VerificationStatus.Declined
+] as const;
+
+function conditionalVerificationStatusDropdown<PS, PM>(): ComponentView<State<PS>, Msg<PM>> {
+  return props => {
+    const { state, dispatch } = props;
+    const buyerStatus = getVerificationStatus(state);
+    const isLoading = state.verificationStatusLoading > 0;
+    if (buyerStatus) {
+      return (
+        <UncontrolledButtonDropdown>
+          <DropdownToggle caret color='info-alt' disabled={isLoading}>
+            {isLoading ? (<Spinner color='light' size='sm' className='mr-2' />) : 'Set Account Status'}
+          </DropdownToggle>
+          <DropdownMenu>
+            {ALL_STATUSES.map((s, i) => {
+              const isDisabled = s === buyerStatus;
+              const onClick = () => !isDisabled && dispatch({ tag: 'setVerificationStatus', value: s });
+              return (
+                <DropdownItem key={`buyer-status-${i}`} onClick={onClick} disabled={isDisabled}>
+                  {verificationStatusToTitleCase(s)}
+                </DropdownItem>
+              );
+            })}
+          </DropdownMenu>
+        </UncontrolledButtonDropdown>
+      );
+    } else {
+      return null;
+    }
+  };
 }
 
 function conditionalEmail<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
@@ -436,6 +533,8 @@ function conditionalDeactivateAccount<PS, PM, P extends ProfileType>(Profile: Pr
 }
 
 function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
+  const ConditionalVerificationStatusBadge = conditionalVerificationStatusBadge<PS, PM>();
+  const ConditionalVerificationStatusDropdown = conditionalVerificationStatusDropdown<PS, PM>();
   const ConditionalProfile = conditionalProfile(Profile);
   const ConditionalChangePassword = conditionalChangePassword(Profile);
   const ConditionalTermsAndConditions = conditionalTermsAndConditions(Profile);
@@ -446,11 +545,20 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
     const name: string | null = state.viewerUser && state.viewerUser.id === state.profileUser._id ? 'My' : profileName && `${profileName}'s`;
     const headingSuffix = 'Profile';
     const heading = name ? `${name} ${headingSuffix}` : headingSuffix;
+    const showVerificationUi = !!getVerificationStatus(state);
     return (
       <div>
-        <Row className='mb-5'>
+        <Row className={showVerificationUi ? 'mb-3' : 'mb-5'}>
           <Col xs='12'>
-            <h1>{heading}</h1>
+            <h1 className='mb-0'>
+              {heading}
+            </h1>
+          </Col>
+        </Row>
+        <Row className={showVerificationUi ? 'mb-5' : ''}>
+          <Col xs='12' className='d-flex align-items-center'>
+            <ConditionalVerificationStatusDropdown {...props} />
+            <ConditionalVerificationStatusBadge {...props} />
           </Col>
         </Row>
         <ConditionalProfile {...props} />

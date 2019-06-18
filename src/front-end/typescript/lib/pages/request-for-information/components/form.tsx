@@ -20,7 +20,7 @@ import * as FileResource from 'shared/lib/resources/file';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { PublicRfi } from 'shared/lib/resources/request-for-information';
 import { PublicUser } from 'shared/lib/resources/user';
-import { Addendum, ADT, Omit, profileToName, UserType, userTypeToTitleCase } from 'shared/lib/types';
+import { Addendum, ADT, Omit, profileToName, UserType, userTypeToTitleCase, VerificationStatus } from 'shared/lib/types';
 import { getInvalidValue, invalid, valid, validateCategories, Validation } from 'shared/lib/validators';
 import { MAX_GRACE_PERIOD_DAYS, MIN_GRACE_PERIOD_DAYS, validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validateGracePeriodDays, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
 
@@ -128,13 +128,12 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       return aName.localeCompare(bName, 'en', { sensitivity: 'base' });
     };
     // Function to filter users by type, whether they have accepted terms, and active status.
-    const isActiveAndMatchesUserType = (user: PublicUser, userType: UserType) => user.profile.type === userType && user.active;
     const predicate = (userType: UserType): ((user: PublicUser) => boolean) => {
       switch (userType) {
         case UserType.Buyer:
-          return user => isActiveAndMatchesUserType(user, userType) && !!user.acceptedTermsAt;
+          return user => user.profile.type === userType && user.active && !!user.acceptedTermsAt && user.profile.verificationStatus === VerificationStatus.Verified;
         case UserType.ProgramStaff:
-          return user => isActiveAndMatchesUserType(user, userType);
+          return user => user.profile.type === userType && user.active && !!user.acceptedTermsAt;
         case UserType.Vendor:
           return () => false;
       }
