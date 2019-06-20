@@ -497,7 +497,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     if (state.promptCreateConfirmation) {
       return {
         title: 'Review the Terms and Conditions?',
-        body: 'You must accept the Procurement Concierge Terms and Conditions in order to create a Request For Information.',
+        body: 'You must accept the Procurement Concierge Terms and Conditions in order to create a Request for Information.',
         onCloseMsg: { tag: 'hideCreateConfirmationPrompt', value: undefined },
         actions: [
           {
@@ -516,7 +516,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     } else if (state.promptEditConfirmation) {
       return {
         title: 'Review the Terms and Conditions?',
-        body: 'You must accept the Procurement Concierge Terms and Conditions in order to edit a Request For Information.',
+        body: 'You must accept the Procurement Concierge Terms and Conditions in order to edit a Request for Information.',
         onCloseMsg: { tag: 'hideEditConfirmationPrompt', value: undefined },
         actions: [
           {
