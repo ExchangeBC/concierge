@@ -193,9 +193,9 @@ export interface PageMetadata {
 export type PageGetMetadata<State> = (state: Immutable<State>) => PageMetadata;
 
 export interface PageAlerts {
-  info: string[];
-  warnings: string[];
-  errors: string[];
+  info: Array<string | ReactElement>;
+  warnings: Array<string | ReactElement>;
+  errors: Array<string | ReactElement>;
 }
 
 export type PageGetAlerts<State> = (state: Immutable<State>) => PageAlerts;

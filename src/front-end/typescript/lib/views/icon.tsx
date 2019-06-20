@@ -25,8 +25,8 @@ export type AvailableIcons
 interface Props {
   name: AvailableIcons;
   color?: BootstrapColor;
-  width?: number;
-  height?: number;
+  width?: number | 'auto';
+  height?: number | 'auto';
   className?: string;
   style?: CSSProperties;
   onClick?: MouseEventHandler<SVGSVGElement>;

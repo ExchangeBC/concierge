@@ -5,7 +5,7 @@ import { default as React, ReactElement } from 'react';
 import { Alert, Breadcrumb, BreadcrumbItem, Col, Container, Row } from 'reactstrap';
 
 interface ViewAlertProps {
-  messages: string[];
+  messages: Array<string | ReactElement>;
   color: 'primary' | 'warning' | 'danger';
   className?: string;
 }

@@ -93,6 +93,12 @@ export async function readOneUser(userId: string): Promise<ValidOrInvalid<UserRe
   }
 }
 
+export async function hasUserAcceptedTerms(userId: string): Promise<boolean> {
+  const user = await readOneUser(userId);
+  if (user.tag === 'invalid') { return false; }
+  return !!user.value.acceptedTermsAt;
+}
+
 export async function deleteUser(userId: string): Promise<ValidOrInvalid<null, null>> {
   await request(HttpMethod.Delete, `users/${userId}`);
   return valid(null);

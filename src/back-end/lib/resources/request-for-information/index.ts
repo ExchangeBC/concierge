@@ -127,7 +127,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
         },
         async respond(request): Promise<Response<CreateResponseBody, Session>> {
           const respond = (code: number, body: PublicRfi | CreateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
-          if (!globalPermissions(request.session) || !permissions.createRfi(request.session)) {
+          if (!globalPermissions(request.session) || !(await permissions.createRfi(UserModel, request.session))) {
             return respond(401, {
               permissions: [permissions.ERROR_MESSAGE]
             });
@@ -240,7 +240,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
         },
         async respond(request): Promise<Response<UpdateResponseBody, Session>> {
           const respond = (code: number, body: PublicRfi | UpdateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
-          if (!globalPermissions(request.session) || !permissions.updateRfi(request.session)) {
+          if (!globalPermissions(request.session) || !(await permissions.updateRfi(UserModel, request.session))) {
             return respond(401, {
               permissions: [permissions.ERROR_MESSAGE]
             });

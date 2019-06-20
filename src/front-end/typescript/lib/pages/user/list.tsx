@@ -1,11 +1,11 @@
 import { FALLBACK_USER_NAME } from 'front-end/config';
-import { makePageMetadata } from 'front-end/lib';
+import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { isUserType } from 'front-end/lib/access-control';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import * as TableComponent from 'front-end/lib/components/table';
-import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, noPageModal, PageComponent, PageInit, replaceRoute, Update, updateComponentChild, View } from 'front-end/lib/framework';
-import { readManyUsers } from 'front-end/lib/http/api';
+import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, immutable, Immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, replaceRoute, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import { hasUserAcceptedTerms, readManyUsers } from 'front-end/lib/http/api';
 import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Icon from 'front-end/lib/views/icon';
@@ -15,6 +15,7 @@ import { get } from 'lodash';
 import { default as React, ReactElement } from 'react';
 import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
+import { PublicSessionUser } from 'shared/lib/resources/session';
 import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, parseUserType, profileToName, UserType, userTypeToTitleCase, VerificationStatus } from 'shared/lib/types';
 
@@ -23,7 +24,7 @@ import { ADT, parseUserType, profileToName, UserType, userTypeToTitleCase, Verif
 type TableCellData
   = ADT<'verificationStatus', VerificationStatus | null>
   | ADT<'userType', UserType>
-  | ADT<'name', { userId: string, text: string }>
+  | ADT<'name', { userId: string, text: string, dispatch: Dispatch<Msg> }>
   | ADT<'publicSectorEntity', string>
   | ADT<'email', string>
   | ADT<'acceptedTerms', boolean>;
@@ -41,7 +42,7 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
     case 'userType':
       return wrap(userTypeToTitleCase(data.value));
     case 'name':
-      return wrap((<Link route={{ tag: 'userView', value: { profileUserId: data.value.userId } }}>{data.value.text}</Link>));
+      return wrap((<Link onClick={() => data.value.dispatch({ tag: 'viewUser', value: data.value.userId })}>{data.value.text}</Link>));
     case 'publicSectorEntity':
       return wrap(data.value);
     case 'email':
@@ -52,12 +53,16 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
 }
 
 export interface State {
+  createLoading: number;
   users: PublicUser[];
   visibleUsers: PublicUser[];
   userTypeFilter: Select.State;
   categoryFilter: Select.State;
   searchFilter: ShortText.State;
   table: Immutable<TableComponent.State<TableCellData>>;
+  promptCreateConfirmation: boolean;
+  promptViewConfirmation?: string;
+  sessionUser?: PublicSessionUser;
 };
 
 type FormFieldKeys
@@ -71,14 +76,21 @@ type InnerMsg
   = ADT<'userTypeFilter', Select.Value>
   | ADT<'categoryFilter', Select.Value>
   | ADT<'searchFilter', string>
-  | ADT<'table', TableComponent.Msg>;
+  | ADT<'table', TableComponent.Msg>
+  | ADT<'createAccount'>
+  | ADT<'hideCreateConfirmationPrompt'>
+  | ADT<'viewUser', string>
+  | ADT<'hideViewConfirmationPrompt'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 async function makeInitState(): Promise<State> {
   return {
+    createLoading: 0,
     users: [],
     visibleUsers: [],
+    promptCreateConfirmation: false,
+    promptViewConfirmation: undefined,
     userTypeFilter: Select.init({
       id: 'user-list-filter-user-type',
       required: false,
@@ -115,7 +127,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
 
   userTypes: [UserType.ProgramStaff],
 
-  async success() {
+  async success({ shared }) {
     const result = await readManyUsers();
     let users: PublicUser[] = [];
     if (result.tag === 'valid') {
@@ -134,7 +146,8 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
     return {
       ...initState,
       users,
-      visibleUsers: users
+      visibleUsers: users,
+      sessionUser: shared.sessionUser
     };
   },
 
@@ -193,6 +206,9 @@ function updateAndQuery<K extends FormFieldKeys>(state: Immutable<State>, key: K
   return state.set('visibleUsers', users); ;
 }
 
+const startCreateLoading: UpdateState<State> = makeStartLoading('createLoading');
+const stopCreateLoading: UpdateState<State> = makeStopLoading('createLoading');
+
 const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'userTypeFilter':
@@ -209,6 +225,45 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         childUpdate: Table.update,
         childMsg: msg.value
       });
+    case 'createAccount':
+      return [
+        startCreateLoading(state),
+        async (state, dispatch) => {
+          state = stopCreateLoading(state);
+          if (!state.sessionUser) {
+            return state;
+          } else if (state.promptCreateConfirmation || (await hasUserAcceptedTerms(state.sessionUser.id))) {
+            dispatch(newRoute({
+              tag: 'signUpProgramStaff',
+              value: null
+            }));
+            return state;
+          } else {
+            return state.set('promptCreateConfirmation', true);
+          }
+        }
+      ];
+    case 'hideCreateConfirmationPrompt':
+      return [state.set('promptCreateConfirmation', false)];
+    case 'viewUser':
+      return [
+        state,
+        async (state, dispatch) => {
+          if (!state.sessionUser) {
+            return state;
+          } else if (state.promptViewConfirmation || (await hasUserAcceptedTerms(state.sessionUser.id))) {
+            dispatch(newRoute({
+              tag: 'userView',
+              value: { profileUserId: msg.value }
+            }));
+            return state;
+          } else {
+            return state.set('promptViewConfirmation', msg.value);
+          }
+        }
+      ];
+    case 'hideViewConfirmationPrompt':
+      return [state.set('promptViewConfirmation', undefined)];
     default:
       return [state];
   }
@@ -287,7 +342,7 @@ const tableHeadCells: TableComponent.THSpec[] = [
   }
 ];
 
-function tableBodyRows(users: PublicUser[]): Array<Array<TableComponent.TDSpec<TableCellData>>> {
+function tableBodyRows(users: PublicUser[], dispatch: Dispatch<Msg>): Array<Array<TableComponent.TDSpec<TableCellData>>> {
   return users.map(user => {
     return [
       TableComponent.makeTDSpec({ tag: 'verificationStatus' as const, value: get(user.profile, 'verificationStatus', null) }),
@@ -296,7 +351,8 @@ function tableBodyRows(users: PublicUser[]): Array<Array<TableComponent.TDSpec<T
         tag: 'name' as const,
         value: {
           userId: user._id,
-          text: profileToName(user.profile) || FALLBACK_USER_NAME
+          text: profileToName(user.profile) || FALLBACK_USER_NAME,
+          dispatch
         }
       }),
       TableComponent.makeTDSpec({
@@ -311,7 +367,7 @@ function tableBodyRows(users: PublicUser[]): Array<Array<TableComponent.TDSpec<T
 
 const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (!state.visibleUsers.length) { return (<div>There are no users that match the search criteria.</div>); }
-  const bodyRows = tableBodyRows(state.visibleUsers);
+  const bodyRows = tableBodyRows(state.visibleUsers, dispatch);
   const dispatchTable: Dispatch<TableComponent.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
   return (
     <Table.view
@@ -331,7 +387,7 @@ const view: ComponentView<State, Msg> = props => {
           <h1 className='mb-3 mb-md-0'>Concierge Users</h1>
         </Col>
         <Col xs='12' md='auto'>
-          <Link route={{ tag: 'signUpProgramStaff', value: null }} button color='primary'>Create a Program Staff Account</Link>
+          <Link onClick={() => props.dispatch({ tag: 'createAccount', value: undefined })} button color='primary'>Create a Program Staff Account</Link>
         </Col>
       </Row>
       <Row className='mb-3 d-none d-md-flex'>
@@ -356,5 +412,47 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     return makePageMetadata('Users');
   },
   getBreadcrumbs: emptyPageBreadcrumbs,
-  getModal: noPageModal
+  getModal(state) {
+    if (state.promptCreateConfirmation) {
+      return {
+        title: 'Review the Terms and Conditions?',
+        body: 'You must accept the Procurement Concierge Terms and Conditions in order to create another account.',
+        onCloseMsg: { tag: 'hideCreateConfirmationPrompt', value: undefined },
+        actions: [
+          {
+            text: 'Yes, review Terms and Conditions',
+            color: 'primary',
+            button: true,
+            msg: { tag: 'createAccount', value: undefined }
+          },
+          {
+            text: 'Go Back',
+            color: 'secondary',
+            msg: { tag: 'hideCreateConfirmationPrompt', value: undefined }
+          }
+        ]
+      };
+    } else if (state.promptViewConfirmation) {
+      return {
+        title: 'Review the Terms and Conditions?',
+        body: 'You must accept the Procurement Concierge Terms and Conditions in order to view this user\'s profile.',
+        onCloseMsg: { tag: 'hideViewConfirmationPrompt', value: undefined },
+        actions: [
+          {
+            text: 'Yes, review Terms and Conditions',
+            color: 'primary',
+            button: true,
+            msg: { tag: 'viewUser', value: state.promptViewConfirmation }
+          },
+          {
+            text: 'Go Back',
+            color: 'secondary',
+            msg: { tag: 'hideViewConfirmationPrompt', value: undefined }
+          }
+        ]
+      };
+    } else {
+      return null;
+    }
+  }
 };

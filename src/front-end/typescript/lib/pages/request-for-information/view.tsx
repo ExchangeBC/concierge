@@ -125,26 +125,20 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [
         startRespondToRfiLoading(state),
         async (state, dispatch) => {
-          const redirect = (state: Immutable<State>) => {
-            if (state.rfi) {
-              dispatch(newRoute({
-                tag: 'requestForInformationRespond',
-                value: {
-                  rfiId: state.rfi._id
-                }
-              }));
-            }
-            return state;
-          };
           state = stopRespondToRfiLoading(state);
-          if (state.promptResponseConfirmation) { return redirect(state); }
-          if (!state.sessionUser) { return redirect(state); }
-          const user = await api.readOneUser(state.sessionUser.id);
-          if (user.tag === 'invalid') { return redirect(state); }
-          const acceptedTerms = !!user.value.acceptedTermsAt;
-          // Ask the user to accept the terms first.
-          if (acceptedTerms) { return redirect(state); }
-          return state.set('promptResponseConfirmation', true);
+          if (!state.rfi) {
+            return state;
+          } else if (state.promptResponseConfirmation || !state.sessionUser || (await api.hasUserAcceptedTerms(state.sessionUser.id))) {
+            dispatch(newRoute({
+              tag: 'requestForInformationRespond',
+              value: {
+                rfiId: state.rfi._id
+              }
+            }));
+            return state;
+          } else {
+            return state.set('promptResponseConfirmation', true);
+          }
         }
       ];
     case 'respondToDiscoveryDay':
@@ -154,7 +148,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           if (!state.rfi) { return state; }
           const finish = (state: Immutable<State>) => stopRespondToDiscoveryDayLoading(state);
           const thisRoute: Route = {
-            tag: 'requestForInformationView' as 'requestForInformationView',
+            tag: 'requestForInformationView' as const,
             value: {
               rfiId: state.rfi._id
             }
@@ -163,23 +157,20 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           // Redirect the user to the sign-in form.
           if (!state.sessionUser) {
             dispatch(newRoute({
-              tag: 'signIn' as 'signIn',
+              tag: 'signIn' as const,
               value: {
                 redirectOnSuccess: thisUrl
               }
             }));
             return finish(state);
           }
-          // Do nothing when the API fails to return the user data, as this shouldn't happen.
-          const user = await api.readOneUser(state.sessionUser.id);
-          if (user.tag === 'invalid') { return finish(state); }
-          const acceptedTerms = !!user.value.acceptedTermsAt;
+          const acceptedTerms = await api.hasUserAcceptedTerms(state.sessionUser.id);
           // Ask the user to accept the terms first.
           if (!acceptedTerms) {
             dispatch(newRoute({
-              tag: 'termsAndConditions' as 'termsAndConditions',
+              tag: 'termsAndConditions' as const,
               value: {
-                userId: user.value._id,
+                userId: state.sessionUser.id,
                 warningId: WarningId.DiscoveryDayResponse,
                 redirectOnAccept: thisUrl,
                 redirectOnSkip: thisUrl
@@ -229,7 +220,7 @@ const Details: View<{ rfi: PublicRfi }> = ({ rfi }) => {
     (<a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>)
   ];
   const statusValues = [
-    (<StatusBadge rfi={rfi} style={{ fontSize: '0.85rem' }} />)
+    (<StatusBadge rfi={rfi} />)
   ];
   const attachmentsValues = version.attachments.length
     ? [(<a href={`#${ATTACHMENTS_ID}`}>View Attachments</a>)]

@@ -7,6 +7,7 @@ import * as api from 'front-end/lib/http/api';
 import * as RfiForm from 'front-end/lib/pages/request-for-information/components/form';
 import { createAndShowPreview, makeRequestBody, publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
+import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
 import FixedBar from 'front-end/lib/views/layout/fixed-bar';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
@@ -66,18 +67,36 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
 
   userTypes: [UserType.ProgramStaff],
 
-  async success({ routeParams }) {
+  async success({ routeParams, dispatch, shared }) {
     const { rfiId } = routeParams;
     const result = await api.readOneRfi(rfiId);
     switch (result.tag) {
       case 'valid':
-        return {
-          ...initState,
-          valid: {
-            rfi: result.value,
-            rfiForm: await resetRfiForm(result.value)
-          }
-        };
+        if (shared.sessionUser.type === UserType.ProgramStaff && !(await api.hasUserAcceptedTerms(shared.sessionUser.id))) {
+          dispatch(replaceRoute({
+            tag: 'termsAndConditions' as const,
+            value: {
+              warningId: WarningId.EditRfi,
+              redirectOnAccept: router.routeToUrl({
+                tag: 'requestForInformationEdit',
+                value: routeParams
+              }),
+              redirectOnSkip: router.routeToUrl({
+                tag: 'requestForInformationList',
+                value: null
+              })
+            }
+          }));
+          return initState;
+        } else {
+          return {
+            ...initState,
+            valid: {
+              rfi: result.value,
+              rfiForm: await resetRfiForm(result.value)
+            }
+          };
+        }
       case 'invalid':
         return initState;
     }
@@ -251,8 +270,7 @@ const view: ComponentView<State, Msg> = props => {
             RFI Number: {version.rfiNumber}
             <StatusBadge
               rfi={rfi}
-              className='d-block d-md-inline mb-2 mb-md-0 ml-md-3'
-              style={{ fontSize: '1.4rem' }} />
+              className='d-block d-md-inline mb-2 mb-md-0 ml-md-3 font-size-large' />
           </h1>
         </Col>
       </Row>

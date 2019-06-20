@@ -6,6 +6,7 @@ import { Route, SharedState } from 'front-end/lib/app/types';
 import { ViewerUser } from 'front-end/lib/components/profiles/types';
 import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapGlobalComponentDispatch, mapPageModalMsg, newRoute, PageComponent, PageInit, replaceRoute, Update, updateGlobalComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
+import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
 import * as BuyerProfile from 'front-end/lib/pages/user/view/components/buyer';
 import * as ProgramStaffProfile from 'front-end/lib/pages/user/view/components/program-staff';
 import * as VendorProfile from 'front-end/lib/pages/user/view/components/vendor';
@@ -72,13 +73,34 @@ async function userToState(profileUser: PublicUser, viewerUser?: ViewerUser): Pr
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedIn({
 
-  async success({ routeParams, shared }) {
+  async success({ routeParams, dispatch, shared }) {
     const { profileUserId } = routeParams;
     const viewerUser = shared.sessionUser;
     const result = await api.readOneUser(profileUserId);
     switch (result.tag) {
       case 'valid':
-        return await userToState(result.value, viewerUser);
+        if (viewerUser && viewerUser.type === UserType.ProgramStaff && viewerUser.id !== result.value._id && !(await api.hasUserAcceptedTerms(viewerUser.id))) {
+          dispatch(replaceRoute({
+            tag: 'termsAndConditions' as const,
+            value: {
+              warningId: WarningId.UserViewAsProgramStaff,
+              redirectOnAccept: router.routeToUrl({
+                tag: 'userView',
+                value: routeParams
+              }),
+              redirectOnSkip: router.routeToUrl({
+                tag: 'userList',
+                value: null
+              })
+            }
+          }));
+          return {
+            errors: [ERROR_MESSAGE],
+            viewerUser
+          };
+        } else {
+          return await userToState(result.value, viewerUser);
+        }
       case 'invalid':
         return {
           errors: [ERROR_MESSAGE],
@@ -192,9 +214,20 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   update,
   view,
   getAlerts(state) {
+    const componentAlerts = (() => {
+      if (state.buyer) {
+        return BuyerProfile.component.getAlerts(state.buyer);
+      } else if (state.vendor) {
+        return VendorProfile.component.getAlerts(state.vendor);
+      } else if (state.programStaff) {
+        return ProgramStaffProfile.component.getAlerts(state.programStaff);
+      } else {
+        return emptyPageAlerts();
+      }
+    })();
     return {
-      ...emptyPageAlerts(),
-      errors: state.errors
+      ...componentAlerts,
+      errors: componentAlerts.errors.concat(state.errors)
     };
   },
   getMetadata(state) {

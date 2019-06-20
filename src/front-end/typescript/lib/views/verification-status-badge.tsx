@@ -30,7 +30,7 @@ export const VerificationStatusIcon: View<Pick<Props, 'verificationStatus' | 'cl
     case VerificationStatus.UnderReview:
       return (<Icon name='exclamation-circle' color={color} width={1.25} height={1.25} className={className} />);
     case VerificationStatus.Verified:
-      return (<Icon name='check' color={color} width={1.5} height={1.5} className={className} />);
+      return (<Icon name='check' color={color} width={1.25} height={1.25} className={className} />);
     case VerificationStatus.Declined:
       return (<Icon name='times-circle' color={color} width={1.25} height={1.25} className={className} />);
   }
@@ -39,7 +39,7 @@ export const VerificationStatusIcon: View<Pick<Props, 'verificationStatus' | 'cl
 export const Badge: View<Props> = props => {
   const { verificationStatus, className = '', style = {} } = props;
   return (
-    <BootstrapBadge color={verificationStatusToColor(verificationStatus)} className={`${className} text-uppercase font-size-base p-2 d-flex align-items-center`} style={style || {}}>
+    <BootstrapBadge color={verificationStatusToColor(verificationStatus)} className={`text-uppercase font-size-large align-items-center ${className}`} style={style || {}}>
       <VerificationStatusIcon verificationStatus={verificationStatus} className='mr-1' />
       {verificationStatusToTitleCase(verificationStatus)}
     </BootstrapBadge>

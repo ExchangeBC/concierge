@@ -2,7 +2,7 @@ import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from
 import { isSignedIn } from 'front-end/lib/access-control';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, newUrl, noPageModal, PageComponent, PageInit, replaceRoute, Update } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, noPageModal, PageComponent, PageInit, replaceRoute, replaceUrl, Update } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as markdown from 'front-end/lib/http/markdown';
 import Icon from 'front-end/lib/views/icon';
@@ -17,7 +17,11 @@ import { ADT } from 'shared/lib/types';
 
 export enum WarningId {
   RfiResponse = 'RFI_RESPONSE',
-  DiscoveryDayResponse = 'DISCOVERY_DAY_RESPONSE'
+  DiscoveryDayResponse = 'DISCOVERY_DAY_RESPONSE',
+  CreateRfi = 'CREATE_RFI',
+  EditRfi = 'EDIT_RFI',
+  SignUpProgramStaff = 'SIGN_UP_PROGRAM_STAFF',
+  UserViewAsProgramStaff = 'USER_VIEW_AS_PROGRAM_STAFF'
 }
 
 function warningIdToString(warningId: WarningId): string {
@@ -26,15 +30,31 @@ function warningIdToString(warningId: WarningId): string {
       return 'You must accept the terms and conditions in order to respond to a Request for Information.';
     case WarningId.DiscoveryDayResponse:
       return 'You must accept the terms and conditions in order to register for a Discovery Session.';
+    case WarningId.CreateRfi:
+      return 'You must accept the terms and conditions in order to create a Request for Information.';
+    case WarningId.EditRfi:
+      return 'You must accept the terms and conditions in order to edit a Request for Information.';
+    case WarningId.SignUpProgramStaff:
+      return 'You must accept the terms and conditions in order to create a Program Staff account.';
+    case WarningId.UserViewAsProgramStaff:
+      return 'You must accept the terms and conditions in order to view user profiles.';
   }
 }
 
 export function parseWarningId(raw: string): WarningId | null {
   switch (raw.toUpperCase()) {
-    case 'RFI_RESPONSE':
+    case WarningId.RfiResponse:
       return WarningId.RfiResponse;
-    case 'DISCOVERY_DAY_RESPONSE':
+    case WarningId.DiscoveryDayResponse:
       return WarningId.DiscoveryDayResponse;
+    case WarningId.CreateRfi:
+      return WarningId.CreateRfi;
+    case WarningId.EditRfi:
+      return WarningId.EditRfi;
+    case WarningId.SignUpProgramStaff:
+      return WarningId.SignUpProgramStaff;
+    case WarningId.UserViewAsProgramStaff:
+      return WarningId.UserViewAsProgramStaff;
     default:
       return null
   }
@@ -126,7 +146,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           switch (result.tag) {
             case 'valid':
               state = state.set('warnings', []);
-              dispatch(newUrl(getRedirectUrl(state, false)));
+              dispatch(replaceUrl(getRedirectUrl(state, false)));
               return state;
             case 'invalid':
               return stopLoading(state).set('errors', result.value.acceptedTerms || []);

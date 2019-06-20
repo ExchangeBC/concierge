@@ -155,7 +155,7 @@ const resource: Resource = {
         };
       },
       async respond(request): Promise<Response<CreateResponseBody, Session>> {
-        if (!permissions.createUser(request.session, request.body.profile.type)) {
+        if (!(await permissions.createUser(UserModel, request.session, request.body.profile.type))) {
           return basicResponse(401, request.session, makeJsonResponseBody({
             permissions: [permissions.ERROR_MESSAGE]
           }));
@@ -249,7 +249,7 @@ const resource: Resource = {
         };
       },
       async respond(request): Promise<Response<UpdateResponseBody, Session>> {
-        if (!permissions.updateUser(request.session, request.body.id)) {
+        if (!(await permissions.updateUser(UserModel, request.session, request.body.id))) {
           return basicResponse(401, request.session, makeJsonResponseBody({
             permissions: [permissions.ERROR_MESSAGE]
           }));
@@ -266,7 +266,7 @@ const resource: Resource = {
             let responseSession = request.session;
             if (request.body.email) {
               const session = await SessionModel.findById(request.session._id);
-              if (session && session.user) {
+              if (session && session.user && session.user.id.toString() === user._id.toString()) {
                 session.set('user.email', user.email);
                 await session.save();
                 responseSession = session.toJSON();

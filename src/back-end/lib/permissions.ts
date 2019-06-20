@@ -1,4 +1,7 @@
 import { Session } from 'back-end/lib/app/types';
+import * as UserSchema from 'back-end/lib/schemas/user';
+import { validateUserId } from 'back-end/lib/validators';
+import { get } from 'lodash';
 import { AuthLevel, UserType } from 'shared/lib/types';
 
 export const CURRENT_SESSION_ID = 'current';
@@ -54,8 +57,13 @@ export function isAuthorizedSession(session: Session, authLevel: AuthLevel<UserT
 
 // Users.
 
-export function createUser(session: Session, userType: UserType): boolean {
-  return (!isSignedIn(session) && userType !== UserType.ProgramStaff) || (isProgramStaff(session) && userType === UserType.ProgramStaff);
+export async function createUser(UserModel: UserSchema.Model, session: Session, createeUserType: UserType): Promise<boolean> {
+  if (!isSignedIn(session) && createeUserType !== UserType.ProgramStaff) {
+    return true;
+  } else {
+    const result = await validateUserId(UserModel, get(session.user, 'id', ''), UserType.ProgramStaff, true);
+    return result.tag === 'valid' && createeUserType === UserType.ProgramStaff;
+  }
 }
 
 export function readOneUser(session: Session, id: string): boolean {
@@ -66,8 +74,13 @@ export function readManyUsers(session: Session): boolean {
   return isProgramStaff(session);
 }
 
-export function updateUser(session: Session, id: string): boolean {
-  return isOwnAccount(session, id) || isProgramStaff(session);
+export async function updateUser(UserModel: UserSchema.Model, session: Session, updateeId: string): Promise<boolean> {
+  if (isOwnAccount(session, updateeId)) {
+    return true;
+  } else {
+    const result = await validateUserId(UserModel, get(session.user, 'id', ''), UserType.ProgramStaff, true);
+    return result.tag === 'valid';
+  }
 }
 
 export function deleteUser(session: Session, userId: string, userType: UserType): boolean {
@@ -112,8 +125,9 @@ export function readOneFileBlob(session: Session, fileAuthLevel: AuthLevel<UserT
 
 // RFIs.
 
-export function createRfi(session: Session): boolean {
-  return isProgramStaff(session);
+export async function createRfi(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
+  const result = await validateUserId(UserModel, get(session.user, 'id', ''), UserType.ProgramStaff, true);
+  return result.tag === 'valid';
 }
 
 export function readOneRfi(): boolean {
@@ -124,8 +138,9 @@ export function readManyRfis(): boolean {
   return true;
 }
 
-export function updateRfi(session: Session): boolean {
-  return isProgramStaff(session);
+export async function updateRfi(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
+  const result = await validateUserId(UserModel, get(session.user, 'id', ''), UserType.ProgramStaff, true);
+  return result.tag === 'valid';
 }
 
 // Discovery Day Responses.

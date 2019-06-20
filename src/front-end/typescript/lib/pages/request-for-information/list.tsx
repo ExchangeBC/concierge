@@ -1,18 +1,20 @@
-import { makePageMetadata } from 'front-end/lib';
+import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import * as TableComponent from 'front-end/lib/components/table';
-import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, immutable, Immutable, mapComponentDispatch, noPageModal, PageComponent, PageInit, Update, updateComponentChild, View } from 'front-end/lib/framework';
-import { readManyRfis } from 'front-end/lib/http/api';
+import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import { hasUserAcceptedTerms, readManyRfis } from 'front-end/lib/http/api';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
 import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
+import { get } from 'lodash';
 import { default as React, ReactElement } from 'react';
 import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import { compareDates, rawFormatDate } from 'shared/lib';
 import { PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
+import { PublicSessionUser } from 'shared/lib/resources/session';
 import { ADT, parseRfiStatus, RfiStatus, rfiStatusToTitleCase, UserType } from 'shared/lib/types';
 
 function formatTableDate(date: Date): string {
@@ -25,7 +27,7 @@ type TableCellData
   = ADT<'rfiNumber', string>
   | ADT<'publishDate', Date>
   | ADT<'status', RfiStatus>
-  | ADT<'programStaffTitle', { rfiId: string, text: string }>
+  | ADT<'programStaffTitle', { rfiId: string, text: string, dispatch: Dispatch<Msg> }>
   | ADT<'nonProgramStaffTitle', { rfiId: string, text: string, entity: string }>
   | ADT<'publicSectorEntity', string>
   | ADT<'lastUpdated', Date>
@@ -43,7 +45,7 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
       return wrap(data.value);
     case 'programStaffTitle':
       return wrap((
-        <Link route={{ tag: 'requestForInformationEdit', value: { rfiId: data.value.rfiId }}} className='mb-1'>
+        <Link onClick={() => data.value.dispatch({ tag: 'editRfi', value: data.value.rfiId })} className='mb-1'>
           {data.value.text}
         </Link>
       ), true);
@@ -75,13 +77,16 @@ interface Rfi extends PublicRfi {
 }
 
 export interface State {
-  userType?: UserType;
   rfis: Rfi[];
+  sessionUser?: PublicSessionUser;
   visibleRfis: Rfi[];
+  createLoading: number;
+  promptCreateConfirmation: boolean;
   statusFilter: Select.State;
   categoryFilter: Select.State;
   searchFilter: ShortText.State;
   table: Immutable<TableComponent.State<TableCellData>>;
+  promptEditConfirmation?: string;
 };
 
 type FormFieldKeys
@@ -95,13 +100,17 @@ type InnerMsg
   = ADT<'statusFilter', Select.Value>
   | ADT<'categoryFilter', Select.Value>
   | ADT<'searchFilter', string>
-  | ADT<'table', TableComponent.Msg>;
+  | ADT<'table', TableComponent.Msg>
+  | ADT<'createRfi'>
+  | ADT<'hideCreateConfirmationPrompt'>
+  | ADT<'editRfi', string>
+  | ADT<'hideEditConfirmationPrompt'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) => {
   const { session } = shared;
-  const userType = session && session.user && session.user.type;
+  const sessionUser = session && session.user
   const result = await readManyRfis();
   let rfis: Rfi[] = [];
   if (result.tag === 'valid') {
@@ -124,7 +133,10 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) 
     });
   }
   return {
-    userType,
+    createLoading: 0,
+    promptCreateConfirmation: false,
+    promptEditConfirmation: undefined,
+    sessionUser,
     rfis,
     visibleRfis: rfis,
     statusFilter: Select.init({
@@ -194,6 +206,9 @@ function updateAndQuery<K extends FormFieldKeys>(state: Immutable<State>, key: K
   return state.set('visibleRfis', rfis); ;
 }
 
+const startCreateLoading: UpdateState<State> = makeStartLoading('createLoading');
+const stopCreateLoading: UpdateState<State> = makeStopLoading('createLoading');
+
 const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'statusFilter':
@@ -210,6 +225,45 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         childUpdate: Table.update,
         childMsg: msg.value
       });
+    case 'createRfi':
+      return [
+        startCreateLoading(state),
+        async (state, dispatch) => {
+          state = stopCreateLoading(state);
+          if (!state.sessionUser) {
+            return state;
+          } else if (state.promptCreateConfirmation || (await hasUserAcceptedTerms(state.sessionUser.id))) {
+            dispatch(newRoute({
+              tag: 'requestForInformationCreate',
+              value: null
+            }));
+            return state;
+          } else {
+            return state.set('promptCreateConfirmation', true);
+          }
+        }
+      ];
+    case 'hideCreateConfirmationPrompt':
+      return [state.set('promptCreateConfirmation', false)];
+    case 'editRfi':
+      return [
+        state,
+        async (state, dispatch) => {
+          if (!state.sessionUser) {
+            return state;
+          } else if (state.promptEditConfirmation || (await hasUserAcceptedTerms(state.sessionUser.id))) {
+            dispatch(newRoute({
+              tag: 'requestForInformationEdit',
+              value: { rfiId: msg.value }
+            }));
+            return state;
+          } else {
+            return state.set('promptEditConfirmation', msg.value);
+          }
+        }
+      ];
+    case 'hideEditConfirmationPrompt':
+      return [state.set('promptEditConfirmation', undefined)];
     default:
       return [state];
   }
@@ -218,7 +272,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
-  const categoryFilterElement = state.userType !== UserType.ProgramStaff
+  const categoryFilterElement = get(state.sessionUser, 'type') !== UserType.ProgramStaff
     ? null
     : (
         <Col xs='12' md='4'>
@@ -337,7 +391,7 @@ const nonProgramStaffTableHeadCells: TableComponent.THSpec[] = [
   }
 ];
 
-function programStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.TDSpec<TableCellData>>> {
+function programStaffTableBodyRows(rfis: Rfi[], dispatch: Dispatch<Msg>): Array<Array<TableComponent.TDSpec<TableCellData>>> {
   return rfis.map(rfi => {
     const version = rfi.latestVersion;
     return [
@@ -347,7 +401,8 @@ function programStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.TDSp
         tag: 'programStaffTitle' as const,
         value: {
           rfiId: rfi._id,
-          text: version.title
+          text: version.title,
+          dispatch
         }
       }),
       TableComponent.makeTDSpec({ tag: 'publicSectorEntity' as const, value: version.publicSectorEntity }),
@@ -383,9 +438,9 @@ function nonProgramStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.T
 const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (!state.rfis.length) { return (<div>There are no RFIs currently available.</div>); }
   if (!state.visibleRfis.length) { return (<div>There are no RFIs that match the search criteria.</div>); }
-  const isProgramStaff = state.userType === UserType.ProgramStaff;
+  const isProgramStaff = get(state.sessionUser, 'type') === UserType.ProgramStaff;
   const headCells = isProgramStaff ? programStaffTableHeadCells : nonProgramStaffTableHeadCells;
-  const bodyRows = isProgramStaff ? programStaffTableBodyRows(state.visibleRfis) : nonProgramStaffTableBodyRows(state.visibleRfis);
+  const bodyRows = isProgramStaff ? programStaffTableBodyRows(state.visibleRfis, dispatch) : nonProgramStaffTableBodyRows(state.visibleRfis);
   const dispatchTable: Dispatch<TableComponent.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
   return (
     <Table.view
@@ -399,10 +454,10 @@ const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
 }
 
 const ConditionalCreateButton: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (state.userType !== UserType.ProgramStaff) { return null; }
+  if (get(state.sessionUser, 'type') !== UserType.ProgramStaff) { return null; }
   return (
     <Col xs='12' md='auto'>
-      <Link route={{ tag: 'requestForInformationCreate', value: null }} button color='primary'>Create an RFI</Link>
+      <Link onClick={() => dispatch({ tag: 'createRfi', value: undefined })} button color='primary'>Create an RFI</Link>
     </Col>
   );
 }
@@ -438,5 +493,47 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     return makePageMetadata('Requests for Information');
   },
   getBreadcrumbs: emptyPageBreadcrumbs,
-  getModal: noPageModal
+  getModal(state) {
+    if (state.promptCreateConfirmation) {
+      return {
+        title: 'Review the Terms and Conditions?',
+        body: 'You must accept the Procurement Concierge Terms and Conditions in order to create a Request For Information.',
+        onCloseMsg: { tag: 'hideCreateConfirmationPrompt', value: undefined },
+        actions: [
+          {
+            text: 'Yes, review Terms and Conditions',
+            color: 'primary',
+            button: true,
+            msg: { tag: 'createRfi', value: undefined }
+          },
+          {
+            text: 'Go Back',
+            color: 'secondary',
+            msg: { tag: 'hideCreateConfirmationPrompt', value: undefined }
+          }
+        ]
+      };
+    } else if (state.promptEditConfirmation) {
+      return {
+        title: 'Review the Terms and Conditions?',
+        body: 'You must accept the Procurement Concierge Terms and Conditions in order to edit a Request For Information.',
+        onCloseMsg: { tag: 'hideEditConfirmationPrompt', value: undefined },
+        actions: [
+          {
+            text: 'Yes, review Terms and Conditions',
+            color: 'primary',
+            button: true,
+            msg: { tag: 'editRfi', value: state.promptEditConfirmation }
+          },
+          {
+            text: 'Go Back',
+            color: 'secondary',
+            msg: { tag: 'hideEditConfirmationPrompt', value: undefined }
+          }
+        ]
+      };
+    } else {
+      return null;
+    }
+  }
 };

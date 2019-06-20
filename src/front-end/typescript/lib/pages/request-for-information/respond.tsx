@@ -31,7 +31,7 @@ export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 type PageInitError
   = ADT<'notSignedIn', PublicRfi>
   | ADT<'notVendor', PublicRfi>
-  | ADT<'notAcceptedTerms', [PublicRfi, PublicUser]>
+  | ADT<'notAcceptedTerms', PublicRfi>
   | ADT<'expiredRfi', PublicRfi>
   | ADT<'invalidRfi'>;
 
@@ -66,7 +66,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
         return {
           ...baseState,
           init: invalid({
-            tag: 'expiredRfi' as 'expiredRfi',
+            tag: 'expiredRfi' as const,
             value: rfi
           })
         };
@@ -76,7 +76,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
         return {
           ...baseState,
           init: invalid({
-            tag: 'notSignedIn' as 'notSignedIn',
+            tag: 'notSignedIn' as const,
             value: rfi
           })
         };
@@ -86,7 +86,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
         return {
           ...baseState,
           init: invalid({
-            tag: 'notVendor' as 'notVendor',
+            tag: 'notVendor' as const,
             value: rfi
           })
         };
@@ -96,8 +96,8 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
         return {
           ...baseState,
           init: invalid({
-            tag: 'notAcceptedTerms' as 'notAcceptedTerms',
-            value: [rfi, user] as [PublicRfi, PublicUser]
+            tag: 'notAcceptedTerms' as const,
+            value: rfi
           })
         };
       }
@@ -120,7 +120,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
       return {
         ...baseState,
         init: invalid({
-          tag: 'invalidRfi' as 'invalidRfi',
+          tag: 'invalidRfi' as const,
           value: undefined
         })
       };
@@ -160,7 +160,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           switch (error.tag) {
             case 'notSignedIn':
               dispatch(replaceRoute({
-                tag: 'signIn' as 'signIn',
+                tag: 'signIn' as const,
                 value: {
                   redirectOnSuccess: respondToRfiUrl(error.value)
                 }
@@ -168,21 +168,20 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               return state;
             case 'notVendor':
               dispatch(replaceRoute({
-                tag: 'notice' as 'notice',
+                tag: 'notice' as const,
                 value: {
                   noticeId: {
-                    tag: 'rfiNonVendorResponse' as 'rfiNonVendorResponse',
+                    tag: 'rfiNonVendorResponse' as const,
                     value: error.value._id
                   }
                 }
               }));
               return state;
             case 'notAcceptedTerms':
-              const [rfi, user] = error.value;
+              const rfi = error.value;
               dispatch(replaceRoute({
-                tag: 'termsAndConditions' as 'termsAndConditions',
+                tag: 'termsAndConditions' as const,
                 value: {
-                  userId: user._id,
                   warningId: WarningId.RfiResponse,
                   redirectOnAccept: respondToRfiUrl(rfi),
                   redirectOnSkip: viewRfiUrl(rfi)
@@ -191,10 +190,10 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               return state;
             case 'expiredRfi':
               dispatch(replaceRoute({
-                tag: 'notice' as 'notice',
+                tag: 'notice' as const,
                 value: {
                   noticeId: {
-                    tag: 'rfiExpiredResponse' as 'rfiExpiredResponse',
+                    tag: 'rfiExpiredResponse' as const,
                     value: error.value._id
                   }
                 }
@@ -202,10 +201,10 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               return state;
             case 'invalidRfi':
               dispatch(replaceRoute({
-                tag: 'notice' as 'notice',
+                tag: 'notice' as const,
                 value: {
                   noticeId: {
-                    tag: 'notFound' as 'notFound',
+                    tag: 'notFound' as const,
                     value: undefined
                   }
                 }
@@ -250,10 +249,10 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           });
           if (result.tag === 'invalid') { return fail(state, result.value.attachments || []); }
           dispatch(newRoute({
-            tag: 'notice' as 'notice',
+            tag: 'notice' as const,
             value: {
               noticeId: {
-                tag: 'rfiResponseSubmitted' as 'rfiResponseSubmitted',
+                tag: 'rfiResponseSubmitted' as const,
                 value: rfi._id
               }
             }
@@ -280,7 +279,7 @@ interface AttachmentsProps {
 }
 
 const Attachments: View<AttachmentsProps> = ({ attachments, dispatch }) => {
-  const dispatchAttachments: Dispatch<FileMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeAttachments' as 'onChangeAttachments', value }));
+  const dispatchAttachments: Dispatch<FileMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeAttachments' as const, value }));
   return (
     <Row>
       <Col xs='12' md='6'>

@@ -1,11 +1,14 @@
 import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { makePageMetadata } from 'front-end/lib';
-import { emptyPageAlerts, immutable, newRoute } from 'front-end/lib/framework';
+import { isUserType } from 'front-end/lib/access-control';
+import router from 'front-end/lib/app/router';
+import { emptyPageAlerts, immutable, newRoute, replaceRoute } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as AccountInformation from 'front-end/lib/pages/sign-up/components/account-information';
 import * as StepsController from 'front-end/lib/pages/sign-up/lib/steps/controller';
 import * as StepZero from 'front-end/lib/pages/sign-up/lib/steps/zero';
 import * as StepOne from 'front-end/lib/pages/sign-up/program-staff/steps/one';
+import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
 import { UserType, userTypeToTitleCase } from 'shared/lib/types';
 
 export type State = StepsController.State2<StepZero.Params, StepZero.State, StepZero.InnerMsg, StepOne.Params, StepOne.State, StepOne.InnerMsg>;
@@ -23,7 +26,7 @@ const StepZeroComponent = StepZero.makeComponent({
   stepIndicator: 'Step 1 of 2'
 });
 
-const init: Component['init'] = async () => {
+async function makeInitState(): Promise<State> {
   return {
     loading: 0,
     pageMetadata: makePageMetadata(`Create a ${userTypeToTitleCase(UserType.ProgramStaff)} Account`),
@@ -35,6 +38,44 @@ const init: Component['init'] = async () => {
     }
   };
 };
+
+const init: Component['init'] = isUserType({
+
+  userTypes: [UserType.ProgramStaff],
+  async success({ shared, dispatch }) {
+    if (!(await api.hasUserAcceptedTerms(shared.sessionUser.id))) {
+      dispatch(replaceRoute({
+        tag: 'termsAndConditions' as const,
+        value: {
+          warningId: WarningId.SignUpProgramStaff,
+          redirectOnAccept: router.routeToUrl({
+            tag: 'signUpProgramStaff',
+            value: null
+          }),
+          redirectOnSkip: router.routeToUrl({
+            tag: 'userList',
+            value: null
+          })
+        }
+      }));
+    }
+    return await makeInitState();
+  },
+
+  async fail({ routeParams, dispatch }) {
+    dispatch(replaceRoute({
+      tag: 'signIn' as const,
+      value: {
+        redirectOnSuccess: router.routeToUrl({
+          tag: 'signUpProgramStaff',
+          value: null
+        })
+      }
+    }));
+    return await makeInitState();
+  }
+
+});
 
 const startLoading: UpdateState<State> = makeStartLoading('loading');
 const stopLoading: UpdateState<State> = makeStopLoading('loading');

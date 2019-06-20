@@ -6,6 +6,7 @@ import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalC
 import * as api from 'front-end/lib/http/api';
 import * as RfiForm from 'front-end/lib/pages/request-for-information/components/form';
 import { createAndShowPreview, makeRequestBody } from 'front-end/lib/pages/request-for-information/lib';
+import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
 import FixedBar from 'front-end/lib/views/layout/fixed-bar';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
@@ -51,7 +52,26 @@ async function makeInitState(): Promise<State> {
 const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
 
   userTypes: [UserType.ProgramStaff],
-  success: makeInitState,
+  async success({ shared, dispatch }) {
+    const user = await api.readOneUser(shared.sessionUser.id);
+    if (user.tag === 'valid' && !user.value.acceptedTermsAt) {
+      dispatch(replaceRoute({
+        tag: 'termsAndConditions' as const,
+        value: {
+          warningId: WarningId.CreateRfi,
+          redirectOnAccept: router.routeToUrl({
+            tag: 'requestForInformationCreate',
+            value: null
+          }),
+          redirectOnSkip: router.routeToUrl({
+            tag: 'requestForInformationList',
+            value: null
+          })
+        }
+      }));
+    }
+    return await makeInitState();
+  },
 
   async fail({ routeParams, dispatch }) {
     dispatch(replaceRoute({

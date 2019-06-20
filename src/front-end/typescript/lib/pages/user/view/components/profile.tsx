@@ -1,8 +1,8 @@
-import { FALLBACK_USER_NAME } from 'front-end/config';
+import { CONTACT_EMAIL, FALLBACK_USER_NAME } from 'front-end/config';
 import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { Route } from 'front-end/lib/app/types';
 import { ProfileComponent, ViewerUser } from 'front-end/lib/components/profiles/types';
-import { Component, ComponentView, Dispatch, GlobalComponentMsg, Immutable, immutable, Init, mapComponentDispatch, newRoute, PageComponent, Update, updateComponentChild } from 'front-end/lib/framework';
+import { Component, ComponentView, ComponentViewProps, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, Init, mapComponentDispatch, newRoute, PageComponent, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { updateField, validateField } from 'front-end/lib/views/form-field/lib';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
@@ -229,7 +229,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
 
       case 'setVerificationStatus':
         const verificationStatus = getVerificationStatus(state);
-        if (!verificationStatus) { return [state]; }
+        if (!verificationStatus || !viewerUserIsProgramStaff(state)) { return [state]; }
         state = startVerificationStatusLoading(state);
         return [
           state,
@@ -265,8 +265,15 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
 };
 
 function getVerificationStatus<PS>(state: Immutable<State<PS>>): VerificationStatus | null {
-  const viewerUserIsProgramStaff = !!state.viewerUser && state.viewerUser.type === UserType.ProgramStaff;
-  return viewerUserIsProgramStaff && state.profileUser.profile.type === UserType.Buyer ? state.profileUser.profile.verificationStatus : null;
+  return state.profileUser.profile.type === UserType.Buyer ? state.profileUser.profile.verificationStatus : null;
+}
+
+function viewerUserIsProgramStaff<PS>(state: Immutable<State<PS>>): boolean {
+  return !!state.viewerUser && state.viewerUser.type === UserType.ProgramStaff;
+}
+
+function viewerUserIsOwner<PS>(state: Immutable<State<PS>>): boolean {
+  return !!state.viewerUser && state.viewerUser.id === state.profileUser._id;
 }
 
 function isInvalid<PS, PM, P extends ProfileType>(state: State<PS>, Profile: ProfileComponent<PS, PM, P>): boolean {
@@ -278,15 +285,15 @@ function isValid<PS, PM, P extends ProfileType>(state: State<PS>, Profile: Profi
   return providedRequiredFields && !isInvalid(state, Profile);
 }
 
-function conditionalVerificationStatusBadge<PS, PM>(): ComponentView<State<PS>, Msg<PM>> {
+function conditionalVerificationStatusBadge<PS, PM>(): View<ComponentViewProps<State<PS>, Msg<PM>> & { className?: string }> {
   return props => {
-    const { state } = props;
+    const { state, className } = props;
     const buyerStatus = getVerificationStatus(state);
     if (buyerStatus) {
       return (
         <VerificationStatusBadge
           verificationStatus={buyerStatus}
-          className='ml-2' />
+          className={className} />
       );
     } else {
       return null;
@@ -306,9 +313,9 @@ function conditionalVerificationStatusDropdown<PS, PM>(): ComponentView<State<PS
     const { state, dispatch } = props;
     const buyerStatus = getVerificationStatus(state);
     const isLoading = state.verificationStatusLoading > 0;
-    if (buyerStatus) {
+    if (viewerUserIsProgramStaff(state) && buyerStatus) {
       return (
-        <UncontrolledButtonDropdown>
+        <UncontrolledButtonDropdown className='mt-3'>
           <DropdownToggle caret color='info-alt' disabled={isLoading}>
             {isLoading ? (<Spinner color='light' size='sm' className='mr-2' />) : 'Set Account Status'}
           </DropdownToggle>
@@ -542,23 +549,20 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
   return props => {
     const { state } = props;
     const profileName = profileToName(Profile.getValues(state.profile));
-    const name: string | null = state.viewerUser && state.viewerUser.id === state.profileUser._id ? 'My' : profileName && `${profileName}'s`;
+    const isOwner = viewerUserIsOwner(state);
+    const name: string | null = isOwner ? 'My' : profileName && `${profileName}'s`;
     const headingSuffix = 'Profile';
     const heading = name ? `${name} ${headingSuffix}` : headingSuffix;
-    const showVerificationUi = !!getVerificationStatus(state);
     return (
       <div>
-        <Row className={showVerificationUi ? 'mb-3' : 'mb-5'}>
+        <Row className='mb-5'>
           <Col xs='12'>
-            <h1 className='mb-0'>
+            <ConditionalVerificationStatusBadge {...props} className={`mb-2 ${isOwner ? 'd-md-none' : ''}`} />
+            <h1 className='d-flex align-items-center'>
               {heading}
+              <ConditionalVerificationStatusBadge {...props} className={`ml-3 d-none ${isOwner ? 'd-md-inline-flex' : ''}`} />
             </h1>
-          </Col>
-        </Row>
-        <Row className={showVerificationUi ? 'mb-5' : ''}>
-          <Col xs='12' className='d-flex align-items-center'>
             <ConditionalVerificationStatusDropdown {...props} />
-            <ConditionalVerificationStatusBadge {...props} />
           </Col>
         </Row>
         <ConditionalProfile {...props} />
@@ -570,11 +574,21 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
   };
 };
 
-export function component<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Component<Params, State<PS>, Msg<PM>> & Pick<PageComponent<never, never, State<PS>, Msg<PM>>, 'getModal'> {
+export function component<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): Component<Params, State<PS>, Msg<PM>> & Pick<PageComponent<never, never, State<PS>, Msg<PM>>, 'getModal' | 'getAlerts'> {
   return {
     init: init(Profile),
     update: update(Profile),
     view: view(Profile),
+    getAlerts(state) {
+      const buyerStatus = getVerificationStatus(state);
+      const showStatusWarning = viewerUserIsOwner(state) && buyerStatus && buyerStatus !== VerificationStatus.Verified;
+      return {
+        ...emptyPageAlerts(),
+        warnings: showStatusWarning
+          ? [(<span>Your access to the Procurement Concierge Program is limited because your account has not yet been verified by the Program's staff. Please contact <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> if you have any questions.</span>)]
+          : []
+      };
+    },
     getModal(state) {
       if (!state.promptDeactivationConfirmation) { return null; }
       const isOwnAccount = !!state.viewerUser && state.viewerUser.id === state.profileUser._id;
