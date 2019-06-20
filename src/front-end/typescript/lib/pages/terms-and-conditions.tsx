@@ -145,9 +145,8 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           });
           switch (result.tag) {
             case 'valid':
-              state = state.set('warnings', []);
               dispatch(replaceUrl(getRedirectUrl(state, false)));
-              return state;
+              return null;
             case 'invalid':
               return stopLoading(state).set('errors', result.value.acceptedTerms || []);
           }

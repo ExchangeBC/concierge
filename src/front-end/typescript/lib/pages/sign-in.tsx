@@ -108,7 +108,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                   value: null
                 }));
               }
-              return state;
+              return null;
             case 'invalid':
               return stopLoading(state).set('errors', result.value);
           }

@@ -75,7 +75,7 @@ export function createAndShowPreview<State, InnerMsg>(params: CreateAndShowPrevi
     startLoading(state),
     async (state: Immutable<State>, dispatch: Dispatch<GlobalComponentMsg<InnerMsg, Route>>) => {
       const rfiForm = getRfiForm(state);
-      if (!rfiForm) { return state; }
+      if (!rfiForm) { return null; }
       const fail = (state: Immutable<State>, errors: RfiResource.CreateValidationErrors) => {
         state = stopLoading(state);
         return setRfiForm(state, RfiForm.setErrors(rfiForm, errors));

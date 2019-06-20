@@ -5,7 +5,7 @@ const init: Init<null, State> = async () => {
   return {
     ready: false,
     isNavOpen: false,
-    inTransition: false,
+    transitionLoading: 0,
     shared: {
       session: undefined
     },

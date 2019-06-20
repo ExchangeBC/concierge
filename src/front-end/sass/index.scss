@@ -96,12 +96,23 @@ input[type="time"] {
 }
 
 .app {
-  filter: grayscale(0);
-  transition: filter 240ms;
+  $page-transition-duration: 240ms;
+
+  .page-container {
+    opacity: 1;
+    transform: translateY(0);
+    transition-property: opacity, transform;
+    transition-duration: $page-transition-duration;
+    transition-timing-function: ease-out;
+  }
 
   &.in-transition {
-    filter: grayscale(0.2);
     pointer-events: none;
+
+    .page-container {
+      opacity: 0;
+      transform: translateY($spacer / 2);
+    }
   }
 }
 

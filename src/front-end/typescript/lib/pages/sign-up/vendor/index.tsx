@@ -88,7 +88,7 @@ const onNext: ControllerHook = state => {
                   redirectOnSkip: rfiListUrl
                 }
               }));
-              return state;
+              return null;
             case 'invalid':
               return stopLoading(state)
                 .setIn(['steps', 'zero', 'state'], StepZero.setErrors(zero.state, result.value))
@@ -114,7 +114,7 @@ const onBack: ControllerHook = state => {
             tag: '@newRoute',
             value: { tag: 'signUp', value: null }
           });
-          return state;
+          return null;
         }
       ];
     case 'one':
@@ -132,7 +132,7 @@ const onCancel: ControllerHook = state => {
         tag: '@newRoute',
         value: { tag: 'landing', value: null }
       });
-      return state;
+      return null;
     }
   ];
 };

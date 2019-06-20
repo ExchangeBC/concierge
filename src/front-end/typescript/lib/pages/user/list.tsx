@@ -237,7 +237,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               tag: 'signUpProgramStaff',
               value: null
             }));
-            return state;
+            return null;
           } else {
             return state.set('promptCreateConfirmation', true);
           }
@@ -256,7 +256,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               tag: 'userView',
               value: { profileUserId: msg.value }
             }));
-            return state;
+            return null;
           } else {
             return state.set('promptViewConfirmation', msg.value);
           }

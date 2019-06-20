@@ -57,8 +57,7 @@ export interface SharedState {
 export interface State {
   ready: boolean;
   isNavOpen: boolean;
-  // TODO planning to use inTransition?
-  inTransition: boolean;
+  transitionLoading: number;
   shared: SharedState;
   activeRoute: Route;
   modal: {

@@ -122,7 +122,7 @@ export function view<PageState, PageMsg>(props: Props<PageState, PageMsg>) {
   // Handle full width pages.
   if (fullWidth) {
     return (
-      <div className='d-flex flex-column flex-grow-1'>
+      <div className='d-flex flex-column flex-grow-1 page-container'>
         <ViewAlertsAndBreadcrumbs {...viewAlertsAndBreadcrumbsProps} />
         <div className={containerClassName}>
           <component.view {...viewProps} />
@@ -133,7 +133,7 @@ export function view<PageState, PageMsg>(props: Props<PageState, PageMsg>) {
   }
   // Handle pages within a container.
   return (
-    <div className='d-flex flex-column flex-grow-1'>
+    <div className='d-flex flex-column flex-grow-1 page-container'>
       <ViewAlertsAndBreadcrumbs {...viewAlertsAndBreadcrumbsProps} />
       <div className={containerClassName}>
         <Container>

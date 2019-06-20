@@ -150,7 +150,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
                     }
                   }));
                 }
-                return state;
+                return null;
               case 'invalid':
                 const profileErrors = result.value.profile;
                 if (profileErrors && !isArray(profileErrors)) {

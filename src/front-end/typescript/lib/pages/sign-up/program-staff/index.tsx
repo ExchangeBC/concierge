@@ -106,7 +106,7 @@ const onNext: ControllerHook = state => {
                 tag: 'userList' as const,
                 value: null
               }));
-              return state;
+              return null;
             case 'invalid':
               return stopLoading(state)
                 .setIn(['steps', 'zero', 'state'], StepZero.setErrors(zero.state, result.value))
@@ -139,7 +139,7 @@ const onCancel: ControllerHook = state => {
         tag: '@newRoute',
         value: { tag: 'userList', value: null }
       });
-      return state;
+      return null;
     }
   ];
 };

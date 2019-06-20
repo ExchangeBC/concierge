@@ -22,7 +22,7 @@ export type Dispatch<Msg> = (msg: Msg) => Promise<any>;
 export type Init<Params, State> = (params: Params) => Promise<State>;
 
 // Update returns a tuple representing sync and async state mutations.
-export type UpdateReturnValue<State, Msg> = [Immutable<State>, ((state: Immutable<State>, dispatch: Dispatch<Msg>) => Promise<Immutable<State>>)?];
+export type UpdateReturnValue<State, Msg> = [Immutable<State>, ((state: Immutable<State>, dispatch: Dispatch<Msg>) => Promise<Immutable<State> | null>)?];
 
 export interface UpdateParams<State, Msg> {
   state: Immutable<State>;
@@ -80,7 +80,9 @@ export function updateComponentChild<PS, PM, CS, CM>(params: UpdateChildParams<P
   if (newAsyncChildState) {
     asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<PM>) => {
       const mappedDispatch = mapComponentDispatch(dispatch, mapChildMsg);
-      return state.setIn(childStatePath, await newAsyncChildState(state.getIn(childStatePath), mappedDispatch));
+      const newChildState = await newAsyncChildState(state.getIn(childStatePath), mappedDispatch);
+      if (!newChildState) { return null; }
+      return state.setIn(childStatePath, newChildState);
     }
   }
   return [
@@ -167,7 +169,9 @@ export function updateGlobalComponentChild<PS, PM, CS, CM, Route>(params: Update
   if (newAsyncChildState) {
     asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<GlobalComponentMsg<PM, Route>>) => {
       const mappedDispatch = mapGlobalComponentDispatch(dispatch, mapChildMsg);
-      return state.setIn(childStatePath, await newAsyncChildState(state.getIn(childStatePath), mappedDispatch));
+      const newChildState = await newAsyncChildState(state.getIn(childStatePath), mappedDispatch);
+      if (!newChildState) { return null; }
+      return state.setIn(childStatePath, newChildState);
     }
   }
   return [
@@ -398,7 +402,9 @@ export function updateAppChild<PS, PM, CS, CM, Route>(params: UpdateChildParams<
   if (newAsyncChildState) {
     asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<AppMsg<PM, Route>>) => {
       const mappedDispatch = mapAppDispatch(dispatch, mapChildMsg);
-      return state.setIn(childStatePath, await newAsyncChildState(state.getIn(childStatePath), mappedDispatch));
+      const newChildState = await newAsyncChildState(state.getIn(childStatePath), mappedDispatch);
+      if (!newChildState) { return null; }
+      return state.setIn(childStatePath, newChildState);
     }
   }
   return [
@@ -437,6 +443,7 @@ export function updateAppChildPage<PS, PM, CS, CM, Route>(params: UpdateChildPag
   if (newAsyncState) {
     asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<AppMsg<PM, Route>>) => {
       const newState = await newAsyncState(state, dispatch);
+      if (!newState) { return null; }
       setMetadata(newState);
       return setModal(newState);
     };
@@ -515,7 +522,7 @@ export async function start<State, Msg extends ADT<any, any>, Route>(app: AppCom
     // a promise chain.
     if (promiseState) {
       promise = promise
-        .then((): Promise<Immutable<State>> => new Promise((resolve, reject) => {
+        .then((): Promise<Immutable<State> | null> => new Promise((resolve, reject) => {
           // We want to run async state updates after
           // the current "tick" to ensure all
           // sync updates are processed first.
@@ -527,8 +534,10 @@ export async function start<State, Msg extends ADT<any, any>, Route>(app: AppCom
         }))
         .then(newState => {
           // Update state with its asynchronous change.
-          state = newState;
-          notifyStateSubscriptions();
+          if (newState) {
+            state = newState;
+            notifyStateSubscriptions();
+          }
         });
     }
     return promise;

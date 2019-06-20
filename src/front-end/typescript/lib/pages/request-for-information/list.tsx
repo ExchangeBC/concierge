@@ -237,7 +237,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               tag: 'requestForInformationCreate',
               value: null
             }));
-            return state;
+            return null;
           } else {
             return state.set('promptCreateConfirmation', true);
           }
@@ -256,7 +256,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               tag: 'requestForInformationEdit',
               value: { rfiId: msg.value }
             }));
-            return state;
+            return null;
           } else {
             return state.set('promptEditConfirmation', msg.value);
           }

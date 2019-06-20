@@ -57,10 +57,6 @@ function startLoading(state: Immutable<State>): Immutable<State> {
   return state.set('loading', state.loading + 1);
 }
 
-function stopLoading(state: Immutable<State>): Immutable<State> {
-  return state.set('loading', Math.max(state.loading - 1, 0));
-}
-
 const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'onChangeEmail':
@@ -85,7 +81,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               }
             }
           }));
-          return stopLoading(state)
+          return null;
         }
       ];
     default:

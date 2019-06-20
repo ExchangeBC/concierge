@@ -148,7 +148,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                       rfiId: result.value._id
                     }
                   }));
-                  break;
+                  return null;
                 case 'invalid':
                   state = fail(state, result.value);
                   if (window.scrollTo) { window.scrollTo(0, 0); }

@@ -171,8 +171,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
                     value: null
                   }));
                 }
-                return stopDeactivateLoading(state)
-                  .set('showDeactivateAccount', false);
+                return null;
               case 'invalid':
                 // TODO show errors
                 return stopDeactivateLoading(state);

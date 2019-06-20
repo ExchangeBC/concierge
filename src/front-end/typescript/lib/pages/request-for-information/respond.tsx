@@ -151,10 +151,12 @@ const viewRfiUrl = (rfi: PublicRfi): string => router.routeToUrl(viewRfiRoute(rf
 const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'handlePageInitError':
+      // TODO move to init function now that it has the
+      // dispatch function param
       return [
         state.set('handledPageInitError', true),
         async (state, dispatch) => {
-          if (state.init.tag === 'valid') { return state; }
+          if (state.init.tag === 'valid') { return null; }
           // Handle cases where the user should not be able to respond to this RFI.
           const error = state.init.value;
           switch (error.tag) {
@@ -165,7 +167,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                   redirectOnSuccess: respondToRfiUrl(error.value)
                 }
               }));
-              return state;
+              return null;
             case 'notVendor':
               dispatch(replaceRoute({
                 tag: 'notice' as const,
@@ -176,7 +178,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                   }
                 }
               }));
-              return state;
+              return null;
             case 'notAcceptedTerms':
               const rfi = error.value;
               dispatch(replaceRoute({
@@ -187,7 +189,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                   redirectOnSkip: viewRfiUrl(rfi)
                 }
               }));
-              return state;
+              return null;
             case 'expiredRfi':
               dispatch(replaceRoute({
                 tag: 'notice' as const,
@@ -198,7 +200,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                   }
                 }
               }));
-              return state;
+              return null;
             case 'invalidRfi':
               dispatch(replaceRoute({
                 tag: 'notice' as const,
@@ -209,7 +211,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                   }
                 }
               }));
-              return state;
+              return null;
           }
         }
       ];
@@ -235,7 +237,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [
         startLoading(state),
         async (state, dispatch) => {
-          if (state.init.tag === 'invalid') { return state; }
+          if (state.init.tag === 'invalid') { return null; }
           const { rfi, attachments } = state.init.value;
           const fail = (state: Immutable<State>, errors: string[][]) => {
             return stopLoading(state)
@@ -257,7 +259,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               }
             }
           }));
-          return stopLoading(state);
+          return null;
         }
       ];
     default:

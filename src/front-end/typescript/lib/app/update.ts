@@ -1,3 +1,4 @@
+import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { Msg, Route, Session, State } from 'front-end/lib/app/types';
 import { Dispatch, Immutable, initAppChildPage, PageModal, Update, updateAppChildPage } from 'front-end/lib/framework';
 import { getSession } from 'front-end/lib/http/api';
@@ -31,13 +32,8 @@ return state.set('shared', {
   });
 };
 
-function startTransition(state: Immutable<State>): Immutable<State> {
-  return state.set('inTransition', true);
-}
-
-function endTransition(state: Immutable<State>): Immutable<State> {
-  return state.set('inTransition', false);
-}
+const startTransition: UpdateState<State> = makeStartLoading('transitionLoading');
+const stopTransition: UpdateState<State> = makeStopLoading('transitionLoading');
 
 async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route: Route): Promise<Immutable<State>> {
   const defaultPageInitParams = {
@@ -366,11 +362,10 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 
     case '@incomingRoute':
       const incomingRoute: Route = msg.value;
-      state = startTransition(state);
       return [
-        state,
+        startTransition(state),
         async (state, dispatch) => {
-          state = endTransition(state);
+          state = stopTransition(state);
           // Unset the previous page's state.
           state = state.setIn(['pages', state.activeRoute.tag], undefined);
           // Refresh the front-end's view of the current session.

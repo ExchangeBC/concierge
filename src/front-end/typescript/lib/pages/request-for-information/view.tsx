@@ -127,7 +127,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         async (state, dispatch) => {
           state = stopRespondToRfiLoading(state);
           if (!state.rfi) {
-            return state;
+            return null;
           } else if (state.promptResponseConfirmation || !state.sessionUser || (await api.hasUserAcceptedTerms(state.sessionUser.id))) {
             dispatch(newRoute({
               tag: 'requestForInformationRespond',
@@ -135,7 +135,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                 rfiId: state.rfi._id
               }
             }));
-            return state;
+            return null;
           } else {
             return state.set('promptResponseConfirmation', true);
           }
@@ -145,7 +145,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [
         startRespondToDiscoveryDayLoading(state),
         async (state, dispatch) => {
-          if (!state.rfi) { return state; }
+          if (!state.rfi) { return null; }
           const finish = (state: Immutable<State>) => stopRespondToDiscoveryDayLoading(state);
           const thisRoute: Route = {
             tag: 'requestForInformationView' as const,

@@ -282,7 +282,7 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   } else {
     const toggleIsNavOpen = (value?: boolean) => dispatch({ tag: 'toggleIsNavOpen', value });
     return (
-      <div className={`route-${state.activeRoute.tag} ${state.inTransition ? 'in-transition' : ''} app d-flex flex-column`} style={{ minHeight: '100vh' }}>
+      <div className={`route-${state.activeRoute.tag} ${state.transitionLoading > 0 ? 'in-transition' : ''} app d-flex flex-column`} style={{ minHeight: '100vh' }}>
         {isLiveSite() ? null : <TestEnvironmentBanner />}
         <Nav session={state.shared.session} activeRoute={state.activeRoute} isOpen={state.isNavOpen} toggleIsOpen={toggleIsNavOpen} />
         <ViewActiveRoute state={state} dispatch={dispatch} />

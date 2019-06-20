@@ -156,8 +156,8 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       }
       return [
         setIsEditing(state, false),
-        async () => {
-          if (!state.valid) { return state; }
+        async (state) => {
+          if (!state.valid) { return null; }
           return state.setIn(['valid', 'rfiForm'], await resetRfiForm(state.valid.rfi));
         }
       ];
