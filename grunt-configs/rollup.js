@@ -3,7 +3,6 @@ const path = require("path");
 const root = path.resolve(__dirname, "..", gruntConfig.src.ts);
 const tsConfigPath = path.join(root, "tsconfig.json");
 const compilerOptions = require(tsConfigPath).compilerOptions;
-const pathmodify = require("pathmodify");
 const typescript = require("rollup-plugin-typescript2");
 const replace = require("rollup-plugin-replace");
 const commonJs = require("rollup-plugin-commonjs");
