@@ -6,6 +6,7 @@ import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { getString } from 'shared/lib';
 import { CreateRequestBody, PublicSession } from 'shared/lib/resources/session';
+import { UserType } from 'shared/lib/types';
 
 const INVALID_CREDENTIALS_ERROR_MESSAGE = 'Your email and password combination do not match.';
 
@@ -40,10 +41,27 @@ export const resource: Resource = {
         const fail = () => basicResponse(401, request.session, makeJsonResponseBody([INVALID_CREDENTIALS_ERROR_MESSAGE]));
         if (!permissions.createSession(request.session)) { return fail(); }
         const { email, password } = request.body;
-        const user = await UserModel.findOne({ email, active: true }).exec();
+        const user = await UserModel.findOne({
+          $and: [
+            { email: { $eq: email }},
+            {
+              $or: [
+                { active: { $eq: true }},
+                {
+                  'profile.type': { $in: [UserType.Vendor, UserType.Buyer] },
+                  active: { $eq: false }
+                }
+              ]
+            }
+          ]
+        }).exec();
         if (!user) { return fail(); }
         const authenticated = await UserSchema.authenticate(user, password);
         if (!authenticated) { return fail(); }
+        if (!user.active) {
+          user.active = true;
+          await user.save();
+        }
         const session = await SessionSchema.signIn(SessionModel, UserModel, request.session, user._id);
         const publicSession = SessionSchema.makePublicSession(session);
         return basicResponse(201, session, makeJsonResponseBody(publicSession));
