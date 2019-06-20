@@ -5,7 +5,7 @@
 *.DS_Store
 .env
 .sass-cache/
-/node_modules/
+node_modules/
 /tmp/
 /build/
 /typedoc/front-end/

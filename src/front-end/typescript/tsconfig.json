@@ -20,6 +20,7 @@
     }
   },
   "files": [
-    "index.ts"
+    "index.ts",
+    "dependencies.d.ts"
   ]
 }

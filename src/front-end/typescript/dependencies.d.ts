@@ -7,6 +7,8 @@
  * TODO upgrade @types/react-select once available.
  */
 
-import Creatable from 'react-select/lib/Creatable';
-export * from 'react-select/lib/Creatable';
-export default Creatable;
+declare module 'react-select/creatable' {
+  import Creatable from 'react-select/lib/Creatable';
+  export * from 'react-select/lib/Creatable';
+  export default Creatable;
+}
