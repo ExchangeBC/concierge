@@ -5,8 +5,6 @@ module.exports = {
         gruntConfig.out.js
       ]
     },
-    options: {
-      mangle: true
-    }
+    options: {}
   }
 };

@@ -1,4 +1,4 @@
-export const NODE_ENV: 'development' | 'production'  = process.env.NODE_ENV === 'development' ? 'development' : 'production';
+export const NODE_ENV = process.env.NODE_ENV || 'production';
 
 export const LIVE_SITE_DOMAIN = 'procurementconcierge.gov.bc.ca';
 

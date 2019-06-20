@@ -11,4 +11,4 @@ node_modules/
 /typedoc/front-end/
 /typedoc/back-end/
 /typedoc/shared/
-
+/.rpt2_cache/

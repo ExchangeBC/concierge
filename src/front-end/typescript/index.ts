@@ -7,6 +7,5 @@ const element = document.getElementById('main') || document.body;
 const debug = NODE_ENV === 'development';
 start(app, element, debug)
   .then(stateManager => {
-    // Store stateManager on the window in development.
     if (debug) { set(window, 'stateManager', stateManager); }
   });

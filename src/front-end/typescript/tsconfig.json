@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "module": "commonjs",
+    "module": "esnext",
     "moduleResolution": "node",
     "jsx": "react",
     "allowJs": true,
@@ -14,6 +14,7 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "baseUrl": ".",
+    "incremental": true,
     "paths": {
       "front-end/*": ["./*"],
       "shared/*": ["../../shared/*"]

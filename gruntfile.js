@@ -38,11 +38,11 @@ module.exports = function (grunt) {
     "clean:build",
     "copy:static",
     "sass",
-    "postcss:prefix"
+    "postcss:prefix",
+    "rollup",
   ]);
   grunt.registerTask("development-build", [
     "common",
-    "browserify:development",
     "compress"
   ]);
   grunt.registerTask("development-watch", [
@@ -52,8 +52,7 @@ module.exports = function (grunt) {
   grunt.registerTask("production-build", [
     "common",
     "postcss:min",
-    "browserify:production",
-    "uglify:production",
+    "terser:production",
     "htmlmin:production",
     "compress"
   ]);
