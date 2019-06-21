@@ -20,8 +20,8 @@
       "shared/*": ["../../shared/*"]
     }
   },
-  "files": [
-    "index.ts",
-    "dependencies.d.ts"
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
   ]
 }
