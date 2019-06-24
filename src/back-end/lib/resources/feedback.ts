@@ -1,7 +1,7 @@
 import { CONTACT_EMAIL } from 'back-end/config';
 import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
-import * as notifications from 'back-end/lib/mailer/notifications';
+import * as mailer from 'back-end/lib/mailer';
 import * as FeedbackSchema from 'back-end/lib/schemas/feedback';
 import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { getString } from 'shared/lib';
@@ -58,7 +58,7 @@ export const resource: Resource = {
 
         // Send email to configured CONTACT_EMAIL
         try {
-          await notifications.createFeedback({
+          await mailer.createFeedback({
             feedbackEmail: CONTACT_EMAIL,
             feedbackResponse: FeedbackSchema.makePublicFeedback(feedback)
           });

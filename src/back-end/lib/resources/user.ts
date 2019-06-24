@@ -1,6 +1,6 @@
 import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
-import * as notifications from 'back-end/lib/mailer/notifications';
+import * as mailer from 'back-end/lib/mailer';
 import * as permissions from 'back-end/lib/permissions';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
@@ -50,8 +50,14 @@ async function validateCreateRequestBody(Model: UserSchema.Model, body: CreateRe
   }
 }
 
-async function validateUpdateRequestBody(Model: UserSchema.Model, body: UpdateRequestBody, session: Session): Promise<ValidOrInvalid<InstanceType<UserSchema.Model>, UpdateValidationErrors>> {
+interface ValidUpdateRequestBody {
+  user: InstanceType<UserSchema.Model>;
+  verificationStatusHasChanged: boolean;
+}
+
+async function validateUpdateRequestBody(Model: UserSchema.Model, body: UpdateRequestBody, session: Session): Promise<ValidOrInvalid<ValidUpdateRequestBody, UpdateValidationErrors>> {
   const { id, currentPassword, newPassword, profile, acceptedTerms } = body;
+  let verificationStatusHasChanged = false;
   let { email } = body;
   // Does the user exist? Is their account active?
   const user = await Model.findById(id);
@@ -104,7 +110,8 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, body: UpdateRe
     const validatedProfile = validateProfile(profile);
     switch (validatedProfile.tag) {
       case 'valid':
-        if (validatedProfile.value.type === UserType.Buyer && user.profile.type === UserType.Buyer && !permissions.isProgramStaff(session) && validatedProfile.value.verificationStatus !== user.profile.verificationStatus) {
+        verificationStatusHasChanged = validatedProfile.value.type === UserType.Buyer && user.profile.type === UserType.Buyer && validatedProfile.value.verificationStatus !== user.profile.verificationStatus;
+        if (verificationStatusHasChanged && !permissions.isProgramStaff(session)) {
           // Only Program Staff can modify a buyer's verification status.
           return invalid({
             profile: ['You cannot change your verification status.']
@@ -125,7 +132,10 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, body: UpdateRe
   }
   // Set updated date.
   user.updatedAt = now;
-  return valid(user);
+  return valid({
+    user,
+    verificationStatusHasChanged
+  });
 }
 
 type RequiredModels = 'User' | 'Session';
@@ -172,7 +182,7 @@ const resource: Resource = {
             await user.save();
             // Send notification email.
             try {
-              await notifications.createUser(user.email);
+              await mailer.createUser(user.email);
             } catch (error) {
               request.logger.error('sending the createUser notification email failed', error);
             }
@@ -260,7 +270,7 @@ const resource: Resource = {
             const invalidCode = validatedBody.value.permissions ? 401 : 400;
             return basicResponse(invalidCode, request.session, makeJsonResponseBody(validatedBody.value));
           case 'valid':
-            const user = validatedBody.value;
+            const { user, verificationStatusHasChanged } = validatedBody.value;
             await user.save();
             // Update the session's cache of the user's email.
             let responseSession = request.session;
@@ -271,6 +281,10 @@ const resource: Resource = {
                 await session.save();
                 responseSession = session.toJSON();
               }
+            }
+            // Notify buyers if their account status has changed.
+            if (user.profile.type === UserType.Buyer && verificationStatusHasChanged) {
+              await mailer.buyerStatusUpdated(user.email, user.profile.verificationStatus);
             }
             return basicResponse(200, responseSession, makeJsonResponseBody(UserSchema.makePublicUser(user)));
         }
@@ -298,7 +312,7 @@ const resource: Resource = {
         await user.save();
         // Send notification email.
         try {
-          await notifications.deleteUser(user.email);
+          await mailer.deleteUser(user.email);
         } catch (error) {
           request.logger.error('sending the deleteUser notification email failed', error);
         }

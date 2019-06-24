@@ -1,6 +1,6 @@
 import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
-import * as notifications from 'back-end/lib/mailer/notifications';
+import * as mailer from 'back-end/lib/mailer';
 import * as permissions from 'back-end/lib/permissions';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
@@ -82,7 +82,7 @@ export const resource: Resource = {
             try {
               const programStaffUsers = await UserSchema.findProgramStaff(UserModel);
               const programStaffEmails = programStaffUsers.map(user => user.email);
-              await notifications.createRfiResponseProgramStaff({
+              await mailer.createRfiResponseProgramStaff({
                 programStaffEmails,
                 rfiResponse: publicRfiResponse
               });

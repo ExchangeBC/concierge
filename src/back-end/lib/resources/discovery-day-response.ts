@@ -1,6 +1,6 @@
 import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
-import * as notifications from 'back-end/lib/mailer/notifications';
+import * as mailer from 'back-end/lib/mailer';
 import * as permissions from 'back-end/lib/permissions';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import * as UserSchema from 'back-end/lib/schemas/user';
@@ -86,7 +86,7 @@ export const resource: Resource = {
           const programStaffUsers = await UserSchema.findProgramStaff(UserModel);
           const programStaffEmails = programStaffUsers.map(user => user.email);
           const latestVersion = RfiSchema.getLatestVersion(rfi);
-          await notifications.createDdrProgramStaff({
+          await mailer.createDdrProgramStaff({
             programStaffEmails,
             // TODO make these default string values constants somewhere
             // to stay DRY.

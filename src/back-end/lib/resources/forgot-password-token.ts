@@ -1,6 +1,6 @@
 import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
-import * as notifications from 'back-end/lib/mailer/notifications';
+import * as mailer from 'back-end/lib/mailer';
 import * as permissions from 'back-end/lib/permissions';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
 import * as UserSchema from 'back-end/lib/schemas/user';
@@ -50,7 +50,7 @@ export const resource: Resource = {
         await forgotPasswordToken.save();
         // Send notification email.
         try {
-          await notifications.createForgotPasswordToken(request.body.email, forgotPasswordToken.token, userId);
+          await mailer.createForgotPasswordToken(request.body.email, forgotPasswordToken.token, userId);
         } catch (error) {
           request.logger.error('sending the createForgotPasswordToken notification email failed', error);
         }
