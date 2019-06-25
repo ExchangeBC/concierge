@@ -100,17 +100,15 @@ const styles: Styles = (() => {
       ...utilities.p[0],
       ...utilities.font.sans,
       ...utilities.font.md,
-      backgroundColor: variables.colors.white
+      backgroundColor: variables.colors.white,
+      width: '100%'
     },
     table: {
-      ...utilities.mt[0],
-      ...utilities.mb[0],
       ...utilities.pt[4],
       ...utilities.pb[4],
       ...utilities.pr[3],
       ...utilities.pl[3],
-      marginLeft: 'auto',
-      marginRight: 'auto',
+      margin: '0 auto',
       border: 0,
       width: '100%',
       maxWidth: px(scale(30)),
@@ -151,18 +149,19 @@ const styles: Styles = (() => {
       ...utilities.border.radius,
       ...utilities.font.lg,
       ...utilities.text.center,
-      ...utilities.p[3],
+      padding: `${px(scale(0.75))} ${px(scale(1.5))}`,
+      margin: '0 auto',
       backgroundColor: variables.colors.action,
       color: variables.colors.white,
       cursor: 'pointer',
-      display: 'block'
+      display: 'inline-block',
+      textDecoration: 'none'
     },
     logoBackground: {
       ...utilities.border.radius,
       ...utilities.p[3],
       ...utilities.text.center,
       backgroundColor: variables.colors.primary,
-      width: '100%',
       display: 'block'
     },
     logo: {
@@ -207,7 +206,7 @@ const Link: View<LinkProps> = ({ text, url }) => {
 
 const CallToAction: View<LinkProps> = ({ text, url }) => {
   return (
-    <Row>
+    <Row style={styles.utilities.text.center}>
       <a href={url} target='_blank' style={styles.classes.button}>
         {text}
       </a>
@@ -295,7 +294,7 @@ interface LayoutProps extends WithChildren {
 
 const Layout: View<LayoutProps> = ({ title, description, children }) => {
   return (
-    <html>
+    <html style={styles.classes.body}>
       <head>
         <meta charSet='utf8' />
       </head>
@@ -433,3 +432,23 @@ const BuyerStatusUpdated: View<BuyerStatusUpdatedProps> = ({ verificationStatus 
 };
 
 export const buyerStatusUpdated: Template<BuyerStatusUpdatedProps> = makeTemplate(BuyerStatusUpdated);
+
+// Deactivate user.
+
+export interface DeactivateUserProps {
+  userType: UserType;
+}
+
+const DeactivateUser: View<DeactivateUserProps> = ({ userType }) => {
+  const description = (
+    <div>
+      <p>Your Procurement Concierge Program account has been deactivated. Your access to the web application's features are now limited.</p>
+      {userType !== UserType.ProgramStaff
+        ? (<p>If you would like to return to the Procurement Concierge Program's web application, you can reactivate your account at any time by logging in with your email and password.</p>)
+        : null}
+    </div>
+  );
+  return (<Simple title='Your Account has been Deactivated' description={description} />);
+};
+
+export const deactivateUser: Template<DeactivateUserProps> = makeTemplate(DeactivateUser);

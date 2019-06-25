@@ -3,7 +3,7 @@ import * as templates from 'back-end/lib/mailer/templates';
 import { send } from 'back-end/lib/mailer/transport';
 import { PublicFeedback } from 'shared/lib/resources/feedback';
 import { PublicRfiResponse } from 'shared/lib/resources/request-for-information/response';
-import { profileToName, VerificationStatus } from 'shared/lib/types';
+import { profileToName, UserType, VerificationStatus } from 'shared/lib/types';
 
 export async function createUser(email: string): Promise<void> {
   const title = 'Welcome to the Procurement Concierge Program';
@@ -21,14 +21,26 @@ export async function createUser(email: string): Promise<void> {
   });
 }
 
-export async function deleteUser(email: string): Promise<void> {
-  const title = 'You have Deactivated your Account';
+export async function deactivateUser(email: string, userType: UserType): Promise<void> {
+  await send({
+    to: email,
+    subject: 'Your Account has been Deactivated',
+    html: templates.deactivateUser({ userType })
+  });
+}
+
+export async function reactivateUser(email: string): Promise<void> {
+  const title = 'Welcome back to the Procurement Concierge Program';
   await send({
     to: email,
     subject: title,
     html: templates.simple({
       title,
-      description: 'Your request to deactivate your account has been processed. You no longer have access to the Procurement Concierge Program\'s Web Application.'
+      description: 'Your Procurement Concierge Program account has been reactivated.',
+      callToAction: {
+        text: 'Sign In',
+        url: templates.makeUrl('sign-in')
+      }
     })
   });
 }

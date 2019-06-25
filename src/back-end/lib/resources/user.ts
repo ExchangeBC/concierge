@@ -312,9 +312,9 @@ const resource: Resource = {
         await user.save();
         // Send notification email.
         try {
-          await mailer.deleteUser(user.email);
+          await mailer.deactivateUser(user.email, user.profile.type);
         } catch (error) {
-          request.logger.error('sending the deleteUser notification email failed', error);
+          request.logger.error('sending the deactivateUser notification email failed', error);
         }
         let session = request.session;
         // Sign out the user if they are deactivating their own account.

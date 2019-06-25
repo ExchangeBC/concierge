@@ -63,11 +63,15 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedOut({
     }
   },
 
-  async fail({ dispatch }) {
-    dispatch(replaceRoute({
-      tag: 'requestForInformationList' as const,
-      value: null
-    }));
+  async fail({ routeParams, dispatch, shared }) {
+    if (routeParams.redirectOnSuccess && shared.session && shared.session.user) {
+      dispatch(replaceUrl(routeParams.redirectOnSuccess));
+    } else {
+      dispatch(replaceRoute({
+        tag: 'requestForInformationList' as const,
+        value: null
+      }));
+    }
     return initState;
   }
 

@@ -1,5 +1,6 @@
 import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
+import * as mailer from 'back-end/lib/mailer';
 import * as permissions from 'back-end/lib/permissions';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
@@ -59,8 +60,15 @@ export const resource: Resource = {
         const authenticated = await UserSchema.authenticate(user, password);
         if (!authenticated) { return fail(); }
         if (!user.active) {
+          request.logger.debug('reactivate user');
           user.active = true;
           await user.save();
+          // Send notification email.
+          try {
+            await mailer.reactivateUser(user.email);
+          } catch (error) {
+            request.logger.error('sending the reactivateUser notification email failed', error);
+          }
         }
         const session = await SessionSchema.signIn(SessionModel, UserModel, request.session, user._id);
         const publicSession = SessionSchema.makePublicSession(session);
