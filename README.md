@@ -197,6 +197,7 @@ As a convenience, developers can refer to `sample.env` as a guide.
 | `MAILER_FROM` | The sender for transactional emails. |
 | `MAILER_ROOT_URL` | The domain used for links in transactional email bodies. |
 | `CONTACT_EMAIL` | The Procurement Transformation team's contact email address. |
+| `SCHEDULED_MAINTENANCE` | A boolean flag (`0` for `false`, `1` for `true`) to turn off CRUD endpoints and vend a downtime HTML page to all users when set to a non-zero number. |
 
 ## Deployment
 
