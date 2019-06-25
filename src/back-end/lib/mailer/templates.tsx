@@ -442,7 +442,7 @@ export interface DeactivateUserProps {
 const DeactivateUser: View<DeactivateUserProps> = ({ userType }) => {
   const description = (
     <div>
-      <p>Your Procurement Concierge Program account has been deactivated. Your access to the web application's features are now limited.</p>
+      <p>Your Procurement Concierge Program account has been deactivated. Your no longer have access to the program's web application.</p>
       {userType !== UserType.ProgramStaff
         ? (<p>If you would like to return to the Procurement Concierge Program's web application, you can reactivate your account at any time by logging in with your email and password.</p>)
         : null}
