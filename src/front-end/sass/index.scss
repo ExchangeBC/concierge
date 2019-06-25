@@ -104,6 +104,7 @@ input[type="time"] {
     transition-property: opacity, transform;
     transition-duration: $page-transition-duration;
     transition-timing-function: ease-out;
+    z-index: 2;
   }
 
   &.in-transition {
