@@ -38,7 +38,7 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
   switch (data.tag) {
     case 'verificationStatus':
       if (!data.value) { return wrap(null); }
-      return wrap((<VerificationStatusIcon verificationStatus={data.value} colored />), true);
+      return wrap((<VerificationStatusIcon verificationStatus={data.value} colored large />), true);
     case 'userType':
       return wrap(userTypeToTitleCase(data.value));
     case 'name':

@@ -23,16 +23,17 @@ export function verificationStatusToColor(s: VerificationStatus): BootstrapColor
   }
 }
 
-export const VerificationStatusIcon: View<Pick<Props, 'verificationStatus' | 'className'> & { colored?: boolean }> = ({ verificationStatus, colored, className }) => {
+export const VerificationStatusIcon: View<Pick<Props, 'verificationStatus' | 'className'> & { colored?: boolean, large?: boolean }> = ({ verificationStatus, colored, className, large }) => {
   const color = colored ? verificationStatusToColor(verificationStatus) : undefined;
+  const size = large ? 1.25 : 1;
   switch (verificationStatus) {
     case VerificationStatus.Unverified:
     case VerificationStatus.UnderReview:
-      return (<Icon name='exclamation-circle' color={color} width={1} height={1} className={className} />);
+      return (<Icon name='exclamation-circle' color={color} width={size} height={size} className={className} />);
     case VerificationStatus.Verified:
-      return (<Icon name='check' color={color} width={1} height={1} className={className} />);
+      return (<Icon name='check' color={color} width={size} height={size} className={className} />);
     case VerificationStatus.Declined:
-      return (<Icon name='times-circle' color={color} width={1} height={1} className={className} />);
+      return (<Icon name='times-circle' color={color} width={size} height={size} className={className} />);
   }
 };
 
