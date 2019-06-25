@@ -66,7 +66,7 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
       return wrap(formatTableDate(data.value));
     case 'discoveryDay':
       const showCheck = data.value[0] && rfiToRfiStatus(data.value[1]) === RfiStatus.Open;
-      return wrap(showCheck ? (<Icon name='check' color='body' width={1.5} height={1.5} />) : null, false, true);
+      return wrap(showCheck ? (<Icon name='check' color='body' width={1.25} height={1.25} />) : null, false, true);
   }
 }
 

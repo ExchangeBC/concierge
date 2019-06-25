@@ -48,7 +48,7 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
     case 'email':
       return wrap(data.value);
     case 'acceptedTerms':
-      return wrap(data.value ? (<Icon name='check' color='body' width={1.5} height={1.5} />) : null, true);
+      return wrap(data.value ? (<Icon name='check' color='body' width={1.25} height={1.25} />) : null, true);
   }
 }
 
