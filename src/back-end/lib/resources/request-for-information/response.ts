@@ -80,10 +80,7 @@ export const resource: Resource = {
             const publicRfiResponse = await RfiResponseSchema.makePublicRfiResponse(RfiModel, UserModel, FileModel, rfiResponse, request.session);
             // notify program staff
             try {
-              const programStaffUsers = await UserSchema.findProgramStaff(UserModel);
-              const programStaffEmails = programStaffUsers.map(user => user.email);
-              await mailer.createRfiResponseProgramStaff({
-                programStaffEmails,
+              await mailer.rfiResponseReceived({
                 rfiResponse: publicRfiResponse
               });
             } catch (error) {

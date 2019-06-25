@@ -1,4 +1,4 @@
-import { MAILER_NOREPLY } from 'back-end/config';
+import { CONTACT_EMAIL, MAILER_NOREPLY } from 'back-end/config';
 import * as templates from 'back-end/lib/mailer/templates';
 import { send } from 'back-end/lib/mailer/transport';
 import { PublicFeedback } from 'shared/lib/resources/feedback';
@@ -61,21 +61,19 @@ export async function createForgotPasswordToken(email: string, token: string, us
   });
 }
 
-// TODO refactor these params
-interface CreateRfiResponseProgramStaffParams {
-  programStaffEmails: string[];
+interface RfiResponseReceivedParams {
   rfiResponse: PublicRfiResponse;
 }
 
-export async function createRfiResponseProgramStaff(params: CreateRfiResponseProgramStaffParams): Promise<void> {
-  const { programStaffEmails, rfiResponse } = params;
+export async function rfiResponseReceived(params: RfiResponseReceivedParams): Promise<void> {
+  const { rfiResponse } = params;
   const { rfi } = rfiResponse;
   const rfiName = rfi.latestVersion.rfiNumber;
   const vendorName = profileToName(rfiResponse.createdBy.profile) || '[Undefined Vendor Name]';
   const subject = `${rfiName}: RFI Response Received`;
   await send({
     to: MAILER_NOREPLY,
-    bcc: programStaffEmails,
+    bcc: CONTACT_EMAIL,
     subject,
     html: templates.rfiResponseReceived({
       vendor: {
@@ -95,20 +93,19 @@ export async function createRfiResponseProgramStaff(params: CreateRfiResponsePro
   });
 }
 
-interface CreateDdrProgramStaffParams {
-  programStaffEmails: string[];
+interface DiscoveryDayResponseReceived {
   rfiName: string;
   rfiId: string;
   vendorName: string;
   vendorId: string;
 }
 
-export async function createDdrProgramStaff(params: CreateDdrProgramStaffParams): Promise<void> {
-  const { programStaffEmails, rfiName, rfiId, vendorName, vendorId } = params;
+export async function discoveryDayResponseReceived(params: DiscoveryDayResponseReceived): Promise<void> {
+  const { rfiName, rfiId, vendorName, vendorId } = params;
   const subject = `${rfiName}: Discovery Session Request`;
   await send({
     to: MAILER_NOREPLY,
-    bcc: programStaffEmails,
+    bcc: CONTACT_EMAIL,
     subject,
     html: templates.simple({
       title: 'Discovery Session Request',

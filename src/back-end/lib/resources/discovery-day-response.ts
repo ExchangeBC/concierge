@@ -3,7 +3,6 @@ import * as crud from 'back-end/lib/crud';
 import * as mailer from 'back-end/lib/mailer';
 import * as permissions from 'back-end/lib/permissions';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
-import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateRfiId, validateUserId } from 'back-end/lib/validators';
 import * as mongoose from 'mongoose';
@@ -83,11 +82,8 @@ export const resource: Resource = {
         await rfi.save();
         // notify program staff
         try {
-          const programStaffUsers = await UserSchema.findProgramStaff(UserModel);
-          const programStaffEmails = programStaffUsers.map(user => user.email);
           const latestVersion = RfiSchema.getLatestVersion(rfi);
-          await mailer.createDdrProgramStaff({
-            programStaffEmails,
+          await mailer.discoveryDayResponseReceived({
             // TODO make these default string values constants somewhere
             // to stay DRY.
             rfiName: latestVersion ? latestVersion.rfiNumber : '[Undefined RFI Number]',
