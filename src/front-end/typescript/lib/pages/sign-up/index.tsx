@@ -64,7 +64,7 @@ const view: ComponentView<State, Msg> = props => {
               Work with the Program's staff during the pre-market engagement process to
               post Requests for Information and offer Discovery Sessions to Vendors.
             </CardText>
-            <Link button route={{ tag: 'signUpBuyer', value: null }} color='primary' className='mt-auto w-100'>Select</Link>
+            <Link button route={{ tag: 'signUpBuyer', value: null }} color='primary' className='mt-md-auto w-100'>Select</Link>
           </Card>
         </Col>
         <Col xs='12' sm='8' md='5'>
@@ -75,7 +75,7 @@ const view: ComponentView<State, Msg> = props => {
               Find opportunities to connect with Public Sector Buyers during the pre-market engagement process.
               Respond to Requests for Information and attend Discovery Sessions.
             </CardText>
-            <Link button route={{ tag: 'signUpVendor', value: null }} color='primary' className='mt-auto w-100'>Select</Link>
+            <Link button route={{ tag: 'signUpVendor', value: null }} color='primary' className='mt-md-auto w-100'>Select</Link>
           </Card>
         </Col>
       </Row>
