@@ -284,15 +284,15 @@ function isValid<PS, PM, P extends ProfileType>(state: State<PS>, Profile: Profi
   return providedRequiredFields && !isInvalid(state, Profile);
 }
 
-function conditionalVerificationStatusBadge<PS, PM>(): View<ComponentViewProps<State<PS>, Msg<PM>> & { className?: string }> {
+function conditionalVerificationStatusBadge<PS, PM>(): View<ComponentViewProps<State<PS>, Msg<PM>>> {
   return props => {
-    const { state, className } = props;
+    const { state } = props;
     const buyerStatus = getVerificationStatus(state);
     if (buyerStatus) {
       return (
         <VerificationStatusBadge
           verificationStatus={buyerStatus}
-          className={className} />
+          className='mb-3' />
       );
     } else {
       return null;
@@ -556,10 +556,9 @@ function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
       <div>
         <Row className='mb-5'>
           <Col xs='12'>
-            <ConditionalVerificationStatusBadge {...props} className={`mb-2 ${isOwner ? 'd-md-none' : ''}`} />
-            <h1 className='d-flex align-items-center'>
+            <ConditionalVerificationStatusBadge {...props} />
+            <h1>
               {heading}
-              <ConditionalVerificationStatusBadge {...props} className={`ml-3 d-none ${isOwner ? 'd-md-inline-flex' : ''}`} />
             </h1>
             <ConditionalVerificationStatusDropdown {...props} />
           </Col>
