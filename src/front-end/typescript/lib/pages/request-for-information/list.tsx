@@ -38,7 +38,7 @@ const Table: TableComponent.TableComponent<TableCellData> = TableComponent.compo
 
 const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
   const wrap = (child: string | null | ReactElement<any>, wrapText = false, center = false) => {
-    return (<td className={`${wrapText ? 'text-wrap' : ''} ${center ? 'text-center' : ''} align-middle`}>{child}</td>);
+    return (<td className={`${wrapText ? 'text-wrap' : ''} ${center ? 'text-center' : ''} align-top`}>{child}</td>);
   };
   switch (data.tag) {
     case 'rfiNumber':

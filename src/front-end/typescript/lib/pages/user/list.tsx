@@ -33,7 +33,7 @@ const Table: TableComponent.TableComponent<TableCellData> = TableComponent.compo
 
 const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
   const wrap = (child: string | null | ReactElement<any>, center = false) => {
-    return (<td className={`align-middle ${center ? 'text-center' : ''}`}>{child}</td>);
+    return (<td className={`align-top ${center ? 'text-center' : ''}`}>{child}</td>);
   };
   switch (data.tag) {
     case 'verificationStatus':
