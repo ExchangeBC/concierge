@@ -381,16 +381,8 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           if (incomingRoute.tag === 'signOut') {
             state = setSession(state, await getSession());
           }
-          dispatch({ tag: 'routeTransitionComplete', value: undefined })
-          return state;
-        }
-      ];
-
-    case 'routeTransitionComplete':
-      return [
-        state,
-        async (state, dispatch) => {
-          if (window.scrollTo) { window.scrollTo(0, 0); }
+          const html = document.documentElement;
+          if (html.scrollTo) { html.scrollTo(0, 0); }
           return state;
         }
       ];

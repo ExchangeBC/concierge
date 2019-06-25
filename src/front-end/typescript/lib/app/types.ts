@@ -92,7 +92,6 @@ export interface State {
 
 type InnerMsg
   = ADT<'noop'>
-  | ADT<'routeTransitionComplete'>
   | ADT<'toggleIsNavOpen', boolean | undefined >
   | ADT<'toggleModal', undefined>
   | ADT<'pageLanding', PageLanding.Msg>
