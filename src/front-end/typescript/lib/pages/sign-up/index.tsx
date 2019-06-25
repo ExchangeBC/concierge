@@ -56,22 +56,22 @@ const view: ComponentView<State, Msg> = props => {
         </Col>
       </Row>
       <Row className='justify-content-center mb-4 mb-md-5'>
-        <Col xs='12' sm='8' md='5' lg='4' className='mb-4 mb-md-0'>
-          <Card body className='text-center shadow-sm h-100 d-flex flex-column justify-content-center'>
+        <Col xs='12' sm='8' md='5' className='mb-4 mb-md-0'>
+          <Card body className='py-5 px-4 px-lg-5 text-center shadow-sm h-100 d-flex flex-column justify-content-center'>
             <Icon name='buyer' color='secondary' width={4} height={4} className='mb-4 mx-auto' />
             <CardTitle className='h3'>{userTypeToTitleCase(UserType.Buyer)}</CardTitle>
-            <CardText>
+            <CardText className='mb-4'>
               Work with the Program's staff during the pre-market engagement process to
               post Requests for Information and offer Discovery Sessions to Vendors.
             </CardText>
             <Link button route={{ tag: 'signUpBuyer', value: null }} color='primary' className='mt-auto w-100'>Select</Link>
           </Card>
         </Col>
-        <Col xs='12' sm='8' md='5' lg='4'>
-          <Card body className='text-center mb-3 mb-md-0 shadow-sm h-100 d-flex flex-column align-items-center justify-content-center'>
+        <Col xs='12' sm='8' md='5'>
+          <Card body className='py-5 px-4 px-lg-5 text-center mb-3 mb-md-0 shadow-sm h-100 d-flex flex-column align-items-center justify-content-center'>
             <Icon name='vendor' color='secondary' width={4} height={4} className='mb-4 mx-auto' />
             <CardTitle className='h3'>{userTypeToTitleCase(UserType.Vendor)}</CardTitle>
-            <CardText>
+            <CardText className='mb-4'>
               Find opportunities to connect with Public Sector Buyers during the pre-market engagement process.
               Respond to Requests for Information and attend Discovery Sessions.
             </CardText>
