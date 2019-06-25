@@ -1,3 +1,4 @@
+import { SCHEDULED_MAINTENANCE } from 'back-end/config';
 import { AvailableModels, Session, SupportedRequestBodies, SupportedResponseBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
 import loggerHook from 'back-end/lib/hooks/logger';
@@ -93,9 +94,11 @@ export function createRouter(params: CreateRouterParams): Router<SupportedReques
   // Collect all routes.
   let allRoutes = flow([
     // API routes.
-    flippedConcat(crudRoutes),
+    // Do not expose CRUD routes if undergoing scheduled maintenance.
+    flippedConcat(SCHEDULED_MAINTENANCE ? [] : crudRoutes),
     // Front-end router.
-    flippedConcat(FrontEndRouter),
+    // Vend the downtime HTML file during scheduled maintenance.
+    flippedConcat(FrontEndRouter(SCHEDULED_MAINTENANCE ? 'downtime.html' : 'index.html')),
     // Add global hooks to all routes.
     map((route: Route<SupportedRequestBodies, any, SupportedResponseBodies, any, Session>) => addHooksToRoute(hooks, route))
   ])([]);

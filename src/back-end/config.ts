@@ -53,6 +53,8 @@ export const TOKEN_SECRET = get('TOKEN_SECRET', '');
 
 export const COOKIE_SECRET = get('COOKIE_SECRET', '');
 
+export const SCHEDULED_MAINTENANCE = !!parseInt(get('SCHEDULED_MAINTENANCE', '0'), 10);
+
 export const FRONT_END_BUILD_DIR = resolve(REPOSITORY_ROOT_DIR, 'build/front-end');
 
 const fileStorageDir = get('FILE_STORAGE_DIR', '');
