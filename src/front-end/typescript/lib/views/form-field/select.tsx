@@ -8,11 +8,21 @@ import React from 'react';
 export { Option, Value } from 'front-end/lib/views/form-field/lib/select';
 
 export function setValue(state: State, value?: string): State {
-  const newValue = find(state.options, { value }) || undefined;
-  return {
-    ...state,
-    value: newValue
-  };
+  const found = find(state.options, { value }) || undefined;
+  if (state.isCreatable && !found && value) {
+    return {
+      ...state,
+      value: {
+        value,
+        label: value
+      }
+    };
+  } else {
+    return {
+      ...state,
+      value: found
+    };
+  }
 }
 
 export interface State extends FormField.State<Value> {
