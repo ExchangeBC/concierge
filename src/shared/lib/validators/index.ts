@@ -73,8 +73,8 @@ export function mapValid<A, B, C>(value: ValidOrInvalid<A, C>, fn: (a: A) => B):
 }
 
 // Validate a field only if it is truthy.
-export function optional<Value, Valid, Invalid>(fn: (v: Value) => ValidOrInvalid<Valid, Invalid>, v: Value): ValidOrInvalid<Valid | undefined, Invalid> {
-  return isEmpty(v) ? valid(undefined) : fn(v);
+export function optional<Value, Valid, Invalid>(fn: (v: Value) => ValidOrInvalid<Valid, Invalid>, v: Value | undefined): ValidOrInvalid<Valid | undefined, Invalid> {
+  return isEmpty(v) ? valid(undefined) : fn(v as Value);
 }
 
 export function validateBoolean(value: any): Validation<boolean> {

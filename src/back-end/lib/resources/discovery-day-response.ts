@@ -281,6 +281,7 @@ export const resource: Resource = {
         if (rfi.discoveryDayResponses.length === oldResponses.length) {
           return basicResponse(404, request.session, makeJsonResponseBody(['You have not responded to this Discovery Day Session.']));
         }
+        await rfi.save();
         return basicResponse(200, request.session, makeJsonResponseBody(null));
       }
     };

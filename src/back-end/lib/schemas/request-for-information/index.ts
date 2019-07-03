@@ -19,6 +19,7 @@ export interface Version {
   publicSectorEntity: string;
   categories: string[];
   discoveryDay?: PublicDiscoveryDay;
+  discoveryDayDeprecated?: boolean;
   addenda: Addendum[];
   attachments: mongoose.Types.ObjectId[];
   buyerContact: mongoose.Types.ObjectId;

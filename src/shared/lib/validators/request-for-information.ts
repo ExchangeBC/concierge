@@ -117,7 +117,7 @@ export function validateDiscoveryDayRemoteAccess(raw: string): Validation<string
   return validateGenericString(raw, 'Remote Access Info', 1, 5000);
 }
 
-export function validateDiscoveryDay(raw: CreateDiscoveryDayBody): ValidOrInvalid<PublicDiscoveryDay, DiscoveryDayValidationErrors> {
+export function validateDiscoveryDayObject(raw: CreateDiscoveryDayBody): ValidOrInvalid<PublicDiscoveryDay, DiscoveryDayValidationErrors> {
   const validatedDescription = validateDiscoveryDayDescription(raw.description);
   const validatedDate = validateDiscoveryDayDate(raw.date);
   const validatedTime = validateDiscoveryDayTime(raw.date, raw.time);
@@ -142,4 +142,8 @@ export function validateDiscoveryDay(raw: CreateDiscoveryDayBody): ValidOrInvali
       remoteAccess: getInvalidValue(validatedRemoteAccess, undefined)
     });
   }
+}
+
+export function validateDiscoveryDay(raw: CreateDiscoveryDayBody | undefined): ValidOrInvalid<PublicDiscoveryDay | undefined, DiscoveryDayValidationErrors> {
+  return optional(validateDiscoveryDayObject, raw);
 }

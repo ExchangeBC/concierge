@@ -55,7 +55,7 @@ export interface CreateRequestBody {
   title: string;
   publicSectorEntity: string;
   description: string;
-  discoveryDay: CreateDiscoveryDayBody;
+  discoveryDay?: CreateDiscoveryDayBody;
   closingDate: string;
   closingTime: string;
   gracePeriodDays?: number;

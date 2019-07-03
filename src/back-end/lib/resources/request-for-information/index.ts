@@ -47,7 +47,7 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
       description: validatedDescription.value as string,
       publicSectorEntity: validatedPublicSectorEntity.value as string,
       categories: validatedCategories.value as string[],
-      discoveryDay: validatedDiscoveryDay.value as PublicDiscoveryDay,
+      discoveryDay: validatedDiscoveryDay.value as PublicDiscoveryDay | undefined,
       addenda: (validatedAddenda.value as string[]).map((description: string) => {
         return {
           createdAt,
@@ -118,14 +118,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
             description: getString(body, 'description'),
             publicSectorEntity: getString(body, 'publicSectorEntity'),
             categories: getStringArray(body, 'categories'),
-            discoveryDay: {
-              description: get(body.discoveryDay, 'description', undefined),
-              date: get(body.discoveryDay, 'date', ''),
-              time: get(body.discoveryDay, 'time', ''),
-              location: get(body.discoveryDay, 'location', ''),
-              venue: get(body.discoveryDay, 'venue', ''),
-              remoteAccess: get(body.discoveryDay, 'remoteAccess', '')
-            },
+            discoveryDay: get(body, 'discoveryDay', undefined),
             addenda: getStringArray(body, 'addenda'),
             attachments: getStringArray(body, 'attachments'),
             buyerContact: getString(body, 'buyerContact'),
