@@ -27,6 +27,7 @@ export interface Version {
 
 export interface DiscoveryDayResponse {
   createdAt: Date;
+  updatedAt: Date;
   vendor: mongoose.Types.ObjectId;
   attendees: Attendee[];
 }
@@ -52,6 +53,7 @@ export function getLatestVersion(rfi: Data): Version | undefined {
 export async function makePublicDiscoveryDayResponse(UserModel: UserSchema.Model, ddr: DiscoveryDayResponse): Promise<PublicDiscoveryDayResponse> {
   return {
     createdAt: ddr.createdAt,
+    updatedAt: ddr.updatedAt,
     vendor: await UserSchema.findPublicUserByIdUnsafely(UserModel, ddr.vendor),
     attendees: ddr.attendees
   };

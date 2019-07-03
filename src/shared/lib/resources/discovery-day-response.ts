@@ -1,4 +1,5 @@
 import { PublicUser } from 'shared/lib/resources/user';
+import { Omit } from 'shared/lib/types';
 
 export interface Attendee {
   name: string;
@@ -8,6 +9,7 @@ export interface Attendee {
 
 export interface PublicDiscoveryDayResponse {
   createdAt: Date;
+  updatedAt: Date;
   vendor: PublicUser;
   attendees: Attendee[];
 }
@@ -30,3 +32,7 @@ export interface CreateValidationErrors {
   vendor?: string[];
   attendees?: AttendeeValidationErrors[];
 }
+
+export type UpdateRequestBody = Pick<CreateRequestBody, 'attendees'>;
+
+export type UpdateValidationErrors = Omit<CreateValidationErrors, 'vendor'>;

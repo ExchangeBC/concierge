@@ -149,8 +149,20 @@ export function createDiscoveryDayResponse(session: Session): boolean {
   return isVendor(session);
 }
 
-export function readOneDiscoveryDayResponse(session: Session): boolean {
-  return isVendor(session);
+export function readManyDiscoveryDayResponses(session: Session): boolean {
+  return isProgramStaff(session);
+}
+
+export function readOneDiscoveryDayResponse(session: Session, id: string): boolean {
+  return (isVendor(session) && isOwnSession(session, id)) || isProgramStaff(session);
+}
+
+export function updateDiscoveryDayResponse(session: Session, id: string): boolean {
+  return (isVendor(session) && isOwnSession(session, id)) || isProgramStaff(session);
+}
+
+export function deleteDiscoveryDayResponse(session: Session, id: string): boolean {
+  return (isVendor(session) && isOwnSession(session, id)) || isProgramStaff(session);
 }
 
 // RFI Responses.

@@ -338,14 +338,16 @@ export async function readOneRfiPreview(rfiId: string): Promise<ValidOrInvalid<R
   }
 }
 
-interface RawDdr extends Omit<DdrResource.PublicDiscoveryDayResponse, 'createdAt'> {
+interface RawDdr extends Omit<DdrResource.PublicDiscoveryDayResponse, 'createdAt' | 'updatedAt'> {
   createdAt: string;
+  updatedAt: string;
 }
 
 function rawDdrToPublicDdr(raw: RawDdr): DdrResource.PublicDiscoveryDayResponse {
   return {
     ...raw,
-    createdAt: new Date(raw.createdAt)
+    createdAt: new Date(raw.createdAt),
+    updatedAt: new Date(raw.updatedAt)
   };
 }
 

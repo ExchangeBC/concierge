@@ -8,21 +8,24 @@ import { validateRfiId, validateUserId } from 'back-end/lib/validators';
 import { get } from 'lodash';
 import * as mongoose from 'mongoose';
 import { getString } from 'shared/lib';
-import { CreateRequestBody, CreateValidationErrors, PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
-import { profileToName } from 'shared/lib/types';
+import { CreateRequestBody, CreateValidationErrors, PublicDiscoveryDayResponse, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/discovery-day-response';
+import { PaginatedList, profileToName } from 'shared/lib/types';
 import { RfiStatus, UserType } from 'shared/lib/types';
 import { validateAttendees } from 'shared/lib/validators/discovery-day-response';
 
 type CreateResponseBody = JsonResponseBody<PublicDiscoveryDayResponse | CreateValidationErrors>;
 
+type UpdateResponseBody = JsonResponseBody<PublicDiscoveryDayResponse | UpdateValidationErrors>;
+
 type ReadOneResponseBody = JsonResponseBody<PublicDiscoveryDayResponse | string[]>;
 
+type ReadManyResponseBody = JsonResponseBody<PaginatedList<PublicDiscoveryDayResponse> | string[]>;
+
 /**
- * Helper to find a Vendor's Discovery Day Response
- * to an RFI.
+ * Helper to find a Vendor's Discovery Day Response to an RFI.
  */
 
-function findDiscoveryDayResponse(rfi: RfiSchema.Data, vendor: mongoose.Types.ObjectId): RfiSchema.DiscoveryDayResponse | null {
+function findDiscoveryDayResponse(rfi: RfiSchema.Data, vendor: mongoose.Types.ObjectId | string): RfiSchema.DiscoveryDayResponse | null {
   return rfi.discoveryDayResponses.filter(ddr => {
     return ddr.vendor.toString() === vendor.toString();
   })[0] || null;
@@ -30,7 +33,7 @@ function findDiscoveryDayResponse(rfi: RfiSchema.Data, vendor: mongoose.Types.Ob
 
 type RequiredModels = 'Rfi' | 'User';
 
-export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, Session>;
+export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, UpdateRequestBody, Session>;
 
 export const resource: Resource = {
 
@@ -81,8 +84,10 @@ export const resource: Resource = {
           return respond(200, await RfiSchema.makePublicDiscoveryDayResponse(UserModel, existingDdr));
         }
         // Create the DDR.
+        const createdAt = new Date();
         const ddr = {
-          createdAt: new Date(),
+          createdAt,
+          updatedAt: createdAt,
           vendor: vendorId,
           attendees: validatedAttendees.value
         };
@@ -114,9 +119,45 @@ export const resource: Resource = {
   },
 
   /**
+   * Only Program Staff can read many discovery day responses.
+   * The `rfiId` query parameter must be supplied, clamping the list
+   * of discovery day responses in the response to the supplied RFI.
+   */
+
+  readMany(Models) {
+    const RfiModel = Models.Rfi;
+    const UserModel = Models.User;
+    return {
+      async transformRequest(request) {
+        return request.body;
+      },
+      async respond(request): Promise<Response<ReadManyResponseBody, Session>> {
+        if (!permissions.readManyDiscoveryDayResponses(request.session) || !request.session.user) {
+          return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
+        }
+        const validatedRfi = await validateRfiId(RfiModel, request.query.rfiId || '', undefined, true);
+        if (validatedRfi.tag === 'invalid') {
+          return basicResponse(400, request.session, makeJsonResponseBody(validatedRfi.value));
+        }
+        const rfi = validatedRfi.value;
+        const publicDdrs: PublicDiscoveryDayResponse[] = [];
+        for await (const ddr of rfi.discoveryDayResponses) {
+          publicDdrs.push(await RfiSchema.makePublicDiscoveryDayResponse(UserModel, ddr));
+        }
+        return basicResponse(200, request.session, makeJsonResponseBody({
+          total: publicDdrs.length,
+          count: publicDdrs.length,
+          offset: 0,
+          items: publicDdrs
+        }));
+      }
+    };
+  },
+
+  /**
    * Reading one Disovery Day Response corresponds to reading
-   * the authenticated user's response to the RFI specified
-   * by the ID URL parameter.
+   * a vendor's response specified by the `rfiId` query parameter, and
+   * the `id` URL parameter (which corresponds to the vendor's ID).
    */
 
   readOne(Models) {
@@ -127,20 +168,120 @@ export const resource: Resource = {
         return request.body;
       },
       async respond(request): Promise<Response<ReadOneResponseBody, Session>> {
-        if (!permissions.readOneDiscoveryDayResponse(request.session) || !request.session.user) {
+        const vendorId = request.params.id;
+        if (!permissions.readOneDiscoveryDayResponse(request.session, vendorId)) {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         }
-        const validatedRfi = await validateRfiId(RfiModel, request.params.id, undefined, true);
+        const validatedRfi = await validateRfiId(RfiModel, request.query.rfiId || '', undefined, true);
         if (validatedRfi.tag === 'invalid') {
           return basicResponse(400, request.session, makeJsonResponseBody(validatedRfi.value));
         }
         const rfi = validatedRfi.value;
-        const ddr = findDiscoveryDayResponse(rfi, request.session.user.id);
+        const ddr = findDiscoveryDayResponse(rfi, vendorId);
         if (!ddr) {
           return basicResponse(404, request.session, makeJsonResponseBody(['You have not responded to this Discovery Day Session.']));
         }
         const publicDdr = await RfiSchema.makePublicDiscoveryDayResponse(UserModel, ddr);
         return basicResponse(200, request.session, makeJsonResponseBody(publicDdr));
+      }
+    };
+  },
+
+  /**
+   * Updating a Disovery Day Response corresponds to updating
+   * a vendor's response specified by the `rfiId` query parameter, and
+   * the `id` URL parameter (which corresponds to the vendor's ID).
+   * It is only possible to update the attendees for a response.
+   */
+
+  update(Models) {
+    const RfiModel = Models.Rfi;
+    const UserModel = Models.User;
+    return {
+      async transformRequest(request) {
+        return {
+          attendees: get(request.body.value, 'attendees', [])
+        };
+      },
+      async respond(request): Promise<Response<UpdateResponseBody, Session>> {
+        const respond = (code: number, body: PublicDiscoveryDayResponse | UpdateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
+        const vendorId = request.params.id;
+        if (!permissions.updateDiscoveryDayResponse(request.session, vendorId)) {
+          return respond(401, {
+            permissions: [permissions.ERROR_MESSAGE]
+          })
+        }
+        // Get the RFI.
+        const validatedRfi = await validateRfiId(RfiModel, request.query.rfiId || '', [RfiStatus.Open, RfiStatus.Closed], true);
+        if (validatedRfi.tag === 'invalid') {
+          return respond(400, {
+            rfiId: validatedRfi.value
+          });
+        }
+        // Validate the new attendees.
+        const validatedAttendees = validateAttendees(request.body.attendees);
+        if (validatedAttendees.tag === 'invalid') {
+          return respond(400, {
+            attendees: validatedAttendees.value
+          });
+        }
+        const rfi = validatedRfi.value;
+        let updatedDdr: RfiSchema.DiscoveryDayResponse | undefined;
+        rfi.discoveryDayResponses = rfi.discoveryDayResponses.map(ddr => {
+          if (ddr.vendor.toString() !== vendorId) {
+            return ddr;
+          } else {
+            updatedDdr = {
+              ...ddr,
+              updatedAt: new Date(),
+              attendees: validatedAttendees.value
+            };
+            return updatedDdr;
+          }
+        });
+        if (!updatedDdr) {
+          return basicResponse(404, request.session, makeJsonResponseBody({
+            permissions: ['You have not responded to this Discovery Day Session.']
+          }));
+        }
+        await rfi.save();
+        const publicDdr = await RfiSchema.makePublicDiscoveryDayResponse(UserModel, updatedDdr)
+        // TODO email notification
+        return respond(200, publicDdr);
+      }
+    };
+  },
+
+  /**
+   * Deleting a Disovery Day Response corresponds to deleting
+   * a vendor's response specified by the `rfiId` query parameter, and
+   * the `id` URL parameter (which corresponds to the vendor's ID).
+   */
+
+  delete(Models) {
+    const RfiModel = Models.Rfi;
+    return {
+      async transformRequest(request) {
+        return request.body;
+      },
+      async respond(request) {
+        const vendorId = request.params.id;
+        if (!permissions.deleteDiscoveryDayResponse(request.session, vendorId)) {
+          return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
+        }
+        const validatedRfi = await validateRfiId(RfiModel, request.query.rfiId || '', undefined, true);
+        if (validatedRfi.tag === 'invalid') {
+          return basicResponse(400, request.session, makeJsonResponseBody(validatedRfi.value));
+        }
+        const rfi = validatedRfi.value;
+        const oldResponses = rfi.discoveryDayResponses;
+        rfi.discoveryDayResponses = oldResponses.filter(ddr => {
+          return ddr.vendor.toString() !== vendorId;
+        });
+        if (rfi.discoveryDayResponses.length === oldResponses.length) {
+          return basicResponse(404, request.session, makeJsonResponseBody(['You have not responded to this Discovery Day Session.']));
+        }
+        return basicResponse(200, request.session, makeJsonResponseBody(null));
       }
     };
   }
