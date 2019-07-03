@@ -4,8 +4,8 @@ import { dateSchema } from 'back-end/lib/schemas';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import * as mongoose from 'mongoose';
-import { PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
-import { PublicRfi, PublicVersion } from 'shared/lib/resources/request-for-information';
+import { Attendee, PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
+import { PublicDiscoveryDay, PublicRfi, PublicVersion } from 'shared/lib/resources/request-for-information';
 import { Addendum, ProgramStaffProfile } from 'shared/lib/types';
 
 export interface Version {
@@ -18,7 +18,7 @@ export interface Version {
   description: string;
   publicSectorEntity: string;
   categories: string[];
-  discoveryDay: boolean;
+  discoveryDay?: PublicDiscoveryDay;
   addenda: Addendum[];
   attachments: mongoose.Types.ObjectId[];
   buyerContact: mongoose.Types.ObjectId;
@@ -28,6 +28,7 @@ export interface Version {
 export interface DiscoveryDayResponse {
   createdAt: Date;
   vendor: mongoose.Types.ObjectId;
+  attendees: Attendee[];
 }
 
 export interface Data {
@@ -48,10 +49,11 @@ export function getLatestVersion(rfi: Data): Version | undefined {
   }, undefined);
 }
 
-export function makePublicDiscoveryDayResponse(ddr: DiscoveryDayResponse): PublicDiscoveryDayResponse {
+export async function makePublicDiscoveryDayResponse(UserModel: UserSchema.Model, ddr: DiscoveryDayResponse): Promise<PublicDiscoveryDayResponse> {
   return {
     createdAt: ddr.createdAt,
-    vendor: ddr.vendor.toString()
+    vendor: await UserSchema.findPublicUserByIdUnsafely(UserModel, ddr.vendor),
+    attendees: ddr.attendees
   };
 }
 
@@ -87,7 +89,10 @@ export async function makePublicRfi(UserModel: UserSchema.Model, FileModel: File
   };
   let discoveryDayResponses: PublicDiscoveryDayResponse[] | undefined;
   if (isProgramStaff) {
-    discoveryDayResponses = rfi.discoveryDayResponses.map(v => makePublicDiscoveryDayResponse(v));
+    discoveryDayResponses = [];
+    for await (const ddr of rfi.discoveryDayResponses) {
+      discoveryDayResponses.push(await makePublicDiscoveryDayResponse(UserModel, ddr));
+    }
   }
   return {
     _id: rfi._id.toString(),

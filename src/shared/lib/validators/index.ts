@@ -11,7 +11,7 @@ export type ValidOrInvalid<Valid, Invalid> = ADT<'valid', Valid> | ADT<'invalid'
 
 export type Validation<Value> = ValidOrInvalid<Value, string[]>;
 
-export type ArrayValidation<Value> = ValidOrInvalid<Value[], string[][]>;
+export type ArrayValidation<Value, Errors = string[]> = ValidOrInvalid<Value[], Errors[]>;
 
 export function valid<Valid>(value: Valid): ValidOrInvalid<Valid, any> {
   return {
@@ -108,13 +108,17 @@ export function validateNumberString(value: string, name: string, min?: number, 
   return validateGenericString(value, name, min, max, 'numbers');
 }
 
-export function validateArray<A, B>(raw: A[], validate: (v: A) => Validation<B>): ArrayValidation<B> {
+export function validateArrayCustom<A, B, C>(raw: A[], validate: (v: A) => ValidOrInvalid<B, C>, defaultInvalidValue: C): ArrayValidation<B, C> {
   const validations = raw.map(v => validate(v));
   if (allValid(validations)) {
     return valid(validations.map(({ value }) => value));
   } else {
-    return invalid(validations.map(validation => getInvalidValue(validation, [])));
+    return invalid(validations.map(validation => getInvalidValue(validation, defaultInvalidValue)));
   }
+}
+
+export function validateArray<A, B>(raw: A[], validate: (v: A) => Validation<B>): ArrayValidation<B> {
+  return validateArrayCustom(raw, validate, []);
 }
 
 export async function validateArrayAsync<A, B>(raw: A[], validate: (v: A) => Promise<Validation<B>>): Promise<ArrayValidation<B>> {

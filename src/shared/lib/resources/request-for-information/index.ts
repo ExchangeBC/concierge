@@ -4,6 +4,14 @@ import { PublicFile } from 'shared/lib/resources/file';
 import { PublicUser } from 'shared/lib/resources/user';
 import { Addendum, RfiStatus } from 'shared/lib/types';
 
+export interface PublicDiscoveryDay {
+  description?: string;
+  occurringAt: Date;
+  location: string;
+  venue: string;
+  remoteAccess: string;
+}
+
 export interface PublicVersion {
   createdAt: Date;
   closingAt: Date;
@@ -13,7 +21,7 @@ export interface PublicVersion {
   description: string;
   publicSectorEntity: string;
   categories: string[];
-  discoveryDay: boolean;
+  discoveryDay?: PublicDiscoveryDay;
   addenda: Addendum[];
   attachments: PublicFile[];
   programStaffContact: {
@@ -33,12 +41,21 @@ export interface PublicRfi {
   discoveryDayResponses?: PublicDiscoveryDayResponse[]; // Only defined for Program Staff.
 }
 
+export interface CreateDiscoveryDayBody {
+  description?: string;
+  date: string;
+  time: string;
+  location: string;
+  venue: string;
+  remoteAccess: string;
+}
+
 export interface CreateRequestBody {
   rfiNumber: string;
   title: string;
   publicSectorEntity: string;
   description: string;
-  discoveryDay: boolean;
+  discoveryDay: CreateDiscoveryDayBody;
   closingDate: string;
   closingTime: string;
   gracePeriodDays?: number;
@@ -47,6 +64,15 @@ export interface CreateRequestBody {
   categories: string[];
   attachments: string[];
   addenda: string[];
+}
+
+export interface DiscoveryDayValidationErrors {
+  description?: string[];
+  date?: string[];
+  time?: string[];
+  location?: string[];
+  venue?: string[];
+  remoteAccess?: string[];
 }
 
 export interface CreateValidationErrors {
@@ -61,7 +87,7 @@ export interface CreateValidationErrors {
   publicSectorEntity?: string[];
   numCategories?: string[];
   categories?: string[][];
-  discoveryDay?: string[];
+  discoveryDay?: DiscoveryDayValidationErrors;
   addenda?: string[][];
   attachments?: string[][];
   buyerContact?: string[];

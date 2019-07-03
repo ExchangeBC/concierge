@@ -5,11 +5,13 @@ import * as permissions from 'back-end/lib/permissions';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateRfiId, validateUserId } from 'back-end/lib/validators';
+import { get } from 'lodash';
 import * as mongoose from 'mongoose';
 import { getString } from 'shared/lib';
 import { CreateRequestBody, CreateValidationErrors, PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
 import { profileToName } from 'shared/lib/types';
 import { RfiStatus, UserType } from 'shared/lib/types';
+import { validateAttendees } from 'shared/lib/validators/discovery-day-response';
 
 type CreateResponseBody = JsonResponseBody<PublicDiscoveryDayResponse | CreateValidationErrors>;
 
@@ -40,7 +42,8 @@ export const resource: Resource = {
     return {
       async transformRequest(request) {
         return {
-          rfiId: getString(request.body.value, 'rfiId')
+          rfiId: getString(request.body.value, 'rfiId'),
+          attendees: get(request.body.value, 'attendees', [])
         };
       },
       async respond(request): Promise<Response<CreateResponseBody, Session>> {
@@ -63,22 +66,29 @@ export const resource: Resource = {
             vendor: validatedVendor.value
           });
         }
+        const validatedAttendees = validateAttendees(request.body.attendees);
+        if (validatedAttendees.tag === 'invalid') {
+          return respond(400, {
+            attendees: validatedAttendees.value
+          });
+        }
         const rfi = validatedRfi.value;
         // Do not store duplicate responses.
         const vendor = validatedVendor.value;
         const vendorId = vendor._id;
         const existingDdr = findDiscoveryDayResponse(rfi, vendorId);
         if (existingDdr) {
-          return respond(200, RfiSchema.makePublicDiscoveryDayResponse(existingDdr));
+          return respond(200, await RfiSchema.makePublicDiscoveryDayResponse(UserModel, existingDdr));
         }
         // Create the DDR.
         const ddr = {
           createdAt: new Date(),
-          vendor: vendorId
+          vendor: vendorId,
+          attendees: validatedAttendees.value
         };
         // Update the RFI with the response.
         rfi.discoveryDayResponses.push(ddr);
-        const publicDdr = RfiSchema.makePublicDiscoveryDayResponse(ddr)
+        const publicDdr = await RfiSchema.makePublicDiscoveryDayResponse(UserModel, ddr)
         await rfi.save();
         // notify program staff
         try {
@@ -111,6 +121,7 @@ export const resource: Resource = {
 
   readOne(Models) {
     const RfiModel = Models.Rfi;
+    const UserModel = Models.User;
     return {
       async transformRequest(request) {
         return request.body;
@@ -128,7 +139,7 @@ export const resource: Resource = {
         if (!ddr) {
           return basicResponse(404, request.session, makeJsonResponseBody(['You have not responded to this Discovery Day Session.']));
         }
-        const publicDdr = await RfiSchema.makePublicDiscoveryDayResponse(ddr);
+        const publicDdr = await RfiSchema.makePublicDiscoveryDayResponse(UserModel, ddr);
         return basicResponse(200, request.session, makeJsonResponseBody(publicDdr));
       }
     };

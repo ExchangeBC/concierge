@@ -8,10 +8,10 @@ import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonRespons
 import { validateFileIdArray, validateUserId } from 'back-end/lib/validators';
 import { get, isObject } from 'lodash';
 import { getNumber, getString, getStringArray } from 'shared/lib';
-import { CreateRequestBody, CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicRfi, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
+import { CreateRequestBody, CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicDiscoveryDay, PublicRfi, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
 import { PaginatedList, UserType } from 'shared/lib/types';
-import { allValid, getInvalidValue, getValidValue, invalid, valid, validateBoolean, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
-import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validateGracePeriodDays, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
+import { allValid, getInvalidValue, getValidValue, invalid, valid, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
+import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validateDiscoveryDay, validateGracePeriodDays, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
 
 async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, body: CreateRequestBody, session: Session): Promise<ValidOrInvalid<RfiSchema.Version, CreateValidationErrors>> {
   // Get raw values.
@@ -28,7 +28,7 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
   const validatedPublicSectorEntity = validatePublicSectorEntity(publicSectorEntity);
   const validatedNumCategories = !categories.length ? invalid(['Please select at least one Commodity Code.']) : valid(null);
   const validatedCategories = validateCategories(categories, 'Commodity Code');
-  const validatedDiscoveryDay = validateBoolean(discoveryDay);
+  const validatedDiscoveryDay = validateDiscoveryDay(discoveryDay);
   const validatedAddenda = validateAddendumDescriptions(addenda);
   const validatedAttachments = await validateFileIdArray(FileModel, attachments);
   const validatedBuyerContact = await validateUserId(UserModel, buyerContact, UserType.Buyer, true, true);
@@ -47,7 +47,7 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
       description: validatedDescription.value as string,
       publicSectorEntity: validatedPublicSectorEntity.value as string,
       categories: validatedCategories.value as string[],
-      discoveryDay: validatedDiscoveryDay.value as boolean,
+      discoveryDay: validatedDiscoveryDay.value as PublicDiscoveryDay,
       addenda: (validatedAddenda.value as string[]).map((description: string) => {
         return {
           createdAt,
@@ -118,7 +118,14 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
             description: getString(body, 'description'),
             publicSectorEntity: getString(body, 'publicSectorEntity'),
             categories: getStringArray(body, 'categories'),
-            discoveryDay: get(body, 'discoveryDay'),
+            discoveryDay: {
+              description: get(body.discoveryDay, 'description', undefined),
+              date: get(body.discoveryDay, 'date', ''),
+              time: get(body.discoveryDay, 'time', ''),
+              location: get(body.discoveryDay, 'location', ''),
+              venue: get(body.discoveryDay, 'venue', ''),
+              remoteAccess: get(body.discoveryDay, 'remoteAccess', '')
+            },
             addenda: getStringArray(body, 'addenda'),
             attachments: getStringArray(body, 'attachments'),
             buyerContact: getString(body, 'buyerContact'),
@@ -231,7 +238,14 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
             description: getString(body, 'description'),
             publicSectorEntity: getString(body, 'publicSectorEntity'),
             categories: getStringArray(body, 'categories'),
-            discoveryDay: get(body, 'discoveryDay'),
+            discoveryDay: {
+              description: get(body.discoveryDay, 'description', undefined),
+              date: get(body.discoveryDay, 'date', ''),
+              time: get(body.discoveryDay, 'time', ''),
+              location: get(body.discoveryDay, 'location', ''),
+              venue: get(body.discoveryDay, 'venue', ''),
+              remoteAccess: get(body.discoveryDay, 'remoteAccess', '')
+            },
             addenda: getStringArray(body, 'addenda'),
             attachments: getStringArray(body, 'attachments'),
             buyerContact: getString(body, 'buyerContact'),
