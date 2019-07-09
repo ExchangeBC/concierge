@@ -51,6 +51,29 @@ export function getLatestVersion(rfi: Data): Version | undefined {
   }, undefined);
 }
 
+export async function getPublicDiscoveryDayResponses(UserModel: UserSchema.Model, rfi: Data): Promise<PublicDiscoveryDayResponse[]> {
+  const responses: PublicDiscoveryDayResponse[] = [];
+  for await (const ddr of rfi.discoveryDayResponses) {
+    try {
+      const publicDdr = await makePublicDiscoveryDayResponse(UserModel, ddr);
+      if (publicDdr.vendor.active) {
+        responses.push(publicDdr);
+      }
+    // tslint:disable:next-line no-empty
+    } catch (e) {
+    }
+  }
+  return responses;
+}
+
+export async function getDiscoveryDayResponses(UserModel: UserSchema.Model, rfi: Data): Promise<DiscoveryDayResponse[]> {
+  const responses = await getPublicDiscoveryDayResponses(UserModel, rfi);
+  return responses.map(r => ({
+    ...r,
+    vendor: new mongoose.Types.ObjectId(r.vendor._id)
+  }));
+}
+
 export async function makePublicDiscoveryDayResponse(UserModel: UserSchema.Model, ddr: DiscoveryDayResponse): Promise<PublicDiscoveryDayResponse> {
   return {
     createdAt: ddr.createdAt,
@@ -92,10 +115,7 @@ export async function makePublicRfi(UserModel: UserSchema.Model, FileModel: File
   };
   let discoveryDayResponses: PublicDiscoveryDayResponse[] | undefined;
   if (isProgramStaff) {
-    discoveryDayResponses = [];
-    for await (const ddr of rfi.discoveryDayResponses) {
-      discoveryDayResponses.push(await makePublicDiscoveryDayResponse(UserModel, ddr));
-    }
+    discoveryDayResponses = await getPublicDiscoveryDayResponses(UserModel, rfi);
   }
   return {
     _id: rfi._id.toString(),

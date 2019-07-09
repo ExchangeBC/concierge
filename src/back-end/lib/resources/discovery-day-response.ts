@@ -3,6 +3,7 @@ import * as crud from 'back-end/lib/crud';
 import * as mailer from 'back-end/lib/mailer';
 import * as permissions from 'back-end/lib/permissions';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
+import * as UserSchema from 'back-end/lib/schemas/user';
 import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateRfiId, validateUserId } from 'back-end/lib/validators';
 import { get } from 'lodash';
@@ -25,10 +26,12 @@ type ReadManyResponseBody = JsonResponseBody<PaginatedList<PublicDiscoveryDayRes
  * Helper to find a Vendor's Discovery Day Response to an RFI.
  */
 
-function findDiscoveryDayResponse(rfi: RfiSchema.Data, vendor: mongoose.Types.ObjectId | string): RfiSchema.DiscoveryDayResponse | null {
-  return rfi.discoveryDayResponses.filter(ddr => {
-    return ddr.vendor.toString() === vendor.toString();
-  })[0] || null;
+async function findDiscoveryDayResponse(UserModel: UserSchema.Model, rfi: RfiSchema.Data, vendor: mongoose.Types.ObjectId | string): Promise<RfiSchema.DiscoveryDayResponse | null> {
+  const responses = await RfiSchema.getDiscoveryDayResponses(UserModel, rfi);
+  for await (const ddr of responses) {
+    if (ddr.vendor.toString() === vendor.toString()) { return ddr; }
+  }
+  return null;
 }
 
 type RequiredModels = 'Rfi' | 'User';
@@ -69,17 +72,23 @@ export const resource: Resource = {
             vendor: validatedVendor.value
           });
         }
-        const validatedAttendees = validateAttendees(request.body.attendees);
+        const rfi = validatedRfi.value;
+        const latestVersion = RfiSchema.getLatestVersion(rfi);
+        if (!latestVersion || !latestVersion.discoveryDay) {
+          return respond(500, {
+            rfiId: ['RFI does not have a discovery day.']
+          });
+        }
+        const validatedAttendees = validateAttendees(request.body.attendees, latestVersion.discoveryDay.occurringAt);
         if (validatedAttendees.tag === 'invalid') {
           return respond(400, {
             attendees: validatedAttendees.value
           });
         }
-        const rfi = validatedRfi.value;
         // Do not store duplicate responses.
         const vendor = validatedVendor.value;
         const vendorId = vendor._id;
-        const existingDdr = findDiscoveryDayResponse(rfi, vendorId);
+        const existingDdr = await findDiscoveryDayResponse(UserModel, rfi, vendorId);
         if (existingDdr) {
           return respond(200, await RfiSchema.makePublicDiscoveryDayResponse(UserModel, existingDdr));
         }
@@ -140,10 +149,7 @@ export const resource: Resource = {
           return basicResponse(400, request.session, makeJsonResponseBody(validatedRfi.value));
         }
         const rfi = validatedRfi.value;
-        const publicDdrs: PublicDiscoveryDayResponse[] = [];
-        for await (const ddr of rfi.discoveryDayResponses) {
-          publicDdrs.push(await RfiSchema.makePublicDiscoveryDayResponse(UserModel, ddr));
-        }
+        const publicDdrs = await RfiSchema.getPublicDiscoveryDayResponses(UserModel, rfi);
         return basicResponse(200, request.session, makeJsonResponseBody({
           total: publicDdrs.length,
           count: publicDdrs.length,
@@ -177,7 +183,7 @@ export const resource: Resource = {
           return basicResponse(400, request.session, makeJsonResponseBody(validatedRfi.value));
         }
         const rfi = validatedRfi.value;
-        const ddr = findDiscoveryDayResponse(rfi, vendorId);
+        const ddr = await findDiscoveryDayResponse(UserModel, rfi, vendorId);
         if (!ddr) {
           return basicResponse(404, request.session, makeJsonResponseBody(['You have not responded to this Discovery Day Session.']));
         }
@@ -219,13 +225,20 @@ export const resource: Resource = {
           });
         }
         // Validate the new attendees.
-        const validatedAttendees = validateAttendees(request.body.attendees);
+        const rfi = validatedRfi.value;
+        const latestVersion = RfiSchema.getLatestVersion(rfi);
+        if (!latestVersion || !latestVersion.discoveryDay) {
+          return respond(500, {
+            rfiId: ['RFI does not have a discovery day.']
+          });
+        }
+        const existingDdr = await findDiscoveryDayResponse(UserModel, rfi, vendorId);
+        const validatedAttendees = validateAttendees(request.body.attendees, latestVersion.discoveryDay.occurringAt, get(existingDdr, 'attendees'));
         if (validatedAttendees.tag === 'invalid') {
           return respond(400, {
             attendees: validatedAttendees.value
           });
         }
-        const rfi = validatedRfi.value;
         let updatedDdr: RfiSchema.DiscoveryDayResponse | undefined;
         rfi.discoveryDayResponses = rfi.discoveryDayResponses.map(ddr => {
           if (ddr.vendor.toString() !== vendorId) {
