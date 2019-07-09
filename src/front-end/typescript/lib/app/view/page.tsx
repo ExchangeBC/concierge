@@ -13,7 +13,7 @@ interface ViewAlertProps {
 const ViewAlert: View<ViewAlertProps> = ({ messages, color, className }) => {
   if (!messages.length) { return null; }
   return (
-    <Alert color={color} className={className}>
+    <Alert color={color} className={className} fade={false}>
       {messages.map((text, i)  => (<div key={`alert-${color}-${i}`}>{text}</div>))}
     </Alert>
   );
