@@ -3,7 +3,7 @@ import { diffDates, getString } from 'shared/lib';
 import { Attendee, AttendeeValidationErrors } from 'shared/lib/resources/discovery-day-response';
 import { allValid, getInvalidValue, invalid, valid, validateArrayCustom, validateBoolean, validateEmail, validateGenericString, Validation, ValidOrInvalid } from 'shared/lib/validators';
 
-const ATTENDEE_IN_PERSON_WINDOW_HOURS = 1;
+const ATTENDEE_IN_PERSON_WINDOW_HOURS = 24;
 
 export function validateAttendeeName(raw: string): Validation<string> {
   return validateGenericString(raw, 'Name');
