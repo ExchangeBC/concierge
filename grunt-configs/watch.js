@@ -9,7 +9,7 @@ module.exports = {
       `${gruntConfig.src.tsShared}/**`
     ],
     tasks: [
-      "rollup",
+      "browserify",
       "compress"
     ]
   },
@@ -29,7 +29,7 @@ module.exports = {
     ],
     tasks: [
       "common",
-      "rollup",
+      "browserify",
       "compress"
     ]
   },
