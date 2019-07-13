@@ -39,7 +39,7 @@ module.exports = function (grunt) {
     "copy:static",
     "sass",
     "postcss:prefix",
-    "rollup",
+    "browserify",
   ]);
   grunt.registerTask("development-build", [
     "common",
