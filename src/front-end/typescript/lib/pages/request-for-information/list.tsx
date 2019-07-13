@@ -408,7 +408,7 @@ function programStaffTableBodyRows(rfis: Rfi[], dispatch: Dispatch<Msg>): Array<
       TableComponent.makeTDSpec({ tag: 'publicSectorEntity' as const, value: version.publicSectorEntity }),
       TableComponent.makeTDSpec({ tag: 'lastUpdated' as const, value: version.createdAt }),
       TableComponent.makeTDSpec({ tag: 'closingDate' as const, value: version.closingAt }),
-      TableComponent.makeTDSpec({ tag: 'discoveryDay' as const, value: [version.discoveryDay, rfi] as [boolean, PublicRfi] })
+      TableComponent.makeTDSpec({ tag: 'discoveryDay' as const, value: [!!version.discoveryDay, rfi] as [boolean, PublicRfi] })
     ];
   });
 }
@@ -429,7 +429,7 @@ function nonProgramStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.T
         }
       }),
       TableComponent.makeTDSpec({ tag: 'closingDate' as const, value: version.closingAt }),
-      TableComponent.makeTDSpec({ tag: 'discoveryDay' as const, value: [version.discoveryDay, rfi] as [boolean, PublicRfi] }),
+      TableComponent.makeTDSpec({ tag: 'discoveryDay' as const, value: [!!version.discoveryDay, rfi] as [boolean, PublicRfi] }),
       TableComponent.makeTDSpec({ tag: 'lastUpdated' as const, value: version.createdAt })
     ];
   });

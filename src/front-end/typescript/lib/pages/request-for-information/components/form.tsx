@@ -1,97 +1,42 @@
 import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
-import * as FormFieldMulti from 'front-end/lib/components/form-field-multi/lib/index';
-import * as LongTextMulti from 'front-end/lib/components/form-field-multi/long-text';
-import * as SelectMulti from 'front-end/lib/components/form-field-multi/select';
-import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
-import * as api from 'front-end/lib/http/api';
-import * as DateTime from 'front-end/lib/views/form-field/datetime';
-import * as LongText from 'front-end/lib/views/form-field/long-text';
-import * as NumberInput from 'front-end/lib/views/form-field/number';
-import * as Select from 'front-end/lib/views/form-field/select';
-import * as ShortText from 'front-end/lib/views/form-field/short-text';
-import * as Switch from 'front-end/lib/views/form-field/switch';
-import FormSectionHeading from 'front-end/lib/views/form-section-heading';
-import { find, get } from 'lodash';
+import { Component, ComponentView, ComponentViewProps, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import * as DetailsForm from 'front-end/lib/pages/request-for-information/components/details-form';
+import * as DiscoveryDayForm from 'front-end/lib/pages/request-for-information/components/discovery-day-form';
 import { default as React } from 'react';
-import { Col, Row } from 'reactstrap';
-import AVAILABLE_CATEGORIES from 'shared/data/categories';
-import { getString, rawFormatDate } from 'shared/lib';
-import * as FileResource from 'shared/lib/resources/file';
-import * as RfiResource from 'shared/lib/resources/request-for-information';
+import { Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
 import { PublicRfi } from 'shared/lib/resources/request-for-information';
-import { PublicUser } from 'shared/lib/resources/user';
-import { Addendum, ADT, Omit, profileToName, UserType, userTypeToTitleCase, VerificationStatus } from 'shared/lib/types';
-import { getInvalidValue, invalid, valid, validateCategories, Validation } from 'shared/lib/validators';
-import { MAX_GRACE_PERIOD_DAYS, MIN_GRACE_PERIOD_DAYS, validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validateGracePeriodDays, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
-
-const FALLBACK_NAME = 'No Name Provided';
-const DEFAULT_CLOSING_TIME = '14:00';
-
-export const GLOBAL_ERROR_MESSAGE = 'Please fix the errors below, and try submitting the form again.';
+import * as RfiResource from 'shared/lib/resources/request-for-information';
+import { ADT, Omit } from 'shared/lib/types';
 
 export interface Params {
-  isEditing: boolean;
+  formType: 'create' | 'edit',
   existingRfi?: PublicRfi;
 }
 
-type HelpFieldName
-  = 'description'
-  | 'addenda';
-
 export type Msg
-  = ADT<'onChangeRfiNumber', string>
-  | ADT<'onChangeTitle', string>
-  | ADT<'onChangePublicSectorEntity', string>
-  | ADT<'onChangeDescription', string>
-  | ADT<'onChangeDiscoveryDay', boolean>
-  | ADT<'onChangeClosingDate', string>
-  | ADT<'onChangeClosingTime', string>
-  | ADT<'onChangeGracePeriodDays', NumberInput.Value>
-  | ADT<'onChangeBuyerContact', Select.Value>
-  | ADT<'onChangeProgramStaffContact', Select.Value>
-  | ADT<'onChangeCategories', SelectMulti.Msg>
-  | ADT<'onChangeAttachments', FileMulti.Msg>
-  | ADT<'onChangeAddenda', LongTextMulti.Msg>
-  | ADT<'validateRfiNumber'>
-  | ADT<'validateTitle'>
-  | ADT<'validatePublicSectorEntity'>
-  | ADT<'validateDescription'>
-  | ADT<'validateDiscoveryDay'>
-  | ADT<'validateClosingDate'>
-  | ADT<'validateClosingTime'>
-  | ADT<'validateGracePeriodDays'>
-  | ADT<'toggleHelp', HelpFieldName>;
+  = ADT<'setActiveTab', TabId>
+  | ADT<'details', DetailsForm.Msg>
+  | ADT<'discoveryDay', DiscoveryDayForm.Msg>;
 
-type FormFieldKeys
-  = 'rfiNumber'
-  | 'title'
-  | 'publicSectorEntity'
-  | 'description'
-  | 'discoveryDay'
-  | 'closingDate'
-  | 'closingTime'
-  | 'gracePeriodDays'
-  | 'buyerContact'
-  | 'programStaffContact';
+export type TabId = 'details' | 'discoveryDay';
+
+function tabIdToName(id: TabId): string {
+  switch (id) {
+    case 'details':
+      return DetailsForm.TAB_NAME
+    case 'discoveryDay':
+      return DiscoveryDayForm.TAB_NAME
+  }
+}
+
+export function makeErrorMessage(state: State): string {
+  return `Please fix the errors below, and try submitting the form again. If you don't see any errors below, you may need to review the information in the "${tabIdToName(state.activeTab)}" tab, and resolve any issues there. If you are still unable to save this RFI, please contact this web app's software engineer.`;
+}
 
 export interface State {
-  loading: number;
-  isEditing: boolean;
-  buyers: PublicUser[];
-  programStaff: PublicUser[];
-  rfiNumber: ShortText.State;
-  title: ShortText.State;
-  publicSectorEntity: ShortText.State;
-  description: LongText.State;
-  discoveryDay: Switch.State;
-  closingDate: DateTime.State;
-  closingTime: DateTime.State;
-  gracePeriodDays: NumberInput.State;
-  buyerContact: Select.State;
-  programStaffContact: Select.State;
-  categories: Immutable<SelectMulti.State>;
-  attachments: Immutable<FileMulti.State>;
-  addenda: Immutable<LongTextMulti.State>;
+  activeTab: TabId;
+  details: Immutable<DetailsForm.State>;
+  discoveryDay: Immutable<DiscoveryDayForm.State>;
 };
 
 export interface Values extends Omit<RfiResource.CreateRequestBody, 'attachments'> {
@@ -100,544 +45,94 @@ export interface Values extends Omit<RfiResource.CreateRequestBody, 'attachments
 
 export function getValues(state: State, includeDeletedAddenda = false): Values {
   return {
-    rfiNumber: state.rfiNumber.value,
-    title: state.title.value,
-    publicSectorEntity: state.publicSectorEntity.value,
-    description: state.description.value,
-    discoveryDay: state.discoveryDay.value,
-    closingDate: state.closingDate.value,
-    closingTime: state.closingTime.value,
-    gracePeriodDays: state.gracePeriodDays.value,
-    buyerContact: state.buyerContact.value ? state.buyerContact.value.value : '',
-    programStaffContact: state.programStaffContact.value ? state.programStaffContact.value.value : '',
-    categories: SelectMulti.getValuesAsStrings(state.categories),
-    attachments: FileMulti.getValues(state.attachments),
-    addenda: LongTextMulti.getValuesAsStrings(state.addenda, RfiResource.DELETE_ADDENDUM_TOKEN)
+    ...DetailsForm.getValues(state.details, includeDeletedAddenda),
+    discoveryDay: DiscoveryDayForm.getValues(state.discoveryDay)
   };
 }
 
-export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
-  const result = await api.readManyUsers();
-  let buyers: PublicUser[] = [];
-  let programStaff: PublicUser[] = [];
-  if (result.tag === 'valid') {
-    // Function to sort users by name.
-    const comparator = (a: PublicUser, b: PublicUser): number => {
-      const aName = profileToName(a.profile) || FALLBACK_NAME;
-      const bName = profileToName(b.profile) || FALLBACK_NAME;
-      return aName.localeCompare(bName, 'en', { sensitivity: 'base' });
-    };
-    // Function to filter users by type, whether they have accepted terms, and active status.
-    const predicate = (userType: UserType): ((user: PublicUser) => boolean) => {
-      switch (userType) {
-        case UserType.Buyer:
-          return user => user.profile.type === userType && user.active && !!user.acceptedTermsAt && user.profile.verificationStatus === VerificationStatus.Verified;
-        case UserType.ProgramStaff:
-          return user => user.profile.type === userType && user.active && !!user.acceptedTermsAt;
-        case UserType.Vendor:
-          return () => false;
-      }
-    };
-    buyers = result.value.items.filter(predicate(UserType.Buyer)).sort(comparator);
-    programStaff = result.value.items.filter(predicate(UserType.ProgramStaff)).sort(comparator);
-  }
-  const userToOption = (user: PublicUser): SelectMulti.Option => {
-    return {
-      value: user._id,
-      label: profileToName(user.profile) || FALLBACK_NAME
-    };
-  };
-  const getRfiString = (k: string | string[]): string => getString(existingRfi, ['latestVersion'].concat(k));
-  const rawClosingAt = getRfiString('closingAt');
-  const closingDateValue = rawClosingAt ? rawFormatDate(new Date(rawClosingAt), 'YYYY-MM-DD', false) : '';
-  const closingTimeValue = rawClosingAt ? rawFormatDate(new Date(rawClosingAt), 'HH:mm', false) : DEFAULT_CLOSING_TIME;
-  const existingCategoryFields = get(existingRfi, ['latestVersion', 'categories'], [])
-    .map((value: string, index: number): FormFieldMulti.Field<SelectMulti.Value> => {
-      return {
-        value: { label: value, value },
-        errors: [],
-        removable: index !== 0
-      };
-    });
-  const existingAddenda = get(existingRfi, ['latestVersion', 'addenda'], [])
-    .map((value: Addendum, index: number) => {
-      return {
-        value: LongTextMulti.makeExistingValue(value.description),
-        errors: [],
-        removable: true
-      };
-    });
-  const existingBuyerContact = get(existingRfi, ['latestVersion', 'buyerContact'], undefined);
-  const existingProgramStaffContactId = get(existingRfi, ['latestVersion', 'programStaffContact', '_id'], undefined);
-  const existingProgramStaffContact: PublicUser | undefined = find<PublicUser>(programStaff, { _id: existingProgramStaffContactId });
-  const descriptionHelpText = 'Suggested sections for this RFI\'s description: \n(1) Business Requirement(s) or Issue(s); \n(2) Brief Ministry Overview; \n(3) Objectives of this RFI; \n(4) Ministry Obligations; and \n(5) Response Instructions.';
-  const addendaHelpText = 'Additional information related to this RFI.';
+export const init: Init<Params, State> = async ({ formType, existingRfi }) => {
+  const isEditing = formType === 'create';
+  const existingDiscoveryDay = existingRfi && existingRfi.latestVersion.discoveryDay;
   return {
-    loading: 0,
-    isEditing,
-    buyers,
-    programStaff,
-    rfiNumber: ShortText.init({
-      id: 'rfi-number',
-      required: true,
-      type: 'text',
-      label: 'Request for Information (RFI) Number',
-      placeholder: 'RFI Number',
-      value: getRfiString('rfiNumber')
-    }),
-    title: ShortText.init({
-      id: 'rfi-title',
-      required: true,
-      type: 'text',
-      label: 'Project Title',
-      placeholder: 'Project Title',
-      value: getRfiString('title')
-    }),
-    publicSectorEntity: ShortText.init({
-      id: 'rfi-public-sector-entity',
-      required: true,
-      type: 'text',
-      label: 'Public Sector Entity',
-      placeholder: 'Public Sector Entity',
-      value: getRfiString('publicSectorEntity')
-    }),
-    description: LongText.init({
-      id: 'rfi-description',
-      required: true,
-      label: 'RFI Description',
-      placeholder: descriptionHelpText,
-      value: getRfiString('description'),
-      help: {
-        text: descriptionHelpText,
-        show: false
-      }
-    }),
-    discoveryDay: Switch.init({
-      id: 'rfi-discovery-day',
-      label: 'Additional Response Option(s) (Optional)',
-      value: get(existingRfi, ['latestVersion', 'discoveryDay'], false),
-      inlineLabel: 'This RFI is (or will be) associated with a Discovery Day session.'
-    }),
-    closingDate: DateTime.init({
-      id: 'rfi-closing-date',
-      type: 'date',
-      required: true,
-      label: 'Closing Date',
-      value: closingDateValue
-    }),
-    closingTime: DateTime.init({
-      id: 'rfi-closing-time',
-      type: 'time',
-      required: true,
-      label: 'Closing Time',
-      value: closingTimeValue
-    }),
-    gracePeriodDays: NumberInput.init({
-      id: 'rfi-grace-period-days',
-      required: true,
-      label: 'Late Response Grace Period',
-      placeholder: '#',
-      value: get(existingRfi, ['latestVersion', 'gracePeriodDays'], 2),
-      min: String(MIN_GRACE_PERIOD_DAYS),
-      max: String(MAX_GRACE_PERIOD_DAYS)
-    }),
-    buyerContact: Select.init({
-      id: 'rfi-buyer-contact',
-      value: existingBuyerContact ? userToOption(existingBuyerContact) : undefined,
-      required: true,
-      label: `${userTypeToTitleCase(UserType.Buyer)} Contact`,
-      placeholder: `Select ${userTypeToTitleCase(UserType.Buyer)}`,
-      options: buyers.map(userToOption)
-    }),
-    programStaffContact: Select.init({
-      id: 'rfi-program-staff-contact',
-      value: existingProgramStaffContact ? userToOption(existingProgramStaffContact) : undefined,
-      required: true,
-      label: `${userTypeToTitleCase(UserType.ProgramStaff)} Contact`,
-      placeholder: `Select ${userTypeToTitleCase(UserType.ProgramStaff)}`,
-      options: programStaff.map(userToOption)
-    }),
-    categories: immutable(await SelectMulti.init({
-      options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value })),
-      placeholder: 'Select Commodity Code',
-      formFieldMulti: {
-        idNamespace: 'rfi-categories',
-        label: 'Commodity Code(s)',
-        required: true,
-        fields: existingCategoryFields.length ? existingCategoryFields : [{
-          value: undefined,
-          errors: [],
-          removable: false
-        }]
-      }
+    activeTab: 'details',
+    details: immutable(await DetailsForm.init({
+      isEditing,
+      existingRfi
     })),
-    attachments: immutable(await FileMulti.init({
-      formFieldMulti: {
-        idNamespace: 'rfi-categories',
-        label: 'Attachments (Optional)',
-        required: false,
-        fields: get(existingRfi, ['latestVersion', 'attachments'], [])
-          .map((attachment: FileResource.PublicFile) => {
-            return {
-              value: FileMulti.makeExistingValue(attachment),
-              errors: []
-            };
-          })
-      }
-    })),
-    addenda: immutable(await LongTextMulti.init({
-      addButtonText: 'Add Addendum',
-      field: {
-        label: 'Addendum',
-        placeholder: addendaHelpText,
-        textAreaStyle: {
-          height: '120px'
-        }
-      },
-      formFieldMulti: {
-        idNamespace: 'rfi-addenda',
-        label: 'Addenda (Optional)',
-        required: false,
-        reverseFieldOrderInView: true,
-        fields: existingAddenda,
-        help: {
-          text: addendaHelpText,
-          show: false
-        }
-      }
+    discoveryDay: immutable(await DiscoveryDayForm.init({
+      isEditing,
+      showToggle: formType === 'create' || !existingDiscoveryDay,
+      existingDiscoveryDay
     }))
   };
 };
 
 export const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
-    case 'onChangeRfiNumber':
-      return [updateValue(state, 'rfiNumber', msg.value)];
-    case 'onChangeTitle':
-      return [updateValue(state, 'title', msg.value)];
-    case 'onChangePublicSectorEntity':
-      return [updateValue(state, 'publicSectorEntity', msg.value)];
-    case 'onChangeDescription':
-      return [updateValue(state, 'description', msg.value)];
-    case 'onChangeDiscoveryDay':
-      return [updateValue(state, 'discoveryDay', msg.value)];
-    case 'onChangeClosingDate':
-      return [updateValue(state, 'closingDate', msg.value)];
-    case 'onChangeClosingTime':
-      return [updateValue(state, 'closingTime', msg.value)];
-    case 'onChangeGracePeriodDays':
-      return [updateValue(state, 'gracePeriodDays', msg.value)];
-    case 'onChangeBuyerContact':
-      state = updateValue(state, 'buyerContact', msg.value);
-      if (!state.publicSectorEntity.value) {
-        const buyer = msg.value && find<PublicUser>(state.buyers, { _id: msg.value.value });
-        if (buyer && buyer.profile.type === UserType.Buyer) {
-          state = state.setIn(['publicSectorEntity', 'value'], buyer.profile.publicSectorEntity);
-          state = validateValue(state, 'publicSectorEntity', validatePublicSectorEntity);
-        }
-      }
-      return [validateValue(state, 'buyerContact', validateBuyerContact)];
-    case 'onChangeProgramStaffContact':
-      state = updateValue(state, 'programStaffContact', msg.value);
-      return [validateValue(state, 'programStaffContact', validateProgramStaffContact)];
-    case 'onChangeCategories':
-      state = updateComponentChild({
+    case 'setActiveTab':
+      return [state.set('activeTab', msg.value)];
+    case 'details':
+      return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'onChangeCategories', value }),
-        childStatePath: ['categories'],
-        childUpdate: SelectMulti.update,
+        mapChildMsg: value => ({ tag: 'details', value }),
+        childStatePath: ['details'],
+        childUpdate: DetailsForm.update,
         childMsg: msg.value
-      })[0];
-      const validatedCategories = validateCategories(SelectMulti.getValuesAsStrings(state.categories), 'Commodity Code');
-      state = state.set('categories', SelectMulti.setErrors(state.categories, getInvalidValue(validatedCategories, [])));
-      return [state];
-    case 'onChangeAttachments':
-      state = updateComponentChild({
+      });
+    case 'discoveryDay':
+      return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'onChangeAttachments', value }),
-        childStatePath: ['attachments'],
-        childUpdate: FileMulti.update,
+        mapChildMsg: value => ({ tag: 'discoveryDay', value }),
+        childStatePath: ['discoveryDay'],
+        childUpdate: DiscoveryDayForm.update,
         childMsg: msg.value
-      })[0];
-      // No need to validate attachments as FileMulti
-      // is fairly 'intelligent' about file names,
-      // and handles file size constraint validation as-is.
-      return [state];
-    case 'onChangeAddenda':
-      state = updateComponentChild({
-        state,
-        mapChildMsg: value => ({ tag: 'onChangeAddenda', value }),
-        childStatePath: ['addenda'],
-        childUpdate: LongTextMulti.update,
-        childMsg: msg.value
-      })[0];
-      const validatedAddenda = validateAddendumDescriptions(LongTextMulti.getValuesAsStrings(state.addenda, RfiResource.DELETE_ADDENDUM_TOKEN));
-      state = state.set('addenda', LongTextMulti.setErrors(state.addenda, getInvalidValue(validatedAddenda, [])));
-      return [state];
-    case 'validateRfiNumber':
-      return [validateValue(state, 'rfiNumber', validateRfiNumber)];
-    case 'validateTitle':
-      return [validateValue(state, 'title', validateTitle)];
-    case 'validatePublicSectorEntity':
-      return [validateValue(state, 'publicSectorEntity', validatePublicSectorEntity)];
-    case 'validateDescription':
-      return [validateValue(state, 'description', validateDescription)];
-    case 'validateClosingDate':
-      return [validateClosingDateAndTime(state)];
-    case 'validateClosingTime':
-      return [validateClosingDateAndTime(state)];
-    case 'validateGracePeriodDays':
-      return [validateValue(state, 'gracePeriodDays', validateGracePeriodDays)];
-    case 'toggleHelp':
-      return [(() => {
-        switch (msg.value) {
-          case 'description':
-            return state.setIn(['description', 'help', 'show'], !state.getIn(['description', 'help', 'show']));
-          case 'addenda':
-            return state.setIn(['addenda', 'help', 'show'], !state.getIn(['addenda', 'help', 'show']));
-        }
-      })()];
-    default:
-      return [state];
+      });
   }
 };
 
-function updateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K, value: State[K]['value']): Immutable<State> {
-  return state.setIn([key, 'value'], value);
-}
-
-function validateClosingDateAndTime(state: Immutable<State>): Immutable<State> {
-  state = validateValue(state, 'closingDate', validateClosingDate);
-  return validateValue(state, 'closingTime', v => validateClosingTime(v, state.closingDate.value));
-}
-
-function validateBuyerContact(raw: Select.Value): Validation<Select.Value> {
-  return raw ? valid(raw) : invalid([`Please select a ${userTypeToTitleCase(UserType.Buyer)}.`]);
-}
-
-function validateProgramStaffContact(raw: Select.Value): Validation<Select.Value> {
-  return raw ? valid(raw) : invalid([`Please select a ${userTypeToTitleCase(UserType.ProgramStaff)}.`]);
-}
-
-function validateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K, validate: (value: State[K]['value']) => Validation<State[K]['value']>): Immutable<State> {
-  const validation = validate(state.getIn([key, 'value']));
-  return state.setIn([key, 'errors'], getInvalidValue(validation, []));
-}
-
 export function setErrors(state: Immutable<State>, errors: RfiResource.CreateValidationErrors): Immutable<State> {
   return state
-    .setIn(['closingDate', 'errors'], errors.closingDate || [])
-    .setIn(['closingTime', 'errors'], errors.closingTime || [])
-    .setIn(['gracePeriodDays', 'errors'], errors.gracePeriodDays || [])
-    .setIn(['rfiNumber', 'errors'], errors.rfiNumber || [])
-    .setIn(['title', 'errors'], errors.title || [])
-    .setIn(['description', 'errors'], errors.description || [])
-    .setIn(['publicSectorEntity', 'errors'], errors.publicSectorEntity || [])
-    .setIn(['discoveryDay', 'errors'], errors.discoveryDay || [])
-    .setIn(['buyerContact', 'errors'], errors.buyerContact || [])
-    .setIn(['programStaffContact', 'errors'], errors.programStaffContact || [])
-    .set('categories', SelectMulti.setErrors(state.categories, errors.categories || []))
-    .set('addenda', LongTextMulti.setErrors(state.addenda, errors.addenda || []))
-    .set('attachments', FileMulti.setErrors(state.attachments, errors.attachments || []));
+    .set('details', DetailsForm.setErrors(state.details, errors))
+    .set('discoveryDay', DiscoveryDayForm.setErrors(state.discoveryDay, errors.discoveryDay || {}));
 }
 
 export function isValid(state: State): boolean {
-  const {
-    rfiNumber,
-    title,
-    publicSectorEntity,
-    description,
-    closingDate,
-    closingTime,
-    gracePeriodDays,
-    buyerContact,
-    programStaffContact,
-    categories,
-    attachments,
-    addenda
-  } = state;
-  const providedRequiredFields = !!(rfiNumber.value && title.value && publicSectorEntity.value && description.value && closingDate.value && closingTime.value && gracePeriodDays.value !== undefined && buyerContact.value && programStaffContact.value);
-  const noValidationErrors = !(rfiNumber.errors.length || title.errors.length || publicSectorEntity.errors.length || description.errors.length || closingDate.errors.length || closingTime.errors.length || gracePeriodDays.errors.length || buyerContact.errors.length || programStaffContact.errors.length);
-  return providedRequiredFields && noValidationErrors && SelectMulti.isValid(categories) && FileMulti.isValid(attachments) && LongTextMulti.isValid(addenda);
+  return DetailsForm.isValid(state.details) && DiscoveryDayForm.isValid(state.discoveryDay);
 }
 
-const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const isDisabled = !state.isEditing;
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
-  const onChangeNumberInput = (tag: any) => NumberInput.makeOnChange(dispatch, value => ({ tag, value }));
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
-  const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
-  const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeCategories' as const, value }));
-  return (
-    <div className='mb-4'>
-      <Row>
-        <Col xs='12'>
-          <FormSectionHeading text='Details' />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='12' md='5' lg='4'>
-          <ShortText.view
-            state={state.rfiNumber}
-            disabled={isDisabled}
-            onChangeDebounced={onChangeDebounced('validateRfiNumber')}
-            onChange={onChangeShortText('onChangeRfiNumber')}
-            autoFocus />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='12' md='10'>
-          <ShortText.view
-            state={state.title}
-            disabled={isDisabled}
-            onChangeDebounced={onChangeDebounced('validateTitle')}
-            onChange={onChangeShortText('onChangeTitle')} />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='12' md='4'>
-          <Select.view
-            state={state.buyerContact}
-            disabled={isDisabled}
-            onChange={onChangeSelect('onChangeBuyerContact')} />
-        </Col>
-        <Col xs='12' md='6'>
-          <ShortText.view
-            state={state.publicSectorEntity}
-            disabled={isDisabled}
-            onChangeDebounced={onChangeDebounced('validatePublicSectorEntity')}
-            onChange={onChangeShortText('onChangePublicSectorEntity')} />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='12' md='4'>
-          <Select.view
-            state={state.programStaffContact}
-            disabled={isDisabled}
-            onChange={onChangeSelect('onChangeProgramStaffContact')} />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='12' md='8' lg='7'>
-          <SelectMulti.view
-            state={state.categories}
-            dispatch={dispatchCategories}
-            disabled={isDisabled} />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='12' md='3'>
-          <DateTime.view
-            state={state.closingDate}
-            disabled={isDisabled}
-            onChangeDebounced={onChangeDebounced('validateClosingDate')}
-            onChange={onChangeShortText('onChangeClosingDate')} />
-        </Col>
-        <Col xs='12' md='3' lg='2'>
-          <DateTime.view
-            state={state.closingTime}
-            disabled={isDisabled}
-            onChangeDebounced={onChangeDebounced('validateClosingTime')}
-            onChange={onChangeShortText('onChangeClosingTime')} />
-        </Col>
-        <Col xs='12' md='4' lg='3'>
-          <NumberInput.view
-            state={state.gracePeriodDays}
-            disabled={isDisabled}
-            onChangeDebounced={onChangeDebounced('validateGracePeriodDays')}
-            onChange={onChangeNumberInput('onChangeGracePeriodDays')}
-            addon={{ type: 'append', text: 'Days' }}
-          />
-        </Col>
-      </Row>
-    </div>
-  );
-};
+interface TabLinkProps extends ComponentViewProps<State, Msg> {
+  id: TabId;
+}
 
-const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const isDisabled = !state.isEditing;
-  const onChangeLongText = (tag: any) => LongText.makeOnChange(dispatch, value => ({ tag, value }));
-  const onChangeSwitch = (tag: any) => Switch.makeOnChange(dispatch, value => ({ tag, value }));
-  const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
-  const toggleHelp = (value: HelpFieldName) => () => dispatch({ tag: 'toggleHelp', value });
+const TabLink: View<TabLinkProps> = ({ id, state, dispatch }) => {
+  const isActive = id === state.activeTab;
   return (
-    <div className='mb-4'>
-      <Row>
-        <Col xs='12'>
-          <FormSectionHeading text='Description'>
-            <p className='mb-0'>Use <a href='https://www.markdownguide.org/cheat-sheet' target='_blank'>Markdown</a> to describe the RFI.</p>
-          </FormSectionHeading>
-        </Col>
-      </Row>
-      <Row className='mb-3'>
-        <Col xs='12'>
-          <LongText.view
-            state={state.description}
-            disabled={isDisabled}
-            onChangeDebounced={onChangeDebounced('validateDescription')}
-            onChange={onChangeLongText('onChangeDescription')}
-            toggleHelp={toggleHelp('description')}
-            style={{ height: '50vh', minHeight: '400px' }} />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='12'>
-          <Switch.view
-            state={state.discoveryDay}
-            disabled={isDisabled}
-            onChange={onChangeSwitch('onChangeDiscoveryDay')}
-            labelClassName='h4 mb-3' />
-        </Col>
-      </Row>
-    </div>
-  );
-};
-
-const Attachments: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const isDisabled = !state.isEditing;
-  const dispatchAttachments: Dispatch<FileMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeAttachments' as const, value }));
-  return (
-    <div className='pb-4 border-bottom mb-5'>
-      <Row className='mb-3'>
-        <Col xs='12' md='7' lg='6'>
-          <FileMulti.view
-            state={state.attachments}
-            dispatch={dispatchAttachments}
-            disabled={isDisabled}
-            labelClassName='h3'
-            labelWrapperClassName='mb-4' />
-        </Col>
-      </Row>
-    </div>
-  );
-};
-
-const Addenda: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const isDisabled = !state.isEditing;
-  const dispatchAddenda: Dispatch<LongTextMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeAddenda' as const, value }));
-  return (
-    <div className='mb-4'>
-      <Row>
-        <Col xs='12'>
-          <LongTextMulti.view
-            state={state.addenda}
-            dispatch={dispatchAddenda}
-            disabled={isDisabled}
-            labelClassName='h3'
-            labelWrapperClassName='mb-4' />
-        </Col>
-      </Row>
-    </div>
+    <NavItem>
+      <NavLink className={isActive ? 'active' : ''} onClick={() => !isActive && dispatch({ tag: 'setActiveTab', value: id })}>
+        {tabIdToName(id)}
+      </NavLink>
+    </NavItem>
   );
 };
 
 export const view: ComponentView<State, Msg> = props => {
+  const { state, dispatch } = props;
+  const dispatchDetails: Dispatch<DetailsForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'details' as const, value }));
+  const dispatchDiscoveryDay: Dispatch<DiscoveryDayForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'discoveryDay' as const, value }));
   return (
     <div>
-      <Details {...props} />
-      <Description {...props} />
-      <Attachments {...props} />
-      <Addenda {...props} />
+      <Nav tabs>
+        <TabLink id='details' {...props} />
+        <TabLink id='discoveryDay' {...props} />
+      </Nav>
+      <TabContent activeTab={state.activeTab}>
+        <TabPane tabId='details'>
+          <DetailsForm.view state={state.details} dispatch={dispatchDetails} />
+        </TabPane>
+        <TabPane tabId='discoveryDay'>
+          <DiscoveryDayForm.view state={state.discoveryDay} dispatch={dispatchDiscoveryDay} />
+        </TabPane>
+      </TabContent>
     </div>
   );
 };

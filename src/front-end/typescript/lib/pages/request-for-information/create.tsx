@@ -44,7 +44,7 @@ async function makeInitState(): Promise<State> {
     promptCancelConfirmation: false,
     promptPublishConfirmation: false,
     rfiForm: immutable(await RfiForm.init({
-      isEditing: true
+      formType: 'create'
     }))
   };
 }
@@ -216,7 +216,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     return {
       ...emptyPageAlerts(),
       errors: state.hasTriedPublishing && !RfiForm.isValid(state.rfiForm)
-        ? [RfiForm.GLOBAL_ERROR_MESSAGE]
+        ? [RfiForm.makeErrorMessage(state.rfiForm)]
         : []
     };
   },

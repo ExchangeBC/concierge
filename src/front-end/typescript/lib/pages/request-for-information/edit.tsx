@@ -50,7 +50,7 @@ export interface State {
 
 async function resetRfiForm(existingRfi: RfiResource.PublicRfi): Promise<Immutable<RfiForm.State>> {
   return immutable(await RfiForm.init({
-    isEditing: false,
+    formType: 'edit',
     existingRfi
   }));
 }
@@ -305,7 +305,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getAlerts(state) {
     const initializationErrors = !state.valid ? [ERROR_MESSAGE] : [];
     const validationErrors = state.valid && state.hasTriedPublishing && !RfiForm.isValid(state.valid.rfiForm)
-      ? [RfiForm.GLOBAL_ERROR_MESSAGE]
+      ? [RfiForm.makeErrorMessage(state.valid.rfiForm)]
       : [];
     return {
       ...emptyPageAlerts(),

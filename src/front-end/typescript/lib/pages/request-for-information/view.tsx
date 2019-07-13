@@ -19,7 +19,7 @@ import { compareDates, formatDate, formatTime } from 'shared/lib';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as FileResource from 'shared/lib/resources/file';
 import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
-import { PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
+import { PublicDiscoveryDay, PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
 import { PublicSessionUser } from 'shared/lib/resources/session';
 import { Addendum, ADT, RfiStatus, UserType } from 'shared/lib/types';
 
@@ -178,8 +178,9 @@ const update: Update<State, Msg> = ({ state, msg }) => {
             }));
             return finish(state);
           }
+          return state;
           // Otherwise, process the response.
-          const result = await api.createDdr({
+          /*const result = await api.createDdr({
             rfiId: state.rfi._id
           });
           switch (result.tag) {
@@ -189,7 +190,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               // TODO show error messages from the server.
               // TODO Redirect to T&C if required.
               return finish(state);
-          }
+          }*/
         }
       ];
     default:
@@ -303,7 +304,7 @@ const Addenda: View<{ addenda: Addendum[] }> = ({ addenda }) => {
 
 interface RespondToDiscoveryDayButtonProps {
   loading: boolean;
-  discoveryDay: boolean;
+  discoveryDay?: PublicDiscoveryDay;
   alreadyResponded: boolean;
   onClick(): void;
 }

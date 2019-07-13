@@ -21,6 +21,7 @@ export interface Props {
   onChange: ChangeEventHandler<HTMLTextAreaElement>;
   onChangeDebounced?: OnChangeDebounced;
   onKeyUp?: KeyboardEventHandler<HTMLTextAreaElement>;
+  autoFocus?: boolean;
 }
 
 export class View extends React.Component<Props> {
@@ -56,7 +57,8 @@ export class View extends React.Component<Props> {
       style = {},
       onChange,
       onChangeDebounced,
-      onKeyUp
+      onKeyUp,
+      autoFocus = false
     } = this.props;
     // Manage this.onChangeDebounced.
     // This is pretty gross, but the only (simple) way to support real-time validation
@@ -93,7 +95,8 @@ export class View extends React.Component<Props> {
         style={style}
         onChange={this.onChange.bind(this, onChange)}
         onKeyUp={onKeyUp}
-        ref={ref => { this.ref = ref; }} />
+        ref={ref => { this.ref = ref; }}
+        autoFocus={autoFocus} />
     );
   }
 

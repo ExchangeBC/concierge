@@ -17,6 +17,7 @@ interface ExtraProps {
   onKeyUp: KeyboardEventHandler<HTMLTextAreaElement>;
   onChangeDebounced?: OnChangeDebounced;
   style?: CSSProperties;
+  autoFocus?: boolean;
 }
 
 export interface Props extends Pick<FormField.Props<State, ExtraProps, Value>, 'toggleHelp' | 'disabled' | 'onChange'> {
@@ -24,6 +25,7 @@ export interface Props extends Pick<FormField.Props<State, ExtraProps, Value>, '
   onChangeDebounced?: OnChangeDebounced;
   onEnter?: OnEnter;
   style?: CSSProperties;
+  autoFocus?: boolean;
 }
 
 interface Params extends Pick<State, 'id' | 'required' | 'label' | 'placeholder' | 'help'> {
@@ -62,15 +64,17 @@ const Child: View<FormField.ChildProps<State, ExtraProps, Value>> = props => {
       style={extraProps && extraProps.style}
       onChange={event => onChange(event.currentTarget.value)}
       onChangeDebounced={extraProps && extraProps.onChangeDebounced}
-      onKeyUp={extraProps && extraProps.onKeyUp} />
+      onKeyUp={extraProps && extraProps.onKeyUp}
+      autoFocus={extraProps && extraProps.autoFocus} />
   );
 };
 
-export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter, toggleHelp, style, disabled = false }) => {
+export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter, toggleHelp, style, disabled = false, autoFocus }) => {
   const extraProps: ExtraProps = {
     onKeyUp: makeOnKeyUp(onEnter),
     onChangeDebounced,
-    style
+    style,
+    autoFocus
   };
   return (
     <FormField.view
