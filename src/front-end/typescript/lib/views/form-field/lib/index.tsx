@@ -1,6 +1,6 @@
 import { Immutable, View } from 'front-end/lib/framework';
 import Icon from 'front-end/lib/views/icon';
-import React from 'react';
+import React, { ReactElement } from 'react';
 import { Alert, FormGroup, FormText, Label } from 'reactstrap';
 import { getInvalidValue, getValidValue, Validation } from 'shared/lib/validators';
 
@@ -11,7 +11,7 @@ export interface State<Value> {
   errors: string[];
   label?: string;
   help?: {
-    text: string;
+    text: string | ReactElement;
     show: boolean;
   }
 }
@@ -76,7 +76,7 @@ const ConditionalHelp: View<Props<any, any, any>> = ({ state, disabled }) => {
   const { help } = state;
   if (help && help.show && !disabled) {
     return (
-      <Alert color='info' style={{ whiteSpace: 'pre' }}>
+      <Alert color='info' style={{ whiteSpace: 'pre-line' }}>
         {help.text}
       </Alert>
     );

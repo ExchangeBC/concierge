@@ -8,16 +8,6 @@ import { PublicRfi } from 'shared/lib/resources/request-for-information';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { ADT, Omit } from 'shared/lib/types';
 
-export interface Params {
-  formType: 'create' | 'edit',
-  existingRfi?: PublicRfi;
-}
-
-export type Msg
-  = ADT<'setActiveTab', TabId>
-  | ADT<'details', DetailsForm.Msg>
-  | ADT<'discoveryDay', DiscoveryDayForm.Msg>;
-
 export type TabId = 'details' | 'discoveryDay';
 
 function tabIdToName(id: TabId): string {
@@ -29,8 +19,19 @@ function tabIdToName(id: TabId): string {
   }
 }
 
+export interface Params {
+  formType: 'create' | 'edit',
+  existingRfi?: PublicRfi;
+  activeTab?: TabId;
+}
+
+export type Msg
+  = ADT<'setActiveTab', TabId>
+  | ADT<'details', DetailsForm.Msg>
+  | ADT<'discoveryDay', DiscoveryDayForm.Msg>;
+
 export function makeErrorMessage(state: State): string {
-  return `Please fix the errors below, and try submitting the form again. If you don't see any errors below, you may need to review the information in the "${tabIdToName(state.activeTab)}" tab, and resolve any issues there. If you are still unable to save this RFI, please contact this web app's software engineer.`;
+  return `Please fix the errors below, and try submitting the form again. If you don't see any errors below, you may need to review the information in the "${tabIdToName(state.activeTab)}" tab, and resolve any issues there.`;
 }
 
 export interface State {
@@ -50,17 +51,16 @@ export function getValues(state: State, includeDeletedAddenda = false): Values {
   };
 }
 
-export const init: Init<Params, State> = async ({ formType, existingRfi }) => {
+export const init: Init<Params, State> = async ({ formType, existingRfi, activeTab }) => {
   const isEditing = formType === 'create';
   const existingDiscoveryDay = existingRfi && existingRfi.latestVersion.discoveryDay;
   return {
-    activeTab: 'details',
+    activeTab: activeTab || 'details',
     details: immutable(await DetailsForm.init({
       isEditing,
       existingRfi
     })),
     discoveryDay: immutable(await DiscoveryDayForm.init({
-      isEditing,
       showToggle: formType === 'create' || !existingDiscoveryDay,
       existingDiscoveryDay
     }))
@@ -106,9 +106,18 @@ interface TabLinkProps extends ComponentViewProps<State, Msg> {
 
 const TabLink: View<TabLinkProps> = ({ id, state, dispatch }) => {
   const isActive = id === state.activeTab;
+  let isValid = true;
+  switch (id) {
+    case 'details':
+      isValid = !DetailsForm.hasProvidedRequiredFields(state.details) || DetailsForm.isValid(state.details);
+      break;
+    case 'discoveryDay':
+      isValid = !DiscoveryDayForm.hasProvidedRequiredFields(state.discoveryDay) || DiscoveryDayForm.isValid(state.discoveryDay);
+      break;
+  }
   return (
     <NavItem>
-      <NavLink className={isActive ? 'active' : ''} onClick={() => !isActive && dispatch({ tag: 'setActiveTab', value: id })}>
+      <NavLink className={`${isActive ? 'active' : isValid ? 'text-info-alt' : ''} ${isValid ? '' : 'text-danger'} text-nowrap`} onClick={() => !isActive && dispatch({ tag: 'setActiveTab', value: id })}>
         {tabIdToName(id)}
       </NavLink>
     </NavItem>
@@ -121,10 +130,12 @@ export const view: ComponentView<State, Msg> = props => {
   const dispatchDiscoveryDay: Dispatch<DiscoveryDayForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'discoveryDay' as const, value }));
   return (
     <div>
-      <Nav tabs>
-        <TabLink id='details' {...props} />
-        <TabLink id='discoveryDay' {...props} />
-      </Nav>
+      <div style={{ overflowX: 'auto' }}>
+        <Nav className='mb-5 flex-nowrap' tabs>
+          <TabLink id='details' {...props} />
+          <TabLink id='discoveryDay' {...props} />
+        </Nav>
+      </div>
       <TabContent activeTab={state.activeTab}>
         <TabPane tabId='details'>
           <DetailsForm.view state={state.details} dispatch={dispatchDetails} />

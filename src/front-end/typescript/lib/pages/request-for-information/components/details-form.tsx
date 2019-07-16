@@ -1,3 +1,4 @@
+import { MARKDOWN_HELP_URL } from 'front-end/config';
 import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
 import * as FormFieldMulti from 'front-end/lib/components/form-field-multi/lib/index';
 import * as LongTextMulti from 'front-end/lib/components/form-field-multi/long-text';
@@ -10,6 +11,7 @@ import * as NumberInput from 'front-end/lib/views/form-field/number';
 import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
+import Link from 'front-end/lib/views/link';
 import { find, get } from 'lodash';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
@@ -26,7 +28,7 @@ import { MAX_GRACE_PERIOD_DAYS, MIN_GRACE_PERIOD_DAYS, validateAddendumDescripti
 const FALLBACK_NAME = 'No Name Provided';
 const DEFAULT_CLOSING_TIME = '14:00';
 
-export const TAB_NAME = 'RFI';
+export const TAB_NAME = 'Details';
 
 export interface Params {
   isEditing: boolean;
@@ -426,7 +428,22 @@ export function setErrors(state: Immutable<State>, errors: RfiResource.CreateVal
     .set('attachments', FileMulti.setErrors(state.attachments, errors.attachments || []));
 }
 
-export function isValid(state: State): boolean {
+export function hasProvidedRequiredFields(state: State): boolean {
+  const {
+    rfiNumber,
+    title,
+    publicSectorEntity,
+    description,
+    closingDate,
+    closingTime,
+    gracePeriodDays,
+    buyerContact,
+    programStaffContact
+  } = state;
+  return !!(rfiNumber.value && title.value && publicSectorEntity.value && description.value && closingDate.value && closingTime.value && gracePeriodDays.value !== undefined && buyerContact.value && programStaffContact.value);
+}
+
+export function hasValidationErrors(state: State): boolean {
   const {
     rfiNumber,
     title,
@@ -441,9 +458,12 @@ export function isValid(state: State): boolean {
     attachments,
     addenda
   } = state;
-  const providedRequiredFields = !!(rfiNumber.value && title.value && publicSectorEntity.value && description.value && closingDate.value && closingTime.value && gracePeriodDays.value !== undefined && buyerContact.value && programStaffContact.value);
-  const noValidationErrors = !(rfiNumber.errors.length || title.errors.length || publicSectorEntity.errors.length || description.errors.length || closingDate.errors.length || closingTime.errors.length || gracePeriodDays.errors.length || buyerContact.errors.length || programStaffContact.errors.length);
-  return providedRequiredFields && noValidationErrors && SelectMulti.isValid(categories) && FileMulti.isValid(attachments) && LongTextMulti.isValid(addenda);
+  const errors = !!(rfiNumber.errors.length || title.errors.length || publicSectorEntity.errors.length || description.errors.length || closingDate.errors.length || closingTime.errors.length || gracePeriodDays.errors.length || buyerContact.errors.length || programStaffContact.errors.length);
+  return errors || !SelectMulti.isValid(categories) || !FileMulti.isValid(attachments) || !LongTextMulti.isValid(addenda);
+}
+
+export function isValid(state: State): boolean {
+  return hasProvidedRequiredFields(state) && !hasValidationErrors(state);
 }
 
 const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
@@ -549,7 +569,7 @@ const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <Row>
         <Col xs='12'>
           <FormSectionHeading text='Description'>
-            <p className='mb-0'>Use <a href='https://www.markdownguide.org/cheat-sheet' target='_blank'>Markdown</a> to describe the RFI.</p>
+            <p className='mb-0'>Use <Link href={MARKDOWN_HELP_URL} newTab>Markdown</Link> to describe the RFI.</p>
           </FormSectionHeading>
         </Col>
       </Row>

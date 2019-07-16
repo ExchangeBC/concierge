@@ -8,7 +8,7 @@ import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonRespons
 import { validateFileIdArray, validateUserId } from 'back-end/lib/validators';
 import { get, isObject } from 'lodash';
 import { getNumber, getString, getStringArray } from 'shared/lib';
-import { CreateRequestBody, CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicDiscoveryDay, PublicRfi, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
+import { CreateDiscoveryDayBody, CreateRequestBody, CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicDiscoveryDay, PublicRfi, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
 import { PaginatedList, UserType } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, valid, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
 import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validateDiscoveryDay, validateGracePeriodDays, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
@@ -82,6 +82,20 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
   }
 }
 
+function getDiscoveryDayBody(raw: any): CreateDiscoveryDayBody | undefined {
+  const body = get(raw, 'discoveryDay');
+  return body
+    ? {
+        description: get(body, 'description', undefined),
+        date: get(body, 'date', ''),
+        time: get(body, 'time', ''),
+        location: get(body, 'location', ''),
+        venue: get(body, 'venue', ''),
+        remoteAccess: get(body, 'remoteAccess', '')
+      }
+    : undefined;
+}
+
 type CreateResponseBody = JsonResponseBody<PublicRfi | CreateValidationErrors>;
 
 type ReadOneResponseBody = JsonResponseBody<PublicRfi | string[]>;
@@ -118,7 +132,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
             description: getString(body, 'description'),
             publicSectorEntity: getString(body, 'publicSectorEntity'),
             categories: getStringArray(body, 'categories'),
-            discoveryDay: get(body, 'discoveryDay', undefined),
+            discoveryDay: getDiscoveryDayBody(body),
             addenda: getStringArray(body, 'addenda'),
             attachments: getStringArray(body, 'attachments'),
             buyerContact: getString(body, 'buyerContact'),
@@ -231,14 +245,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
             description: getString(body, 'description'),
             publicSectorEntity: getString(body, 'publicSectorEntity'),
             categories: getStringArray(body, 'categories'),
-            discoveryDay: {
-              description: get(body.discoveryDay, 'description', undefined),
-              date: get(body.discoveryDay, 'date', ''),
-              time: get(body.discoveryDay, 'time', ''),
-              location: get(body.discoveryDay, 'location', ''),
-              venue: get(body.discoveryDay, 'venue', ''),
-              remoteAccess: get(body.discoveryDay, 'remoteAccess', '')
-            },
+            discoveryDay: getDiscoveryDayBody(body),
             addenda: getStringArray(body, 'addenda'),
             attachments: getStringArray(body, 'attachments'),
             buyerContact: getString(body, 'buyerContact'),
@@ -261,13 +268,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
           const validatedVersion = await validateCreateRequestBody(RfiModel, UserModel, FileModel, request.body, request.session);
           switch (validatedVersion.tag) {
             case 'valid':
-              const currentVersion: RfiSchema.Version | null = rfi.versions.reduce((acc: RfiSchema.Version | null, version) => {
-                if (!acc || version.createdAt.getTime() > acc.createdAt.getTime()) {
-                  return version;
-                } else {
-                  return acc;
-                }
-              }, null);
+              const currentVersion = RfiSchema.getLatestVersion(rfi);
               const newVersion = validatedVersion.value;
               // Update the addenda correctly (support deleting, updating and adding new addenda).
               const now = new Date();

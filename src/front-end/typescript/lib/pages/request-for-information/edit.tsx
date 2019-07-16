@@ -16,6 +16,7 @@ import { Button, Col, Row } from 'reactstrap';
 import { getString } from 'shared/lib';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { ADT, UserType } from 'shared/lib/types';
+import { valid, ValidOrInvalid } from 'shared/lib/validators';
 
 const ERROR_MESSAGE = 'The Request for Information you are looking for is not available.';
 
@@ -25,12 +26,15 @@ export interface RouteParams {
 
 export type InnerMsg
   = ADT<'rfiForm', RfiForm.Msg>
+  | ADT<'preview'>
   | ADT<'startEditing'>
   | ADT<'cancelEditing'>
-  | ADT<'preview'>
+  | ADT<'hideChangeTabConfirmationPrompt'>
   | ADT<'hideCancelConfirmationPrompt'>
   | ADT<'hidePublishConfirmationPrompt'>
-  | ADT<'publish'>;
+  | ADT<'hideCancelEventConfirmationPrompt'>
+  | ADT<'publish'>
+  | ADT<'cancelEvent'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -42,24 +46,31 @@ export interface ValidState {
 export interface State {
   previewLoading: number;
   publishLoading: number;
+  cancelEventLoading: number;
   hasTriedPublishing: boolean;
+  promptChangeTabConfirmation?: RfiForm.Msg;
   promptCancelConfirmation: boolean;
   promptPublishConfirmation: boolean;
+  promptCancelEventConfirmation: boolean;
   valid?: ValidState;
 };
 
-async function resetRfiForm(existingRfi: RfiResource.PublicRfi): Promise<Immutable<RfiForm.State>> {
+async function resetRfiForm(existingRfi: RfiResource.PublicRfi, activeTab?: RfiForm.TabId): Promise<Immutable<RfiForm.State>> {
   return immutable(await RfiForm.init({
     formType: 'edit',
-    existingRfi
+    existingRfi,
+    activeTab
   }));
 }
 
 const initState: State = {
   previewLoading: 0,
   publishLoading: 0,
+  cancelEventLoading: 0,
+  promptChangeTabConfirmation: undefined,
   promptCancelConfirmation: false,
   promptPublishConfirmation: false,
+  promptCancelEventConfirmation: false,
   hasTriedPublishing: false
 };
 
@@ -121,22 +132,71 @@ const startPreviewLoading: UpdateState<State> = makeStartLoading('previewLoading
 const stopPreviewLoading: UpdateState<State>  = makeStopLoading('previewLoading');
 const startPublishLoading: UpdateState<State> = makeStartLoading('publishLoading');
 const stopPublishLoading: UpdateState<State>  = makeStopLoading('publishLoading');
+const startCancelEventLoading: UpdateState<State> = makeStartLoading('cancelEventLoading');
+const stopCancelEventLoading: UpdateState<State>  = makeStopLoading('cancelEventLoading');
+
+function getExistingDiscoveryDay(state: State): RfiResource.PublicDiscoveryDay | undefined {
+  return state.valid && state.valid.rfi.latestVersion.discoveryDay;
+}
 
 function setIsEditing(state: Immutable<State>, value: boolean): Immutable<State> {
   if (!state.valid) { return state; }
-  return state.setIn(['valid', 'rfiForm', 'isEditing'], value);
+  return state
+    .setIn(['valid', 'rfiForm', 'details', 'isEditing'], false)
+    .setIn(['valid', 'rfiForm', 'discoveryDay', 'isEditing'], false)
+    .setIn(['valid', 'rfiForm', state.valid.rfiForm.activeTab, 'isEditing'], true);
 }
 
 function getIsEditing(state: Immutable<State>): boolean {
   if (!state.valid) { return false; }
-  return state.getIn(['valid', 'rfiForm', 'isEditing']);
+  return state.getIn(['valid', 'rfiForm', 'details', 'isEditing']) || state.getIn(['valid', 'rfiForm', 'discoveryDay', 'isEditing']);
+}
+
+async function updateRfi(state: Immutable<State>, requestBody: ValidOrInvalid<RfiResource.CreateRequestBody, RfiResource.CreateValidationErrors>): Promise<Immutable<State>> {
+  const valid = state.valid;
+  if (!valid) { return state };
+  const fail = (state: Immutable<State>, errors: RfiResource.UpdateValidationErrors) => {
+    state = setIsEditing(state, false);
+    return state.setIn(['valid', 'rfiForm'], RfiForm.setErrors(valid.rfiForm, errors));
+  };
+  switch (requestBody.tag) {
+    case 'valid':
+      const result = await api.updateRfi(valid.rfi._id, requestBody.value);
+      switch (result.tag) {
+        case 'valid':
+          state = state
+            .setIn(['valid', 'rfi'], result.value)
+            .setIn(['valid', 'rfiForm'], await resetRfiForm(result.value, valid.rfiForm.activeTab));
+          break;
+        case 'invalid':
+          state = fail(state, result.value);
+          if (window.scrollTo) { window.scrollTo(0, 0); }
+          break;
+      }
+      break;
+    case 'invalid':
+      state = fail(state, requestBody.value);
+      break;
+  }
+  return state;
 }
 
 const update: Update<State, Msg> = ({ state, msg }) => {
-  if (!state.valid) { return [state]; }
-  const valid = state.valid;
+  const validState = state.valid;
+  if (!validState) { return [state]; }
   switch (msg.tag) {
     case 'rfiForm':
+      const rfiFormChildMsg = msg.value;
+      let shouldResetRfiForm = false;
+      if (rfiFormChildMsg.tag === 'setActiveTab' && getIsEditing(state) && rfiFormChildMsg.value !== validState.rfiForm.activeTab) {
+        if (!state.promptChangeTabConfirmation) {
+          return [state.set('promptChangeTabConfirmation', rfiFormChildMsg)];
+        } else {
+          state = setIsEditing(state, false)
+            .set('promptChangeTabConfirmation', undefined);
+          shouldResetRfiForm = true;
+        }
+      }
       state = updateComponentChild({
         state,
         mapChildMsg: value => ({ tag: 'rfiForm', value }),
@@ -144,7 +204,15 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         childUpdate: RfiForm.update,
         childMsg: msg.value
       })[0];
-      return [state];
+      return [
+        state,
+        async state => {
+          if (state.valid && shouldResetRfiForm) {
+            state = state.setIn(['valid', 'rfiForm'], await resetRfiForm(state.valid.rfi, state.valid.rfiForm.activeTab));
+          }
+          return state;
+        }
+      ];
     case 'startEditing':
       return [setIsEditing(state, true)];
     case 'cancelEditing':
@@ -157,8 +225,8 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [
         setIsEditing(state, false),
         async (state) => {
-          if (!state.valid) { return null; }
-          return state.setIn(['valid', 'rfiForm'], await resetRfiForm(state.valid.rfi));
+          if (!state.valid) { return state; }
+          return state.setIn(['valid', 'rfiForm'], await resetRfiForm(state.valid.rfi, state.valid.rfiForm.activeTab));
         }
       ];
     case 'preview':
@@ -167,16 +235,20 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         startLoading: startPreviewLoading,
         stopLoading: stopPreviewLoading,
         getRfiForm(state) {
-          return state.valid && state.valid.rfiForm;
+          return validState.rfiForm;
         },
         setRfiForm(state, rfiForm) {
           return state.setIn(['valid', 'rfiForm'], rfiForm);
         }
       });
+    case 'hideChangeTabConfirmationPrompt':
+      return [state.set('promptChangeTabConfirmation', undefined)];
     case 'hideCancelConfirmationPrompt':
       return [state.set('promptCancelConfirmation', false)];
     case 'hidePublishConfirmationPrompt':
       return [state.set('promptPublishConfirmation', false)];
+    case 'hideCancelEventConfirmationPrompt':
+      return [state.set('promptCancelEventConfirmation', false)];
     case 'publish':
       state = state.set('hasTriedPublishing', true);
       if (!state.promptPublishConfirmation) {
@@ -187,32 +259,31 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [
         startPublishLoading(state),
         async (state, dispatch) => {
-          const fail = (state: Immutable<State>, errors: RfiResource.UpdateValidationErrors) => {
-            state = stopPublishLoading(state);
-            state = setIsEditing(state, false);
-            return state.setIn(['valid', 'rfiForm'], RfiForm.setErrors(valid.rfiForm, errors));
-          };
-          const requestBody = await makeRequestBody(valid.rfiForm);
-          switch (requestBody.tag) {
-            case 'valid':
-              const result = await api.updateRfi(valid.rfi._id, requestBody.value);
-              switch (result.tag) {
-                case 'valid':
-                  state = stopPublishLoading(state)
-                    .setIn(['valid', 'rfi'], result.value)
-                    .setIn(['valid', 'rfiForm'], await resetRfiForm(result.value));
-                  break;
-                case 'invalid':
-                  state = fail(state, result.value);
-                  if (window.scrollTo) { window.scrollTo(0, 0); }
-                  break;
-              }
-              break;
-            case 'invalid':
-              state = fail(state, requestBody.value);
-              break;
+          state = stopPublishLoading(state);
+          if (!state.valid) { return state; }
+          return await updateRfi(state, await makeRequestBody(state.valid.rfiForm));
+        }
+      ];
+    case 'cancelEvent':
+      state = state.set('hasTriedPublishing', false);
+      if (!state.promptCancelEventConfirmation) {
+        return [state.set('promptCancelEventConfirmation', true)];
+      } else {
+        state = state.set('promptCancelEventConfirmation', false);
+      }
+      return [
+        startCancelEventLoading(state),
+        async (state, dispatch) => {
+          state = stopCancelEventLoading(state);
+          if (!state.valid) { return state; }
+          let requestBody = await makeRequestBody(state.valid.rfiForm);
+          if (requestBody.tag === 'valid') {
+            requestBody = valid({
+              ...requestBody.value,
+              discoveryDay: undefined
+            });
           }
-          return state;
+          return await updateRfi(state, requestBody);
         }
       ];
     default:
@@ -226,13 +297,18 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const preview = () => dispatch({ tag: 'preview', value: undefined });
   const startEditing = () => dispatch({ tag: 'startEditing', value: undefined });
   const cancelEditing = () => dispatch({ tag: 'cancelEditing', value: undefined });
+  const cancelEvent = () => dispatch({ tag: 'cancelEvent', value: undefined });
   const viewRoute: Route = { tag: 'requestForInformationView', value: { rfiId: getString(state.valid, ['rfi', '_id']) }};
   const isEditing = getIsEditing(state);
   const isPreviewLoading = state.previewLoading > 0;
   const isPublishLoading = state.publishLoading > 0;
-  const isLoading = isPreviewLoading || isPublishLoading;
+  const isCancelEventLoading = state.cancelEventLoading > 0;
+  const isLoading = isPreviewLoading || isPublishLoading || isCancelEventLoading;
   const isDisabled = isLoading || !RfiForm.isValid(state.valid.rfiForm);
-  if (isEditing) {
+  const isDetailsTab = state.valid.rfiForm.activeTab === 'details';
+  const isDiscoveryDayTab = state.valid.rfiForm.activeTab === 'discoveryDay';
+  const hasExistingDiscoveryDay = !!getExistingDiscoveryDay(state);
+  if (isDetailsTab && isEditing) {
     return (
       <FixedBar>
         <LoadingButton color='primary' onClick={publish} loading={isPublishLoading} disabled={isDisabled} className='text-nowrap'>
@@ -244,15 +320,64 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Link onClick={cancelEditing} color='secondary' disabled={isLoading}>Cancel</Link>
       </FixedBar>
     );
-  } else {
+  } else if (isDetailsTab && !isEditing) {
     return (
       <FixedBar>
         <Button color='primary' onClick={startEditing} disabled={isLoading} className='text-nowrap'>
-          Edit RFI
+          Edit Details
         </Button>
         <Link route={viewRoute} button color='info' disabled={isLoading} className='ml-3 ml-md-0 mr-md-3 text-nowrap'>View RFI</Link>
       </FixedBar>
     );
+  } else if (isDiscoveryDayTab && isEditing) {
+    if (hasExistingDiscoveryDay) {
+      return (
+        <FixedBar>
+          <LoadingButton color='primary' onClick={publish} loading={isPublishLoading} disabled={isDisabled} className='text-nowrap'>
+            Publish Changes
+          </LoadingButton>
+          <LoadingButton color='info' onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
+            Preview Changes
+          </LoadingButton>
+          <Link onClick={cancelEditing} color='secondary' disabled={isLoading}>Cancel</Link>
+        </FixedBar>
+      );
+    } else {
+      return (
+        <FixedBar>
+          <LoadingButton color='primary' onClick={publish} loading={isPublishLoading} disabled={isDisabled} className='text-nowrap'>
+            Publish Discovery Day
+          </LoadingButton>
+          <LoadingButton color='info' onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
+            Preview RFI
+          </LoadingButton>
+          <Link onClick={cancelEditing} color='secondary' disabled={isLoading}>Cancel</Link>
+        </FixedBar>
+      );
+    }
+  } else if (isDiscoveryDayTab && !isEditing) {
+    if (hasExistingDiscoveryDay) {
+      return (
+        <FixedBar>
+          <Button color='primary' onClick={startEditing} disabled={isLoading} className='text-nowrap'>
+            Edit Discovery Day
+          </Button>
+          <LoadingButton color='danger' onClick={cancelEvent} loading={isCancelEventLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
+            Cancel Discovery Day
+          </LoadingButton>
+          <Link route={viewRoute} button color='info' disabled={isLoading} className='text-nowrap'>View RFI</Link>
+        </FixedBar>
+      );
+    } else {
+      return (
+        <FixedBar>
+          <Link route={viewRoute} button color='info' disabled={isLoading} className='text-nowrap'>View RFI</Link>
+        </FixedBar>
+      );
+    }
+  } else {
+    // This branch should never be evaluated.
+    return null;
   }
 };
 
@@ -317,14 +442,22 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   },
   getBreadcrumbs: emptyPageBreadcrumbs,
   getModal(state) {
+    if (!state.valid) { return null; }
+    const isDiscoveryDayTab = state.valid.rfiForm.activeTab === 'discoveryDay';
+    const hasExistingDiscoveryDay = !!getExistingDiscoveryDay(state);
+    const changes = isDiscoveryDayTab && !hasExistingDiscoveryDay ? 'Discovery Day' : 'changes';
+    const publishBody = `
+      ${isDiscoveryDayTab && !hasExistingDiscoveryDay ? 'This Discovery Day will be visible to the public once it has been published.' : 'Any changes that you have made will be visible to the public once they have been published.'}
+      ${isDiscoveryDayTab && hasExistingDiscoveryDay ? ' Attendees will be notified via email of any changes to their attendance.' : ''}
+    `.replace('\n', ' ').trim();
     if (state.promptPublishConfirmation) {
       return {
-        title: 'Publish your changes to this RFI?',
-        body: 'Any changes that you have made will be visible to the public once they have been published.',
+        title: `Publish ${changes}?`,
+        body: publishBody,
         onCloseMsg: { tag: 'hidePublishConfirmationPrompt', value: undefined },
         actions: [
           {
-            text: 'Yes, publish changes',
+            text: `Yes, publish ${changes}`,
             color: 'primary',
             button: true,
             msg: { tag: 'publish', value: undefined }
@@ -338,7 +471,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
       };
     } else if (state.promptCancelConfirmation) {
       return {
-        title: 'Cancel editing this RFI?',
+        title: 'Cancel editing?',
         body: 'Any changes that you have made will be lost if you choose to cancel.',
         onCloseMsg: { tag: 'hideCancelConfirmationPrompt', value: undefined },
         actions: [
@@ -352,6 +485,44 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
             text: 'Go Back',
             color: 'secondary',
             msg: { tag: 'hideCancelConfirmationPrompt', value: undefined }
+          }
+        ]
+      };
+    } else if (state.promptChangeTabConfirmation) {
+      return {
+        title: 'Leave this tab?',
+        body: 'Any changes that you have made will be lost if you choose to leave this tab.',
+        onCloseMsg: { tag: 'hideChangeTabConfirmationPrompt', value: undefined },
+        actions: [
+          {
+            text: 'Yes, I want to leave this tab',
+            color: 'primary',
+            button: true,
+            msg: { tag: 'rfiForm', value: state.promptChangeTabConfirmation }
+          },
+          {
+            text: 'Go Back',
+            color: 'secondary',
+            msg: { tag: 'hideChangeTabConfirmationPrompt', value: undefined }
+          }
+        ]
+      };
+    } else if (state.promptCancelEventConfirmation) {
+      return {
+        title: 'Cancel Discovery Day?',
+        body: 'All current registrants will be notified that the session has been cancelled.',
+        onCloseMsg: { tag: 'hideCancelEventConfirmationPrompt', value: undefined },
+        actions: [
+          {
+            text: 'Yes, I want to cancel',
+            color: 'danger',
+            button: true,
+            msg: { tag: 'cancelEvent', value: undefined }
+          },
+          {
+            text: 'Go Back',
+            color: 'secondary',
+            msg: { tag: 'hideCancelEventConfirmationPrompt', value: undefined }
           }
         ]
       };

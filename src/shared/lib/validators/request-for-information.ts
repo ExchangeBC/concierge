@@ -120,7 +120,7 @@ export function validateDiscoveryDayRemoteAccess(raw: string): Validation<string
 export function validateDiscoveryDayObject(raw: CreateDiscoveryDayBody): ValidOrInvalid<PublicDiscoveryDay, DiscoveryDayValidationErrors> {
   const validatedDescription = validateDiscoveryDayDescription(raw.description);
   const validatedDate = validateDiscoveryDayDate(raw.date);
-  const validatedTime = validateDiscoveryDayTime(raw.date, raw.time);
+  const validatedTime = validateDiscoveryDayTime(raw.time, raw.date);
   const validatedLocation = validateDiscoveryDayLocation(raw.location);
   const validatedVenue = validateDiscoveryDayVenue(raw.venue);
   const validatedRemoteAccess = validateDiscoveryDayRemoteAccess(raw.remoteAccess);

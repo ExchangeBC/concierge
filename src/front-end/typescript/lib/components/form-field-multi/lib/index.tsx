@@ -24,7 +24,7 @@ export interface State<Value> {
   required: boolean;
   fields: Array<Field<Value>>;
   help?: {
-    text: string;
+    text: string | ReactElement;
     show: boolean;
   }
 }

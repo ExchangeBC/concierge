@@ -227,7 +227,7 @@ export function emptyPageBreadcrumbs<Msg>(): PageBreadcrumbs<Msg> {
 
 export interface ModalButton<Msg> {
   text: string;
-  color: 'primary' | 'info' | 'secondary';
+  color: 'primary' | 'info' | 'secondary' | 'danger';
   msg: Msg;
   button?: boolean;
 }

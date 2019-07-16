@@ -3,8 +3,6 @@ import { Route } from 'front-end/lib/app/types';
 import { ButtonColor, TextColor } from 'front-end/lib/types';
 import { CSSProperties, default as React, MouseEvent, ReactElement } from 'react';
 
-// TODO refactor this view and provide a better, cleaner API.
-
 interface BaseProps {
   children: Array<ReactElement<any> | string> | ReactElement<any> | string;
   className?: string;
@@ -19,6 +17,7 @@ interface AnchorProps extends BaseProps {
   button?: false;
   color?: TextColor;
   nav?: boolean;
+  newTab?: boolean;
 }
 
 interface ButtonProps extends BaseProps {
@@ -40,7 +39,8 @@ function AnchorLink(props: AnchorProps) {
     children,
     href = '#',
     route,
-    onClick
+    onClick,
+    newTab = false
   } = props;
   // Give precedence to the `route` prop over the `href` prop.
   const finalHref: string
@@ -54,11 +54,11 @@ function AnchorLink(props: AnchorProps) {
   finalClassName += disabled ? ' disabled' : '';
   finalClassName += color ? ` text-${color}` : '';
   const finalOnClick = onClick && ((e: MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
+    if (!e.ctrlKey && !e.metaKey && !e.shiftKey) { e.preventDefault(); }
     if (!disabled) { onClick(); }
   });
   return (
-    <a href={finalHref} onClick={finalOnClick} className={finalClassName}>
+    <a href={finalHref} onClick={finalOnClick} className={finalClassName} target={newTab ? '_blank' : undefined}>
       {children}
     </a>
   );

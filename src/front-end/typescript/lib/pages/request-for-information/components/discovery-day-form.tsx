@@ -1,9 +1,11 @@
+import { MARKDOWN_HELP_URL } from 'front-end/config';
 import { Component, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
 import * as DateTime from 'front-end/lib/views/form-field/datetime';
 import * as LongText from 'front-end/lib/views/form-field/long-text';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import * as Switch from 'front-end/lib/views/form-field/switch';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
+import Link from 'front-end/lib/views/link';
 import { get } from 'lodash';
 import { flow } from 'lodash/fp';
 import { default as React } from 'react';
@@ -19,7 +21,6 @@ export const TAB_NAME = 'Discovery Day';
 
 export interface Params {
   showToggle: boolean;
-  isEditing: boolean;
   existingDiscoveryDay?: PublicDiscoveryDay;
 }
 
@@ -57,6 +58,7 @@ type FormFieldKeys
 export interface State {
   loading: number;
   showToggle: boolean;
+  existingDiscoveryDay?: PublicDiscoveryDay;
   isEditing: boolean;
   toggle: Switch.State;
   description: LongText.State;
@@ -81,17 +83,17 @@ export function getValues(state: State): Values {
   };
 }
 
-export const init: Init<Params, State> = async ({ showToggle, isEditing, existingDiscoveryDay }) => {
+export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryDay }) => {
   const getDdString = (k: string | string[]): string => getString(existingDiscoveryDay, k);
   const rawOccurringAt = getDdString('occurringAt');
   const dateValue = rawOccurringAt ? rawFormatDate(new Date(rawOccurringAt), 'YYYY-MM-DD', false) : '';
   const timeValue = rawOccurringAt ? rawFormatDate(new Date(rawOccurringAt), 'HH:mm', false) : '';
-  const descriptionHelpText = 'Provide a brief description of the Discovery Day session.';
   const remoteAccessHelpText = 'Dial-in and/or teleconference information that will only be visible to remote attendees.';
   return {
     loading: 0,
     showToggle,
-    isEditing,
+    existingDiscoveryDay,
+    isEditing: false,
     toggle: Switch.init({
       id: 'discovery-day-discovery-day',
       value: showToggle && !!existingDiscoveryDay,
@@ -101,10 +103,10 @@ export const init: Init<Params, State> = async ({ showToggle, isEditing, existin
       id: 'discovery-day-description',
       required: true,
       label: 'Description (Optional)',
-      placeholder: descriptionHelpText,
+      placeholder: 'Provide a brief description of the Discovery Day session.',
       value: getDdString('description'),
       help: {
-        text: descriptionHelpText,
+        text: (<span>You can use <Link href={MARKDOWN_HELP_URL} newTab>Markdown</Link> to describe this Discovery Day session.</span>),
         show: false
       }
     }),
@@ -119,7 +121,7 @@ export const init: Init<Params, State> = async ({ showToggle, isEditing, existin
       id: 'discovery-day-time',
       type: 'time',
       required: true,
-      label: 'Closing Time',
+      label: 'Time',
       value: timeValue
     }),
     location: ShortText.init({
@@ -130,7 +132,7 @@ export const init: Init<Params, State> = async ({ showToggle, isEditing, existin
       placeholder: 'Visible to all users.',
       value: getDdString('location'),
       help: {
-        text: 'The general location of the Discovery Day that will be visible to all users. For example, "Victoria, BC."',
+        text: 'The Discovery Day\'s general location that will be visible to all users. For example, "Victoria, BC."',
         show: false
       }
     }),
@@ -142,7 +144,7 @@ export const init: Init<Params, State> = async ({ showToggle, isEditing, existin
       placeholder: 'Only visible to in-person attendees.',
       value: getDdString('venue'),
       help: {
-        text: 'The specific venue of the Discovery Day that will only be visible to in-person attendees. For example, "563 Superior St, Victoria, BC, V8V 1T7."',
+        text: 'The Discovery Day\'s specific venue that will only be visible to in-person attendees. For example, "563 Superior St, Victoria, BC, V8V 1T7."',
         show: false
       }
     }),
@@ -163,6 +165,11 @@ export const init: Init<Params, State> = async ({ showToggle, isEditing, existin
 export const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'onChangeToggle':
+      if (msg.value) {
+        state = state.set('isEditing', true);
+      } else {
+        state = state.set('isEditing', false);
+      }
       return [updateValue(state, 'toggle', msg.value)];
     case 'onChangeDescription':
       return [updateValue(state, 'description', msg.value)];
@@ -240,7 +247,21 @@ export function setErrors(state: Immutable<State>, errors: RfiResource.Discovery
   )(state);
 }
 
-export function isValid(state: State): boolean {
+export function hasProvidedRequiredFields(state: State): boolean {
+  const {
+    showToggle,
+    toggle,
+    date,
+    time,
+    location,
+    venue,
+    remoteAccess
+  } = state;
+  if (showToggle && !toggle.value) { return true; }
+  return !!(date.value && time.value && location.value && venue.value && remoteAccess.value);
+}
+
+export function hasValidationErrors(state: State): boolean {
   const {
     showToggle,
     toggle,
@@ -251,14 +272,15 @@ export function isValid(state: State): boolean {
     venue,
     remoteAccess
   } = state;
-  if (showToggle && !toggle.value) { return true; }
-  const providedRequiredFields = !!(date.value && time.value && location.value && venue.value && remoteAccess.value);
-  const noValidationErrors = !(description.errors.length || date.errors.length || time.errors.length || location.errors.length || venue.errors.length || remoteAccess.errors.length);
-  return providedRequiredFields && noValidationErrors;
+  if (showToggle && !toggle.value) { return false; }
+  return !!(description.errors.length || date.errors.length || time.errors.length || location.errors.length || venue.errors.length || remoteAccess.errors.length);
+}
+
+export function isValid(state: State): boolean {
+  return hasProvidedRequiredFields(state) && !hasValidationErrors(state);
 }
 
 const Toggle: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const isDisabled = !state.isEditing;
   const onChangeSwitch = (tag: any) => Switch.makeOnChange(dispatch, value => ({ tag, value }));
   return (
     <div className='mb-4'>
@@ -272,7 +294,6 @@ const Toggle: ComponentView<State, Msg> = ({ state, dispatch }) => {
             <Col xs='12'>
               <Switch.view
                 state={state.toggle}
-                disabled={isDisabled}
                 onChange={onChangeSwitch('onChangeToggle')}
                 labelClassName='d-none' />
             </Col>
@@ -283,6 +304,7 @@ const Toggle: ComponentView<State, Msg> = ({ state, dispatch }) => {
 };
 
 const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  if (!state.toggle.value && !state.existingDiscoveryDay) { return null; }
   const isDisabled = !state.isEditing;
   const onChangeLongText = (tag: any) => LongText.makeOnChange(dispatch, value => ({ tag, value }));
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
@@ -290,11 +312,13 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const toggleHelp = (value: HelpFieldName) => () => dispatch({ tag: 'toggleHelp', value });
   return (
     <div className='mb-4'>
-      <Row>
-        <Col xs='12'>
-          <h4>Details</h4>
-        </Col>
-      </Row>
+      {state.showToggle
+        ? (<Row className='mb-3'>
+            <Col xs='12'>
+              <h4>Details</h4>
+            </Col>
+          </Row>)
+        : null}
       <Row>
         <Col xs='12'>
           <LongText.view
@@ -303,7 +327,7 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
             onChangeDebounced={onChangeDebounced('validateDescription')}
             onChange={onChangeLongText('onChangeDescription')}
             toggleHelp={toggleHelp('description')}
-            style={{ height: '30vh', minHeight: '240px' }}
+            style={{ height: '10rem' }}
             autoFocus />
         </Col>
       </Row>
@@ -334,7 +358,7 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='5' lg='4'>
+        <Col xs='12' md='9' lg='8'>
           <ShortText.view
             state={state.venue}
             disabled={isDisabled}
@@ -344,14 +368,14 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='5' lg='4'>
+        <Col xs='12' md='9' lg='8'>
           <LongText.view
             state={state.remoteAccess}
             disabled={isDisabled}
             toggleHelp={toggleHelp('remoteAccess')}
             onChangeDebounced={onChangeDebounced('validateRemoteAccess')}
             onChange={onChangeShortText('onChangeRemoteAccess')}
-            style={{ height: '20vh', minHeight: '180px' }} />
+            style={{ height: '8rem' }} />
         </Col>
       </Row>
     </div>
