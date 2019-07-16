@@ -1,10 +1,13 @@
+const path = require("path");
 //set up global constants for all grunt tasks
 const env = process.env.NODE_ENV || "development";
-const src = "src/front-end";
-const build = "build/front-end";
+const src = path.resolve(__dirname, "./src/front-end");
+const tmp = path.resolve(__dirname, "./tmp/grunt");
+const build = path.resolve(__dirname, "./build/front-end");
 global.gruntConfig = {
   dir: {
     src,
+    tmp,
     build
   },
   src: {
@@ -12,6 +15,11 @@ global.gruntConfig = {
     sass: `${src}/sass`,
     ts: `${src}/typescript`,
     tsShared: `src/shared`
+  },
+  tmp: {
+    js: `${tmp}/js`,
+    frontEnd: `${tmp}/js/front-end/typescript`,
+    shared: `${tmp}/js/shared`
   },
   out: {
     css: `${build}/app.css`,
@@ -35,10 +43,11 @@ module.exports = function (grunt) {
   }));
   //create task lists for dev and prod envs
   grunt.registerTask("common", [
-    "clean:build",
-    "copy:static",
+    "clean",
+    "copy",
     "sass",
     "postcss:prefix",
+    "shell:typescript",
     "browserify",
   ]);
   grunt.registerTask("development-build", [

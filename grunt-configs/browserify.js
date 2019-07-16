@@ -1,8 +1,9 @@
 const { transform, assign } = require("lodash");
 const path = require("path");
-const root = path.resolve(__dirname, '..', gruntConfig.src.ts);
-const compilerOptions = require(path.join(root, 'tsconfig.json')).compilerOptions;
+const root = path.resolve(__dirname, "..", gruntConfig.src.ts);
+const compilerOptions = require(path.join(root, "tsconfig.json")).compilerOptions;
 const pathmodify = require("pathmodify");
+const isDev = process.env.NODE_ENV === "development";
 
 module.exports = {
   build: {
@@ -11,37 +12,29 @@ module.exports = {
         [
           "envify",
           {
-            NODE_ENV: process.env.NODE_ENV === 'development' ? 'development' : 'production',
+            NODE_ENV: isDev ? "development" : "production",
             CONTACT_EMAIL: process.env.CONTACT_EMAIL
           }
         ]
       ],
       plugin: [
         [
-          "tsify",
-          {
-            project: root
-          }
-        ],
-        // Modify paths because tsify does not fully support rewriting paths per
-        // tsconfig.json's `paths` option.
-        [
           "pathmodify",
           {
             mods: [
-              pathmodify.mod.dir("front-end", root),
-              pathmodify.mod.dir("shared", path.resolve(root, "../../shared"))
+              pathmodify.mod.dir("front-end", `${gruntConfig.tmp.frontEnd}`),
+              pathmodify.mod.dir("shared", `${gruntConfig.tmp.shared}`)
             ]
           }
         ]
       ],
       browserifyOptions: {
-        debug: process.env.NODE_ENV === 'development',
-        extensions: [".js", ".json", ".ts", ".tsx", ".jsx"]
+        debug: isDev,
+        paths: ['./node_modules']
       }
     },
     src: [
-      `${gruntConfig.src.ts}/index.ts`
+      `${gruntConfig.tmp.frontEnd}/index.js`
     ],
     dest: `${gruntConfig.out.js}`
   }

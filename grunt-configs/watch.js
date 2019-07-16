@@ -9,6 +9,9 @@ module.exports = {
       `${gruntConfig.src.tsShared}/**`
     ],
     tasks: [
+      // Do not clean tmp dir here to ensure
+      // TypeScript builds incrementally (faster).
+      "shell:typescript",
       "browserify",
       "compress"
     ]
@@ -29,7 +32,6 @@ module.exports = {
     ],
     tasks: [
       "common",
-      "browserify",
       "compress"
     ]
   },
