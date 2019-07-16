@@ -391,17 +391,17 @@ const view: ComponentView<State, Msg> = props => {
     <div>
       <Row>
         <Col xs='12' md='10'>
-          <h1 className='d-flex flex-column-reverse flex-md-row align-items-start align-items-md-center flex-wrap'>
+          <h2 className='d-flex flex-column-reverse flex-md-row align-items-start align-items-md-center flex-wrap'>
             RFI Number: {version.rfiNumber}
             <StatusBadge
               rfi={rfi}
-              className='d-block d-md-inline mb-2 mb-md-0 ml-md-3 font-size-large' />
-          </h1>
+              className='d-block d-md-inline mb-2 mb-md-0 ml-md-3 font-size-base' />
+          </h2>
         </Col>
       </Row>
       <Row>
         <Col xs='12' md='10'>
-          <h2>{version.title}</h2>
+          <h1>{version.title}</h1>
         </Col>
       </Row>
       <Row className='mb-4'>

@@ -8,7 +8,7 @@ import { publishedDateToString, updatedDateToString } from 'front-end/lib/pages/
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
 import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
-import Icon from 'front-end/lib/views/icon';
+import Icon, { AvailableIcons } from 'front-end/lib/views/icon';
 import FixedBar from 'front-end/lib/views/layout/fixed-bar';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
@@ -19,11 +19,13 @@ import { compareDates, formatDate, formatTime } from 'shared/lib';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as FileResource from 'shared/lib/resources/file';
 import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
+import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { PublicDiscoveryDay, PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
 import { PublicSessionUser } from 'shared/lib/resources/session';
 import { Addendum, ADT, RfiStatus, UserType } from 'shared/lib/types';
 
 const ERROR_MESSAGE = 'The Request for Information you are looking for is not available.';
+const DISCOVERY_DAY_ID = 'discovery-day';
 const ATTACHMENTS_ID = 'attachments';
 
 export interface RouteParams {
@@ -223,20 +225,24 @@ const Details: View<{ rfi: PublicRfi }> = ({ rfi }) => {
   const statusValues = [
     (<StatusBadge rfi={rfi} />)
   ];
+  const discoveryDayValues = version.discoveryDay
+    ? [(<a href={`#${DISCOVERY_DAY_ID}`}>View Discovery Day Information</a>)]
+    : ['No Discovery Day'];
   const attachmentsValues = version.attachments.length
     ? [(<a href={`#${ATTACHMENTS_ID}`}>View Attachments</a>)]
     : ['No attachments'];
   return (
     <Row>
       <Col xs='12' md='7'>
-        <Detail title='Commodity Code(s)' values={version.categories} />
         <Detail title='Public Sector Entity' values={[version.publicSectorEntity]} />
         <Detail title='Contact' values={contactValues} />
+        <Detail title='Commodity Code(s)' values={version.categories} />
       </Col>
       <Col xs='12' md='5'>
         <Detail title='Status' values={statusValues} />
         <Detail title='Closing Date' values={[formatDate(version.closingAt)]} />
         <Detail title='Closing Time' values={[formatTime(version.closingAt, true)]} />
+        <Detail title='Discovery Day' values={discoveryDayValues} />
         <Detail title='Attachments' values={attachmentsValues} />
       </Col>
     </Row>
@@ -245,11 +251,43 @@ const Details: View<{ rfi: PublicRfi }> = ({ rfi }) => {
 
 const Description: View<{ value: string }> = ({ value }) => {
   return (
-    <Row className='mt-5 pt-5 border-top'>
-      <Col xs='12'>
-        <Markdown source={value} openLinksInNewTabs />
-      </Col>
-    </Row>
+    <div className='mt-5 pt-5 border-top'>
+      <Row>
+        <Col xs='12'>
+          <Markdown source={value} openLinksInNewTabs />
+        </Col>
+      </Row>
+    </div>
+  );
+}
+
+const DiscoveryDay: View<{ discoveryDay?: RfiResource.PublicDiscoveryDay }> = ({ discoveryDay }) => {
+  if (!discoveryDay) { return null; }
+  const { description, occurringAt, location } = discoveryDay;
+  const InfoItem: View<{ icon: AvailableIcons, name: string, value: string }> = ({ icon, name, value }) => (
+    <div className='d-flex align-items-start mb-3'>
+      <Icon name={icon} color='secondary' className='mr-3 flex-shrink-0' width={1.4} height={1.4} />
+      <span className='font-weight-bold text-secondary mr-3'>{name}</span>
+      <span>{value}</span>
+    </div>
+  );
+  const Info = () => (
+    <Col xs='12'>
+      <InfoItem name='Date' value={formatDate(occurringAt)} icon='calendar' />
+      <InfoItem name='Time' value={formatTime(occurringAt, true)} icon='clock' />
+      <InfoItem name='Location' value={location} icon='map-marker' />
+    </Col>
+  );
+  return (
+    <div className='pt-5 mt-5 border-top' id={DISCOVERY_DAY_ID}>
+      <FormSectionHeading text='Discovery Day' />
+      <Row>
+        <Col xs='12'>
+          {description ? (<Markdown source={description} className='pb-3' openLinksInNewTabs />) : null}
+        </Col>
+        <Info />
+      </Row>
+    </div>
   );
 }
 
@@ -257,8 +295,8 @@ const Attachments: View<{ files: FileResource.PublicFile[] }> = ({ files }) => {
   if (!files.length) { return null; }
   const children = files.map((file, i) => {
     return (
-      <div className='d-flex align-items-start mb-2' key={`view-rfi-attachment-${i}`}>
-        <Icon name='paperclip' color='secondary' className='mr-2 mt-1 flex-shrink-0' width={1.1} height={1.1} />
+      <div className='d-flex align-items-start mb-3' key={`view-rfi-attachment-${i}`}>
+        <Icon name='paperclip' color='secondary' className='mr-3 mt-1 flex-shrink-0' width={1.1} height={1.1} />
         <a href={makeFileBlobPath(file._id)} className='d-block' download>
           {file.originalName}
         </a>
@@ -375,6 +413,7 @@ const view: ComponentView<State, Msg> = props => {
       </Row>
       <Details rfi={rfi} />
       <Description value={version.description} />
+      <DiscoveryDay discoveryDay={version.discoveryDay} />
       <Attachments files={version.attachments} />
       <Addenda addenda={version.addenda} />
     </div>

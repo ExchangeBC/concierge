@@ -478,11 +478,14 @@ function conditionalChangePassword<PS, PM, P extends ProfileType>(Profile: Profi
 function conditionalTermsAndConditions<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
   return ({ state }) => {
     let conditionalLink = null;
+    const isOwner = viewerUserIsOwner(state);
+    const you = isOwner ? 'You' : profileToName(Profile.getValues(state.profile));
+    const have = isOwner ? 'have' : 'has';
     if (state.showReviewTermsAndConditionsLink) {
       conditionalLink = (
         <Row>
           <Col xs='12'>
-            <Link route={{ tag: 'termsAndConditions', value: {} }} color='secondary'>
+            <Link route={{ tag: 'termsAndConditions', value: {} }}>
               Review the Concierge's Terms & Conditions
             </Link>
           </Col>
@@ -498,7 +501,7 @@ function conditionalTermsAndConditions<PS, PM, P extends ProfileType>(Profile: P
         </Row>
         <Row className='mb-4'>
           <Col xs='12'>
-            {formatTermsAndConditionsAgreementDate(state.profileUser.acceptedTermsAt)}
+            {formatTermsAndConditionsAgreementDate(state.profileUser.acceptedTermsAt, you, have)}
           </Col>
         </Row>
         {conditionalLink}
