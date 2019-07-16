@@ -20,7 +20,7 @@ export function validateAttendeeRemote(raw: any, occurringAt: Date, existingRemo
       // within ATTENDEE_IN_PERSON_WINDOW_HOURS, or that a new in-person attendee is not being
       // added within ATTENDEE_IN_PERSON_WINDOW_HOURS
       if (withinWindow && validated.value === false && existingRemote !== false) {
-        return invalid([`Cannot add an in-person attendee within ${ATTENDEE_IN_PERSON_WINDOW_HOURS} hours of the Discovery Day.`]);
+        return invalid([`Cannot add an in-person registrant within ${ATTENDEE_IN_PERSON_WINDOW_HOURS} hours of the Discovery Day.`]);
       } else {
         return validated;
       }

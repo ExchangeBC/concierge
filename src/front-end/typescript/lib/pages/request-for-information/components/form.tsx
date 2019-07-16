@@ -8,6 +8,8 @@ import { PublicRfi } from 'shared/lib/resources/request-for-information';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { ADT, Omit } from 'shared/lib/types';
 
+export const ERROR_MESSAGE = `Please fix the errors below, and try submitting the form again. If you don't see any errors below, you may need to review the information in a different tab, and resolve any issues there.`;
+
 export type TabId = 'details' | 'discoveryDay';
 
 function tabIdToName(id: TabId): string {
@@ -29,10 +31,6 @@ export type Msg
   = ADT<'setActiveTab', TabId>
   | ADT<'details', DetailsForm.Msg>
   | ADT<'discoveryDay', DiscoveryDayForm.Msg>;
-
-export function makeErrorMessage(state: State): string {
-  return `Please fix the errors below, and try submitting the form again. If you don't see any errors below, you may need to review the information in the "${tabIdToName(state.activeTab)}" tab, and resolve any issues there.`;
-}
 
 export interface State {
   activeTab: TabId;

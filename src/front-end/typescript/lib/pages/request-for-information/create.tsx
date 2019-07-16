@@ -216,7 +216,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     return {
       ...emptyPageAlerts(),
       errors: state.hasTriedPublishing && !RfiForm.isValid(state.rfiForm)
-        ? [RfiForm.makeErrorMessage(state.rfiForm)]
+        ? [RfiForm.ERROR_MESSAGE]
         : []
     };
   },

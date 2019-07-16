@@ -230,6 +230,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         }
       ];
     case 'preview':
+      state = state.set('hasTriedPublishing', true);
       return createAndShowPreview({
         state,
         startLoading: startPreviewLoading,
@@ -430,7 +431,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getAlerts(state) {
     const initializationErrors = !state.valid ? [ERROR_MESSAGE] : [];
     const validationErrors = state.valid && state.hasTriedPublishing && !RfiForm.isValid(state.valid.rfiForm)
-      ? [RfiForm.makeErrorMessage(state.valid.rfiForm)]
+      ? [RfiForm.ERROR_MESSAGE]
       : [];
     return {
       ...emptyPageAlerts(),

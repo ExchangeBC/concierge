@@ -19,6 +19,8 @@ import { validateDiscoveryDayDate, validateDiscoveryDayDescription, validateDisc
 
 export const TAB_NAME = 'Discovery Day';
 
+const DEFAULT_TIME = '14:00';
+
 export interface Params {
   showToggle: boolean;
   existingDiscoveryDay?: PublicDiscoveryDay;
@@ -87,7 +89,7 @@ export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryD
   const getDdString = (k: string | string[]): string => getString(existingDiscoveryDay, k);
   const rawOccurringAt = getDdString('occurringAt');
   const dateValue = rawOccurringAt ? rawFormatDate(new Date(rawOccurringAt), 'YYYY-MM-DD', false) : '';
-  const timeValue = rawOccurringAt ? rawFormatDate(new Date(rawOccurringAt), 'HH:mm', false) : '';
+  const timeValue = rawOccurringAt ? rawFormatDate(new Date(rawOccurringAt), 'HH:mm', false) : DEFAULT_TIME;
   const remoteAccessHelpText = 'Dial-in and/or teleconference information that will only be visible to remote attendees.';
   return {
     loading: 0,
@@ -283,14 +285,14 @@ export function isValid(state: State): boolean {
 const Toggle: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeSwitch = (tag: any) => Switch.makeOnChange(dispatch, value => ({ tag, value }));
   return (
-    <div className='mb-4'>
+    <div>
       <Row>
         <Col xs='12'>
           <FormSectionHeading text='Discovery Day' />
         </Col>
       </Row>
       {state.showToggle
-        ? (<Row>
+        ? (<Row className='mb-4'>
             <Col xs='12'>
               <Switch.view
                 state={state.toggle}
