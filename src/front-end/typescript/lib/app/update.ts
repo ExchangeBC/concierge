@@ -8,6 +8,7 @@ import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageMarkdown from 'front-end/lib/pages/markdown';
 import * as PageNotice from 'front-end/lib/pages/notice';
+import * as PageRequestForInformationAttendDiscoveryDay from 'front-end/lib/pages/request-for-information/attend-discovery-day';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
 import * as PageRequestForInformationEdit from 'front-end/lib/pages/request-for-information/edit';
 import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
@@ -283,6 +284,19 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetModal: PageRequestForInformationRespond.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageRequestForInformationRespond' as const, value };
+        }
+      });
+
+    case 'requestForInformationAttendDiscoveryDay':
+      return await initAppChildPage({
+        ...defaultPageInitParams,
+        childStatePath: ['pages', 'requestForInformationAttendDiscoveryDay'],
+        childRouteParams: route.value,
+        childInit: PageRequestForInformationAttendDiscoveryDay.component.init,
+        childGetMetadata: PageRequestForInformationAttendDiscoveryDay.component.getMetadata,
+        childGetModal: PageRequestForInformationAttendDiscoveryDay.component.getModal,
+        mapChildMsg(value) {
+          return { tag: 'pageRequestForInformationAttendDiscoveryDay' as const, value };
         }
       });
 
@@ -588,6 +602,17 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         childUpdate: PageRequestForInformationRespond.component.update,
         childGetMetadata: PageRequestForInformationRespond.component.getMetadata,
         childGetModal: PageRequestForInformationRespond.component.getModal,
+        childMsg: msg.value
+      });
+
+    case 'pageRequestForInformationAttendDiscoveryDay':
+      return updateAppChildPage({
+        ...defaultPageUpdateParams,
+        mapChildMsg: value => ({ tag: 'pageRequestForInformationAttendDiscoveryDay', value }),
+        childStatePath: ['pages', 'requestForInformationAttendDiscoveryDay'],
+        childUpdate: PageRequestForInformationAttendDiscoveryDay.component.update,
+        childGetMetadata: PageRequestForInformationAttendDiscoveryDay.component.getMetadata,
+        childGetModal: PageRequestForInformationAttendDiscoveryDay.component.getModal,
         childMsg: msg.value
       });
 

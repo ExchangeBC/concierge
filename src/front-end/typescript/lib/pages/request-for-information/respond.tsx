@@ -333,8 +333,8 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <Row className='mb-5'>
         <Col xs='12' className='d-flex flex-column'>
           <h1>Respond to RFI Number: {version.rfiNumber}</h1>
-          <h2>{version.title}</h2>
-          <p>
+          <h3>{version.title}</h3>
+          <p className='mt-2'>
             Please submit your response to this Request for Information by following the instructions defined
             in its <a href={router.routeToUrl(viewRfiRoute(rfi))}>description</a>.
           </p>
@@ -354,8 +354,8 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   view,
   viewBottomBar,
   getAlerts: emptyPageAlerts,
-  getMetadata() {
-    return makePageMetadata('Respond to a Request for Information');
+  getMetadata(state) {
+    return makePageMetadata(`Respond — ${state.init.tag === 'valid' ? state.init.value.rfi.latestVersion.rfiNumber : 'RFI'}`);
   },
   getBreadcrumbs(state) {
     if (state.init.tag === 'invalid') { return []; }

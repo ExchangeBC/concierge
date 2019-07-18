@@ -5,6 +5,7 @@ import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageMarkdown from 'front-end/lib/pages/markdown';
 import * as PageNotice from 'front-end/lib/pages/notice';
+import * as PageRequestForInformationAttendDiscoveryDay from 'front-end/lib/pages/request-for-information/attend-discovery-day';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
 import * as PageRequestForInformationEdit from 'front-end/lib/pages/request-for-information/edit';
 import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
@@ -45,6 +46,7 @@ export type Route
   | ADT<'requestForInformationView', PageRequestForInformationView.RouteParams>
   | ADT<'requestForInformationPreview', PageRequestForInformationPreview.RouteParams>
   | ADT<'requestForInformationRespond', PageRequestForInformationRespond.RouteParams>
+  | ADT<'requestForInformationAttendDiscoveryDay', PageRequestForInformationAttendDiscoveryDay.RouteParams>
   | ADT<'requestForInformationList', PageRequestForInformationList.RouteParams>
   | ADT<'markdown', PageMarkdown.RouteParams>
   | ADT<'notice', PageNotice.RouteParams>
@@ -83,6 +85,7 @@ export interface State {
     requestForInformationView?: Immutable<PageRequestForInformationView.State>;
     requestForInformationPreview?: Immutable<PageRequestForInformationPreview.State>;
     requestForInformationRespond?: Immutable<PageRequestForInformationRespond.State>;
+    requestForInformationAttendDiscoveryDay?: Immutable<PageRequestForInformationAttendDiscoveryDay.State>;
     requestForInformationList?: Immutable<PageRequestForInformationList.State>;
     markdown?: Immutable<PageMarkdown.State>;
     notice?: Immutable<PageNotice.State>;
@@ -112,6 +115,7 @@ type InnerMsg
   | ADT<'pageRequestForInformationView', PageRequestForInformationView.Msg>
   | ADT<'pageRequestForInformationPreview', PageRequestForInformationPreview.Msg>
   | ADT<'pageRequestForInformationRespond', PageRequestForInformationRespond.Msg>
+  | ADT<'pageRequestForInformationAttendDiscoveryDay', PageRequestForInformationAttendDiscoveryDay.Msg>
   | ADT<'pageRequestForInformationList', PageRequestForInformationList.Msg>
   | ADT<'pageMarkdown', PageMarkdown.Msg>
   | ADT<'pageNotice', PageNotice.Msg>

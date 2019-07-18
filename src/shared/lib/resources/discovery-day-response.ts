@@ -16,6 +16,7 @@ export interface PublicDiscoveryDayResponse {
 
 export interface CreateRequestBody {
   rfiId: string;
+  vendorId: string;
   attendees: Attendee[];
 }
 
@@ -29,10 +30,10 @@ export interface CreateValidationErrors {
   permissions?: string[];
   contentType?: string[];
   rfiId?: string[];
-  vendor?: string[];
+  vendorId?: string[];
   attendees?: AttendeeValidationErrors[];
 }
 
 export type UpdateRequestBody = Pick<CreateRequestBody, 'attendees'>;
 
-export type UpdateValidationErrors = Omit<CreateValidationErrors, 'vendor'>;
+export type UpdateValidationErrors = Omit<CreateValidationErrors, 'vendorId'>;

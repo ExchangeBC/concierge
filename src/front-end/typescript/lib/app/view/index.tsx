@@ -10,6 +10,7 @@ import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
 import * as PageLanding from 'front-end/lib/pages/landing';
 import * as PageMarkdown from 'front-end/lib/pages/markdown';
 import * as PageNotice from 'front-end/lib/pages/notice';
+import * as PageRequestForInformationAttendDiscoveryDay from 'front-end/lib/pages/request-for-information/attend-discovery-day';
 import * as PageRequestForInformationCreate from 'front-end/lib/pages/request-for-information/create';
 import * as PageRequestForInformationEdit from 'front-end/lib/pages/request-for-information/edit';
 import * as PageRequestForInformationList from 'front-end/lib/pages/request-for-information/list';
@@ -235,6 +236,15 @@ const ViewActiveRoute: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.requestForInformationRespond}
           mapPageMsg={value => ({ tag: 'pageRequestForInformationRespond', value })}
           component={PageRequestForInformationRespond.component} />
+      );
+
+    case 'requestForInformationAttendDiscoveryDay':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.requestForInformationAttendDiscoveryDay}
+          mapPageMsg={value => ({ tag: 'pageRequestForInformationAttendDiscoveryDay', value })}
+          component={PageRequestForInformationAttendDiscoveryDay.component} />
       );
 
     case 'requestForInformationList':

@@ -278,6 +278,17 @@ const router: Router<Route> = {
       }
     },
     {
+      path: '/requests-for-information/:rfiId/attend-discovery-day',
+      makeRoute({ params }) {
+        return {
+          tag: 'requestForInformationAttendDiscoveryDay',
+          value: {
+            rfiId: getParamString(params, 'rfiId')
+          }
+        };
+      }
+    },
+    {
       path: '/requests-for-information/:rfiId/respond',
       makeRoute({ params }) {
         return {
@@ -463,6 +474,8 @@ const router: Router<Route> = {
         return `/requests-for-information/${route.value.rfiId}/preview`;
       case 'requestForInformationRespond':
         return `/requests-for-information/${route.value.rfiId}/respond`;
+      case 'requestForInformationAttendDiscoveryDay':
+        return `/requests-for-information/${route.value.rfiId}/attend-discovery-day`;
       case 'requestForInformationList':
         return '/requests-for-information';
       case 'markdown':

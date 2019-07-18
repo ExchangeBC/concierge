@@ -145,24 +145,24 @@ export async function updateRfi(UserModel: UserSchema.Model, session: Session): 
 
 // Discovery Day Responses.
 
-export function createDiscoveryDayResponse(session: Session): boolean {
-  return isVendor(session);
+export function createDiscoveryDayResponse(session: Session, vendorId: string): boolean {
+  return (isVendor(session) && isOwnAccount(session, vendorId)) || isProgramStaff(session);
 }
 
 export function readManyDiscoveryDayResponses(session: Session): boolean {
   return isProgramStaff(session);
 }
 
-export function readOneDiscoveryDayResponse(session: Session, id: string): boolean {
-  return (isVendor(session) && isOwnSession(session, id)) || isProgramStaff(session);
+export function readOneDiscoveryDayResponse(session: Session, vendorId: string): boolean {
+  return (isVendor(session) && isOwnAccount(session, vendorId)) || isProgramStaff(session);
 }
 
-export function updateDiscoveryDayResponse(session: Session, id: string): boolean {
-  return (isVendor(session) && isOwnSession(session, id)) || isProgramStaff(session);
+export function updateDiscoveryDayResponse(session: Session, vendorId: string): boolean {
+  return (isVendor(session) && isOwnAccount(session, vendorId)) || isProgramStaff(session);
 }
 
-export function deleteDiscoveryDayResponse(session: Session, id: string): boolean {
-  return (isVendor(session) && isOwnSession(session, id)) || isProgramStaff(session);
+export function deleteDiscoveryDayResponse(session: Session, vendorId: string): boolean {
+  return (isVendor(session) && isOwnAccount(session, vendorId)) || isProgramStaff(session);
 }
 
 // RFI Responses.

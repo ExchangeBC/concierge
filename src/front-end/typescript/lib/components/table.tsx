@@ -122,10 +122,11 @@ interface TBodyProps<Data> {
   id: string;
   rows: Array<Array<TDProps<Data>>>;
   TDView: View<TDProps<Data>>;
+  borderless?: boolean;
 }
 
 export function makeTBody<Data>(): View<TBodyProps<Data>> {
-  return ({ id, rows, TDView }) => {
+  return ({ id, rows, TDView, borderless }) => {
     const children = rows.map((row, i) => {
       const cellChildren = row.map((cell, j) => (<TDView key={`${id}-${i}-${j}`} {...cell} />));
       return (
@@ -135,7 +136,7 @@ export function makeTBody<Data>(): View<TBodyProps<Data>> {
       );
     });
     return (
-      <tbody style={{ fontSize: '0.875rem' }}>
+      <tbody style={{ fontSize: '0.875rem' }} className={borderless ? 'table-borderless' : ''}>
         {children}
       </tbody>
     );
@@ -147,12 +148,13 @@ interface ViewProps<Data> extends ComponentViewProps<State<Data>, Msg> {
   bodyRows: Array<Array<TDSpec<Data>>>;
   className?: string;
   style?: CSSProperties;
+  borderless?: boolean;
 }
 
 export function view<Data>(): View<ViewProps<Data>> {
   const TBody: View<TBodyProps<Data>> = makeTBody();
   return props => {
-    const { state, dispatch, className, style, headCells, bodyRows } = props;
+    const { state, dispatch, className, style, headCells, bodyRows, borderless } = props;
     const headProps: THeadProps = {
       THView: state.THView,
       cells: headCells.map((spec, index) => {
@@ -168,7 +170,8 @@ export function view<Data>(): View<ViewProps<Data>> {
     const bodyProps: TBodyProps<Data> = {
       id: `table-${state.idNamespace}-tbody`,
       TDView: state.TDView,
-      rows: bodyRows
+      rows: bodyRows,
+      borderless
     };
     return (
       <Table className={className} style={style} responsive>

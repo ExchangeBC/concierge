@@ -1,17 +1,17 @@
 import { CONTACT_EMAIL } from 'front-end/config';
-import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
+import { makePageMetadata } from 'front-end/lib';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, Immutable, newRoute, PageBreadcrumbs, PageComponent, PageInit, Update, View } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, GlobalComponentMsg, newRoute, PageBreadcrumbs, PageComponent, PageInit, Update, View } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
+import DiscoveryDayInfo from 'front-end/lib/pages/request-for-information/views/discovery-day-info';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
 import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
-import Icon, { AvailableIcons } from 'front-end/lib/views/icon';
+import Icon from 'front-end/lib/views/icon';
 import FixedBar from 'front-end/lib/views/layout/fixed-bar';
 import Link from 'front-end/lib/views/link';
-import LoadingButton from 'front-end/lib/views/loading-button';
 import Markdown from 'front-end/lib/views/markdown';
 import { default as React, ReactElement } from 'react';
 import { Col, Row } from 'reactstrap';
@@ -20,7 +20,7 @@ import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as FileResource from 'shared/lib/resources/file';
 import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
-import { PublicDiscoveryDay, PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
+import { PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
 import { PublicSessionUser } from 'shared/lib/resources/session';
 import { Addendum, ADT, RfiStatus, UserType } from 'shared/lib/types';
 
@@ -41,8 +41,6 @@ export type InnerMsg
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export interface State {
-  respondToDiscoveryDayLoading: number;
-  respondToRfiLoading: number;
   infoAlerts: string[];
   preview: boolean;
   promptResponseConfirmation: boolean;
@@ -60,8 +58,6 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
   const { session } = shared;
   const sessionUser = session && session.user;
   const defaultState: State = {
-    respondToDiscoveryDayLoading: 0,
-    respondToRfiLoading: 0,
     infoAlerts: [],
     preview,
     promptResponseConfirmation: false,
@@ -77,7 +73,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
       // if they are a Vendor.
       let ddr: DdrResource.PublicDiscoveryDayResponse | undefined;
       if (sessionUser && sessionUser.type === UserType.Vendor) {
-        const ddrResult = await api.readOneDdr(rfi._id);
+        const ddrResult = await api.readOneDdr(sessionUser.id, rfi._id);
         if (ddrResult.tag === 'valid') {
           ddr = ddrResult.value;
         }
@@ -113,11 +109,6 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
   }
 };
 
-const startRespondToRfiLoading: UpdateState<State> = makeStartLoading('respondToRfiLoading');
-const stopRespondToRfiLoading: UpdateState<State> = makeStopLoading('respondToRfiLoading');
-const startRespondToDiscoveryDayLoading: UpdateState<State> = makeStartLoading('respondToDiscoveryDayLoading');
-const stopRespondToDiscoveryDayLoading: UpdateState<State> = makeStopLoading('respondToDiscoveryDayLoading');
-
 const update: Update<State, Msg> = ({ state, msg }) => {
   if (!state.rfi) { return [state]; }
   switch (msg.tag) {
@@ -125,9 +116,8 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [state.set('promptResponseConfirmation', false)];
     case 'respondToRfi':
       return [
-        startRespondToRfiLoading(state),
+        state,
         async (state, dispatch) => {
-          state = stopRespondToRfiLoading(state);
           if (!state.rfi) {
             return null;
           } else if (state.promptResponseConfirmation || !state.sessionUser || (await api.hasUserAcceptedTerms(state.sessionUser.id))) {
@@ -145,10 +135,9 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       ];
     case 'respondToDiscoveryDay':
       return [
-        startRespondToDiscoveryDayLoading(state),
+        state,
         async (state, dispatch) => {
           if (!state.rfi) { return null; }
-          const finish = (state: Immutable<State>) => stopRespondToDiscoveryDayLoading(state);
           const thisRoute: Route = {
             tag: 'requestForInformationView' as const,
             value: {
@@ -164,7 +153,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                 redirectOnSuccess: thisUrl
               }
             }));
-            return finish(state);
+            return state;
           }
           const acceptedTerms = await api.hasUserAcceptedTerms(state.sessionUser.id);
           // Ask the user to accept the terms first.
@@ -178,7 +167,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                 redirectOnSkip: thisUrl
               }
             }));
-            return finish(state);
+            return state;
           }
           return state;
           // Otherwise, process the response.
@@ -263,30 +252,10 @@ const Description: View<{ value: string }> = ({ value }) => {
 
 const DiscoveryDay: View<{ discoveryDay?: RfiResource.PublicDiscoveryDay }> = ({ discoveryDay }) => {
   if (!discoveryDay) { return null; }
-  const { description, occurringAt, location } = discoveryDay;
-  const InfoItem: View<{ icon: AvailableIcons, name: string, value: string }> = ({ icon, name, value }) => (
-    <div className='d-flex align-items-start mb-3'>
-      <Icon name={icon} color='secondary' className='mr-3 flex-shrink-0' width={1.4} height={1.4} />
-      <span className='font-weight-bold text-secondary mr-3'>{name}</span>
-      <span>{value}</span>
-    </div>
-  );
-  const Info = () => (
-    <Col xs='12'>
-      <InfoItem name='Date' value={formatDate(occurringAt)} icon='calendar' />
-      <InfoItem name='Time' value={formatTime(occurringAt, true)} icon='clock' />
-      <InfoItem name='Location' value={location} icon='map-marker' />
-    </Col>
-  );
   return (
     <div className='pt-5 mt-5 border-top' id={DISCOVERY_DAY_ID}>
       <FormSectionHeading text='Discovery Day' />
-      <Row>
-        <Col xs='12'>
-          {description ? (<Markdown source={description} className='pb-3' openLinksInNewTabs />) : null}
-        </Col>
-        <Info />
-      </Row>
+      <DiscoveryDayInfo discoveryDay={discoveryDay} />
     </div>
   );
 }
@@ -340,25 +309,6 @@ const Addenda: View<{ addenda: Addendum[] }> = ({ addenda }) => {
   );
 }
 
-interface RespondToDiscoveryDayButtonProps {
-  loading: boolean;
-  discoveryDay?: PublicDiscoveryDay;
-  alreadyResponded: boolean;
-  onClick(): void;
-}
-
-const RespondToDiscoveryDayButton: View<RespondToDiscoveryDayButtonProps> = props => {
-  const { loading, discoveryDay, alreadyResponded, onClick } = props;
-  if (!discoveryDay) { return null; }
-  const disabled = alreadyResponded || loading;
-  const text = alreadyResponded ? 'Discovery Session Request Sent' : 'Attend Discovery Session';
-  return (
-    <LoadingButton color='info' onClick={onClick} loading={loading} disabled={disabled} className='ml-3 ml-md-0 mx-md-3 text-nowrap'>
-      {text}
-    </LoadingButton>
-  );
-};
-
 function showButtons(rfiStatus: RfiStatus, userType?: UserType): boolean {
   return (!userType || userType === UserType.Vendor) && !!rfiStatus && rfiStatus !== RfiStatus.Expired;
 }
@@ -373,19 +323,17 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
   const version = state.rfi.latestVersion;
   const alreadyRespondedToDiscoveryDay = !!state.ddr;
   const respondToDiscoveryDay = () => !alreadyRespondedToDiscoveryDay && dispatch({ tag: 'respondToDiscoveryDay', value: undefined });
-  const isLoading = state.respondToDiscoveryDayLoading > 0;
   const respondToRfi = () => dispatch({ tag: 'respondToRfi', value: undefined });
   return (
     <FixedBar>
-      <Link onClick={respondToRfi} button color='primary' disabled={isLoading} className='text-nowrap'>
+      <Link onClick={respondToRfi} button color='primary' className='text-nowrap'>
         Respond to RFI
       </Link>
-      {rfiStatus === RfiStatus.Open
-        ? (<RespondToDiscoveryDayButton
-             discoveryDay={version.discoveryDay}
-             alreadyResponded={alreadyRespondedToDiscoveryDay}
-             onClick={respondToDiscoveryDay}
-             loading={isLoading} />)
+      {version.discoveryDay && rfiStatus === RfiStatus.Open
+        ? (<Link onClick={respondToDiscoveryDay} button color='info' className='text-nowrap'>
+            Respond to RFI
+            {alreadyRespondedToDiscoveryDay ? 'Manage Discovery Day Registration' : 'Attend Discovery Day'}
+          </Link>)
         : null}
       <div className='text-secondary font-weight-bold d-none d-md-block mr-auto'>I want to...</div>
     </FixedBar>
@@ -433,10 +381,8 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     };
   },
   getMetadata(state) {
-    const title
-      = state.preview
-      ? 'Request for Information Preview'
-      : 'Request for Information';
+    const name = state.rfi ? state.rfi.latestVersion.rfiNumber : 'Request for Information';
+    const title = `${name}${state.preview ? ' Preview' : ''}`;
     return makePageMetadata(title);
   },
   getBreadcrumbs(state) {
@@ -447,11 +393,9 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
         value: null
       })
     }];
-    if (state.rfi) {
-      breadcrumbs.push({
-        text: state.rfi.latestVersion.rfiNumber
-      });
-    }
+    breadcrumbs.push({
+      text: state.rfi ? state.rfi.latestVersion.rfiNumber : 'Request for Information'
+    });
     return breadcrumbs;
   },
   getModal(state) {

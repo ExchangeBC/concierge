@@ -49,12 +49,13 @@ export const resource: Resource = {
       async transformRequest(request) {
         return {
           rfiId: getString(request.body.value, 'rfiId'),
+          vendorId: getString(request.body.value, 'vendorId'),
           attendees: get(request.body.value, 'attendees', [])
         };
       },
       async respond(request): Promise<Response<CreateResponseBody, Session>> {
         const respond = (code: number, body: PublicDiscoveryDayResponse | CreateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
-        if (!permissions.createDiscoveryDayResponse(request.session) || !request.session.user) {
+        if (!permissions.createDiscoveryDayResponse(request.session, request.body.vendorId)) {
           return respond(401, {
             permissions: [permissions.ERROR_MESSAGE]
           })
@@ -66,10 +67,10 @@ export const resource: Resource = {
             rfiId: validatedRfi.value
           });
         }
-        const validatedVendor = await validateUserId(UserModel, request.session.user.id, UserType.Vendor, true);
+        const validatedVendor = await validateUserId(UserModel, request.body.vendorId, UserType.Vendor, true);
         if (validatedVendor.tag === 'invalid') {
           return respond(400, {
-            vendor: validatedVendor.value
+            vendorId: validatedVendor.value
           });
         }
         const rfi = validatedRfi.value;

@@ -30,6 +30,6 @@ export function makeStopLoading<State, Key extends keyof State>(key: Key): Updat
 
 export function makePageMetadata(title: string): PageMetadata {
   return {
-    title: `${title} - Procurement Concierge Program`
+    title: `${title} — Procurement Concierge Program`
   };
 }

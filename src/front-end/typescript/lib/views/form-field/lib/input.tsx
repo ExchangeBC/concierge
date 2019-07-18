@@ -2,7 +2,7 @@ import { debounce } from 'lodash';
 import { ChangeEvent, ChangeEventHandler, default as React, KeyboardEventHandler } from 'react';
 
 // We need to define a stateful React Component because React has a known issue that causes
-// <input> field's cursors to jump around when we update their values using state management.
+// <input> field's cursors to jump around when we asynchronously update their values using state management.
 // In my opinion, the React team should fix this, but they don't view it as a bug (argh).
 // Using a stateful component that tracks cursor position is the industry standard workaround
 // as of 2019.03.04.
