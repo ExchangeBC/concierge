@@ -1,6 +1,6 @@
 import { Route } from 'front-end/lib/app/types';
 import * as Table from 'front-end/lib/components/table';
-import { Component, ComponentViewProps, Dispatch, GlobalComponentMsg, immutable, Immutable, Init, mapComponentDispatch, Update, View } from 'front-end/lib/framework';
+import { Component, ComponentViewProps, Dispatch, GlobalComponentMsg, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import * as Input from 'front-end/lib/views/form-field/lib/input';
 import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
@@ -9,6 +9,8 @@ import { CustomInput } from 'reactstrap';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, Omit, profileToName } from 'shared/lib/types';
+import { getInvalidValue } from 'shared/lib/validators';
+import { validateAttendee } from 'shared/lib/validators/discovery-day-response';
 
 interface Attendee extends DdrResource.Attendee {
   errors: string[];
@@ -72,7 +74,7 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
             color='secondary'
             width={1.25}
             height={1.25}
-            className='btn btn-sm btn-link text-hover-danger'
+            className={`btn btn-sm btn-link text-hover-danger ${content.value.disabled ? 'disabled' : ''}`}
             style={{ boxSizing: 'content-box', cursor: 'pointer' }}
             onClick={() => dispatch({
               tag: 'deleteGroup',
@@ -87,7 +89,7 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
       return wrap((
         <Input.View
           type='text'
-          className='form-control font-size-sm'
+          className='form-control'
           value={content.value.value}
           placeholder='Full Name'
           disabled={content.value.disabled}
@@ -106,7 +108,7 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
       return wrap((
         <Input.View
           type='text'
-          className='form-control font-size-sm'
+          className='form-control'
           value={content.value.value}
           placeholder='Email Address'
           disabled={content.value.disabled}
@@ -156,14 +158,13 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
       ), true, true);
 
     case 'attendeeDelete':
-      if (content.value.disabled) { return <td></td>; }
       return wrap((
         <Icon
           name='trash'
           color='secondary'
           width={1.25}
           height={1.25}
-          className='btn btn-sm btn-link text-hover-danger'
+          className={`btn btn-sm btn-link text-hover-danger ${content.value.disabled ? 'disabled' : ''}`}
           style={{ boxSizing: 'content-box', cursor: 'pointer' }}
           onClick={() => dispatch({
             tag: 'deleteAttendee',
@@ -190,11 +191,11 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
       ), true, false, NUM_COLUMNS);
 
     case 'attendeeErrors':
-      return wrap((
-        <div className='small text-danger'>
+      return (
+        <td colSpan={NUM_COLUMNS} className='align-top pt-0 text-danger border-0'>
           {content.value.map((s, i) => (<div key={i}>{s}</div>))}
-        </div>
-      ), false, false, NUM_COLUMNS);
+        </td>
+      );
 
     default:
       return null;
@@ -203,35 +204,40 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
 
 const tableHeadCells: Table.THSpec[] = [
   {
-    children: 'Attendee Name',
+    children: (<span>Attendee Name<span className='text-primary ml-1'>*</span></span>),
     style: {
-      width: '300px'
+      minWidth: '240px',
+      width: '240px'
     }
   },
   {
-    children: 'Attendee Email Address',
+    children: (<span>Attendee Email Address<span className='text-primary ml-1'>*</span></span>),
     style: {
-      width: '300px'
+      minWidth: '240px',
+      width: '240px'
     }
   },
   {
     children: (<div>Attending<br />In-Person</div>),
     className: 'text-center',
     style: {
-      width: '120px'
+      minWidth: '110px',
+      width: '110px'
     }
   },
   {
     children: (<div>Attending<br />Remotely</div>),
     className: 'text-center',
     style: {
-      width: '120px'
+      minWidth: '110px',
+      width: '110px'
     }
   },
   {
     children: ' ',
     style: {
-      width: '60px'
+      minWidth: '80px',
+      width: '80px'
     }
   }
 ];
@@ -240,10 +246,20 @@ const TableComponent: Table.TableComponent<TableCellData> = Table.component();
 
 export interface State {
   groups: AttendeeGroup[];
+  occurringAt: Date;
   table: Immutable<Table.State<TableCellData>>;
 }
 
-export type Params = Omit<State,  'table'>;
+export function isValid(state: Immutable<State>): boolean {
+  for (const group of state.groups) {
+    for (const attendee of group.attendees) {
+      if (attendee.errors.length) { return false; }
+    }
+  }
+  return true;
+}
+
+export type Params = Omit<State, 'table'>;
 
 type OnChangeAttendeeField<Value> = Omit<TableCellContentValue<Value>, 'disabled'>;
 
@@ -259,9 +275,9 @@ type InnerMsg
 
 export type Msg = GlobalComponentMsg<InnerMsg,  Route>;
 
-export const init: Init<Params,  State> = async ({ groups }) => {
+export const init: Init<Params,  State> = async params => {
   return {
-    groups,
+    ...params,
     table: immutable(await TableComponent.init({
       TDView,
       THView: Table.DefaultTHView,
@@ -273,10 +289,58 @@ export const init: Init<Params,  State> = async ({ groups }) => {
 export const update: Update<State,  Msg> = ({ state,  msg }) => {
   switch  (msg.tag) {
     case 'table':
+      return updateComponentChild({
+        state,
+        mapChildMsg: value => ({ tag: 'table' as const, value }),
+        childStatePath: ['table'],
+        childUpdate: TableComponent.update,
+        childMsg: msg.value
+      });
+
+    case 'onChangeAttendeeName':
+      return [updateAndValidateAttendee(state, 'name', msg.value.value, msg.value.groupIndex, msg.value.attendeeIndex)];
+
+    case 'onChangeAttendeeEmail':
+      return [updateAndValidateAttendee(state, 'email', msg.value.value, msg.value.groupIndex, msg.value.attendeeIndex)];
+
+    case 'onChangeAttendeeInPerson':
+      return [updateAndValidateAttendee(state, 'remote', !msg.value.value, msg.value.groupIndex, msg.value.attendeeIndex)];
+
+    case 'onChangeAttendeeRemote':
+      return [updateAndValidateAttendee(state, 'remote', msg.value.value, msg.value.groupIndex, msg.value.attendeeIndex)];
+
+    case 'deleteAttendee':
+      return [state.setIn(['groups', msg.value.groupIndex, 'attendees'], state.groups[msg.value.groupIndex].attendees.filter((a, i) => i !== msg.value.attendeeIndex))];
+
+    case 'addAttendee':
+      return [state.setIn(['groups', msg.value.groupIndex, 'attendees'], state.groups[msg.value.groupIndex].attendees.concat({
+        name: '',
+        email: '',
+        remote: false,
+        errors: []
+      }))];
+
+    case 'deleteGroup':
+      return [state.set('groups', state.groups.filter((g, i) => i !== msg.value.groupIndex))];
+
     default:
       return [state];
   }
 };
+
+function updateAndValidateAttendee<K extends keyof DdrResource.Attendee>(state: Immutable<State>, key: K, value: DdrResource.Attendee[K], groupIndex: number, attendeeIndex: number): Immutable<State> {
+  const getAttendee = (state: Immutable<State>) => state.groups[groupIndex].attendees[attendeeIndex];
+  const newState = state.setIn(['groups', groupIndex, 'attendees', attendeeIndex, key], value);
+  const existingAttendee = getAttendee(state);
+  const newAttendee = getAttendee(newState);
+  const validation = validateAttendee(newAttendee, state.occurringAt, existingAttendee);
+  const validationErrors: DdrResource.AttendeeValidationErrors = getInvalidValue(validation, {});
+  let visibleErrors: string[] = [];
+  if (newAttendee.name || existingAttendee.name) { visibleErrors = visibleErrors.concat(validationErrors.name || []); }
+  if (newAttendee.email || existingAttendee.email) { visibleErrors = visibleErrors.concat(validationErrors.email || []); }
+  visibleErrors.concat(validationErrors.remote || []);
+  return newState.setIn(['groups', groupIndex, 'attendees', attendeeIndex, 'errors'], visibleErrors);
+}
 
 export interface ViewProps extends ComponentViewProps<State,  Msg> {
   disabled ?: boolean;
@@ -302,7 +366,13 @@ function tableBodyRows(groups: AttendeeGroup[], dispatch: Dispatch<Msg>, disable
         { tag:  'attendeeInPerson', value: { ...defaults,  value: !attendee.remote }},
         { tag:  'attendeeRemote', value: { ...defaults,  value: attendee.remote }}
       ];
-      row.push({ tag: 'attendeeDelete', value: defaults });
+      row.push({
+        tag: 'attendeeDelete',
+        value: {
+          ...defaults,
+          disabled: defaults.disabled || group.attendees.length === 1
+        }
+      });
       groupRows.push(row);
       if (attendee.errors.length) {
         groupRows.push([{ tag: 'attendeeErrors', value: attendee.errors }]);
@@ -333,8 +403,7 @@ export const view: View<ViewProps> = ({ state,  dispatch, disabled }) => {
       headCells={tableHeadCells}
       bodyRows={bodyRows}
       state={state.table}
-      dispatch={dispatchTable}
-      borderless />
+      dispatch={dispatchTable} />
   );
 };
 

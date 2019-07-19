@@ -78,6 +78,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
     const rfiResult = await api.readOneRfi(rfiId);
     if (rfiResult.tag === 'invalid') { return fail(notFoundRoute); }
     const rfi = rfiResult.value;
+    if (!rfi.latestVersion.discoveryDay) { return fail(notFoundRoute); }
     const ddrResult = await api.readOneDdr(sessionUser.id, rfi._id);
     return valid(immutable({
       submitLoading: 0,
@@ -85,8 +86,8 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
       rfi,
       ddr: ddrResult.tag === 'valid' ? ddrResult.value : undefined,
       attendees: immutable(await Attendees.init({
+        occurringAt: rfi.latestVersion.discoveryDay.occurringAt,
         groups: [{
-          vendor: userResult.value,
           attendees: ddrResult.tag === 'valid'
             ? ddrResult.value.attendees.map(a => ({ ...a, errors: [] }))
             : [{
@@ -122,7 +123,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return updateComponentChild({
         state,
         mapChildMsg: value => ({ tag: 'attendees', value }),
-        childStatePath: ['attendees'],
+        childStatePath: ['value', 'attendees'],
         childUpdate: Attendees.update,
         childMsg: msg.value
       });
@@ -142,7 +143,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
     <FixedBar>
       <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled} className='text-nowrap'>
-        Submit Response
+        Submit Registration
       </LoadingButton>
       <Link route={{ tag: 'requestForInformationView', value: { rfiId: rfi._id }}} color='secondary' className='text-nowrap mx-3'>
         Cancel
@@ -163,9 +164,6 @@ const view: ComponentView<State, Msg> = props => {
         <Col xs='12' className='d-flex flex-column'>
           <h1>Discovery Day Registration</h1>
           <h3>{version.rfiNumber}: {version.title}</h3>
-          <p className='mt-2'>
-            Please complete the following form to register one of more of your company's representatives to this RFI's Discovery Day session.
-          </p>
         </Col>
       </Row>
       <Row>
@@ -175,8 +173,11 @@ const view: ComponentView<State, Msg> = props => {
       </Row>
       <DiscoveryDayInfo discoveryDay={version.discoveryDay} />
       <Row className='mt-5 pb-3'>
-        <Col xs='12'>
+        <Col xs='12' className='d-flex flex-column'>
           <h2>Attendee(s)</h2>
+          <p className='mt-2'>
+            Please complete the following form to register one of more of your company's representatives to this RFI's Discovery Day session. If you are not personally attending, please clear your name and email from the list of attendees, and add the information of your colleagues that will be.
+          </p>
         </Col>
       </Row>
       <Row>
