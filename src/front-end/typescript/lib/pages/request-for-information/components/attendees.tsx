@@ -178,7 +178,7 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
     case 'attendeeAdd':
       return wrap((
         <Link
-          className='d-inline-flex flex-nowrap align-items-center'
+          className='d-inline-flex flex-nowrap align-items-center font-size-base'
           onClick={() => dispatch({
             tag: 'addAttendee',
             value: {

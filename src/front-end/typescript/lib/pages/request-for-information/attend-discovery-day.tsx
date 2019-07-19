@@ -24,12 +24,17 @@ export interface RouteParams {
 
 export type InnerMsg
   = ADT<'attendees', Attendees.Msg>
+  | ADT<'startEditing'>
+  | ADT<'cancelEditing'>
+  | ADT<'cancelRegistration'>
   | ADT<'submit'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 interface ValidState {
+  isEditing: boolean;
   submitLoading: number;
+  cancelRegistrationLoading: number;
   rfi: PublicRfi;
   discoveryDay: PublicDiscoveryDay;
   vendor: PublicUser;
@@ -100,6 +105,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
     const ddrResult = await api.readOneDdr(sessionUser.id, rfi._id);
     const ddr = ddrResult.tag === 'valid' ? ddrResult.value : undefined;
     return valid(immutable({
+      isEditing: !ddr,
       submitLoading: 0,
       vendor: userResult.value,
       rfi,
@@ -127,6 +133,7 @@ const stopSubmitLoading: UpdateState<ValidState> = makeStopLoading('submitLoadin
 const update: Update<State, Msg> = ({ state, msg }) => {
   if (state.tag === 'invalid') { return [state]; }
   switch (msg.tag) {
+
     case 'attendees':
       return updateComponentChild({
         state,
@@ -135,6 +142,19 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         childUpdate: Attendees.update,
         childMsg: msg.value
       });
+
+    case 'startEditing':
+      return [state.setIn(['value', 'isEditing'], true)];
+
+    case 'cancelEditing':
+    return [
+      state.setIn(['value', 'isEditing'], false),
+      async state => {
+        if (state.tag === 'invalid') { return state; }
+        return state.setIn(['value', 'attendees'], await resetAttendees(state.value.discoveryDay, state.value.vendor, state.value.ddr));
+      }
+    ];
+
     case 'submit':
       return [
         state.set('value', startSubmitLoading(state.value)),
@@ -156,6 +176,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           }
         }
       ];
+
     default:
       return [state];
   }
@@ -163,26 +184,60 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 
 const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (state.tag === 'invalid') { return null; }
-  const { rfi, submitLoading } = state.value;
-  const isLoading = submitLoading > 0;
+  const { rfi, ddr, isEditing, submitLoading, cancelRegistrationLoading } = state.value;
+  const isSubmitLoading = submitLoading > 0;
+  const isCancelRegistrationLoading = cancelRegistrationLoading > 0;
+  const isLoading = isSubmitLoading || isCancelRegistrationLoading;
   const isDisabled = isLoading || !Attendees.isValid(state.value.attendees);
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
-  return (
-    <FixedBar>
-      <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled} className='text-nowrap'>
-        Submit Registration
-      </LoadingButton>
-      <Link route={{ tag: 'requestForInformationView', value: { rfiId: rfi._id }}} color='secondary' className='text-nowrap mx-3'>
-        Cancel
-      </Link>
-    </FixedBar>
-  );
+  const startEditing = () => dispatch({ tag: 'startEditing', value: undefined });
+  const cancelEditing = () => dispatch({ tag: 'cancelEditing', value: undefined });
+  const cancelRegistration = () => dispatch({ tag: 'cancelRegistration', value: undefined });
+  if (!ddr) {
+    return (
+      <FixedBar>
+        <LoadingButton color='primary' onClick={submit} loading={isSubmitLoading} disabled={isDisabled} className='text-nowrap'>
+          Submit Registration
+        </LoadingButton>
+        <Link route={{ tag: 'requestForInformationView', value: { rfiId: rfi._id }}} color='secondary' className='text-nowrap mx-3'>
+          Cancel
+        </Link>
+      </FixedBar>
+    );
+  } else {
+    if (isEditing) {
+      return (
+        <FixedBar>
+          <LoadingButton color='primary' onClick={submit} loading={isSubmitLoading} disabled={isDisabled} className='text-nowrap'>
+            Submit Changes
+          </LoadingButton>
+          <Link onClick={cancelEditing} color='secondary' className='text-nowrap mx-3'>
+            Cancel
+          </Link>
+        </FixedBar>
+      );
+    } else {
+      return (
+        <FixedBar>
+          <Link button color='primary' onClick={startEditing} disabled={isLoading} className='text-nowrap'>
+            Edit Registration
+          </Link>
+          <LoadingButton color='danger' onClick={cancelRegistration} loading={isCancelRegistrationLoading} disabled={isLoading} className='text-nowrap mx-3'>
+            Cancel Registration
+          </LoadingButton>
+          <Link route={{ tag: 'requestForInformationView', value: { rfiId: rfi._id }}} color='secondary' className='text-nowrap'>
+            Cancel
+          </Link>
+        </FixedBar>
+      );
+    }
+  }
 };
 
 const view: ComponentView<State, Msg> = props => {
   const { state, dispatch } = props;
   if (state.tag === 'invalid') { return null; }
-  const rfi = state.value.rfi;
+  const { attendees, rfi, isEditing } = state.value;
   const version = rfi.latestVersion;
   const dispatchAttendees: Dispatch<Attendees.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'attendees' as const, value }));
   return (
@@ -209,7 +264,7 @@ const view: ComponentView<State, Msg> = props => {
       </Row>
       <Row>
         <Col xs='12'>
-          <Attendees.view state={state.value.attendees} dispatch={dispatchAttendees} />
+          <Attendees.view state={attendees} dispatch={dispatchAttendees} disabled={!isEditing} />
         </Col>
       </Row>
     </div>

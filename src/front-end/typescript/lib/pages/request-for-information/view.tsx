@@ -36,7 +36,7 @@ export interface RouteParams {
 export type InnerMsg
   = ADT<'hideResponseConfirmationPrompt'>
   | ADT<'respondToRfi'>
-  | ADT<'respondToDiscoveryDay'>;
+  | ADT<'attendDiscoveryDay'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -133,11 +133,18 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           }
         }
       ];
-    case 'respondToDiscoveryDay':
+    case 'attendDiscoveryDay':
       return [
         state,
         async (state, dispatch) => {
           if (!state.rfi) { return null; }
+          const registrationRoute: Route = {
+            tag: 'requestForInformationAttendDiscoveryDay',
+            value: {
+              rfiId: state.rfi._id
+            }
+          };
+          const registrationUrl = router.routeToUrl(registrationRoute);
           const thisRoute: Route = {
             tag: 'requestForInformationView' as const,
             value: {
@@ -150,7 +157,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
             dispatch(newRoute({
               tag: 'signIn' as const,
               value: {
-                redirectOnSuccess: thisUrl
+                redirectOnSuccess: registrationUrl
               }
             }));
             return state;
@@ -163,12 +170,14 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               value: {
                 userId: state.sessionUser.id,
                 warningId: WarningId.DiscoveryDayResponse,
-                redirectOnAccept: thisUrl,
+                redirectOnAccept: registrationUrl,
                 redirectOnSkip: thisUrl
               }
             }));
             return state;
           }
+          // Navigate to registration page.
+          dispatch(newRoute(registrationRoute));
           return state;
         }
       ];
@@ -310,7 +319,7 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
   if (!showButtons(rfiStatus, state.sessionUser && state.sessionUser.type)) { return null; }
   const version = state.rfi.latestVersion;
   const alreadyRespondedToDiscoveryDay = !!state.ddr;
-  const respondToDiscoveryDay = () => !alreadyRespondedToDiscoveryDay && dispatch({ tag: 'respondToDiscoveryDay', value: undefined });
+  const attendDiscoveryDay = () => dispatch({ tag: 'attendDiscoveryDay', value: undefined });
   const respondToRfi = () => dispatch({ tag: 'respondToRfi', value: undefined });
   return (
     <FixedBar>
@@ -318,8 +327,7 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
         Respond to RFI
       </Link>
       {version.discoveryDay && rfiStatus === RfiStatus.Open
-        ? (<Link onClick={respondToDiscoveryDay} button color='info' className='text-nowrap'>
-            Respond to RFI
+        ? (<Link onClick={attendDiscoveryDay} button color='info' className='text-nowrap mr-md-3 mr-0 ml-3 ml-md-0'>
             {alreadyRespondedToDiscoveryDay ? 'Manage Discovery Day Registration' : 'Attend Discovery Day'}
           </Link>)
         : null}
