@@ -4,6 +4,7 @@ import { Component, ComponentViewProps, Dispatch, GlobalComponentMsg, immutable,
 import * as Input from 'front-end/lib/views/form-field/lib/input';
 import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
+import { get } from 'lodash';
 import React, { ReactElement } from 'react';
 import { CustomInput } from 'reactstrap';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
@@ -12,8 +13,14 @@ import { ADT, Omit, profileToName } from 'shared/lib/types';
 import { getInvalidValue } from 'shared/lib/validators';
 import { validateAttendee } from 'shared/lib/validators/discovery-day-response';
 
+interface AttendeeErrors {
+  name: string[];
+  email: string[];
+  remote: string[];
+}
+
 interface Attendee extends DdrResource.Attendee {
-  errors: string[];
+  errors?: AttendeeErrors;
 }
 
 interface AttendeeGroup {
@@ -31,13 +38,15 @@ interface TableCellContentValue<Value> {
 type TableCellContent
   = ADT<'groupTitle', PublicUser>
   | ADT<'groupDelete', { groupIndex: number, disabled?: boolean }>
-  | ADT<'attendeeName', TableCellContentValue<string>>
-  | ADT<'attendeeEmail', TableCellContentValue<string>>
+  | ADT<'attendeeName', TableCellContentValue<[string, boolean]>>
+  | ADT<'attendeeEmail', TableCellContentValue<[string, boolean]>>
   | ADT<'attendeeInPerson', TableCellContentValue<boolean>>
   | ADT<'attendeeRemote', TableCellContentValue<boolean>>
   | ADT<'attendeeDelete', Omit<TableCellContentValue<null>, 'value'>>
   | ADT<'attendeeAdd', { groupIndex: number }>
-  | ADT<'attendeeErrors', string[]>;
+  | ADT<'attendeeErrorsName', string[]>
+  | ADT<'attendeeErrorsEmail', string[]>
+  | ADT<'attendeeErrorsRemote', string[]>;
 
 interface TableCellData {
   content: TableCellContent;
@@ -89,8 +98,8 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
       return wrap((
         <Input.View
           type='text'
-          className='form-control'
-          value={content.value.value}
+          className={`form-control ${content.value.value[1] ? 'is-invalid' : ''}`}
+          value={content.value.value[0]}
           placeholder='Full Name'
           disabled={content.value.disabled}
           onChange={event => dispatch({
@@ -108,8 +117,8 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
       return wrap((
         <Input.View
           type='text'
-          className='form-control'
-          value={content.value.value}
+          className={`form-control ${content.value.value[1] ? 'is-invalid' : ''}`}
+          value={content.value.value[0]}
           placeholder='Email Address'
           disabled={content.value.disabled}
           onChange={event => dispatch({
@@ -190,9 +199,23 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
         </Link>
       ), true, false, NUM_COLUMNS);
 
-    case 'attendeeErrors':
+    case 'attendeeErrorsName':
       return (
-        <td colSpan={NUM_COLUMNS} className='align-top pt-0 text-danger border-0'>
+        <td className='align-top pt-0 text-danger border-0 text-wrap'>
+          {content.value.map((s, i) => (<div key={i}>{s}</div>))}
+        </td>
+      );
+
+    case 'attendeeErrorsEmail':
+      return (
+        <td className='align-top pt-0 text-danger border-0 text-wrap'>
+          {content.value.map((s, i) => (<div key={i}>{s}</div>))}
+        </td>
+      );
+
+    case 'attendeeErrorsRemote':
+      return (
+        <td colSpan={2} className='align-top pt-0 text-danger border-0 text-wrap'>
           {content.value.map((s, i) => (<div key={i}>{s}</div>))}
         </td>
       );
@@ -250,10 +273,14 @@ export interface State {
   table: Immutable<Table.State<TableCellData>>;
 }
 
+function attendeeHasErrors(attendee: Attendee): boolean {
+  return !!(attendee.errors && (attendee.errors.name.length || attendee.errors.email.length || attendee.errors.remote.length));
+}
+
 export function isValid(state: Immutable<State>): boolean {
   for (const group of state.groups) {
     for (const attendee of group.attendees) {
-      if (attendee.errors.length || !attendee.name || !attendee.email) { return false; }
+      if (attendeeHasErrors(attendee) || !attendee.name || !attendee.email) { return false; }
     }
   }
   return true;
@@ -321,8 +348,7 @@ export const update: Update<State,  Msg> = ({ state,  msg }) => {
       return [state.setIn(['groups', msg.value.groupIndex, 'attendees'], state.groups[msg.value.groupIndex].attendees.concat({
         name: '',
         email: '',
-        remote: false,
-        errors: []
+        remote: false
       }))];
 
     case 'deleteGroup':
@@ -340,11 +366,11 @@ function updateAndValidateAttendee<K extends keyof DdrResource.Attendee>(state: 
   const newAttendee = getAttendee(newState);
   const validation = validateAttendee(newAttendee, state.occurringAt, existingAttendee);
   const validationErrors: DdrResource.AttendeeValidationErrors = getInvalidValue(validation, {});
-  let visibleErrors: string[] = [];
-  if (newAttendee.name || existingAttendee.name) { visibleErrors = visibleErrors.concat(validationErrors.name || []); }
-  if (newAttendee.email || existingAttendee.email) { visibleErrors = visibleErrors.concat(validationErrors.email || []); }
-  visibleErrors.concat(validationErrors.remote || []);
-  return newState.setIn(['groups', groupIndex, 'attendees', attendeeIndex, 'errors'], visibleErrors);
+  return newState.setIn(['groups', groupIndex, 'attendees', attendeeIndex, 'errors'], {
+    name: get(validationErrors, 'name', []),
+    email: get(validationErrors, 'email', []),
+    remote: get(validationErrors, 'remote', [])
+  });
 }
 
 export interface ViewProps extends ComponentViewProps<State,  Msg> {
@@ -366,8 +392,8 @@ function tableBodyRows(groups: AttendeeGroup[], dispatch: Dispatch<Msg>, disable
     tableRows = tableRows.concat(group.attendees.reduce((groupRows: TableCellContent[][], attendee, attendeeIndex) => {
       const defaults = { groupIndex,  attendeeIndex, disabled };
       const row: TableCellContent[] = [
-        { tag:  'attendeeName', value: { ...defaults,  value: attendee.name }},
-        { tag:  'attendeeEmail', value: { ...defaults,  value: attendee.email }},
+        { tag:  'attendeeName', value: { ...defaults,  value: [attendee.name, !!(attendee.errors && attendee.errors.name.length)] }},
+        { tag:  'attendeeEmail', value: { ...defaults,  value: [attendee.email, !!(attendee.errors && attendee.errors.email.length)] }},
         { tag:  'attendeeInPerson', value: { ...defaults,  value: !attendee.remote }},
         { tag:  'attendeeRemote', value: { ...defaults,  value: attendee.remote }}
       ];
@@ -379,8 +405,12 @@ function tableBodyRows(groups: AttendeeGroup[], dispatch: Dispatch<Msg>, disable
         }
       });
       groupRows.push(row);
-      if (attendee.errors.length) {
-        groupRows.push([{ tag: 'attendeeErrors', value: attendee.errors }]);
+      if (attendeeHasErrors(attendee) && attendee.errors) {
+        groupRows.push([
+          { tag: 'attendeeErrorsName', value: attendee.errors.name },
+          { tag: 'attendeeErrorsEmail', value: attendee.errors.email },
+          { tag: 'attendeeErrorsRemote', value: attendee.errors.remote }
+        ]);
       }
       return groupRows;
     }, []));

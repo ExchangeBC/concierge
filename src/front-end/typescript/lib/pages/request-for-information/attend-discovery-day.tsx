@@ -51,12 +51,11 @@ async function resetAttendees(discoveryDay: PublicDiscoveryDay, vendor: PublicUs
     occurringAt: discoveryDay.occurringAt,
     groups: [{
       attendees: ddr
-        ? ddr.attendees.map(a => ({ ...a, errors: [] }))
+        ? ddr.attendees
         : [{
             name: profileToName(vendor.profile) || '',
             email: vendor.email,
-            remote: false,
-            errors: []
+            remote: false
           }]
     }]
   }));
