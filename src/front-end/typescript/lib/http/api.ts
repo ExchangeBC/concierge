@@ -354,6 +354,7 @@ function rawDdrToPublicDdr(raw: RawDdr): DdrResource.PublicDiscoveryDayResponse 
 export async function createDdr(ddr: DdrResource.CreateRequestBody): Promise<ValidOrInvalid<DdrResource.PublicDiscoveryDayResponse, DdrResource.CreateValidationErrors>> {
   const response = await request(HttpMethod.Post, 'discoveryDayResponses', ddr);
   switch (response.status) {
+    case 200:
     case 201:
       const rawDdr = response.data as RawDdr;
       return valid(rawDdrToPublicDdr(rawDdr));
@@ -365,7 +366,7 @@ export async function createDdr(ddr: DdrResource.CreateRequestBody): Promise<Val
 }
 
 export async function readOneDdr(vendorId: string, rfiId: string): Promise<ValidOrInvalid<DdrResource.PublicDiscoveryDayResponse, null>> {
-  const response = await request(HttpMethod.Get, `discoveryDayResponses/${vendorId}?rfi=${rfiId}`);
+  const response = await request(HttpMethod.Get, `discoveryDayResponses/${vendorId}?rfiId=${rfiId}`);
   switch (response.status) {
     case 200:
       const rawDdr = response.data as RawDdr;

@@ -13,8 +13,8 @@ import LoadingButton from 'front-end/lib/views/loading-button';
 import React from 'react';
 import { Col, Row } from 'reactstrap';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
-import { PublicRfi } from 'shared/lib/resources/request-for-information';
-import { PublicSessionUser } from 'shared/lib/resources/session';
+import { PublicDiscoveryDay, PublicRfi } from 'shared/lib/resources/request-for-information';
+import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, profileToName, UserType } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
@@ -30,8 +30,9 @@ export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 interface ValidState {
   submitLoading: number;
-  sessionUser: PublicSessionUser;
   rfi: PublicRfi;
+  discoveryDay: PublicDiscoveryDay;
+  vendor: PublicUser;
   ddr?: DdrResource.PublicDiscoveryDayResponse;
   attendees: Immutable<Attendees.State>;
 };
@@ -39,6 +40,22 @@ interface ValidState {
 type InvalidState = null;
 
 export type State = ValidOrInvalid<Immutable<ValidState>, InvalidState>;
+
+async function resetAttendees(discoveryDay: PublicDiscoveryDay, vendor: PublicUser, ddr?: DdrResource.PublicDiscoveryDayResponse): Promise<Immutable<Attendees.State>> {
+  return immutable(await Attendees.init({
+    occurringAt: discoveryDay.occurringAt,
+    groups: [{
+      attendees: ddr
+        ? ddr.attendees.map(a => ({ ...a, errors: [] }))
+        : [{
+            name: profileToName(vendor.profile) || '',
+            email: vendor.email,
+            remote: false,
+            errors: []
+          }]
+    }]
+  }));
+}
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
 
@@ -79,25 +96,16 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
     if (rfiResult.tag === 'invalid') { return fail(notFoundRoute); }
     const rfi = rfiResult.value;
     if (!rfi.latestVersion.discoveryDay) { return fail(notFoundRoute); }
+    const discoveryDay = rfi.latestVersion.discoveryDay;
     const ddrResult = await api.readOneDdr(sessionUser.id, rfi._id);
+    const ddr = ddrResult.tag === 'valid' ? ddrResult.value : undefined;
     return valid(immutable({
       submitLoading: 0,
-      sessionUser,
+      vendor: userResult.value,
       rfi,
-      ddr: ddrResult.tag === 'valid' ? ddrResult.value : undefined,
-      attendees: immutable(await Attendees.init({
-        occurringAt: rfi.latestVersion.discoveryDay.occurringAt,
-        groups: [{
-          attendees: ddrResult.tag === 'valid'
-            ? ddrResult.value.attendees.map(a => ({ ...a, errors: [] }))
-            : [{
-              name: profileToName(userResult.value.profile) || '',
-              email: userResult.value.email,
-              remote: false,
-              errors: []
-            }]
-        }]
-      }))
+      discoveryDay,
+      ddr,
+      attendees: await resetAttendees(discoveryDay, userResult.value, ddr)
     }));
   },
 
@@ -128,7 +136,26 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         childMsg: msg.value
       });
     case 'submit':
-      return [state.set('value', stopSubmitLoading(startSubmitLoading(state.value)))];
+      return [
+        state.set('value', startSubmitLoading(state.value)),
+        async state => {
+          if (state.tag === 'invalid') { return state; }
+          state = state.set('value', stopSubmitLoading(state.value));
+          const result = await api.createDdr({
+            rfiId: state.value.rfi._id,
+            vendorId: state.value.vendor._id,
+            attendees: state.value.attendees.groups[0].attendees
+          });
+          switch (result.tag) {
+            case 'valid':
+              return state
+                .setIn(['value', 'ddr'], result.value)
+                .setIn(['value', 'attendees'], await resetAttendees(state.value.discoveryDay, state.value.vendor, result.value));
+            case 'invalid':
+              return state;
+          }
+        }
+      ];
     default:
       return [state];
   }
@@ -138,7 +165,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (state.tag === 'invalid') { return null; }
   const { rfi, submitLoading } = state.value;
   const isLoading = submitLoading > 0;
-  const isDisabled = isLoading;
+  const isDisabled = isLoading || !Attendees.isValid(state.value.attendees);
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
     <FixedBar>
@@ -171,7 +198,7 @@ const view: ComponentView<State, Msg> = props => {
           <h2>Session Information</h2>
         </Col>
       </Row>
-      <DiscoveryDayInfo discoveryDay={version.discoveryDay} />
+      <DiscoveryDayInfo discoveryDay={state.value.discoveryDay} />
       <Row className='mt-5 pb-3'>
         <Col xs='12' className='d-flex flex-column'>
           <h2>Attendee(s)</h2>

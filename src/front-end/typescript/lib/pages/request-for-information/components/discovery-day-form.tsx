@@ -153,7 +153,7 @@ export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryD
     remoteAccess: LongText.init({
       id: 'discovery-day-remote-access',
       required: true,
-      label: 'Remote Access Info',
+      label: 'Remote Access',
       placeholder: remoteAccessHelpText,
       value: getDdString('remoteAccess'),
       help: {

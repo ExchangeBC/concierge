@@ -3,7 +3,7 @@ import * as permissions from 'back-end/lib/permissions';
 import { dateSchema } from 'back-end/lib/schemas';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import * as mongoose from 'mongoose';
+import mongooseDefault, * as mongoose from 'mongoose';
 import { Attendee, PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
 import { PublicDiscoveryDay, PublicRfi, PublicVersion } from 'shared/lib/resources/request-for-information';
 import { Addendum, ProgramStaffProfile } from 'shared/lib/types';
@@ -70,7 +70,7 @@ export async function getDiscoveryDayResponses(UserModel: UserSchema.Model, rfi:
   const responses = await getPublicDiscoveryDayResponses(UserModel, rfi);
   return responses.map(r => ({
     ...r,
-    vendor: new mongoose.Types.ObjectId(r.vendor._id)
+    vendor: new mongooseDefault.Types.ObjectId(r.vendor._id)
   }));
 }
 

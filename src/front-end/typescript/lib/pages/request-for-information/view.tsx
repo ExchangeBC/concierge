@@ -170,18 +170,6 @@ const update: Update<State, Msg> = ({ state, msg }) => {
             return state;
           }
           return state;
-          // Otherwise, process the response.
-          /*const result = await api.createDdr({
-            rfiId: state.rfi._id
-          });
-          switch (result.tag) {
-            case 'valid':
-              return finish(state.set('ddr', result.value));
-            case 'invalid':
-              // TODO show error messages from the server.
-              // TODO Redirect to T&C if required.
-              return finish(state);
-          }*/
         }
       ];
     default:

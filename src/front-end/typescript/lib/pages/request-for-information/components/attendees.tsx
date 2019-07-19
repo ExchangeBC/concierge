@@ -47,7 +47,7 @@ interface TableCellData {
 const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
   const NUM_COLUMNS = 5;
   const { content, dispatch } = data;
-  const id = `attendee-table-cell-${content.tag}`;
+  const makeId = (groupIndex: number, attendeeIndex: number) => `attendee-table-cell-${content.tag}-${groupIndex}-${attendeeIndex}`;
   const wrap = (child: string | null | ReactElement<any>, middle = false, center = false, colSpan?: number) => {
     return (<td className={`align-${middle ? 'middle' : 'top'} ${center ? 'text-center' : ''}`} colSpan={colSpan}>{child}</td>);
   };
@@ -101,7 +101,7 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
               value: event.currentTarget.value
             }
           })}
-          id={id} />
+          id={makeId(content.value.groupIndex, content.value.attendeeIndex)} />
       ));
 
     case 'attendeeEmail':
@@ -120,7 +120,7 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
               value: event.currentTarget.value
             }
           })}
-          id={id} />
+          id={makeId(content.value.groupIndex, content.value.attendeeIndex)} />
       ));
 
     case 'attendeeInPerson':
@@ -137,7 +137,7 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
               value: event.currentTarget.checked
             }
           })}
-          id={id} />
+          id={makeId(content.value.groupIndex, content.value.attendeeIndex)} />
       ), true, true);
 
     case 'attendeeRemote':
@@ -154,7 +154,7 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
               value: event.currentTarget.checked
             }
           })}
-          id={id} />
+          id={makeId(content.value.groupIndex, content.value.attendeeIndex)} />
       ), true, true);
 
     case 'attendeeDelete':
@@ -178,7 +178,7 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
     case 'attendeeAdd':
       return wrap((
         <Link
-          className='d-flex flex-nowrap align-items-center'
+          className='d-inline-flex flex-nowrap align-items-center'
           onClick={() => dispatch({
             tag: 'addAttendee',
             value: {
@@ -253,10 +253,15 @@ export interface State {
 export function isValid(state: Immutable<State>): boolean {
   for (const group of state.groups) {
     for (const attendee of group.attendees) {
-      if (attendee.errors.length) { return false; }
+      if (attendee.errors.length || !attendee.name || !attendee.email) { return false; }
     }
   }
   return true;
+}
+
+export function setErrors(state: Immutable<State>, errors: DdrResource.AttendeeValidationErrors[][]): Immutable<State> {
+  // TODO
+  return state;
 }
 
 export type Params = Omit<State, 'table'>;
