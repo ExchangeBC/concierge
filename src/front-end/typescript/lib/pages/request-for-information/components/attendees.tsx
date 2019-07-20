@@ -259,8 +259,8 @@ const tableHeadCells: Table.THSpec[] = [
   {
     children: ' ',
     style: {
-      minWidth: '80px',
-      width: '80px'
+      minWidth: '70px',
+      width: '70px'
     }
   }
 ];
@@ -287,7 +287,15 @@ export function isValid(state: Immutable<State>): boolean {
 }
 
 export function setErrors(state: Immutable<State>, errors: DdrResource.AttendeeValidationErrors[][]): Immutable<State> {
-  // TODO
+  state.groups.forEach((group, groupIndex) => {
+    group.attendees.forEach((attendee, attendeeIndex) => {
+      state = state.setIn(['groups', groupIndex, 'attendees', attendeeIndex, 'errors'], {
+        name: get(errors, [groupIndex, attendeeIndex, 'name'], []),
+        email: get(errors, [groupIndex, attendeeIndex, 'email'], []),
+        remote: get(errors, [groupIndex, attendeeIndex, 'remote'], [])
+      });
+    });
+  });
   return state;
 }
 

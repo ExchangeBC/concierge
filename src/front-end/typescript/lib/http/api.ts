@@ -378,6 +378,32 @@ export async function readOneDdr(vendorId: string, rfiId: string): Promise<Valid
   }
 }
 
+export async function updateDdr(vendorId: string, rfiId: string, attendees: DdrResource.Attendee[]): Promise<ValidOrInvalid<DdrResource.PublicDiscoveryDayResponse, DdrResource.UpdateValidationErrors>> {
+  const response = await request(HttpMethod.Put, `discoveryDayResponses/${vendorId}?rfiId=${rfiId}`, { attendees });
+  switch (response.status) {
+    case 200:
+      const rawDdr = response.data as RawDdr;
+      return valid(rawDdrToPublicDdr(rawDdr));
+    case 400:
+    case 401:
+      return invalid(response.data as DdrResource.UpdateValidationErrors);
+    default:
+      return invalid({});
+  }
+}
+
+export async function deleteDdr(vendorId: string, rfiId: string): Promise<ValidOrInvalid<null, null>> {
+  const response = await request(HttpMethod.Delete, `discoveryDayResponses/${vendorId}?rfiId=${rfiId}`);
+  switch (response.status) {
+    case 200:
+      return valid(null);
+    case 400:
+      return invalid(null);
+    default:
+      return invalid(null);
+  }
+}
+
 interface RawRfiResponse extends Pick<RfiResponseResource.PublicRfiResponse, '_id'> {
   createdAt: string;
   createdBy: RawUser;

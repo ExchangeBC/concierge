@@ -27,7 +27,8 @@ export type InnerMsg
   | ADT<'startEditing'>
   | ADT<'cancelEditing'>
   | ADT<'cancelRegistration'>
-  | ADT<'submit'>;
+  | ADT<'submitCreate'>
+  | ADT<'submitEdit'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -59,6 +60,14 @@ async function resetAttendees(discoveryDay: PublicDiscoveryDay, vendor: PublicUs
           }]
     }]
   }));
+}
+
+async function resetState(state: Immutable<State>, ddr?: DdrResource.PublicDiscoveryDayResponse): Promise<Immutable<State>> {
+  if (state.tag === 'invalid') { return state; }
+  return state
+    .setIn(['value', 'isEditing'], !ddr)
+    .setIn(['value', 'ddr'], ddr)
+    .setIn(['value', 'attendees'], await resetAttendees(state.value.discoveryDay, state.value.vendor, ddr));
 }
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
@@ -128,6 +137,8 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
 
 const startSubmitLoading: UpdateState<ValidState> = makeStartLoading('submitLoading');
 const stopSubmitLoading: UpdateState<ValidState> = makeStopLoading('submitLoading');
+const startCancelRegistrationLoading: UpdateState<ValidState> = makeStartLoading('cancelRegistrationLoading');
+const stopCancelRegistrationLoading: UpdateState<ValidState> = makeStopLoading('cancelRegistrationLoading');
 
 const update: Update<State, Msg> = ({ state, msg }) => {
   if (state.tag === 'invalid') { return [state]; }
@@ -150,11 +161,27 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       state.setIn(['value', 'isEditing'], false),
       async state => {
         if (state.tag === 'invalid') { return state; }
-        return state.setIn(['value', 'attendees'], await resetAttendees(state.value.discoveryDay, state.value.vendor, state.value.ddr));
+        return await resetState(state, state.value.ddr);
       }
     ];
 
-    case 'submit':
+    case 'cancelRegistration':
+      return [
+        state.set('value', startCancelRegistrationLoading(state.value)),
+        async state => {
+          if (state.tag === 'invalid') { return state; }
+          state = state.set('value', stopCancelRegistrationLoading(state.value));
+          const result = await api.deleteDdr(state.value.vendor._id, state.value.rfi._id);
+          switch (result.tag) {
+            case 'valid':
+              return await resetState(state, undefined);
+            case 'invalid':
+              return state;
+          }
+        }
+      ];
+
+    case 'submitCreate':
       return [
         state.set('value', startSubmitLoading(state.value)),
         async state => {
@@ -167,11 +194,27 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           });
           switch (result.tag) {
             case 'valid':
-              return state
-                .setIn(['value', 'ddr'], result.value)
-                .setIn(['value', 'attendees'], await resetAttendees(state.value.discoveryDay, state.value.vendor, result.value));
+              return await resetState(state, result.value);
             case 'invalid':
-              return state;
+              return state
+                .setIn(['value', 'attendees'], Attendees.setErrors(state.value.attendees, [result.value.attendees || []]));
+          }
+        }
+      ];
+
+    case 'submitEdit':
+      return [
+        state.set('value', startSubmitLoading(state.value)),
+        async state => {
+          if (state.tag === 'invalid') { return state; }
+          state = state.set('value', stopSubmitLoading(state.value));
+          const result = await api.updateDdr(state.value.vendor._id, state.value.rfi._id, state.value.attendees.groups[0].attendees);
+          switch (result.tag) {
+            case 'valid':
+              return await resetState(state, result.value);
+            case 'invalid':
+            return state
+              .setIn(['value', 'attendees'], Attendees.setErrors(state.value.attendees, [result.value.attendees || []]));
           }
         }
       ];
@@ -188,14 +231,15 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isCancelRegistrationLoading = cancelRegistrationLoading > 0;
   const isLoading = isSubmitLoading || isCancelRegistrationLoading;
   const isDisabled = isLoading || !Attendees.isValid(state.value.attendees);
-  const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
+  const submitCreate = () => !isDisabled && dispatch({ tag: 'submitCreate', value: undefined });
+  const submitEdit = () => !isDisabled && dispatch({ tag: 'submitEdit', value: undefined });
   const startEditing = () => dispatch({ tag: 'startEditing', value: undefined });
   const cancelEditing = () => dispatch({ tag: 'cancelEditing', value: undefined });
   const cancelRegistration = () => dispatch({ tag: 'cancelRegistration', value: undefined });
   if (!ddr) {
     return (
       <FixedBar>
-        <LoadingButton color='primary' onClick={submit} loading={isSubmitLoading} disabled={isDisabled} className='text-nowrap'>
+        <LoadingButton color='primary' onClick={submitCreate} loading={isSubmitLoading} disabled={isDisabled} className='text-nowrap'>
           Submit Registration
         </LoadingButton>
         <Link route={{ tag: 'requestForInformationView', value: { rfiId: rfi._id }}} color='secondary' className='text-nowrap mx-3'>
@@ -207,7 +251,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
     if (isEditing) {
       return (
         <FixedBar>
-          <LoadingButton color='primary' onClick={submit} loading={isSubmitLoading} disabled={isDisabled} className='text-nowrap'>
+          <LoadingButton color='primary' onClick={submitEdit} loading={isSubmitLoading} disabled={isDisabled} className='text-nowrap'>
             Submit Changes
           </LoadingButton>
           <Link onClick={cancelEditing} color='secondary' className='text-nowrap mx-3'>
@@ -256,8 +300,11 @@ const view: ComponentView<State, Msg> = props => {
       <Row className='mt-5 pb-3'>
         <Col xs='12' className='d-flex flex-column'>
           <h2>Attendee(s)</h2>
-          <p className='mt-2'>
+          <p>
             Please complete the following form to register one of more of your company's representatives to this RFI's Discovery Day session. If you are not personally attending, please clear your name and email from the list of attendees, and add the information of your colleagues that will be.
+          </p>
+          <p className='mt-2'>
+            In-person and/or remote attendance information will be emailed to all attendees individually based on the information you provide.
           </p>
         </Col>
       </Row>
