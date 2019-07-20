@@ -47,7 +47,7 @@ interface ValidState {
   rfi: PublicRfi;
   discoveryDay: PublicDiscoveryDay;
   vendor: PublicUser;
-  ddr?: DdrResource.PublicDiscoveryDayResponse;
+  ddr: DdrResource.PublicDiscoveryDayResponse | null;
   attendees: Immutable<Attendees.State>;
 };
 
@@ -55,7 +55,7 @@ type InvalidState = null;
 
 export type State = ValidOrInvalid<Immutable<ValidState>, InvalidState>;
 
-async function resetAttendees(discoveryDay: PublicDiscoveryDay, vendor: PublicUser, ddr?: DdrResource.PublicDiscoveryDayResponse): Promise<Immutable<Attendees.State>> {
+async function resetAttendees(discoveryDay: PublicDiscoveryDay, vendor: PublicUser, ddr: DdrResource.PublicDiscoveryDayResponse | null): Promise<Immutable<Attendees.State>> {
   return immutable(await Attendees.init({
     occurringAt: discoveryDay.occurringAt,
     groups: [{
@@ -72,7 +72,7 @@ async function resetAttendees(discoveryDay: PublicDiscoveryDay, vendor: PublicUs
   }));
 }
 
-async function resetState(state: Immutable<State>, ddr?: DdrResource.PublicDiscoveryDayResponse): Promise<Immutable<State>> {
+async function resetState(state: Immutable<State>, ddr: DdrResource.PublicDiscoveryDayResponse | null): Promise<Immutable<State>> {
   if (state.tag === 'invalid') { return state; }
   return state
     .setIn(['value', 'isEditing'], !ddr)
@@ -121,7 +121,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
     if (!rfi.latestVersion.discoveryDay) { return fail(notFoundRoute); }
     const discoveryDay = rfi.latestVersion.discoveryDay;
     const ddrResult = await api.readOneDdr(sessionUser.id, rfi._id);
-    const ddr = ddrResult.tag === 'valid' ? ddrResult.value : undefined;
+    const ddr = ddrResult.tag === 'valid' ? ddrResult.value : null;
     return valid(immutable({
       isEditing: !ddr,
       submitLoading: 0,
@@ -231,7 +231,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           const result = await api.deleteDdr(state.value.vendor._id, state.value.rfi._id);
           switch (result.tag) {
             case 'valid':
-              return await resetState(state, undefined);
+              return await resetState(state, null);
             case 'invalid':
               return state;
           }
