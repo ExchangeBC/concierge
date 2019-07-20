@@ -47,6 +47,18 @@ interface ValidState {
   rfi: PublicRfi;
   discoveryDay: PublicDiscoveryDay;
   vendor: PublicUser;
+  // `ddr` cannot be an optional (i.e. undefined) field
+  // because it doesn't work well with ImmutableJS records.
+  // Since Immutable's records cannot "remove" a value (they
+  // are set to the original value when set to undefined),
+  // we need to use null here to workaround that problem since
+  // null is recognised as a "new" value as opposed to unsetting
+  // the current one.
+  //
+  // I discovered this problem when attempting to cancel a
+  // registration after a hard reload. The UI would jump
+  // the user into "edit" mode even though they had just
+  // cancelled their registration successfully.
   ddr: DdrResource.PublicDiscoveryDayResponse | null;
   attendees: Immutable<Attendees.State>;
 };
