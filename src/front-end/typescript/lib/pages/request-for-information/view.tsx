@@ -1,13 +1,11 @@
 import { CONTACT_EMAIL } from 'front-end/config';
 import { makePageMetadata } from 'front-end/lib';
-import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import { ComponentView, emptyPageAlerts, GlobalComponentMsg, newRoute, PageBreadcrumbs, PageComponent, PageInit, Update, View } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
 import DiscoveryDayInfo from 'front-end/lib/pages/request-for-information/views/discovery-day-info';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
-import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import Icon from 'front-end/lib/views/icon';
 import FixedBar from 'front-end/lib/views/layout/fixed-bar';
@@ -35,6 +33,7 @@ export interface RouteParams {
 
 export type InnerMsg
   = ADT<'hideResponseConfirmationPrompt'>
+  | ADT<'hideDiscoveryDayConfirmationPrompt'>
   | ADT<'respondToRfi'>
   | ADT<'attendDiscoveryDay'>;
 
@@ -44,6 +43,7 @@ export interface State {
   infoAlerts: string[];
   preview: boolean;
   promptResponseConfirmation: boolean;
+  promptDiscoveryDayConfirmation: boolean;
   // TODO refactor how sessionUser, rfi and ddr exist on state
   // once we have better session retrieval in the front-end.
   // See pages/request-for-information/request.tsx for a good example
@@ -61,6 +61,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
     infoAlerts: [],
     preview,
     promptResponseConfirmation: false,
+    promptDiscoveryDayConfirmation: false,
     sessionUser
   };
   const rfiResult = preview ? await api.readOneRfiPreview(rfiId) : await api.readOneRfi(rfiId);
@@ -114,6 +115,8 @@ const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'hideResponseConfirmationPrompt':
       return [state.set('promptResponseConfirmation', false)];
+    case 'hideDiscoveryDayConfirmationPrompt':
+      return [state.set('promptDiscoveryDayConfirmation', false)];
     case 'respondToRfi':
       return [
         state,
@@ -137,48 +140,19 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [
         state,
         async (state, dispatch) => {
-          if (!state.rfi) { return null; }
-          const registrationRoute: Route = {
-            tag: 'requestForInformationAttendDiscoveryDay',
-            value: {
-              rfiId: state.rfi._id
-            }
-          };
-          const registrationUrl = router.routeToUrl(registrationRoute);
-          const thisRoute: Route = {
-            tag: 'requestForInformationView' as const,
-            value: {
-              rfiId: state.rfi._id
-            }
-          };
-          const thisUrl = router.routeToUrl(thisRoute);
-          // Redirect the user to the sign-in form.
-          if (!state.sessionUser) {
+          if (!state.rfi) {
+            return null;
+          } else if (state.promptDiscoveryDayConfirmation || !state.sessionUser || (await api.hasUserAcceptedTerms(state.sessionUser.id))) {
             dispatch(newRoute({
-              tag: 'signIn' as const,
+              tag: 'requestForInformationAttendDiscoveryDay',
               value: {
-                redirectOnSuccess: registrationUrl
+                rfiId: state.rfi._id
               }
             }));
-            return state;
+            return null;
+          } else {
+            return state.set('promptDiscoveryDayConfirmation', true);
           }
-          const acceptedTerms = await api.hasUserAcceptedTerms(state.sessionUser.id);
-          // Ask the user to accept the terms first.
-          if (!acceptedTerms) {
-            dispatch(newRoute({
-              tag: 'termsAndConditions' as const,
-              value: {
-                userId: state.sessionUser.id,
-                warningId: WarningId.DiscoveryDayResponse,
-                redirectOnAccept: registrationUrl,
-                redirectOnSkip: thisUrl
-              }
-            }));
-            return state;
-          }
-          // Navigate to registration page.
-          dispatch(newRoute(registrationRoute));
-          return state;
         }
       ];
     default:
@@ -395,24 +369,47 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     return breadcrumbs;
   },
   getModal(state) {
-    if (!state.promptResponseConfirmation || !state.rfi) { return null; }
-    return {
-      title: 'Review the Terms and Conditions?',
-      body: 'You must accept the Procurement Concierge Terms and Conditions in order to respond to this Request for Information.',
-      onCloseMsg: { tag: 'hideResponseConfirmationPrompt', value: undefined },
-      actions: [
-        {
-          text: 'Yes, review Terms and Conditions',
-          color: 'primary',
-          button: true,
-          msg: { tag: 'respondToRfi', value: undefined }
-        },
-        {
-          text: 'Go Back',
-          color: 'secondary',
-          msg: { tag: 'hideResponseConfirmationPrompt', value: undefined }
-        }
-      ]
-    };
+    if (!state.rfi) { return null; }
+    if (state.promptResponseConfirmation) {
+      return {
+        title: 'Review the Terms and Conditions?',
+        body: 'You must accept the Procurement Concierge Terms and Conditions in order to respond to this Request for Information.',
+        onCloseMsg: { tag: 'hideResponseConfirmationPrompt', value: undefined },
+        actions: [
+          {
+            text: 'Yes, review Terms and Conditions',
+            color: 'primary',
+            button: true,
+            msg: { tag: 'respondToRfi', value: undefined }
+          },
+          {
+            text: 'Go Back',
+            color: 'secondary',
+            msg: { tag: 'hideResponseConfirmationPrompt', value: undefined }
+          }
+        ]
+      };
+    } else if (state.promptDiscoveryDayConfirmation) {
+      return {
+        title: 'Review the Terms and Conditions?',
+        body: 'You must accept the Procurement Concierge Terms and Conditions in order to attend this RFI\'s Discovery Day.',
+        onCloseMsg: { tag: 'hideDiscoveryDayConfirmationPrompt', value: undefined },
+        actions: [
+          {
+            text: 'Yes, review Terms and Conditions',
+            color: 'primary',
+            button: true,
+            msg: { tag: 'attendDiscoveryDay', value: undefined }
+          },
+          {
+            text: 'Go Back',
+            color: 'secondary',
+            msg: { tag: 'hideDiscoveryDayConfirmationPrompt', value: undefined }
+          }
+        ]
+      }
+    } else {
+      return null;
+    }
   }
 };

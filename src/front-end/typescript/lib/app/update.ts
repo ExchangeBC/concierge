@@ -404,8 +404,20 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'toggleIsNavOpen':
       return [state.set('isNavOpen', msg.value === undefined ? !state.isNavOpen : msg.value)];
 
-    case 'toggleModal':
-      return [state.setIn(['modal', 'open'], !state.modal.open)];
+    case 'closeModal':
+      return [
+        state,
+        async (state, dispatch) => {
+          // Trigger the modal's onCloseMsg to ensure state is "clean"
+          // in case the user closes the modal using the "Esc" key,
+          // "X" icon or by clicking the page backdrop.
+          const [newState, asyncState] = update({ state, msg: state.modal.content.onCloseMsg });
+          state = asyncState
+            ? await asyncState(newState, dispatch) || newState
+            : newState;
+          return state.setIn(['modal', 'open'], false);
+        }
+      ];
 
     case 'pageLanding':
       return updateAppChildPage({

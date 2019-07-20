@@ -27,6 +27,7 @@ import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
 import * as PageUserList from 'front-end/lib/pages/user/list';
 import * as PageUserView from 'front-end/lib/pages/user/view';
+import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
 import { default as React } from 'react';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
@@ -38,12 +39,11 @@ interface ViewModalProps {
 
 const ViewModal: View<ViewModalProps> = ({ dispatch, modal }) => {
   const { open, content } = modal;
-  const toggle = () => dispatch({ tag: 'toggleModal', value: undefined });
-  // TODO reverse button order using flex for md and above.
+  const closeModal = () => dispatch({ tag: 'closeModal', value: undefined });
   // TODO custom X icon
   return (
-    <Modal isOpen={open} toggle={toggle}>
-      <ModalHeader toggle={toggle}>{content.title}</ModalHeader>
+    <Modal isOpen={open} toggle={closeModal}>
+      <ModalHeader className='align-items-center' toggle={closeModal} close={(<Icon name='times' color='secondary' onClick={closeModal} style={{ cursor: 'pointer' }}/>)}>{content.title}</ModalHeader>
       <ModalBody>{content.body}</ModalBody>
       <ModalFooter className='d-flex flex-md-row-reverse justify-content-start align-items-center'>
         {content.actions.map(({ button, text, color, msg }, i) => {

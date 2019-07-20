@@ -15,7 +15,7 @@ import { Col, Row } from 'reactstrap';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import { PublicDiscoveryDay, PublicRfi } from 'shared/lib/resources/request-for-information';
 import { PublicUser } from 'shared/lib/resources/user';
-import { ADT, profileToName, UserType } from 'shared/lib/types';
+import { ADT, UserType } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
 export interface RouteParams {
@@ -27,6 +27,10 @@ export type InnerMsg
   | ADT<'startEditing'>
   | ADT<'cancelEditing'>
   | ADT<'cancelRegistration'>
+  | ADT<'hideCancelRegistrationPrompt'>
+  | ADT<'hideSubmitCreatePrompt'>
+  | ADT<'hideSubmitEditPrompt'>
+  | ADT<'hideCancelEditingPrompt'>
   | ADT<'submitCreate'>
   | ADT<'submitEdit'>;
 
@@ -36,6 +40,10 @@ interface ValidState {
   isEditing: boolean;
   submitLoading: number;
   cancelRegistrationLoading: number;
+  promptCancelRegistration: boolean;
+  promptSubmitCreate: boolean;
+  promptSubmitEdit: boolean;
+  promptCancelEditing: boolean;
   rfi: PublicRfi;
   discoveryDay: PublicDiscoveryDay;
   vendor: PublicUser;
@@ -54,7 +62,9 @@ async function resetAttendees(discoveryDay: PublicDiscoveryDay, vendor: PublicUs
       attendees: ddr
         ? ddr.attendees
         : [{
-            name: profileToName(vendor.profile) || '',
+            name: vendor.profile.type === UserType.Vendor
+              ? vendor.profile.contactName
+              : '',
             email: vendor.email,
             remote: false
           }]
@@ -115,6 +125,11 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
     return valid(immutable({
       isEditing: !ddr,
       submitLoading: 0,
+      cancelRegistrationLoading: 0,
+      promptCancelRegistration: false,
+      promptSubmitCreate: false,
+      promptSubmitEdit: false,
+      promptCancelEditing: false,
       vendor: userResult.value,
       rfi,
       discoveryDay,
@@ -123,13 +138,25 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
     }));
   },
 
-  async fail({ routeParams, dispatch }) {
-    dispatch(newRoute({
-      tag: 'requestForInformationView',
-      value: {
-        rfiId: routeParams.rfiId
-      }
-    }));
+  async fail({ routeParams, dispatch, shared }) {
+    if (shared.session && shared.session.user) {
+      dispatch(newRoute({
+        tag: 'requestForInformationView',
+        value: {
+          rfiId: routeParams.rfiId
+        }
+      }));
+    } else {
+      dispatch(newRoute({
+        tag: 'signIn',
+        value: {
+          redirectOnSuccess: router.routeToUrl({
+            tag: 'requestForInformationAttendDiscoveryDay',
+            value: routeParams
+          })
+        }
+      }));
+    }
     return invalid(null);
   }
 
@@ -157,6 +184,11 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [state.setIn(['value', 'isEditing'], true)];
 
     case 'cancelEditing':
+    if (!state.value.promptCancelEditing) {
+      return [state.setIn(['value', 'promptCancelEditing'], true)];
+    } else {
+      state = state.setIn(['value', 'promptCancelEditing'], false);
+    }
     return [
       state.setIn(['value', 'isEditing'], false),
       async state => {
@@ -165,7 +197,32 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       }
     ];
 
+    case 'hideCancelRegistrationPrompt':
+      return [
+        state.setIn(['value', 'promptCancelRegistration'], false)
+      ];
+
+    case 'hideSubmitCreatePrompt':
+      return [
+        state.setIn(['value', 'promptSubmitCreate'], false)
+      ];
+
+    case 'hideSubmitEditPrompt':
+      return [
+        state.setIn(['value', 'promptSubmitEdit'], false)
+      ];
+
+    case 'hideCancelEditingPrompt':
+      return [
+        state.setIn(['value', 'promptCancelEditing'], false)
+      ];
+
     case 'cancelRegistration':
+      if (!state.value.promptCancelRegistration) {
+        return [state.setIn(['value', 'promptCancelRegistration'], true)];
+      } else {
+        state = state.setIn(['value', 'promptCancelRegistration'], false);
+      }
       return [
         state.set('value', startCancelRegistrationLoading(state.value)),
         async state => {
@@ -182,6 +239,11 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       ];
 
     case 'submitCreate':
+      if (!state.value.promptSubmitCreate) {
+        return [state.setIn(['value', 'promptSubmitCreate'], true)];
+      } else {
+        state = state.setIn(['value', 'promptSubmitCreate'], false);
+      }
       return [
         state.set('value', startSubmitLoading(state.value)),
         async state => {
@@ -203,6 +265,11 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       ];
 
     case 'submitEdit':
+      if (!state.value.promptSubmitEdit) {
+        return [state.setIn(['value', 'promptSubmitEdit'], true)];
+      } else {
+        state = state.setIn(['value', 'promptSubmitEdit'], false);
+      }
       return [
         state.set('value', startSubmitLoading(state.value)),
         async state => {
@@ -301,10 +368,10 @@ const view: ComponentView<State, Msg> = props => {
         <Col xs='12' className='d-flex flex-column'>
           <h2>Attendee(s)</h2>
           <p>
-            Please complete the following form to register one of more of your company's representatives to this RFI's Discovery Day session. If you are not personally attending, please clear your name and email from the list of attendees, and add the information of your colleagues that will be.
+            Please complete the following form to register one of more of your company's representatives to attend this RFI's Discovery Day session. If you are not personally attending, please clear your name and email from the list of attendees, and add the information of your colleagues that will be.
           </p>
           <p className='mt-2'>
-            In-person and/or remote attendance information will be emailed to all attendees individually based on the information you provide.
+            In-person and/or remote attendance information will be emailed to all attendees individually based on the information you provide. You can return to this page to update your team's attendance if required. Please note that you will not be able to add any in-person attendees less than 24 hours before the Discovery Day's scheduled time.
           </p>
         </Col>
       </Row>
@@ -352,6 +419,85 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     ];
   },
   getModal(state) {
-    return null;
+    if (state.tag === 'invalid') { return null; }
+    if (state.value.promptCancelRegistration) {
+      return {
+        title: 'Cancel Discovery Day Registration?',
+        body: 'All attendees will be notified of the cancellation by email.',
+        onCloseMsg: { tag: 'hideCancelRegistrationPrompt', value: undefined },
+        actions: [
+          {
+            text: 'Yes, cancel registration',
+            color: 'primary',
+            button: true,
+            msg: { tag: 'cancelRegistration', value: undefined }
+          },
+          {
+            text: 'Go Back',
+            color: 'secondary',
+            msg: { tag: 'hideCancelRegistrationPrompt', value: undefined }
+          }
+        ]
+      };
+    } else if (state.value.promptSubmitCreate) {
+      return {
+        title: 'Submit Registration?',
+        body: 'Please ensure all of the information you have provided is correct. Note that you may make changes to your registration after it has been submitted.',
+        onCloseMsg: { tag: 'hideSubmitCreatePrompt', value: undefined },
+        actions: [
+          {
+            text: 'Submit Registration',
+            color: 'primary',
+            button: true,
+            msg: { tag: 'submitCreate', value: undefined }
+          },
+          {
+            text: 'Go Back',
+            color: 'secondary',
+            msg: { tag: 'hideSubmitCreatePrompt', value: undefined }
+          }
+        ]
+      }
+    } else if (state.value.promptSubmitEdit) {
+      return {
+        title: 'Submit Changes to Registration?',
+        body: 'Please ensure all of the information you have provided is correct. Attendees will be notified of any changes to their attendance by email. Any new attendees will be sent a confirmation email explaining how to attend the Discovery Day either in-person or remotely.',
+        onCloseMsg: { tag: 'hideSubmitEditPrompt', value: undefined },
+        actions: [
+          {
+            text: 'Submit Changes',
+            color: 'primary',
+            button: true,
+            msg: { tag: 'submitEdit', value: undefined }
+          },
+          {
+            text: 'Go Back',
+            color: 'secondary',
+            msg: { tag: 'hideSubmitEditPrompt', value: undefined }
+          }
+        ]
+      }
+    } else if (state.value.promptCancelEditing) {
+      return {
+        title: 'Cancel editing?',
+        body: 'Any changes that you have made will be lost if you choose to cancel.',
+        onCloseMsg: { tag: 'hideCancelEditingPrompt', value: undefined },
+        actions: [
+          {
+            text: 'Yes, I want to cancel',
+            color: 'primary',
+            button: true,
+            msg: { tag: 'cancelEditing', value: undefined }
+          },
+          {
+            text: 'Go Back',
+            color: 'secondary',
+            msg: { tag: 'hideCancelEditingPrompt', value: undefined }
+          }
+        ]
+      }
+    } else {
+      return null;
+    }
   }
 };
