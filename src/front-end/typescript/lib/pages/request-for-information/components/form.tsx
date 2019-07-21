@@ -60,7 +60,10 @@ export const init: Init<Params, State> = async ({ formType, existingRfi, activeT
     })),
     discoveryDay: immutable(await DiscoveryDayForm.init({
       showToggle: formType === 'create' || !existingDiscoveryDay,
-      existingDiscoveryDay
+      existingDiscoveryDay,
+      discoveryDayResponses: formType === 'edit'
+        ? existingRfi && existingDiscoveryDay && existingRfi.discoveryDayResponses
+        : undefined
     }))
   };
 };

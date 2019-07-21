@@ -1,5 +1,7 @@
 import { MARKDOWN_HELP_URL } from 'front-end/config';
-import { Component, ComponentView, Immutable, Init, Update } from 'front-end/lib/framework';
+import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
+import * as Attendees from 'front-end/lib/pages/request-for-information/components/attendees';
+import { BigStat, SmallStats, Stats } from 'front-end/lib/pages/request-for-information/views/stats';
 import * as DateTime from 'front-end/lib/views/form-field/datetime';
 import * as LongText from 'front-end/lib/views/form-field/long-text';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
@@ -11,6 +13,7 @@ import { flow } from 'lodash/fp';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import { getString, rawFormatDate } from 'shared/lib';
+import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { PublicDiscoveryDay } from 'shared/lib/resources/request-for-information';
 import { ADT } from 'shared/lib/types';
@@ -24,6 +27,7 @@ const DEFAULT_TIME = '14:00';
 export interface Params {
   showToggle: boolean;
   existingDiscoveryDay?: PublicDiscoveryDay;
+  discoveryDayResponses?: DdrResource.PublicDiscoveryDayResponse[]
 }
 
 type HelpFieldName
@@ -46,7 +50,8 @@ export type Msg
   | ADT<'validateLocation'>
   | ADT<'validateVenue'>
   | ADT<'validateRemoteAccess'>
-  | ADT<'toggleHelp', HelpFieldName>;
+  | ADT<'toggleHelp', HelpFieldName>
+  | ADT<'attendees', Attendees.Msg>;
 
 type FormFieldKeys
   = 'toggle'
@@ -69,6 +74,7 @@ export interface State {
   location: ShortText.State;
   venue: ShortText.State;
   remoteAccess: LongText.State;
+  attendees?: Immutable<Attendees.State>;
 };
 
 export type Values = RfiResource.CreateDiscoveryDayBody | undefined;
@@ -85,12 +91,13 @@ export function getValues(state: State): Values {
   };
 }
 
-export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryDay }) => {
+export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryDay, discoveryDayResponses }) => {
   const getDdString = (k: string | string[]): string => getString(existingDiscoveryDay, k);
   const rawOccurringAt = getDdString('occurringAt');
-  const dateValue = rawOccurringAt ? rawFormatDate(new Date(rawOccurringAt), 'YYYY-MM-DD', false) : '';
-  const timeValue = rawOccurringAt ? rawFormatDate(new Date(rawOccurringAt), 'HH:mm', false) : DEFAULT_TIME;
-  const remoteAccessHelpText = 'Dial-in and/or teleconference information that will only be visible to remote attendees.';
+  const occurringAt = new Date(rawOccurringAt);
+  const dateValue = rawOccurringAt ? rawFormatDate(occurringAt, 'YYYY-MM-DD', false) : '';
+  const timeValue = rawOccurringAt ? rawFormatDate(occurringAt, 'HH:mm', false) : DEFAULT_TIME;
+  const remoteAccessHelpText = 'Dial-in and/or teleconference information that will be emailed to remote attendees.';
   return {
     loading: 0,
     showToggle,
@@ -134,7 +141,7 @@ export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryD
       placeholder: 'Visible to all users.',
       value: getDdString('location'),
       help: {
-        text: 'The Discovery Day\'s general location that will be visible to all users. For example, "Victoria, BC."',
+        text: 'The Discovery Day\'s general location that is visible to all users. For example, "Victoria, BC."',
         show: false
       }
     }),
@@ -146,7 +153,7 @@ export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryD
       placeholder: 'Only visible to in-person attendees.',
       value: getDdString('venue'),
       help: {
-        text: 'The Discovery Day\'s specific venue that will only be visible to in-person attendees. For example, "563 Superior St, Victoria, BC, V8V 1T7."',
+        text: 'The Discovery Day\'s specific venue that will only be emailed to in-person attendees. For example, "563 Superior St, Victoria, BC, V8V 1T7."',
         show: false
       }
     }),
@@ -160,7 +167,15 @@ export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryD
         text: remoteAccessHelpText,
         show: false
       }
-    })
+    }),
+    attendees: discoveryDayResponses
+      ? immutable(await Attendees.init({
+          occurringAt,
+          groups: discoveryDayResponses.map(({ vendor, attendees }) => {
+            return { vendor, attendees };
+          })
+        }))
+      : undefined
   };
 };
 
@@ -218,6 +233,15 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
             return state.setIn(['remoteAccess', 'help', 'show'], !state.getIn(['remoteAccess', 'help', 'show']));
         }
       })()];
+    case 'attendees':
+      return updateComponentChild({
+        state,
+        mapChildMsg: value => ({ tag: 'attendees', value }),
+        childStatePath: ['attendees'],
+        childUpdate: Attendees.update,
+        childMsg: msg.value
+      });
+
     default:
       return [state];
   }
@@ -285,14 +309,14 @@ export function isValid(state: State): boolean {
 const Toggle: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeSwitch = (tag: any) => Switch.makeOnChange(dispatch, value => ({ tag, value }));
   return (
-    <div>
+    <div className='mb-4'>
       <Row>
         <Col xs='12'>
           <FormSectionHeading text='Discovery Day' />
         </Col>
       </Row>
       {state.showToggle
-        ? (<Row className='mb-4'>
+        ? (<Row>
             <Col xs='12'>
               <Switch.view
                 state={state.toggle}
@@ -313,14 +337,12 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
   const toggleHelp = (value: HelpFieldName) => () => dispatch({ tag: 'toggleHelp', value });
   return (
-    <div className='mb-4'>
-      {state.showToggle
-        ? (<Row className='mb-3'>
-            <Col xs='12'>
-              <h4>Details</h4>
-            </Col>
-          </Row>)
-        : null}
+    <div>
+      <Row className='mb-3'>
+        <Col xs='12'>
+          <h4>Details</h4>
+        </Col>
+      </Row>
       <Row>
         <Col xs='12'>
           <LongText.view
@@ -384,11 +406,55 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
   );
 };
 
+const ConditionalAttendees: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  if (!state.attendees) { return null; }
+  const dispatchAttendees: Dispatch<Attendees.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'attendees' as const, value }));
+  const numVendors = state.attendees.groups.length;
+  let numAttendees = 0;
+  let numInPerson = 0;
+  let numRemote = 0;
+  state.attendees.groups.forEach(group => {
+    numAttendees += group.attendees.length;
+    group.attendees.forEach(attendee => {
+      if (attendee.remote) {
+        numRemote += 1;
+      } else {
+        numInPerson += 1;
+      }
+    });
+  });
+  const isDisabled = !state.isEditing;
+  return (
+    <div className='mt-5 pt-5 border-top'>
+      <Row className='mb-5'>
+        <Col xs='12'>
+          <Stats>
+            <BigStat color='info' count={numAttendees} label={(<span>Total<br />Attendees</span>)} />
+            <SmallStats a={{ color: 'info', count: numInPerson, label: 'In-Person' }} b={{ color: 'primary', count: numRemote, label: 'Remote' }} />
+            <BigStat color='primary' count={numVendors} label={(<span>Vendors<br />Attending</span>)} />
+          </Stats>
+        </Col>
+      </Row>
+      <Row className='mb-3'>
+        <Col xs='12'>
+          <h4>Attendee(s)</h4>
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12'>
+          <Attendees.view dispatch={dispatchAttendees} state={state.attendees} disabled={isDisabled} />
+        </Col>
+      </Row>
+    </div>
+  );
+};
+
 export const view: ComponentView<State, Msg> = props => {
   return (
     <div>
       <Toggle {...props} />
       <Details {...props} />
+      <ConditionalAttendees {...props} />
     </div>
   );
 };

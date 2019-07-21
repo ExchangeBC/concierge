@@ -75,15 +75,14 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
       )
 
     case 'groupDelete':
-      if (content.value.disabled) { return <td className='bg-light'></td>; }
       return (
-        <td className='align-middle bg-light'>
+        <td className='align-middle bg-light text-center'>
           <Icon
             name='trash'
             color='secondary'
             width={1.25}
             height={1.25}
-            className={`btn btn-sm btn-link text-hover-danger ${content.value.disabled ? 'disabled' : ''}`}
+            className={`btn btn-sm btn-link text-hover-danger ${content.value.disabled ? 'disabled invisible' : ''}`}
             style={{ boxSizing: 'content-box', cursor: 'pointer' }}
             onClick={() => dispatch({
               tag: 'deleteGroup',
