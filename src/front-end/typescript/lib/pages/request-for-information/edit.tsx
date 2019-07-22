@@ -4,6 +4,7 @@ import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, PageComponent, PageInit, replaceRoute, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
+import * as Attendees from 'front-end/lib/pages/request-for-information/components/attendees';
 import * as RfiForm from 'front-end/lib/pages/request-for-information/components/form';
 import { createAndShowPreview, makeRequestBody, publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
@@ -14,9 +15,10 @@ import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
 import { Button, Col, Row } from 'reactstrap';
 import { getString } from 'shared/lib';
+import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { ADT, UserType } from 'shared/lib/types';
-import { valid, ValidOrInvalid } from 'shared/lib/validators';
+import { allValid, getInvalidValue, valid, ValidOrInvalid } from 'shared/lib/validators';
 
 const ERROR_MESSAGE = 'The Request for Information you are looking for is not available.';
 
@@ -161,6 +163,29 @@ async function updateRfi(state: Immutable<State>, requestBody: ValidOrInvalid<Rf
   };
   switch (requestBody.tag) {
     case 'valid':
+      // Update discovery day attendees before updating the RFI.
+      // Update the RFI afterwards so we can update state with the
+      // "freshest" version of the RFI that is returned from the
+      // "update" API request..
+      const attendeesState = valid.rfiForm.discoveryDay.attendees;
+      if (valid.rfiForm.activeTab === 'discoveryDay' && attendeesState) {
+        const ddrUpdates = RfiForm.getDdrUpdates(valid.rfiForm);
+        const ddrResults: Array<ValidOrInvalid<unknown, DdrResource.CreateValidationErrors>> = [];
+        for await (const ddrUpdate of ddrUpdates) {
+          switch (ddrUpdate.tag) {
+            case 'update':
+              ddrResults.push(await api.updateDdr(ddrUpdate.value.vendorId, valid.rfi._id, ddrUpdate.value.attendees));
+              break;
+            case 'delete':
+              // We don't populate delete errors to the user via the UI (no design).
+              await api.deleteDdr(ddrUpdate.value.vendorId, valid.rfi._id);
+              break;
+          }
+        }
+        if (!allValid(ddrResults)) {
+          return state.setIn(['valid', 'rfiForm', 'discoveryDay', 'attendees'], Attendees.setErrors(attendeesState, ddrResults.map(r => getInvalidValue(r, { attendees: [] }).attendees || [])));
+        }
+      }
       const result = await api.updateRfi(valid.rfi._id, requestBody.value);
       switch (result.tag) {
         case 'valid':
@@ -327,7 +352,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Button color='primary' onClick={startEditing} disabled={isLoading} className='text-nowrap'>
           Edit Details
         </Button>
-        <Link route={viewRoute} button color='info' disabled={isLoading} className='ml-3 ml-md-0 mr-md-3 text-nowrap'>View RFI</Link>
+        <Link route={viewRoute} button color='info' disabled={isLoading} className='ml-3 ml-md-0 mr-md-3 text-nowrap' newTab>View RFI</Link>
       </FixedBar>
     );
   } else if (isDiscoveryDayTab && isEditing) {
@@ -366,13 +391,13 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
           <LoadingButton color='danger' onClick={cancelEvent} loading={isCancelEventLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
             Cancel Discovery Day
           </LoadingButton>
-          <Link route={viewRoute} button color='info' disabled={isLoading} className='text-nowrap'>View RFI</Link>
+          <Link route={viewRoute} button color='info' disabled={isLoading} className='text-nowrap' newTab>View RFI</Link>
         </FixedBar>
       );
     } else {
       return (
         <FixedBar>
-          <Link route={viewRoute} button color='info' disabled={isLoading} className='text-nowrap'>View RFI</Link>
+          <Link route={viewRoute} button color='info' disabled={isLoading} className='text-nowrap' newTab>View RFI</Link>
         </FixedBar>
       );
     }

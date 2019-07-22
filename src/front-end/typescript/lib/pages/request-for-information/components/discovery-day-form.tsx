@@ -15,8 +15,7 @@ import { Col, Row } from 'reactstrap';
 import { getString, rawFormatDate } from 'shared/lib';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
-import { PublicDiscoveryDay } from 'shared/lib/resources/request-for-information';
-import { ADT } from 'shared/lib/types';
+import { ADT, Omit } from 'shared/lib/types';
 import { getInvalidValue, valid, Validation } from 'shared/lib/validators';
 import { validateDiscoveryDayDate, validateDiscoveryDayDescription, validateDiscoveryDayLocation, validateDiscoveryDayRemoteAccess, validateDiscoveryDayTime, validateDiscoveryDayVenue } from 'shared/lib/validators/request-for-information';
 
@@ -26,8 +25,8 @@ const DEFAULT_TIME = '14:00';
 
 export interface Params {
   showToggle: boolean;
-  existingDiscoveryDay?: PublicDiscoveryDay;
-  discoveryDayResponses?: DdrResource.PublicDiscoveryDayResponse[]
+  existingDiscoveryDay?: RfiResource.PublicDiscoveryDay;
+  discoveryDayResponses?: DdrResource.PublicDiscoveryDayResponse[];
 }
 
 type HelpFieldName
@@ -65,7 +64,8 @@ type FormFieldKeys
 export interface State {
   loading: number;
   showToggle: boolean;
-  existingDiscoveryDay?: PublicDiscoveryDay;
+  existingDiscoveryDay?: RfiResource.PublicDiscoveryDay;
+  discoveryDayResponses?: DdrResource.PublicDiscoveryDayResponse[];
   isEditing: boolean;
   toggle: Switch.State;
   description: LongText.State;
@@ -91,6 +91,68 @@ export function getValues(state: State): Values {
   };
 }
 
+interface DdrUpdateInfo {
+  vendorId: string;
+  attendees: DdrResource.Attendee[];
+}
+
+export type DdrUpdate
+  = ADT<'update', DdrUpdateInfo>
+  | ADT<'delete', Omit<DdrUpdateInfo, 'attendees'>>;
+
+function attendeesHaveChanged(group: Attendees.AttendeeGroup, ddr: DdrResource.PublicDiscoveryDayResponse): boolean {
+  return group.attendees.reduce((acc: boolean, a, i) => {
+    const b = ddr.attendees[i];
+    return acc || !b || a.name !== b.name || a.email !== b.email || a.remote !== b.remote;
+  }, false);
+}
+
+export function getDdrUpdates(state: State): DdrUpdate[] {
+  if (!state.attendees || !state.existingDiscoveryDay || !state.discoveryDayResponses) { return []; }
+  const responsesByVendorId: Record<string, DdrResource.PublicDiscoveryDayResponse | undefined> = state.discoveryDayResponses.reduce((acc, ddr) => {
+    return {
+      ...acc,
+      [ddr.vendor._id]: ddr
+    };
+  }, {});
+  const groupsByVendorId: Record<string, Attendees.AttendeeGroup | undefined> = state.attendees.groups.reduce((acc, group) => {
+    if (!group.vendor) { return acc; }
+    return {
+      ...acc,
+      [group.vendor._id]: group
+    };
+  }, {});
+  const createsAndUpdates = state.attendees.groups.reduce((acc: DdrUpdate[], group) => {
+    if (!group.vendor) { return acc; }
+    const vendorId = group.vendor._id;
+    const ddr = responsesByVendorId[vendorId];
+    if (ddr && attendeesHaveChanged(group, ddr)) {
+      acc.push({
+        tag: 'update',
+        value: {
+          vendorId,
+          attendees: group.attendees
+        }
+      });
+    }
+    return acc;
+  }, []);
+  const deletes = state.discoveryDayResponses.reduce((acc: DdrUpdate[], ddr) => {
+    const vendorId = ddr.vendor._id;
+    const group = groupsByVendorId[vendorId];
+    if (!group) {
+      acc.push({
+        tag: 'delete',
+        value: {
+          vendorId
+        }
+      });
+    }
+    return acc;
+  }, []);
+  return [...createsAndUpdates, ...deletes];
+}
+
 export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryDay, discoveryDayResponses }) => {
   const getDdString = (k: string | string[]): string => getString(existingDiscoveryDay, k);
   const rawOccurringAt = getDdString('occurringAt');
@@ -102,6 +164,7 @@ export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryD
     loading: 0,
     showToggle,
     existingDiscoveryDay,
+    discoveryDayResponses,
     isEditing: false,
     toggle: Switch.init({
       id: 'discovery-day-discovery-day',
@@ -303,7 +366,7 @@ export function hasValidationErrors(state: State): boolean {
 }
 
 export function isValid(state: State): boolean {
-  return hasProvidedRequiredFields(state) && !hasValidationErrors(state);
+  return hasProvidedRequiredFields(state) && !hasValidationErrors(state) && (!state.attendees || Attendees.isValid(state.attendees));
 }
 
 const Toggle: ComponentView<State, Msg> = ({ state, dispatch }) => {

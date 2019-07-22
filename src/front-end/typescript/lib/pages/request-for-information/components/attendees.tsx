@@ -11,7 +11,7 @@ import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, Omit, profileToName } from 'shared/lib/types';
 import { getInvalidValue } from 'shared/lib/validators';
-import { validateAttendee } from 'shared/lib/validators/discovery-day-response';
+import { countInPerson, validateAttendee } from 'shared/lib/validators/discovery-day-response';
 
 interface AttendeeErrors {
   name: string[];
@@ -19,11 +19,11 @@ interface AttendeeErrors {
   remote: string[];
 }
 
-interface Attendee extends DdrResource.Attendee {
+export interface Attendee extends DdrResource.Attendee {
   errors?: AttendeeErrors;
 }
 
-interface AttendeeGroup {
+export interface AttendeeGroup {
   vendor?: PublicUser;
   attendees: Attendee[];
 }
@@ -268,6 +268,7 @@ const TableComponent: Table.TableComponent<TableCellData> = Table.component();
 
 export interface State {
   groups: AttendeeGroup[];
+  originalGroups: AttendeeGroup[];
   occurringAt: Date;
   table: Immutable<Table.State<TableCellData>>;
 }
@@ -285,20 +286,24 @@ export function isValid(state: Immutable<State>): boolean {
   return true;
 }
 
+export function setAttendeeErrors(state: Immutable<State>, groupIndex: number, attendeeIndex: number, errors: DdrResource.AttendeeValidationErrors): Immutable<State> {
+  return state.setIn(['groups', groupIndex, 'attendees', attendeeIndex, 'errors'], {
+    name: get(errors, 'name', []),
+    email: get(errors, 'email', []),
+    remote: get(errors, 'remote', [])
+  });
+}
+
 export function setErrors(state: Immutable<State>, errors: DdrResource.AttendeeValidationErrors[][]): Immutable<State> {
   state.groups.forEach((group, groupIndex) => {
     group.attendees.forEach((attendee, attendeeIndex) => {
-      state = state.setIn(['groups', groupIndex, 'attendees', attendeeIndex, 'errors'], {
-        name: get(errors, [groupIndex, attendeeIndex, 'name'], []),
-        email: get(errors, [groupIndex, attendeeIndex, 'email'], []),
-        remote: get(errors, [groupIndex, attendeeIndex, 'remote'], [])
-      });
+      state = setAttendeeErrors(state, groupIndex, attendeeIndex, get(errors, [groupIndex, attendeeIndex], {}));
     });
   });
   return state;
 }
 
-export type Params = Omit<State, 'table'>;
+export type Params = Omit<State, 'originalGroups' | 'table'>;
 
 type OnChangeAttendeeField<Value> = Omit<TableCellContentValue<Value>, 'disabled'>;
 
@@ -317,6 +322,7 @@ export type Msg = GlobalComponentMsg<InnerMsg,  Route>;
 export const init: Init<Params,  State> = async params => {
   return {
     ...params,
+    originalGroups: params.groups,
     table: immutable(await TableComponent.init({
       TDView,
       THView: Table.DefaultTHView,
@@ -346,17 +352,20 @@ export const update: Update<State,  Msg> = ({ state,  msg }) => {
       return [updateAndValidateAttendee(state, 'remote', !msg.value.value, msg.value.groupIndex, msg.value.attendeeIndex)];
 
     case 'onChangeAttendeeRemote':
-      return [updateAndValidateAttendee(state, 'remote', msg.value.value, msg.value.groupIndex, msg.value.attendeeIndex)];
+      state = updateAttendee(state, 'remote', msg.value.value, msg.value.groupIndex, msg.value.attendeeIndex);
+      return [validateGroupAttendees(state, msg.value.groupIndex)];
 
     case 'deleteAttendee':
-      return [state.setIn(['groups', msg.value.groupIndex, 'attendees'], state.groups[msg.value.groupIndex].attendees.filter((a, i) => i !== msg.value.attendeeIndex))];
+      state = state.setIn(['groups', msg.value.groupIndex, 'attendees'], state.groups[msg.value.groupIndex].attendees.filter((a, i) => i !== msg.value.attendeeIndex));
+      return [validateGroupAttendees(state, msg.value.groupIndex)];
 
     case 'addAttendee':
-      return [state.setIn(['groups', msg.value.groupIndex, 'attendees'], state.groups[msg.value.groupIndex].attendees.concat({
+      state = state.setIn(['groups', msg.value.groupIndex, 'attendees'], state.groups[msg.value.groupIndex].attendees.concat({
         name: '',
         email: '',
-        remote: false
-      }))];
+        remote: true
+      }));
+      return [validateGroupAttendees(state, msg.value.groupIndex)];
 
     case 'deleteGroup':
       return [state.set('groups', state.groups.filter((g, i) => i !== msg.value.groupIndex))];
@@ -367,17 +376,26 @@ export const update: Update<State,  Msg> = ({ state,  msg }) => {
 };
 
 function updateAndValidateAttendee<K extends keyof DdrResource.Attendee>(state: Immutable<State>, key: K, value: DdrResource.Attendee[K], groupIndex: number, attendeeIndex: number): Immutable<State> {
-  const getAttendee = (state: Immutable<State>) => state.groups[groupIndex].attendees[attendeeIndex];
-  const newState = state.setIn(['groups', groupIndex, 'attendees', attendeeIndex, key], value);
-  const existingAttendee = getAttendee(state);
-  const newAttendee = getAttendee(newState);
-  const validation = validateAttendee(newAttendee, state.occurringAt, existingAttendee);
+  state = updateAttendee(state, key, value, groupIndex, attendeeIndex);
+  return validateOneAttendee(state, groupIndex, attendeeIndex);
+}
+
+function updateAttendee<K extends keyof DdrResource.Attendee>(state: Immutable<State>, key: K, value: DdrResource.Attendee[K], groupIndex: number, attendeeIndex: number): Immutable<State> {
+  return state.setIn(['groups', groupIndex, 'attendees', attendeeIndex, key], value);
+}
+
+function validateOneAttendee(state: Immutable<State>, groupIndex: number, attendeeIndex: number): Immutable<State> {
+  const numInPersonSlots = countInPerson(state.originalGroups[groupIndex].attendees) - countInPerson(state.groups[groupIndex].attendees) + 1;
+  const validation = validateAttendee(state.groups[groupIndex].attendees[attendeeIndex], state.occurringAt, numInPersonSlots);
   const validationErrors: DdrResource.AttendeeValidationErrors = getInvalidValue(validation, {});
-  return newState.setIn(['groups', groupIndex, 'attendees', attendeeIndex, 'errors'], {
-    name: get(validationErrors, 'name', []),
-    email: get(validationErrors, 'email', []),
-    remote: get(validationErrors, 'remote', [])
+  return setAttendeeErrors(state, groupIndex, attendeeIndex, validationErrors);
+}
+
+function validateGroupAttendees(state: Immutable<State>, groupIndex: number): Immutable<State> {
+  state.groups[groupIndex].attendees.forEach((attendee, attendeeIndex) => {
+    state = validateOneAttendee(state, groupIndex, attendeeIndex);
   });
+  return state;
 }
 
 export interface ViewProps extends ComponentViewProps<State,  Msg> {

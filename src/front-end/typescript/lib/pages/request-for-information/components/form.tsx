@@ -49,6 +49,10 @@ export function getValues(state: State, includeDeletedAddenda = false): Values {
   };
 }
 
+export function getDdrUpdates(state: State): DiscoveryDayForm.DdrUpdate[] {
+  return DiscoveryDayForm.getDdrUpdates(state.discoveryDay);
+}
+
 export const init: Init<Params, State> = async ({ formType, existingRfi, activeTab }) => {
   const isEditing = formType === 'create';
   const existingDiscoveryDay = existingRfi && existingRfi.latestVersion.discoveryDay;
