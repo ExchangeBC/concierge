@@ -115,16 +115,23 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
     }
   },
 
-  async fail({ routeParams, dispatch }) {
-    dispatch(replaceRoute({
-      tag: 'signIn' as 'signIn',
-      value: {
-        redirectOnSuccess: router.routeToUrl({
-          tag: 'requestForInformationEdit',
-          value: routeParams
-        })
-      }
-    }));
+  async fail({ routeParams, dispatch, shared }) {
+    if (!shared.session || !shared.session.user) {
+      dispatch(replaceRoute({
+        tag: 'signIn' as 'signIn',
+        value: {
+          redirectOnSuccess: router.routeToUrl({
+            tag: 'requestForInformationEdit',
+            value: routeParams
+          })
+        }
+      }));
+    } else {
+      dispatch(replaceRoute({
+        tag: 'requestForInformationView',
+        value: routeParams
+      }));
+    }
     return initState;
   }
 
