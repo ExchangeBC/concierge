@@ -188,6 +188,11 @@ nav.navbar .nav-link:hover {
   text-decoration: underline;
 }
 
+.nav-tabs .nav-item .active {
+  cursor: default;
+  pointer-events: none;
+}
+
 .card-body {
   @extend .p-4;
 }
