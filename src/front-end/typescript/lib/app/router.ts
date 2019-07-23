@@ -2,6 +2,20 @@ import { Route } from 'front-end/lib/app/types';
 import { RouteParams, RouteQuery, Router } from 'front-end/lib/framework';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
 
+export function pushState(route: Route) {
+  if (window.history && window.history.pushState) {
+    const path = router.routeToUrl(route);
+    window.history.pushState({ path }, '', path);
+  }
+}
+
+export function replaceState(route: Route) {
+  if (window.history && window.history.replaceState) {
+    const path = router.routeToUrl(route);
+    window.history.replaceState({ path }, '', path);
+  }
+}
+
 function getParamString(params: RouteParams, key: string): string {
   return params[key] || '';
 }
@@ -245,11 +259,18 @@ const router: Router<Route> = {
     },
     {
       path: '/requests-for-information/:rfiId/edit',
-      makeRoute({ params }) {
+      makeRoute({ params, query }) {
         return {
           tag: 'requestForInformationEdit',
           value: {
-            rfiId: getParamString(params, 'rfiId')
+            rfiId: getParamString(params, 'rfiId'),
+            activeTab: (() => {
+              switch (getQueryParamString(query, 'activeTab')) {
+                case 'details': return 'details';
+                case 'discoveryDay': return 'discoveryDay';
+                default: return undefined;
+              }
+            })()
           }
         };
       }
@@ -467,7 +488,7 @@ const router: Router<Route> = {
       case 'requestForInformationCreate':
         return '/requests-for-information/create';
       case 'requestForInformationEdit':
-        return `/requests-for-information/${route.value.rfiId}/edit`;
+        return `/requests-for-information/${route.value.rfiId}/edit${route.value.activeTab ? `?activeTab=${encodeURIComponent(route.value.activeTab)}` : ''}`;
       case 'requestForInformationView':
         return `/requests-for-information/${route.value.rfiId}/view`;
       case 'requestForInformationPreview':

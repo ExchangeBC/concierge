@@ -1,6 +1,6 @@
 import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { isUserType } from 'front-end/lib/access-control';
-import router from 'front-end/lib/app/router';
+import router, { replaceState } from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, PageComponent, PageInit, replaceRoute, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
@@ -24,6 +24,7 @@ const ERROR_MESSAGE = 'The Request for Information you are looking for is not av
 
 export interface RouteParams {
   rfiId: string;
+  activeTab?: RfiForm.TabId;
 }
 
 export type InnerMsg
@@ -81,7 +82,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
   userTypes: [UserType.ProgramStaff],
 
   async success({ routeParams, dispatch, shared }) {
-    const { rfiId } = routeParams;
+    const { rfiId, activeTab } = routeParams;
     const result = await api.readOneRfi(rfiId);
     switch (result.tag) {
       case 'valid':
@@ -106,7 +107,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
             ...initState,
             valid: {
               rfi: result.value,
-              rfiForm: await resetRfiForm(result.value)
+              rfiForm: await resetRfiForm(result.value, activeTab)
             }
           };
         }
@@ -220,14 +221,24 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'rfiForm':
       const rfiFormChildMsg = msg.value;
       let shouldResetRfiForm = false;
-      if (rfiFormChildMsg.tag === 'setActiveTab' && getIsEditing(state) && rfiFormChildMsg.value !== validState.rfiForm.activeTab) {
-        if (!state.promptChangeTabConfirmation) {
-          return [state.set('promptChangeTabConfirmation', rfiFormChildMsg)];
-        } else {
-          state = setIsEditing(state, false)
-            .set('promptChangeTabConfirmation', undefined);
-          shouldResetRfiForm = true;
+      if (rfiFormChildMsg.tag === 'setActiveTab' && rfiFormChildMsg.value !== validState.rfiForm.activeTab) {
+        if (getIsEditing(state)) {
+          if (!state.promptChangeTabConfirmation) {
+            return [state.set('promptChangeTabConfirmation', rfiFormChildMsg)];
+          } else {
+            state = setIsEditing(state, false)
+              .set('promptChangeTabConfirmation', undefined);
+            shouldResetRfiForm = true;
+          }
         }
+        // Update the query string with the active tab.
+        replaceState({
+          tag: 'requestForInformationEdit',
+          value: {
+            rfiId: validState.rfi._id,
+            activeTab: rfiFormChildMsg.value
+          }
+        });
       }
       state = updateComponentChild({
         state,
