@@ -543,7 +543,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     } else if (state.promptCancelEventConfirmation) {
       return {
         title: 'Cancel Discovery Day?',
-        body: 'All current registrants will be notified that the session has been cancelled.',
+        body: 'All registered attendees will be notified that the session has been cancelled.',
         onCloseMsg: { tag: 'hideCancelEventConfirmationPrompt', value: undefined },
         actions: [
           {
