@@ -363,7 +363,7 @@ export const update: Update<State,  Msg> = ({ state,  msg }) => {
       state = state.setIn(['groups', msg.value.groupIndex, 'attendees'], state.groups[msg.value.groupIndex].attendees.concat({
         name: '',
         email: '',
-        remote: true
+        remote: false
       }));
       return [validateGroupAttendees(state, msg.value.groupIndex)];
 
