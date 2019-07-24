@@ -283,7 +283,9 @@ const resource: Resource = {
               }
             }
             // Notify buyers if their account status has changed.
-            if (user.profile.type === UserType.Buyer && verificationStatusHasChanged) {
+            // Do not automatically notify Declined buyers (Program Staff will
+            // email them manually).
+            if (user.profile.type === UserType.Buyer && verificationStatusHasChanged && user.profile.verificationStatus !== VerificationStatus.Declined) {
               await mailer.buyerStatusUpdated(user.email, user.profile.verificationStatus);
             }
             return basicResponse(200, responseSession, makeJsonResponseBody(UserSchema.makePublicUser(user)));
