@@ -16,7 +16,8 @@ export type NoticeId
   | ADT<'feedbackSubmitted'>
   | ADT<'rfiResponseSubmitted', RfiId>
   | ADT<'rfiNonVendorResponse', RfiId>
-  | ADT<'rfiExpiredResponse', RfiId>;
+  | ADT<'rfiExpiredResponse', RfiId>
+  | ADT<'ddrSubmitted', RfiId>;
 
 function noticeIdToState(noticeId: NoticeId): State {
   switch (noticeId.tag) {
@@ -83,6 +84,19 @@ function noticeIdToState(noticeId: NoticeId): State {
       return {
         title: 'Thank you',
         body: 'Your response to this Request for Information has been successfully submitted.',
+        button: {
+          text: 'View all RFIs',
+          route: {
+            tag: 'requestForInformationList' as const,
+            value: null
+          }
+        }
+      };
+
+    case 'ddrSubmitted':
+      return {
+        title: 'Thank you',
+        body: 'Your registration for this Request for Information\'s Discovery Day has been successfully submitted.',
         button: {
           text: 'View all RFIs',
           route: {

@@ -400,6 +400,20 @@ const router: Router<Route> = {
       }
     },
     {
+      path: '/notice/request-for-information/:rfiId/discovery-day-registration-submitted',
+      makeRoute({ params }) {
+        return {
+          tag: 'notice',
+          value: {
+            noticeId: {
+              tag: 'ddrSubmitted',
+              value: getParamString(params, 'rfiId')
+            }
+          }
+        };
+      }
+    },
+    {
       path: '/notice/forgot-password',
       makeRoute() {
         return {
@@ -529,6 +543,8 @@ const router: Router<Route> = {
               return `/notice/request-for-information/${route.value.noticeId.value}/expired-rfi-response`;
             case 'rfiResponseSubmitted':
               return `/notice/request-for-information/${route.value.noticeId.value}/response-submitted`;
+            case 'ddrSubmitted':
+              return `/notice/request-for-information/${route.value.noticeId.value}/discovery-day-registration-submitted`;
             case 'forgotPassword':
               return '/notice/forgot-password';
             case 'notFound':

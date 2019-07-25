@@ -258,9 +258,8 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       }
       return [
         state.set('value', startSubmitLoading(state.value)),
-        async state => {
+        async (state, dispatch) => {
           if (state.tag === 'invalid') { return state; }
-          state = state.set('value', stopSubmitLoading(state.value));
           const result = await api.createDdr({
             rfiId: state.value.rfi._id,
             vendorId: state.value.vendor._id,
@@ -268,8 +267,18 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           });
           switch (result.tag) {
             case 'valid':
-              return await resetState(state, result.value);
+              dispatch(newRoute({
+                tag: 'notice',
+                value: {
+                  noticeId: {
+                    tag: 'ddrSubmitted',
+                    value: state.value.rfi._id
+                  }
+                }
+              }));
+              return state;
             case 'invalid':
+              state = state.set('value', stopSubmitLoading(state.value));
               return state
                 .setIn(['value', 'attendees'], Attendees.setErrors(state.value.attendees, [result.value.attendees || []]));
           }
