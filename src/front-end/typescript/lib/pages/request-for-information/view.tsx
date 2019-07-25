@@ -302,7 +302,7 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
       </Link>
       {version.discoveryDay && rfiStatus === RfiStatus.Open
         ? (<Link onClick={attendDiscoveryDay} button color='info' className='text-nowrap mr-md-3 mr-0 ml-3 ml-md-0'>
-            {alreadyRespondedToDiscoveryDay ? 'Manage Discovery Day Registration' : 'Attend Discovery Day'}
+            {alreadyRespondedToDiscoveryDay ? 'View Discovery Day Registration' : 'Attend Discovery Day'}
           </Link>)
         : null}
       <div className='text-secondary font-weight-bold d-none d-md-block mr-auto'>I want to...</div>
