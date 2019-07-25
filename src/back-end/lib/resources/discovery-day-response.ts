@@ -4,13 +4,13 @@ import * as mailer from 'back-end/lib/mailer';
 import * as permissions from 'back-end/lib/permissions';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
+import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateRfiId, validateUserId } from 'back-end/lib/validators';
 import { get } from 'lodash';
 import * as mongoose from 'mongoose';
 import { getString } from 'shared/lib';
-import { CreateRequestBody, CreateValidationErrors, PublicDiscoveryDayResponse, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/discovery-day-response';
-import { PaginatedList, profileToName } from 'shared/lib/types';
+import { CreateRequestBody, CreateValidationErrors, diffAttendees, PublicDiscoveryDayResponse, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/discovery-day-response';
+import { PaginatedList } from 'shared/lib/types';
 import { RfiStatus, UserType } from 'shared/lib/types';
 import { validateAttendees } from 'shared/lib/validators/discovery-day-response';
 
@@ -103,26 +103,14 @@ export const resource: Resource = {
         };
         // Update the RFI with the response.
         rfi.discoveryDayResponses.push(ddr);
-        const publicDdr = await RfiSchema.makePublicDiscoveryDayResponse(UserModel, ddr)
         await rfi.save();
-        // notify program staff
-        try {
-          const latestVersion = RfiSchema.getLatestVersion(rfi);
-          await mailer.discoveryDayResponseReceived({
-            // TODO make these default string values constants somewhere
-            // to stay DRY.
-            rfiName: latestVersion ? latestVersion.rfiNumber : '[Undefined RFI Number]',
-            rfiId: rfi._id,
-            vendorName: profileToName(vendor.profile) || '[Undefined Vendor Name]',
-            vendorId
-          });
-        } catch (error) {
-          request.logger.error('unable to send notification email to program staff for discovery day response', {
-            ...makeErrorResponseBody(error),
-            rfiId: rfi._id,
-            vendorId
-          });
-        }
+        // Notify program staff
+        mailer.createDdrToProgramStaff({ rfi, vendor });
+        // Notify vendor
+        mailer.createDdrToVendor({ rfi, to: vendor.email });
+        // Notify attendees
+        mailer.createDdrToAttendees({ rfi, vendor, attendees: ddr.attendees });
+        const publicDdr = await RfiSchema.makePublicDiscoveryDayResponse(UserModel, ddr)
         return respond(201, publicDdr);
       }
     };
@@ -212,12 +200,13 @@ export const resource: Resource = {
       },
       async respond(request): Promise<Response<UpdateResponseBody, Session>> {
         const respond = (code: number, body: PublicDiscoveryDayResponse | UpdateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
-        const vendorId = request.params.id;
-        if (!permissions.updateDiscoveryDayResponse(request.session, vendorId)) {
+        const validatedVendor = await validateUserId(UserModel, request.params.id, UserType.Vendor, true);
+        if (validatedVendor.tag === 'invalid' || !permissions.updateDiscoveryDayResponse(request.session, validatedVendor.value._id)) {
           return respond(401, {
             permissions: [permissions.ERROR_MESSAGE]
           })
         }
+        const vendor = validatedVendor.value;
         // Get the RFI.
         const validatedRfi = await validateRfiId(RfiModel, request.query.rfiId || '', [RfiStatus.Open, RfiStatus.Closed], true);
         if (validatedRfi.tag === 'invalid') {
@@ -233,7 +222,7 @@ export const resource: Resource = {
             rfiId: ['RFI does not have a discovery day.']
           });
         }
-        const existingDdr = await findDiscoveryDayResponse(UserModel, rfi, vendorId);
+        const existingDdr = await findDiscoveryDayResponse(UserModel, rfi, vendor._id);
         const validatedAttendees = validateAttendees(request.body.attendees, latestVersion.discoveryDay.occurringAt, get(existingDdr, 'attendees'));
         if (validatedAttendees.tag === 'invalid') {
           return respond(400, {
@@ -242,7 +231,7 @@ export const resource: Resource = {
         }
         let updatedDdr: RfiSchema.DiscoveryDayResponse | undefined;
         rfi.discoveryDayResponses = rfi.discoveryDayResponses.map(ddr => {
-          if (ddr.vendor.toString() !== vendorId) {
+          if (ddr.vendor.toString() !== vendor._id) {
             return ddr;
           } else {
             updatedDdr = {
@@ -253,14 +242,27 @@ export const resource: Resource = {
             return updatedDdr;
           }
         });
-        if (!updatedDdr) {
+        if (!existingDdr || !updatedDdr) {
           return basicResponse(404, request.session, makeJsonResponseBody({
             permissions: ['You have not responded to this Discovery Day Session.']
           }));
         }
         await rfi.save();
+        // Notifications
+        if (permissions.isOwnAccount(request.session, vendor._id)) {
+          // Vendor is updating their own DDR.
+          mailer.updateDdrToProgramStaffByVendor({ rfi, vendor });
+          mailer.updateDdrToVendorByVendor({ rfi, to: vendor.email });
+        } else if (permissions.isProgramStaff(request.session)) {
+          // Program Staff are updating this DDR.
+          mailer.updateDdrToVendorByProgramStaff({ rfi, to: vendor.email });
+        }
+        // Notify attendees
+        const attendeeDiff = diffAttendees(existingDdr.attendees, validatedAttendees.value);
+        mailer.createDdrToAttendees({ rfi, vendor, attendees: attendeeDiff.created });
+        mailer.updateDdrToAttendees({ rfi, vendor, attendees: attendeeDiff.updated });
+        mailer.deleteDdrToAttendees({ rfi, vendor, attendees: attendeeDiff.deleted });
         const publicDdr = await RfiSchema.makePublicDiscoveryDayResponse(UserModel, updatedDdr)
-        // TODO email notification
         return respond(200, publicDdr);
       }
     };
@@ -274,28 +276,47 @@ export const resource: Resource = {
 
   delete(Models) {
     const RfiModel = Models.Rfi;
+    const UserModel = Models.User;
     return {
       async transformRequest(request) {
         return request.body;
       },
       async respond(request) {
-        const vendorId = request.params.id;
-        if (!permissions.deleteDiscoveryDayResponse(request.session, vendorId)) {
+        const validatedVendor = await validateUserId(UserModel, request.params.id, UserType.Vendor, true);
+        if (validatedVendor.tag === 'invalid' || !permissions.deleteDiscoveryDayResponse(request.session, validatedVendor.value._id)) {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         }
+        const vendor = validatedVendor.value;
         const validatedRfi = await validateRfiId(RfiModel, request.query.rfiId || '', undefined, true);
         if (validatedRfi.tag === 'invalid') {
           return basicResponse(400, request.session, makeJsonResponseBody(validatedRfi.value));
         }
         const rfi = validatedRfi.value;
+        let deletedDdr: RfiSchema.DiscoveryDayResponse | undefined;
         const oldResponses = rfi.discoveryDayResponses;
         rfi.discoveryDayResponses = oldResponses.filter(ddr => {
-          return ddr.vendor.toString() !== vendorId;
+          if (ddr.vendor.toString() === vendor._id) {
+            deletedDdr = ddr;
+            return false;
+          } else {
+            return true;
+          }
         });
-        if (rfi.discoveryDayResponses.length === oldResponses.length) {
+        if (!deletedDdr) {
           return basicResponse(404, request.session, makeJsonResponseBody(['You have not responded to this Discovery Day Session.']));
         }
         await rfi.save();
+        // Notifications
+        if (permissions.isOwnAccount(request.session, vendor._id)) {
+          // Vendor is deleting their own DDR.
+          mailer.deleteDdrToProgramStaffByVendor({ rfi, vendor });
+          mailer.deleteDdrToVendorByVendor({ rfi, to: vendor.email });
+        } else if (permissions.isProgramStaff(request.session)) {
+          // Program Staff are deleting this DDR.
+          mailer.deleteDdrToVendorByProgramStaff({ rfi, to: vendor.email });
+        }
+        // Notify attendees
+        mailer.deleteDdrToAttendees({ rfi, vendor, attendees: deletedDdr.attendees });
         return basicResponse(200, request.session, makeJsonResponseBody(null));
       }
     };

@@ -49,11 +49,7 @@ export const resource: Resource = {
         });
         await forgotPasswordToken.save();
         // Send notification email.
-        try {
-          await mailer.createForgotPasswordToken(request.body.email, forgotPasswordToken.token, userId);
-        } catch (error) {
-          request.logger.error('sending the createForgotPasswordToken notification email failed', error);
-        }
+        mailer.createForgotPasswordToken(request.body.email, forgotPasswordToken.token, userId);
         return respond(201);
       }
     };

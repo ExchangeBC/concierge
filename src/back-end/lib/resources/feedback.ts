@@ -3,7 +3,7 @@ import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/a
 import * as crud from 'back-end/lib/crud';
 import * as mailer from 'back-end/lib/mailer';
 import * as FeedbackSchema from 'back-end/lib/schemas/feedback';
-import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
+import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { getString } from 'shared/lib';
 import { CreateRequestBody, CreateValidationErrors, PublicFeedback } from 'shared/lib/resources/feedback';
 import { validateFeedbackText, validateRating } from 'shared/lib/validators/feedback';
@@ -57,16 +57,10 @@ export const resource: Resource = {
         await feedback.save();
 
         // Send email to configured CONTACT_EMAIL
-        try {
-          await mailer.createFeedback({
-            feedbackEmail: CONTACT_EMAIL,
-            feedbackResponse: FeedbackSchema.makePublicFeedback(feedback)
-          });
-        } catch (error) {
-          request.logger.error(`unable to send notification email to configured contact email address: ${CONTACT_EMAIL}`, {
-            ...makeErrorResponseBody(error)
-          });
-        }
+        mailer.createFeedback({
+          feedbackEmail: CONTACT_EMAIL,
+          feedbackResponse: FeedbackSchema.makePublicFeedback(feedback)
+        });
 
         return respond(201, FeedbackSchema.makePublicFeedback(feedback));
       }

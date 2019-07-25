@@ -1,5 +1,6 @@
 import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
+import * as mailer from 'back-end/lib/mailer';
 import * as permissions from 'back-end/lib/permissions';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
@@ -8,7 +9,7 @@ import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonRespons
 import { validateFileIdArray, validateUserId } from 'back-end/lib/validators';
 import { get, isObject } from 'lodash';
 import { getNumber, getString, getStringArray } from 'shared/lib';
-import { CreateDiscoveryDayBody, CreateRequestBody, CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicDiscoveryDay, PublicRfi, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
+import { CreateDiscoveryDayBody, CreateRequestBody, CreateValidationErrors, DELETE_ADDENDUM_TOKEN, discoveryDayHasChanged, PublicDiscoveryDay, PublicRfi, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
 import { PaginatedList, UserType } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, valid, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
 import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validateDiscoveryDay, validateGracePeriodDays, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
@@ -294,10 +295,40 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
               newVersion.addenda = newAddenda.filter(addendum => {
                 return addendum.description !== DELETE_ADDENDUM_TOKEN;
               });
-              // Persist the new version.
+              // Persist the new version
               rfi.versions.push(newVersion);
+              const publicRfi = await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session);
+              const existingDdrs = publicRfi.discoveryDayResponses || [];
+              const discoveryDayHasBeenUpdated = !!(currentVersion && publicRfi.discoveryDayResponses && currentVersion.discoveryDay && newVersion.discoveryDay && discoveryDayHasChanged(currentVersion.discoveryDay, newVersion.discoveryDay));
+              const discoveryDayHasBeenDeleted = !!(currentVersion && publicRfi.discoveryDayResponses && currentVersion.discoveryDay && !newVersion.discoveryDay);
+              if (discoveryDayHasBeenDeleted) {
+                // Remove existing discovery day responses if discovery day has been deleted.
+                rfi.discoveryDayResponses = [];
+              }
               await rfi.save();
-              return respond(200, await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session));
+              // Notifications.
+              if (discoveryDayHasBeenUpdated) {
+                // Discovery day has been updated
+                for (const ddr of existingDdrs) {
+                  mailer.updateDiscoveryDayToVendor({ rfi, to: ddr.vendor.email });
+                  mailer.updateDiscoveryDayToAttendees({
+                    rfi,
+                    vendor: ddr.vendor,
+                    attendees: ddr.attendees
+                  });
+                }
+              } else if (discoveryDayHasBeenDeleted) {
+                // Discovery day has been deleted
+                for (const ddr of existingDdrs) {
+                  mailer.deleteDiscoveryDayToVendor({ rfi, to: ddr.vendor.email });
+                  mailer.deleteDiscoveryDayToAttendees({
+                    rfi,
+                    vendor: ddr.vendor,
+                    attendees: ddr.attendees
+                  });
+                }
+              }
+              return respond(200, publicRfi);
             case 'invalid':
               return respond(400, validatedVersion.value);
           }

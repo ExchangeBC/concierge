@@ -64,11 +64,7 @@ export const resource: Resource = {
           user.active = true;
           await user.save();
           // Send notification email.
-          try {
-            await mailer.reactivateUser(user.email);
-          } catch (error) {
-            request.logger.error('sending the reactivateUser notification email failed', error);
-          }
+          mailer.reactivateUser(user.email);
         }
         const session = await SessionSchema.signIn(SessionModel, UserModel, request.session, user._id);
         const publicSession = SessionSchema.makePublicSession(session);

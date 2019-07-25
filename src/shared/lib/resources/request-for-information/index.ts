@@ -12,6 +12,12 @@ export interface PublicDiscoveryDay {
   remoteAccess: string;
 }
 
+export function discoveryDayHasChanged(oldDiscoveryDay: PublicDiscoveryDay, newDiscoveryDay: PublicDiscoveryDay): boolean {
+  return oldDiscoveryDay.occurringAt.toString() !== newDiscoveryDay.occurringAt.toString()
+      || oldDiscoveryDay.venue !== newDiscoveryDay.venue
+      || oldDiscoveryDay.remoteAccess !== newDiscoveryDay.remoteAccess;
+}
+
 export interface PublicVersion {
   createdAt: Date;
   closingAt: Date;

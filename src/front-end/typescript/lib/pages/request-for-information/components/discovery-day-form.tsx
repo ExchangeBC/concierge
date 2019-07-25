@@ -101,7 +101,7 @@ export type DdrUpdate
   | ADT<'delete', Omit<DdrUpdateInfo, 'attendees'>>;
 
 function attendeesHaveChanged(group: Attendees.AttendeeGroup, ddr: DdrResource.PublicDiscoveryDayResponse): boolean {
-  return group.attendees.reduce((acc: boolean, a, i) => {
+  return group.attendees.length !== ddr.attendees.length || group.attendees.reduce((acc: boolean, a, i) => {
     const b = ddr.attendees[i];
     return acc || !b || a.name !== b.name || a.email !== b.email || a.remote !== b.remote;
   }, false);
@@ -122,7 +122,7 @@ export function getDdrUpdates(state: State): DdrUpdate[] {
       [group.vendor._id]: group
     };
   }, {});
-  const createsAndUpdates = state.attendees.groups.reduce((acc: DdrUpdate[], group) => {
+  const updates = state.attendees.groups.reduce((acc: DdrUpdate[], group) => {
     if (!group.vendor) { return acc; }
     const vendorId = group.vendor._id;
     const ddr = responsesByVendorId[vendorId];
@@ -150,7 +150,7 @@ export function getDdrUpdates(state: State): DdrUpdate[] {
     }
     return acc;
   }, []);
-  return [...createsAndUpdates, ...deletes];
+  return [...updates, ...deletes];
 }
 
 export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryDay, discoveryDayResponses }) => {

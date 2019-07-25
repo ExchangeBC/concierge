@@ -6,7 +6,7 @@ import * as FileSchema from 'back-end/lib/schemas/file';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import * as RfiResponseSchema from 'back-end/lib/schemas/request-for-information/response';
 import * as UserSchema from 'back-end/lib/schemas/user';
-import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
+import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateFileIdArray, validateRfiId, validateUserId } from 'back-end/lib/validators';
 import { isObject } from 'lodash';
 import { getString, getStringArray } from 'shared/lib';
@@ -79,17 +79,9 @@ export const resource: Resource = {
             await rfiResponse.save();
             const publicRfiResponse = await RfiResponseSchema.makePublicRfiResponse(RfiModel, UserModel, FileModel, rfiResponse, request.session);
             // notify program staff
-            try {
-              await mailer.rfiResponseReceived({
-                rfiResponse: publicRfiResponse
-              });
-            } catch (error) {
-              request.logger.error('unable to send notification email to program staff for RFI response', {
-                ...makeErrorResponseBody(error),
-                rfiId: rfiResponse.rfi,
-                rfiResponseId: rfiResponse._id
-              });
-            }
+            mailer.rfiResponseReceived({
+              rfiResponse: publicRfiResponse
+            });
             return respond(201, publicRfiResponse);
           case 'invalid':
             return respond(400, validatedVersion.value);

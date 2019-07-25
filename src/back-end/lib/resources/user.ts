@@ -181,11 +181,7 @@ const resource: Resource = {
             const user = new UserModel(body);
             await user.save();
             // Send notification email.
-            try {
-              await mailer.createUser(user.email);
-            } catch (error) {
-              request.logger.error('sending the createUser notification email failed', error);
-            }
+            mailer.createUser(user.email);
             // Sign in the user if they are creating their own account.
             // Otherwise, as is the case with Program Staff, leave them signed in.
             let session = request.session;
@@ -286,7 +282,7 @@ const resource: Resource = {
             // Do not automatically notify Declined buyers (Program Staff will
             // email them manually).
             if (user.profile.type === UserType.Buyer && verificationStatusHasChanged && user.profile.verificationStatus !== VerificationStatus.Declined) {
-              await mailer.buyerStatusUpdated(user.email, user.profile.verificationStatus);
+              mailer.buyerStatusUpdated(user.email, user.profile.verificationStatus);
             }
             return basicResponse(200, responseSession, makeJsonResponseBody(UserSchema.makePublicUser(user)));
         }
@@ -313,11 +309,7 @@ const resource: Resource = {
         user.active = false;
         await user.save();
         // Send notification email.
-        try {
-          await mailer.deactivateUser(user.email, user.profile.type);
-        } catch (error) {
-          request.logger.error('sending the deactivateUser notification email failed', error);
-        }
+        mailer.deactivateUser(user.email, user.profile.type);
         let session = request.session;
         // Sign out the user if they are deactivating their own account.
         // Otherwise, as is the case with Program Staff, leave them signed in.

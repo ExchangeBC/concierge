@@ -134,6 +134,9 @@ const styles: Styles = (() => {
     linkListTitle: {
       ...utilities.font.bold
     },
+    descriptionListTitle: {
+      ...utilities.font.bold
+    },
     linkListLink: {
       ...utilities.m[0],
       ...utilities.p[0],
@@ -191,7 +194,7 @@ type View<Props> = (props: Props) => ReactElement | null;
 
 type TemplateBaseProps = Omit<LayoutProps, 'children'>;
 
-interface LinkProps {
+export interface LinkProps {
   text: string;
   url: string;
 }
@@ -249,14 +252,18 @@ const DescriptionItem: View<DescriptionItemProps> = ({ name, value }) => {
   );
 };
 
-interface DescriptionListProps {
+export interface DescriptionListProps {
+  title?: string;
   items: DescriptionItemProps[];
 }
 
-const DescriptionList: View<DescriptionListProps> = ({ items }) => {
+const DescriptionList: View<DescriptionListProps> = ({ title, items }) => {
   return (
     <Row>
-      {items.map((item, i) => (<DescriptionItem key={`dl-di-${i}`} {...item} />))}
+      {title ? (<div style={styles.classes.descriptionListTitle}>{title}</div>) : null}
+      <Fragment>
+        {items.map((item, i) => (<DescriptionItem key={`dl-di-${i}`} {...item} />))}
+      </Fragment>
     </Row>
   );
 };
@@ -324,16 +331,22 @@ const Layout: View<LayoutProps> = ({ title, description, children }) => {
 
 export interface SimpleProps extends TemplateBaseProps {
   linkLists?: LinkListProps[];
+  descriptionLists?: DescriptionListProps[];
   callToAction?: LinkProps;
 }
 
 const Simple: View<SimpleProps> = props => {
-  const { linkLists, callToAction } = props;
+  const { linkLists, descriptionLists, callToAction } = props;
   return (
     <Layout {...props}>
       <Fragment>
         {linkLists
           ? linkLists.map((list, i) => (<LinkList key={`link-list-${i}`} {...list} />))
+          : null}
+      </Fragment>
+      <Fragment>
+        {descriptionLists
+          ? descriptionLists.map((list, i) => (<DescriptionList key={`description-list-${i}`} {...list} />))
           : null}
       </Fragment>
       {callToAction
