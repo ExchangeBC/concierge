@@ -172,7 +172,7 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
           color='secondary'
           width={1.25}
           height={1.25}
-          className={`btn btn-sm btn-link text-hover-danger ${content.value.disabled ? 'disabled' : ''}`}
+          className={`btn btn-sm btn-link text-hover-danger ${content.value.disabled ? 'disabled invisible' : ''}`}
           style={{ boxSizing: 'content-box', cursor: 'pointer' }}
           onClick={() => dispatch({
             tag: 'deleteAttendee',
