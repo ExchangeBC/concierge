@@ -231,7 +231,7 @@ export const resource: Resource = {
         }
         let updatedDdr: RfiSchema.DiscoveryDayResponse | undefined;
         rfi.discoveryDayResponses = rfi.discoveryDayResponses.map(ddr => {
-          if (ddr.vendor.toString() !== vendor._id) {
+          if (ddr.vendor.toString() !== vendor._id.toString()) {
             return ddr;
           } else {
             updatedDdr = {
@@ -295,7 +295,7 @@ export const resource: Resource = {
         let deletedDdr: RfiSchema.DiscoveryDayResponse | undefined;
         const oldResponses = rfi.discoveryDayResponses;
         rfi.discoveryDayResponses = oldResponses.filter(ddr => {
-          if (ddr.vendor.toString() === vendor._id) {
+          if (ddr.vendor.toString() === vendor._id.toString()) {
             deletedDdr = ddr;
             return false;
           } else {

@@ -78,7 +78,7 @@ async function resetAttendees(discoveryDay: PublicDiscoveryDay, vendor: PublicUs
               ? vendor.profile.contactName
               : '',
             email: vendor.email,
-            remote: true
+            remote: false
           }]
     }]
   }));

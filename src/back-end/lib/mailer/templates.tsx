@@ -135,7 +135,8 @@ const styles: Styles = (() => {
       ...utilities.font.bold
     },
     descriptionListTitle: {
-      ...utilities.font.bold
+      ...utilities.font.bold,
+      ...utilities.mb[3]
     },
     linkListLink: {
       ...utilities.m[0],
@@ -259,7 +260,7 @@ export interface DescriptionListProps {
 
 const DescriptionList: View<DescriptionListProps> = ({ title, items }) => {
   return (
-    <Row>
+    <Row style={styles.utilities.text.center}>
       {title ? (<div style={styles.classes.descriptionListTitle}>{title}</div>) : null}
       <Fragment>
         {items.map((item, i) => (<DescriptionItem key={`dl-di-${i}`} {...item} />))}

@@ -299,8 +299,8 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
               rfi.versions.push(newVersion);
               const publicRfi = await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session);
               const existingDdrs = publicRfi.discoveryDayResponses || [];
-              const discoveryDayHasBeenUpdated = !!(currentVersion && publicRfi.discoveryDayResponses && currentVersion.discoveryDay && newVersion.discoveryDay && discoveryDayHasChanged(currentVersion.discoveryDay, newVersion.discoveryDay));
-              const discoveryDayHasBeenDeleted = !!(currentVersion && publicRfi.discoveryDayResponses && currentVersion.discoveryDay && !newVersion.discoveryDay);
+              const discoveryDayHasBeenUpdated = !!(currentVersion && currentVersion.discoveryDay && newVersion.discoveryDay && discoveryDayHasChanged(currentVersion.discoveryDay, newVersion.discoveryDay));
+              const discoveryDayHasBeenDeleted = !!(currentVersion && currentVersion.discoveryDay && !newVersion.discoveryDay);
               if (discoveryDayHasBeenDeleted) {
                 // Remove existing discovery day responses if discovery day has been deleted.
                 rfi.discoveryDayResponses = [];
