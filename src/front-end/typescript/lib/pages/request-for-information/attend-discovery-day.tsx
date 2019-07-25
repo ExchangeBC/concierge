@@ -389,10 +389,7 @@ const view: ComponentView<State, Msg> = props => {
         <Col xs='12' className='d-flex flex-column'>
           <h2>Attendee(s)</h2>
           <p>
-            Please complete the following form to register one of more of your company's representatives to attend this RFI's Discovery Day session. If you are not personally attending, please clear your name and email from the list of attendees, and add the information of your colleagues that will be.
-          </p>
-          <p className='mt-2'>
-            In-person and/or remote attendance information will be emailed to all attendees individually based on the information you provide. You can return to this page to update your team's attendance if required. Please note that you will not be able to add any in-person attendees less than 24 hours before the Discovery Day's scheduled time.
+            Please complete the following form to register one of more of your company's representatives to attend this RFI's Discovery Day. If you are not personally attending, please clear your name and email from the list of attendees, and add the information of your colleague(s) that will be.
           </p>
         </Col>
       </Row>

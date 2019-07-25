@@ -96,7 +96,7 @@ function noticeIdToState(noticeId: NoticeId): State {
     case 'ddrSubmitted':
       return {
         title: 'Thank you',
-        body: 'Your registration for this Request for Information\'s Discovery Day has been successfully submitted.',
+        body: 'Your registration for this Request for Information\'s Discovery Day has been successfully submitted. In-person and/or remote attendance information will be emailed to all attendees individually based on the information you provide. You can return to the RFI to view and update your team\'s registration required. Please note that you will not be able to add any in-person attendees less than 24 hours before the Discovery Day\'s scheduled time.',
         button: {
           text: 'View all RFIs',
           route: {
