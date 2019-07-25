@@ -496,12 +496,12 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getModal(state) {
     if (state.promptCreateConfirmation) {
       return {
-        title: 'Review the Terms and Conditions?',
+        title: 'Review Terms and Conditions',
         body: 'You must accept the Procurement Concierge Terms and Conditions in order to create a Request for Information.',
         onCloseMsg: { tag: 'hideCreateConfirmationPrompt', value: undefined },
         actions: [
           {
-            text: 'Yes, review Terms and Conditions',
+            text: 'Review Terms & Conditions',
             color: 'primary',
             button: true,
             msg: { tag: 'createRfi', value: undefined }
@@ -515,12 +515,12 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
       };
     } else if (state.promptEditConfirmation) {
       return {
-        title: 'Review the Terms and Conditions?',
+        title: 'Review Terms and Conditions',
         body: 'You must accept the Procurement Concierge Terms and Conditions in order to edit a Request for Information.',
         onCloseMsg: { tag: 'hideEditConfirmationPrompt', value: undefined },
         actions: [
           {
-            text: 'Yes, review Terms and Conditions',
+            text: 'Review Terms & Conditions',
             color: 'primary',
             button: true,
             msg: { tag: 'editRfi', value: state.promptEditConfirmation }

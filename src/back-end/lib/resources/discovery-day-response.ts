@@ -55,7 +55,7 @@ export const resource: Resource = {
       },
       async respond(request): Promise<Response<CreateResponseBody, Session>> {
         const respond = (code: number, body: PublicDiscoveryDayResponse | CreateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
-        if (!permissions.createDiscoveryDayResponse(request.session, request.body.vendorId)) {
+        if (!(await permissions.createDiscoveryDayResponse(UserModel, request.session, request.body.vendorId))) {
           return respond(401, {
             permissions: [permissions.ERROR_MESSAGE]
           })
@@ -130,7 +130,7 @@ export const resource: Resource = {
         return request.body;
       },
       async respond(request): Promise<Response<ReadManyResponseBody, Session>> {
-        if (!permissions.readManyDiscoveryDayResponses(request.session) || !request.session.user) {
+        if (!(await permissions.readManyDiscoveryDayResponses(UserModel, request.session)) || !request.session.user) {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         }
         const validatedRfi = await validateRfiId(RfiModel, request.query.rfiId || '', undefined, true);
@@ -164,7 +164,7 @@ export const resource: Resource = {
       },
       async respond(request): Promise<Response<ReadOneResponseBody, Session>> {
         const vendorId = request.params.id;
-        if (!permissions.readOneDiscoveryDayResponse(request.session, vendorId)) {
+        if (!(await permissions.readOneDiscoveryDayResponse(UserModel, request.session, vendorId))) {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         }
         const validatedRfi = await validateRfiId(RfiModel, request.query.rfiId || '', undefined, true);
@@ -201,7 +201,7 @@ export const resource: Resource = {
       async respond(request): Promise<Response<UpdateResponseBody, Session>> {
         const respond = (code: number, body: PublicDiscoveryDayResponse | UpdateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
         const validatedVendor = await validateUserId(UserModel, request.params.id, UserType.Vendor, true);
-        if (validatedVendor.tag === 'invalid' || !permissions.updateDiscoveryDayResponse(request.session, validatedVendor.value._id)) {
+        if (validatedVendor.tag === 'invalid' || !(await permissions.updateDiscoveryDayResponse(UserModel, request.session, validatedVendor.value._id))) {
           return respond(401, {
             permissions: [permissions.ERROR_MESSAGE]
           })
@@ -283,7 +283,7 @@ export const resource: Resource = {
       },
       async respond(request) {
         const validatedVendor = await validateUserId(UserModel, request.params.id, UserType.Vendor, true);
-        if (validatedVendor.tag === 'invalid' || !permissions.deleteDiscoveryDayResponse(request.session, validatedVendor.value._id)) {
+        if (validatedVendor.tag === 'invalid' || !(await permissions.deleteDiscoveryDayResponse(UserModel, request.session, validatedVendor.value._id))) {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         }
         const vendor = validatedVendor.value;

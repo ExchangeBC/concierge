@@ -415,12 +415,12 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getModal(state) {
     if (state.promptCreateConfirmation) {
       return {
-        title: 'Review the Terms and Conditions?',
+        title: 'Review Terms and Conditions',
         body: 'You must accept the Procurement Concierge Terms and Conditions in order to create another account.',
         onCloseMsg: { tag: 'hideCreateConfirmationPrompt', value: undefined },
         actions: [
           {
-            text: 'Yes, review Terms and Conditions',
+            text: 'Review Terms & Conditions',
             color: 'primary',
             button: true,
             msg: { tag: 'createAccount', value: undefined }
@@ -434,12 +434,12 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
       };
     } else if (state.promptViewConfirmation) {
       return {
-        title: 'Review the Terms and Conditions?',
+        title: 'Review Terms and Conditions',
         body: 'You must accept the Procurement Concierge Terms and Conditions in order to view this user\'s profile.',
         onCloseMsg: { tag: 'hideViewConfirmationPrompt', value: undefined },
         actions: [
           {
-            text: 'Yes, review Terms and Conditions',
+            text: 'Review Terms & Conditions',
             color: 'primary',
             button: true,
             msg: { tag: 'viewUser', value: state.promptViewConfirmation }

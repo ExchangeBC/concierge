@@ -486,7 +486,7 @@ function conditionalTermsAndConditions<PS, PM, P extends ProfileType>(Profile: P
         <Row>
           <Col xs='12'>
             <Link route={{ tag: 'termsAndConditions', value: {} }}>
-              Review the Concierge's Terms & Conditions
+              Review the Terms and Conditions
             </Link>
           </Col>
         </Row>
@@ -496,7 +496,7 @@ function conditionalTermsAndConditions<PS, PM, P extends ProfileType>(Profile: P
       <div className='py-5 border-top'>
         <Row>
           <Col xs='12'>
-            <h2>Terms & Conditions</h2>
+            <h2>Terms and Conditions</h2>
           </Col>
         </Row>
         <Row className='mb-4'>

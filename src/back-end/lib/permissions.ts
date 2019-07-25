@@ -20,6 +20,11 @@ export function isProgramStaff(session: Session): boolean {
   return !!session.user && session.user.type === UserType.ProgramStaff;
 }
 
+export async function isProgramStaffAndHasAcceptedTerms(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
+  const result = await validateUserId(UserModel, get(session.user, 'id', ''), UserType.ProgramStaff, true);
+  return result.tag === 'valid';
+}
+
 export function isVendor(session: Session): boolean {
   return !!session.user && session.user.type === UserType.Vendor;
 }
@@ -61,8 +66,7 @@ export async function createUser(UserModel: UserSchema.Model, session: Session, 
   if (!isSignedIn(session) && createeUserType !== UserType.ProgramStaff) {
     return true;
   } else {
-    const result = await validateUserId(UserModel, get(session.user, 'id', ''), UserType.ProgramStaff, true);
-    return result.tag === 'valid' && createeUserType === UserType.ProgramStaff;
+    return (await isProgramStaffAndHasAcceptedTerms(UserModel, session)) && createeUserType === UserType.ProgramStaff;
   }
 }
 
@@ -78,8 +82,7 @@ export async function updateUser(UserModel: UserSchema.Model, session: Session, 
   if (isOwnAccount(session, updateeId)) {
     return true;
   } else {
-    const result = await validateUserId(UserModel, get(session.user, 'id', ''), UserType.ProgramStaff, true);
-    return result.tag === 'valid';
+    return (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
   }
 }
 
@@ -126,8 +129,7 @@ export function readOneFileBlob(session: Session, fileAuthLevel: AuthLevel<UserT
 // RFIs.
 
 export async function createRfi(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  const result = await validateUserId(UserModel, get(session.user, 'id', ''), UserType.ProgramStaff, true);
-  return result.tag === 'valid';
+  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
 }
 
 export function readOneRfi(): boolean {
@@ -139,30 +141,29 @@ export function readManyRfis(): boolean {
 }
 
 export async function updateRfi(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  const result = await validateUserId(UserModel, get(session.user, 'id', ''), UserType.ProgramStaff, true);
-  return result.tag === 'valid';
+  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
 }
 
 // Discovery Day Responses.
 
-export function createDiscoveryDayResponse(session: Session, vendorId: string): boolean {
-  return (isVendor(session) && isOwnAccount(session, vendorId)) || isProgramStaff(session);
+export async function createDiscoveryDayResponse(UserModel: UserSchema.Model, session: Session, vendorId: string): Promise<boolean> {
+  return (isVendor(session) && isOwnAccount(session, vendorId)) || (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
 }
 
-export function readManyDiscoveryDayResponses(session: Session): boolean {
-  return isProgramStaff(session);
+export async function readManyDiscoveryDayResponses(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
+  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
 }
 
-export function readOneDiscoveryDayResponse(session: Session, vendorId: string): boolean {
-  return (isVendor(session) && isOwnAccount(session, vendorId)) || isProgramStaff(session);
+export async function readOneDiscoveryDayResponse(UserModel: UserSchema.Model, session: Session, vendorId: string): Promise<boolean> {
+  return (isVendor(session) && isOwnAccount(session, vendorId)) || (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
 }
 
-export function updateDiscoveryDayResponse(session: Session, vendorId: string): boolean {
-  return (isVendor(session) && isOwnAccount(session, vendorId)) || isProgramStaff(session);
+export async function updateDiscoveryDayResponse(UserModel: UserSchema.Model, session: Session, vendorId: string): Promise<boolean> {
+  return (isVendor(session) && isOwnAccount(session, vendorId)) || (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
 }
 
-export function deleteDiscoveryDayResponse(session: Session, vendorId: string): boolean {
-  return (isVendor(session) && isOwnAccount(session, vendorId)) || isProgramStaff(session);
+export async function deleteDiscoveryDayResponse(UserModel: UserSchema.Model, session: Session, vendorId: string): Promise<boolean> {
+  return (isVendor(session) && isOwnAccount(session, vendorId)) || (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
 }
 
 // RFI Responses.

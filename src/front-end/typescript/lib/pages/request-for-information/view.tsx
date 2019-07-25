@@ -372,12 +372,12 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     if (!state.rfi) { return null; }
     if (state.promptResponseConfirmation) {
       return {
-        title: 'Review the Terms and Conditions?',
+        title: 'Review Terms and Conditions',
         body: 'You must accept the Procurement Concierge Terms and Conditions in order to respond to this Request for Information.',
         onCloseMsg: { tag: 'hideResponseConfirmationPrompt', value: undefined },
         actions: [
           {
-            text: 'Yes, review Terms and Conditions',
+            text: 'Review Terms & Conditions',
             color: 'primary',
             button: true,
             msg: { tag: 'respondToRfi', value: undefined }
@@ -391,12 +391,12 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
       };
     } else if (state.promptDiscoveryDayConfirmation) {
       return {
-        title: 'Review the Terms and Conditions?',
+        title: 'Review Terms and Conditions',
         body: 'You must accept the Procurement Concierge Terms and Conditions in order to attend this RFI\'s Discovery Day.',
         onCloseMsg: { tag: 'hideDiscoveryDayConfirmationPrompt', value: undefined },
         actions: [
           {
-            text: 'Yes, review Terms and Conditions',
+            text: 'Review Terms & Conditions',
             color: 'primary',
             button: true,
             msg: { tag: 'attendDiscoveryDay', value: undefined }
