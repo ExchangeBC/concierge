@@ -1,6 +1,5 @@
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
-import { get } from 'lodash';
 import { MigrationHook } from 'migrate';
 import { connect } from 'migrations/db';
 import path from 'path';
@@ -23,31 +22,11 @@ export const up: MigrationHook = async () => {
       return v;
     });
     // Update discovery day responses.
-    const ddrs = [];
-    for await (const ddr of doc.discoveryDayResponses) {
-      const vendor = await db.collection('users').findOne({
-        _id: ddr.vendor
-      });
-      if (!vendor) {
-        logger.error('unable to find vendor', { id: ddr.vendor });
-        throw new Error('unable to find vendor');
-      }
-      ddrs.push({
-        ...ddr,
-        updatedAt: ddr.createdAt,
-        attendees: get(ddr, 'attendees.length')
-          ? ddr.attendees
-          : [{
-              name: get(vendor.profile, 'contactName', 'Unknown'),
-              email: vendor.email,
-              remote: false
-            }]
-      });
-    }
-    doc.discoveryDayResponses = ddrs;
-    logger.info('persisting updated rfi...', { _id: doc._id, ddrCount: doc.discoveryDayResponses.length });
+    doc.discoveryDayResponsesDeprecated = doc.discoveryDayResponses || [];
+    doc.discoveryDayResponses = [];
+    logger.info('persisting updated rfi...', { _id: doc._id, ddrCount: doc.discoveryDayResponsesDeprecated.length });
     await db.collection('rfis').replaceOne({ _id: doc._id }, doc);
-    logger.info('...persisted updated rfi...', { _id: doc._id, ddrCount: doc.discoveryDayResponses.length });
+    logger.info('...persisted updated rfi...', { _id: doc._id, ddrCount: doc.discoveryDayResponsesDeprecated.length });
   }
 };
 
@@ -65,6 +44,8 @@ export const down: MigrationHook = async () => {
       delete v.discoveryDayDeprecated;
       return v;
     });
+    doc.discoveryDayResponses = doc.discoveryDayResponsesDeprecated;
+    delete doc.discoveryDayResponsesDeprecated;
     logger.info('persisting updated rfi...', { _id: doc._id });
     await db.collection('rfis').replaceOne({ _id: doc._id }, doc);
     logger.info('...persisted updated rfi...', { _id: doc._id });

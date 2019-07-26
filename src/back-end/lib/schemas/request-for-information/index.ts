@@ -33,12 +33,19 @@ export interface DiscoveryDayResponse {
   attendees: Attendee[];
 }
 
+export interface DiscoveryDayResponseDeprecated {
+  createdAt: Date;
+  updatedAt: Date;
+  vendor: mongoose.Types.ObjectId;
+}
+
 export interface Data {
   _id: mongoose.Types.ObjectId;
   createdAt: Date;
   publishedAt: Date;
   versions: Version[];
   discoveryDayResponses: DiscoveryDayResponse[];
+  discoveryDayResponsesDeprecated: DiscoveryDayResponseDeprecated[];
 }
 
 export function getLatestVersion(rfi: Data): Version | undefined {
