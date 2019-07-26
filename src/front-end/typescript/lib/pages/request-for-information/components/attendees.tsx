@@ -214,7 +214,7 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
 
     case 'attendeeErrorsRemote':
       return (
-        <td colSpan={2} className='align-top pt-0 text-danger border-0 text-wrap'>
+        <td colSpan={3} className='align-top pt-0 text-danger border-0 text-wrap'>
           {content.value.map((s, i) => (<div key={i}>{s}</div>))}
         </td>
       );
@@ -229,14 +229,14 @@ const tableHeadCells: Table.THSpec[] = [
     children: (<span>Attendee Name<span className='text-primary ml-1'>*</span></span>),
     style: {
       minWidth: '240px',
-      width: '240px'
+      width: '30%'
     }
   },
   {
     children: (<span>Attendee Email Address<span className='text-primary ml-1'>*</span></span>),
     style: {
       minWidth: '240px',
-      width: '240px'
+      width: '30%'
     }
   },
   {
@@ -244,7 +244,7 @@ const tableHeadCells: Table.THSpec[] = [
     className: 'text-center',
     style: {
       minWidth: '110px',
-      width: '110px'
+      width: '15%'
     }
   },
   {
@@ -252,14 +252,14 @@ const tableHeadCells: Table.THSpec[] = [
     className: 'text-center',
     style: {
       minWidth: '110px',
-      width: '110px'
+      width: '15%'
     }
   },
   {
     children: ' ',
     style: {
       minWidth: '70px',
-      width: '70px'
+      width: '10%'
     }
   }
 ];
