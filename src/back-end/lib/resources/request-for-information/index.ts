@@ -9,6 +9,7 @@ import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonRespons
 import { validateFileIdArray, validateUserId } from 'back-end/lib/validators';
 import { get, isObject } from 'lodash';
 import { getNumber, getString, getStringArray } from 'shared/lib';
+import { excludeUserFromAttendees } from 'shared/lib/resources/discovery-day-response';
 import { CreateDiscoveryDayBody, CreateRequestBody, CreateValidationErrors, DELETE_ADDENDUM_TOKEN, discoveryDayHasChanged, PublicDiscoveryDay, PublicRfi, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
 import { PaginatedList, UserType } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, valid, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
@@ -310,21 +311,23 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
               if (discoveryDayHasBeenUpdated) {
                 // Discovery day has been updated
                 for (const ddr of existingDdrs) {
+                  const attendees = excludeUserFromAttendees(ddr.attendees, ddr.vendor.email);
                   mailer.updateDiscoveryDayToVendor({ rfi, to: ddr.vendor.email });
                   mailer.updateDiscoveryDayToAttendees({
                     rfi,
                     vendor: ddr.vendor,
-                    attendees: ddr.attendees
+                    attendees
                   });
                 }
               } else if (discoveryDayHasBeenDeleted) {
                 // Discovery day has been deleted
                 for (const ddr of existingDdrs) {
+                  const attendees = excludeUserFromAttendees(ddr.attendees, ddr.vendor.email);
                   mailer.deleteDiscoveryDayToVendor({ rfi, to: ddr.vendor.email });
                   mailer.deleteDiscoveryDayToAttendees({
                     rfi,
                     vendor: ddr.vendor,
-                    attendees: ddr.attendees
+                    attendees
                   });
                 }
               }

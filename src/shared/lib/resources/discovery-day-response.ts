@@ -73,3 +73,7 @@ export function diffAttendees(oldAttendees: Attendee[], newAttendees: Attendee[]
   const deleted = oldAttendees.filter(attendee => !newByEmail[attendee.email]);
   return { created, updated, deleted };
 }
+
+export function excludeUserFromAttendees(attendees: Attendee[], userEmail: string): Attendee[] {
+  return attendees.filter(({ email }) => email !== userEmail);
+}
