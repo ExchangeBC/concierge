@@ -9,8 +9,8 @@ import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonRespons
 import { validateFileIdArray, validateUserId } from 'back-end/lib/validators';
 import { get, isObject } from 'lodash';
 import { getNumber, getString, getStringArray } from 'shared/lib';
-import { excludeUserFromAttendees } from 'shared/lib/resources/discovery-day-response';
-import { CreateDiscoveryDayBody, CreateRequestBody, CreateValidationErrors, DELETE_ADDENDUM_TOKEN, discoveryDayHasChanged, PublicDiscoveryDay, PublicRfi, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
+import { Attendee } from 'shared/lib/resources/discovery-day-response';
+import { CreateDiscoveryDayBody, CreateRequestBody, CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicDiscoveryDay, PublicRfi, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
 import { PaginatedList, UserType } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, valid, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
 import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validateDiscoveryDay, validateGracePeriodDays, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
@@ -96,6 +96,42 @@ function getDiscoveryDayBody(raw: any): CreateDiscoveryDayBody | undefined {
         remoteAccess: get(body, 'remoteAccess', '')
       }
     : undefined;
+}
+
+function getImpactedAttendeesWhenDiscoveryDayHasChanged(attendees: Attendee[], oldRfiVersion?: RfiSchema.Version, newRfiVersion?: RfiSchema.Version): Attendee[] {
+  if (!oldRfiVersion || !newRfiVersion || !oldRfiVersion.discoveryDay || !newRfiVersion.discoveryDay) { return []; }
+  const oldDiscoveryDay = oldRfiVersion.discoveryDay;
+  const newDiscoveryDay = newRfiVersion.discoveryDay;
+  if (oldDiscoveryDay.occurringAt.toString() !== newDiscoveryDay.occurringAt.toString()) {
+    return attendees;
+  }
+  let impactedAttendees: Attendee[] = [];
+  if (oldDiscoveryDay.venue !== newDiscoveryDay.venue) {
+    impactedAttendees = [
+      ...impactedAttendees,
+      ...attendees.filter(({ remote }) => !remote)
+    ];
+  }
+  if (oldDiscoveryDay.remoteAccess !== newDiscoveryDay.remoteAccess) {
+    impactedAttendees = [
+      ...impactedAttendees,
+      ...attendees.filter(({ remote }) => remote)
+    ];
+  }
+  return impactedAttendees;
+}
+
+function hasDiscoveryDayBeenUpdated(oldRfiVersion?: RfiSchema.Version, newRfiVersion?: RfiSchema.Version): boolean {
+  if (!oldRfiVersion || !newRfiVersion || !oldRfiVersion.discoveryDay || !newRfiVersion.discoveryDay) { return false; }
+  const oldDiscoveryDay = oldRfiVersion.discoveryDay;
+  const newDiscoveryDay = newRfiVersion.discoveryDay;
+  return oldDiscoveryDay.occurringAt.toString() !== newDiscoveryDay.occurringAt.toString()
+      || oldDiscoveryDay.venue !== newDiscoveryDay.venue
+      || oldDiscoveryDay.remoteAccess !== newDiscoveryDay.remoteAccess;
+}
+
+function hasDiscoveryDayBeenDeleted(oldRfiVersion?: RfiSchema.Version, newRfiVersion?: RfiSchema.Version): boolean {
+  return !!(oldRfiVersion && oldRfiVersion.discoveryDay && newRfiVersion && !newRfiVersion.discoveryDay);
 }
 
 type CreateResponseBody = JsonResponseBody<PublicRfi | CreateValidationErrors>;
@@ -300,34 +336,32 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
               rfi.versions.push(newVersion);
               const publicRfi = await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session);
               const existingDdrs = publicRfi.discoveryDayResponses || [];
-              const discoveryDayHasBeenUpdated = !!(currentVersion && currentVersion.discoveryDay && newVersion.discoveryDay && discoveryDayHasChanged(currentVersion.discoveryDay, newVersion.discoveryDay));
-              const discoveryDayHasBeenDeleted = !!(currentVersion && currentVersion.discoveryDay && !newVersion.discoveryDay);
+              const discoveryDayHasBeenUpdated = hasDiscoveryDayBeenUpdated(currentVersion, newVersion);
+              const discoveryDayHasBeenDeleted = hasDiscoveryDayBeenDeleted(currentVersion, newVersion);
               if (discoveryDayHasBeenDeleted) {
                 // Remove existing discovery day responses if discovery day has been deleted.
                 rfi.discoveryDayResponses = [];
               }
               await rfi.save();
               // Notifications.
-              if (discoveryDayHasBeenUpdated) {
+              for (const ddr of existingDdrs) {
+                const impactedAttendeesByDiscoveryDayUpdate = getImpactedAttendeesWhenDiscoveryDayHasChanged(ddr.attendees, currentVersion, newVersion);
                 // Discovery day has been updated
-                for (const ddr of existingDdrs) {
-                  const attendees = excludeUserFromAttendees(ddr.attendees, ddr.vendor.email);
+                if (discoveryDayHasBeenUpdated) {
                   mailer.updateDiscoveryDayToVendor({ rfi, to: ddr.vendor.email });
-                  mailer.updateDiscoveryDayToAttendees({
-                    rfi,
-                    vendor: ddr.vendor,
-                    attendees
-                  });
-                }
-              } else if (discoveryDayHasBeenDeleted) {
-                // Discovery day has been deleted
-                for (const ddr of existingDdrs) {
-                  const attendees = excludeUserFromAttendees(ddr.attendees, ddr.vendor.email);
+                  if (impactedAttendeesByDiscoveryDayUpdate.length) {
+                    mailer.updateDiscoveryDayToAttendees({
+                      rfi,
+                      vendor: ddr.vendor,
+                      attendees: impactedAttendeesByDiscoveryDayUpdate
+                    });
+                  }
+                } else if (discoveryDayHasBeenDeleted) {
                   mailer.deleteDiscoveryDayToVendor({ rfi, to: ddr.vendor.email });
                   mailer.deleteDiscoveryDayToAttendees({
                     rfi,
                     vendor: ddr.vendor,
-                    attendees
+                    attendees: ddr.attendees
                   });
                 }
               }

@@ -179,9 +179,9 @@ export async function updateDiscoveryDayToAttendees({ rfi, vendor, attendees }: 
             <p>
               The Discovery Day for <a href={templates.makeUrl(`requests-for-information/${rfi._id}/view`)}>{latestVersion.rfiNumber}: {latestVersion.title}</a> has been updated by the Procurement Concierge Program's staff. You have been registered to attend this Discovery Day {attendee.remote ? 'remotely' : 'in-person'}.
             </p>
-            <p>
-              Please contact {vendor.profile.contactName} at <a href={`mailto:${vendor.email}`}>{vendor.email}</a> if this change impacts your ability to attend this Discovery Day. We apologize for any inconvenience this may cause.
-            </p>
+            {vendor.email === attendee.email
+              ? null
+              : (<p>Please contact {vendor.profile.contactName} at <a href={`mailto:${vendor.email}`}>{vendor.email}</a> if this change impacts your ability to attend this Discovery Day. We apologize for any inconvenience this may cause.</p>)}
           </div>
         ),
         descriptionLists: [makeDiscoveryDaySessionInformation(discoveryDay, !attendee.remote, attendee.remote)]
@@ -228,9 +228,9 @@ export async function deleteDiscoveryDayToAttendees({ rfi, vendor, attendees }: 
             <p>
               The Discovery Day for <a href={templates.makeUrl(`requests-for-information/${rfi._id}/view`)}>{latestVersion.rfiNumber}: {latestVersion.title}</a> has been cancelled by the Procurement Concierge Program's staff.
             </p>
-            <p>
-              Please contact {vendor.profile.contactName} at <a href={`mailto:${vendor.email}`}>{vendor.email}</a> if you have any questions. We apologize for any inconvenience this may cause.
-            </p>
+            {vendor.email === attendee.email
+              ? null
+              : (<p>Please contact {vendor.profile.contactName} at <a href={`mailto:${vendor.email}`}>{vendor.email}</a> if you have any questions. We apologize for any inconvenience this may cause.</p>)}
           </div>
         )
       })
@@ -299,9 +299,9 @@ export async function createDdrToAttendees({ rfi, vendor, attendees }: Discovery
             <p>
               You have been registered to attend the Discovery Day for <a href={templates.makeUrl(`requests-for-information/${rfi._id}/view`)}>{latestVersion.rfiNumber}: {latestVersion.title}</a> {attendee.remote ? 'remotely' : 'in-person'}.
             </p>
-            <p>
-              Please contact {vendor.profile.contactName} at <a href={`mailto:${vendor.email}`}>{vendor.email}</a> if you require changes to be made to your registration.
-            </p>
+            {vendor.email === attendee.email
+              ? null
+              : (<p>Please contact {vendor.profile.contactName} at <a href={`mailto:${vendor.email}`}>{vendor.email}</a> if you require changes to be made to your registration.</p>)}
           </div>
         ),
         descriptionLists: [makeDiscoveryDaySessionInformation(discoveryDay, !attendee.remote, attendee.remote)]
@@ -414,9 +414,9 @@ export async function updateDdrToAttendees({ rfi, vendor, attendees }: Discovery
             <p>
               Your registration for the Discovery Day for <a href={templates.makeUrl(`requests-for-information/${rfi._id}/view`)}>{latestVersion.rfiNumber}: {latestVersion.title}</a> has been updated. You have been registered to attend this Discovery Day {attendee.remote ? 'remotely' : 'in-person'}.
             </p>
-            <p>
-              Please contact {vendor.profile.contactName} at <a href={`mailto:${vendor.email}`}>{vendor.email}</a> if you have any questions.
-            </p>
+            {vendor.email === attendee.email
+              ? null
+              : (<p>Please contact {vendor.profile.contactName} at <a href={`mailto:${vendor.email}`}>{vendor.email}</a> if you have any questions.</p>)}
           </div>
         ),
         descriptionLists: [makeDiscoveryDaySessionInformation(discoveryDay, !attendee.remote, attendee.remote)]
@@ -492,21 +492,21 @@ export async function deleteDdrToAttendees({ rfi, vendor, attendees }: Discovery
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
   if (!latestVersion || !discoveryDay || vendor.profile.type !== UserType.Vendor) { return; }
-  const subject = `${latestVersion.rfiNumber}: Discovery Day Registration Cancelled`;
+  const subject = `${latestVersion.rfiNumber}: Removed from Discovery Day Registration`;
   for await (const attendee of attendees) {
     await send({
       to: attendee.email,
       subject,
       html: templates.simple({
-        title: 'Discovery Day Registration Cancelled',
+        title: 'Removed from Discovery Day Registration',
         description: (
           <div>
             <p>
-              Your registration for the Discovery Day for <a href={templates.makeUrl(`requests-for-information/${rfi._id}/view`)}>{latestVersion.rfiNumber}: {latestVersion.title}</a> has been cancelled.
+              You have been removed from your company's registration for the Discovery Day for <a href={templates.makeUrl(`requests-for-information/${rfi._id}/view`)}>{latestVersion.rfiNumber}: {latestVersion.title}</a>.
             </p>
-            <p>
-              Please contact {vendor.profile.contactName} at <a href={`mailto:${vendor.email}`}>{vendor.email}</a> if you have any questions.
-            </p>
+            {vendor.email === attendee.email
+              ? null
+              : (<p>Please contact {vendor.profile.contactName} at <a href={`mailto:${vendor.email}`}>{vendor.email}</a> if you have any questions.</p>)}
           </div>
         )
       })

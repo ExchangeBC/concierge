@@ -9,7 +9,7 @@ import { validateRfiId, validateUserId } from 'back-end/lib/validators';
 import { get } from 'lodash';
 import * as mongoose from 'mongoose';
 import { getString } from 'shared/lib';
-import { CreateRequestBody, CreateValidationErrors, diffAttendees, excludeUserFromAttendees, PublicDiscoveryDayResponse, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/discovery-day-response';
+import { CreateRequestBody, CreateValidationErrors, diffAttendees, PublicDiscoveryDayResponse, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/discovery-day-response';
 import { PaginatedList } from 'shared/lib/types';
 import { RfiStatus, UserType } from 'shared/lib/types';
 import { validateAttendees } from 'shared/lib/validators/discovery-day-response';
@@ -112,7 +112,7 @@ export const resource: Resource = {
         mailer.createDdrToAttendees({
           rfi,
           vendor,
-          attendees: excludeUserFromAttendees(ddr.attendees, vendor.email)
+          attendees: ddr.attendees
         });
         const publicDdr = await RfiSchema.makePublicDiscoveryDayResponse(UserModel, ddr)
         return respond(201, publicDdr);
@@ -262,8 +262,9 @@ export const resource: Resource = {
           mailer.updateDdrToVendorByProgramStaff({ rfi, to: vendor.email });
         }
         // Notify attendees
-        const newAttendees = excludeUserFromAttendees(validatedAttendees.value, vendor.email);
-        const attendeeDiff = diffAttendees(existingDdr.attendees, newAttendees);
+        const existingAttendees = existingDdr.attendees;
+        const newAttendees = validatedAttendees.value;
+        const attendeeDiff = diffAttendees(existingAttendees, newAttendees);
         mailer.createDdrToAttendees({ rfi, vendor, attendees: attendeeDiff.created });
         mailer.updateDdrToAttendees({ rfi, vendor, attendees: attendeeDiff.updated });
         mailer.deleteDdrToAttendees({ rfi, vendor, attendees: attendeeDiff.deleted });
@@ -324,7 +325,7 @@ export const resource: Resource = {
         mailer.deleteDdrToAttendees({
           rfi,
           vendor,
-          attendees: excludeUserFromAttendees(deletedDdr.attendees, vendor.email)
+          attendees: deletedDdr.attendees
         });
         return basicResponse(200, request.session, makeJsonResponseBody(null));
       }
