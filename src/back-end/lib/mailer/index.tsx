@@ -297,7 +297,7 @@ export async function createDdrToAttendees({ rfi, vendor, attendees }: Discovery
         description: (
           <div>
             <p>
-              You have been registrered to attend the Discovery Day for <a href={templates.makeUrl(`requests-for-information/${rfi._id}/view`)}>{latestVersion.rfiNumber}: {latestVersion.title}</a> {attendee.remote ? 'remotely' : 'in-person'}.
+              You have been registered to attend the Discovery Day for <a href={templates.makeUrl(`requests-for-information/${rfi._id}/view`)}>{latestVersion.rfiNumber}: {latestVersion.title}</a> {attendee.remote ? 'remotely' : 'in-person'}.
             </p>
             <p>
               Please contact {vendor.profile.contactName} at <a href={`mailto:${vendor.email}`}>{vendor.email}</a> if you require changes to be made to your registration.
