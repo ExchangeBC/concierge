@@ -15,7 +15,7 @@ import { Col, Row } from 'reactstrap';
 import { getString, rawFormatDate } from 'shared/lib';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
-import { ADT, Omit } from 'shared/lib/types';
+import { ADT, Omit, profileToName } from 'shared/lib/types';
 import { getInvalidValue, valid, Validation } from 'shared/lib/validators';
 import { validateDiscoveryDayDate, validateDiscoveryDayDescription, validateDiscoveryDayLocation, validateDiscoveryDayRemoteAccess, validateDiscoveryDayTime, validateDiscoveryDayVenue } from 'shared/lib/validators/request-for-information';
 
@@ -234,9 +234,13 @@ export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryD
     attendees: discoveryDayResponses
       ? immutable(await Attendees.init({
           occurringAt,
-          groups: discoveryDayResponses.map(({ vendor, attendees }) => {
-            return { vendor, attendees };
-          })
+          groups: discoveryDayResponses
+            .map(({ vendor, attendees }) => {
+              return { vendor, attendees };
+            })
+            .sort((a, b) => {
+              return profileToName(a.vendor.profile).localeCompare(profileToName(b.vendor.profile));
+            })
         }))
       : undefined
   };
