@@ -9,7 +9,7 @@ import { validateRfiId, validateUserId } from 'back-end/lib/validators';
 import { get } from 'lodash';
 import * as mongoose from 'mongoose';
 import { getString } from 'shared/lib';
-import { CreateRequestBody, CreateValidationErrors, diffAttendees, PublicDiscoveryDayResponse, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/discovery-day-response';
+import { CreateRequestBody, CreateValidationErrors, diffAttendees, PublicDiscoveryDayResponse, UpdateRequestBody, UpdateValidationErrors, vendorIsSoloAttendee } from 'shared/lib/resources/discovery-day-response';
 import { PaginatedList } from 'shared/lib/types';
 import { RfiStatus, UserType } from 'shared/lib/types';
 import { validateAttendees } from 'shared/lib/validators/discovery-day-response';
@@ -106,14 +106,21 @@ export const resource: Resource = {
         await rfi.save();
         // Notify program staff
         mailer.createDdrToProgramStaff({ rfi, vendor });
-        // Notify vendor
-        mailer.createDdrToVendor({ rfi, to: vendor.email });
-        // Notify attendees
-        mailer.createDdrToAttendees({
-          rfi,
-          vendor,
-          attendees: ddr.attendees
-        });
+        // Notify vendor and attendees
+        if (vendorIsSoloAttendee(vendor.email, ddr.attendees) && ddr.attendees[0]) {
+          mailer.createDdrToVendorSolo({
+            rfi,
+            to: vendor.email,
+            remote: ddr.attendees[0].remote
+          });
+        } else {
+          mailer.createDdrToVendor({ rfi, to: vendor.email });
+          mailer.createDdrToAttendees({
+            rfi,
+            vendor,
+            attendees: ddr.attendees
+          });
+        }
         const publicDdr = await RfiSchema.makePublicDiscoveryDayResponse(UserModel, ddr)
         return respond(201, publicDdr);
       }
@@ -252,22 +259,43 @@ export const resource: Resource = {
           }));
         }
         await rfi.save();
+        const existingAttendees = existingDdr.attendees;
+        const newAttendees = validatedAttendees.value;
+        const soloVendor: boolean = vendorIsSoloAttendee(vendor.email, newAttendees);
         // Notifications
         if (permissions.isOwnAccount(request.session, vendor._id)) {
           // Vendor is updating their own DDR.
+          if (soloVendor && newAttendees[0]) {
+            mailer.updateDdrToVendorSoloByVendor({
+              rfi,
+              to: vendor.email,
+              remote: newAttendees[0].remote
+            });
+          } else {
+            mailer.updateDdrToVendorByVendor({ rfi, to: vendor.email });
+          }
           mailer.updateDdrToProgramStaffByVendor({ rfi, vendor });
-          mailer.updateDdrToVendorByVendor({ rfi, to: vendor.email });
         } else if (permissions.isProgramStaff(request.session)) {
           // Program Staff are updating this DDR.
-          mailer.updateDdrToVendorByProgramStaff({ rfi, to: vendor.email });
+          if (soloVendor && newAttendees[0]) {
+            mailer.updateDdrToVendorSoloByProgramStaff({
+              rfi,
+              to: vendor.email,
+              remote: newAttendees[0].remote
+            });
+          } else {
+            mailer.updateDdrToVendorByProgramStaff({ rfi, to: vendor.email });
+          }
         }
         // Notify attendees
-        const existingAttendees = existingDdr.attendees;
-        const newAttendees = validatedAttendees.value;
         const attendeeDiff = diffAttendees(existingAttendees, newAttendees);
-        mailer.createDdrToAttendees({ rfi, vendor, attendees: attendeeDiff.created });
-        mailer.updateDdrToAttendees({ rfi, vendor, attendees: attendeeDiff.updated });
+        // Always notify deleted attendees.
         mailer.deleteDdrToAttendees({ rfi, vendor, attendees: attendeeDiff.deleted });
+        // Only notify creates/updates for non-solo vendors' attendees.
+        if (!soloVendor) {
+          mailer.createDdrToAttendees({ rfi, vendor, attendees: attendeeDiff.created });
+          mailer.updateDdrToAttendees({ rfi, vendor, attendees: attendeeDiff.updated });
+        }
         const publicDdr = await RfiSchema.makePublicDiscoveryDayResponse(UserModel, updatedDdr)
         return respond(200, publicDdr);
       }
@@ -313,20 +341,37 @@ export const resource: Resource = {
         }
         await rfi.save();
         // Notifications
+        const soloVendor = vendorIsSoloAttendee(vendor.email, deletedDdr.attendees);
         if (permissions.isOwnAccount(request.session, vendor._id)) {
           // Vendor is deleting their own DDR.
+          if (soloVendor) {
+            mailer.deleteDdrToVendorSoloByVendor({
+              rfi,
+              to: vendor.email
+            });
+          } else {
+            mailer.deleteDdrToVendorByVendor({ rfi, to: vendor.email });
+          }
           mailer.deleteDdrToProgramStaffByVendor({ rfi, vendor });
-          mailer.deleteDdrToVendorByVendor({ rfi, to: vendor.email });
         } else if (permissions.isProgramStaff(request.session)) {
           // Program Staff are deleting this DDR.
-          mailer.deleteDdrToVendorByProgramStaff({ rfi, to: vendor.email });
+          if (soloVendor) {
+            mailer.deleteDdrToVendorSoloByProgramStaff({
+              rfi,
+              to: vendor.email
+            });
+          } else {
+            mailer.deleteDdrToVendorByProgramStaff({ rfi, to: vendor.email });
+          }
         }
-        // Notify attendees
-        mailer.deleteDdrToAttendees({
-          rfi,
-          vendor,
-          attendees: deletedDdr.attendees
-        });
+        if (!soloVendor) {
+          // Notify attendees
+          mailer.deleteDdrToAttendees({
+            rfi,
+            vendor,
+            attendees: deletedDdr.attendees
+          });
+        }
         return basicResponse(200, request.session, makeJsonResponseBody(null));
       }
     };

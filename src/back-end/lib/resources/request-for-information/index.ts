@@ -9,7 +9,7 @@ import { basicResponse, JsonResponseBody, makeErrorResponseBody, makeJsonRespons
 import { validateFileIdArray, validateUserId } from 'back-end/lib/validators';
 import { get, isObject } from 'lodash';
 import { getNumber, getString, getStringArray } from 'shared/lib';
-import { Attendee } from 'shared/lib/resources/discovery-day-response';
+import { Attendee, vendorIsSoloAttendee } from 'shared/lib/resources/discovery-day-response';
 import { CreateDiscoveryDayBody, CreateRequestBody, CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicDiscoveryDay, PublicRfi, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
 import { PaginatedList, UserType } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, valid, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
@@ -345,9 +345,15 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
               await rfi.save();
               // Notifications.
               for (const ddr of existingDdrs) {
-                const impactedAttendeesByDiscoveryDayUpdate = getImpactedAttendeesWhenDiscoveryDayHasChanged(ddr.attendees, currentVersion, newVersion);
                 // Discovery day has been updated
-                if (discoveryDayHasBeenUpdated) {
+                const impactedAttendeesByDiscoveryDayUpdate = getImpactedAttendeesWhenDiscoveryDayHasChanged(ddr.attendees, currentVersion, newVersion);
+                if (discoveryDayHasBeenUpdated && vendorIsSoloAttendee(ddr.vendor.email, ddr.attendees) && ddr.attendees[0] && impactedAttendeesByDiscoveryDayUpdate.length) {
+                  mailer.updateDiscoveryDayToVendorSolo({
+                    rfi,
+                    to: ddr.vendor.email,
+                    remote: ddr.attendees[0].remote
+                  });
+                } else if (discoveryDayHasBeenUpdated) {
                   mailer.updateDiscoveryDayToVendor({ rfi, to: ddr.vendor.email });
                   if (impactedAttendeesByDiscoveryDayUpdate.length) {
                     mailer.updateDiscoveryDayToAttendees({

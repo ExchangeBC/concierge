@@ -73,3 +73,7 @@ export function diffAttendees(oldAttendees: Attendee[], newAttendees: Attendee[]
   const deleted = oldAttendees.filter(attendee => !newByEmail[attendee.email]);
   return { created, updated, deleted };
 }
+
+export function vendorIsSoloAttendee(vendorEmail: string, attendees: Attendee[]): boolean {
+  return attendees.length === 1 && attendees[0].email === vendorEmail;
+}
