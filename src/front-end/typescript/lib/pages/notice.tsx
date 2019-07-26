@@ -2,7 +2,7 @@ import { makePageMetadata } from 'front-end/lib';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, noPageModal, PageComponent, PageInit, Update } from 'front-end/lib/framework';
 import Link from 'front-end/lib/views/link';
-import React from 'react';
+import React, { ReactElement } from 'react';
 import { Col, Row } from 'reactstrap';
 import { ADT } from 'shared/lib/types';
 
@@ -96,7 +96,12 @@ function noticeIdToState(noticeId: NoticeId): State {
     case 'ddrSubmitted':
       return {
         title: 'Thank you',
-        body: 'Your registration for this Request for Information\'s Discovery Day has been successfully submitted. In-person and/or remote attendance information will be emailed to all attendees individually based on the information you provide. You can return to the RFI to view and update your team\'s registration required. Please note that you will not be able to add any in-person attendees less than 24 hours before the Discovery Day\'s scheduled time.',
+        body: (
+          <div>
+            <p>Your registration for this Request for Information's Discovery Day has been successfully submitted. In-person and/or remote attendance information will be emailed to all attendees individually based on the information you have provided.</p>
+          <p>You can return to the RFI to <Link route={{ tag: 'requestForInformationAttendDiscoveryDay', value: { rfiId: noticeId.value }}}>view and update your team's registration</Link> if required. Please note that you will not be able to add any in-person attendees less than 24 hours before the Discovery Day's scheduled time.</p>
+          </div>
+        ),
         button: {
           text: 'View all RFIs',
           route: {
@@ -145,7 +150,7 @@ export interface RouteParams {
 
 export interface State {
   title: string;
-  body: string;
+  body: string | ReactElement;
   button?: {
     text: string;
     route: Route;
@@ -187,7 +192,9 @@ const view: ComponentView<State, Msg> = props => {
       </Row>
       <Row className='mb-3 pb-3'>
         <Col xs='12'>
-          <p>{state.body}</p>
+          {typeof state.body === 'string'
+            ? (<p>{state.body}</p>)
+            : state.body}
         </Col>
       </Row>
       <ConditionalButton {...props} />
