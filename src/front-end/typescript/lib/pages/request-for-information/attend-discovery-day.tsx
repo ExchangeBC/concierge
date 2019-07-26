@@ -26,11 +26,13 @@ export type InnerMsg
   = ADT<'attendees', Attendees.Msg>
   | ADT<'startEditing'>
   | ADT<'cancelEditing'>
+  | ADT<'cancelCreating'>
   | ADT<'cancelRegistration'>
   | ADT<'hideCancelRegistrationPrompt'>
   | ADT<'hideSubmitCreatePrompt'>
   | ADT<'hideSubmitEditPrompt'>
-  | ADT<'hideCancelEditingPrompt'>
+  | ADT<'hideCancelCreatePrompt'>
+  | ADT<'hideCancelEditPrompt'>
   | ADT<'submitCreate'>
   | ADT<'submitEdit'>;
 
@@ -43,7 +45,8 @@ interface ValidState {
   promptCancelRegistration: boolean;
   promptSubmitCreate: boolean;
   promptSubmitEdit: boolean;
-  promptCancelEditing: boolean;
+  promptCancelCreate: boolean;
+  promptCancelEdit: boolean;
   rfi: PublicRfi;
   discoveryDay: PublicDiscoveryDay;
   vendor: PublicUser;
@@ -141,7 +144,8 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
       promptCancelRegistration: false,
       promptSubmitCreate: false,
       promptSubmitEdit: false,
-      promptCancelEditing: false,
+      promptCancelCreate: false,
+      promptCancelEdit: false,
       vendor: userResult.value,
       rfi,
       discoveryDay,
@@ -196,18 +200,38 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [state.setIn(['value', 'isEditing'], true)];
 
     case 'cancelEditing':
-    if (!state.value.promptCancelEditing) {
-      return [state.setIn(['value', 'promptCancelEditing'], true)];
-    } else {
-      state = state.setIn(['value', 'promptCancelEditing'], false);
-    }
-    return [
-      state.setIn(['value', 'isEditing'], false),
-      async state => {
-        if (state.tag === 'invalid') { return state; }
-        return await resetState(state, state.value.ddr);
+      if (!state.value.promptCancelEdit) {
+        return [state.setIn(['value', 'promptCancelEdit'], true)];
+      } else {
+        state = state.setIn(['value', 'promptCancelEdit'], false);
       }
-    ];
+      return [
+        state.setIn(['value', 'isEditing'], false),
+        async state => {
+          if (state.tag === 'invalid') { return state; }
+          return await resetState(state, state.value.ddr);
+        }
+      ];
+
+    case 'cancelCreating':
+      if (!state.value.promptCancelCreate) {
+        return [state.setIn(['value', 'promptCancelCreate'], true)];
+      } else {
+        state = state.setIn(['value', 'promptCancelCreate'], false);
+      }
+      return [
+        state,
+        async (state, dispatch) => {
+          if (state.tag === 'invalid') { return state; }
+          dispatch(newRoute({
+            tag: 'requestForInformationView',
+            value: {
+              rfiId: state.value.rfi._id
+            }
+          }));
+          return state;
+        }
+      ];
 
     case 'hideCancelRegistrationPrompt':
       return [
@@ -224,9 +248,14 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         state.setIn(['value', 'promptSubmitEdit'], false)
       ];
 
-    case 'hideCancelEditingPrompt':
+    case 'hideCancelEditPrompt':
       return [
-        state.setIn(['value', 'promptCancelEditing'], false)
+        state.setIn(['value', 'promptCancelEdit'], false)
+      ];
+
+    case 'hideCancelCreatePrompt':
+      return [
+        state.setIn(['value', 'promptCancelCreate'], false)
       ];
 
     case 'cancelRegistration':
@@ -323,6 +352,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const submitEdit = () => !isDisabled && dispatch({ tag: 'submitEdit', value: undefined });
   const startEditing = () => dispatch({ tag: 'startEditing', value: undefined });
   const cancelEditing = () => dispatch({ tag: 'cancelEditing', value: undefined });
+  const cancelCreating = () => dispatch({ tag: 'cancelCreating', value: undefined });
   const cancelRegistration = () => dispatch({ tag: 'cancelRegistration', value: undefined });
   if (!ddr) {
     return (
@@ -330,7 +360,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <LoadingButton color='primary' onClick={submitCreate} loading={isSubmitLoading} disabled={isDisabled} className='text-nowrap'>
           Submit Registration
         </LoadingButton>
-        <Link route={{ tag: 'requestForInformationView', value: { rfiId: rfi._id }}} color='secondary' className='text-nowrap mx-3'>
+        <Link onClick={cancelCreating} color='secondary' className='text-nowrap mx-3'>
           Cancel
         </Link>
       </FixedBar>
@@ -495,11 +525,30 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
           }
         ]
       }
-    } else if (state.value.promptCancelEditing) {
+    } else if (state.value.promptCancelCreate) {
+      return {
+        title: 'Cancel Discovery Day Registration?',
+        body: 'Any information that you have entered will be lost if you choose to cancel.',
+        onCloseMsg: { tag: 'hideCancelCreatePrompt', value: undefined },
+        actions: [
+          {
+            text: 'Yes, I want to cancel',
+            color: 'primary',
+            button: true,
+            msg: { tag: 'cancelCreating', value: undefined }
+          },
+          {
+            text: 'Go Back',
+            color: 'secondary',
+            msg: { tag: 'hideCancelCreatePrompt', value: undefined }
+          }
+        ]
+      }
+    } else if (state.value.promptCancelEdit) {
       return {
         title: 'Cancel editing?',
         body: 'Any changes that you have made will be lost if you choose to cancel.',
-        onCloseMsg: { tag: 'hideCancelEditingPrompt', value: undefined },
+        onCloseMsg: { tag: 'hideCancelEditPrompt', value: undefined },
         actions: [
           {
             text: 'Yes, I want to cancel',
@@ -510,7 +559,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
           {
             text: 'Go Back',
             color: 'secondary',
-            msg: { tag: 'hideCancelEditingPrompt', value: undefined }
+            msg: { tag: 'hideCancelEditPrompt', value: undefined }
           }
         ]
       }
