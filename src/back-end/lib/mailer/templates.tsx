@@ -381,15 +381,13 @@ const RfiResponseReceived: View<RfiResponseReceivedProps> = ({ rfi, vendor, atta
   const RfiLink = () => (<Link url={rfiUrl} text={`${rfi.rfiNumber}: ${rfi.title}`} />);
   const attachmentLinks = attachments.map(({ name, id }) => ({ text: name, url: makeUrl(`api/fileBlobs/${id}`) }));
   const description = (
-    <span>A response has been submitted by <VendorLink /> to <RfiLink />.</span>
+    <div>
+      <p>A response has been submitted by <VendorLink /> to <RfiLink />.</p>
+      <p>Please note that you will only be able to view this Vendor's profile and download their response's attachments if you have already signed into your Program Staff account in the Procurement Concierge web application. <Link text='Click here to sign in' url={makeUrl('sign-in')} />.</p>
+    </div>
   );
-  const infoLinks = [
-    { text: 'View Vendor Profile', url: vendorUrl },
-    { text: 'View RFI', url: rfiUrl }
-  ];
   return (
     <Layout title='RFI Response Received' description={description}>
-      <LinkList links={infoLinks} />
       {attachments.length
         ? <LinkList
             links={attachmentLinks}
