@@ -77,8 +77,7 @@ export function validateDiscoveryDayDescription(raw?: string): Validation<string
 }
 
 export function validateDiscoveryDayDate(raw: string): Validation<string> {
-  const minDate = new Date();
-  const validation = validateDate(`${raw} 23:59`, minDate);
+  const validation = validateDate(`${raw} 00:00`);
   switch (validation.tag) {
     case 'valid':
       return valid(raw);
@@ -92,11 +91,8 @@ export function validateDiscoveryDayTime(rawTime: string, rawDate: string): Vali
   if (validatedDate.tag === 'invalid') {
     return valid(rawTime);
   }
-  const minDate = new Date();
-  minDate.setSeconds(0);
-  minDate.setMilliseconds(0);
   const raw = `${rawDate} ${rawTime}`;
-  const validation = validateTime(raw, minDate);
+  const validation = validateTime(raw);
   switch (validation.tag) {
     case 'valid':
       return valid(rawTime);

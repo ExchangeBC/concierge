@@ -10,6 +10,7 @@ import { get } from 'lodash';
 import * as mongoose from 'mongoose';
 import { getString } from 'shared/lib';
 import { CreateRequestBody, CreateValidationErrors, diffAttendees, PublicDiscoveryDayResponse, UpdateRequestBody, UpdateValidationErrors, vendorIsSoloAttendee } from 'shared/lib/resources/discovery-day-response';
+import { discoveryDayHasPassed } from 'shared/lib/resources/request-for-information';
 import { PaginatedList } from 'shared/lib/types';
 import { RfiStatus, UserType } from 'shared/lib/types';
 import { validateAttendees } from 'shared/lib/validators/discovery-day-response';
@@ -67,17 +68,24 @@ export const resource: Resource = {
             rfiId: validatedRfi.value
           });
         }
-        const validatedVendor = await validateUserId(UserModel, request.body.vendorId, UserType.Vendor, true);
-        if (validatedVendor.tag === 'invalid') {
-          return respond(400, {
-            vendorId: validatedVendor.value
-          });
-        }
         const rfi = validatedRfi.value;
         const latestVersion = RfiSchema.getLatestVersion(rfi);
         if (!latestVersion || !latestVersion.discoveryDay) {
           return respond(500, {
             rfiId: ['RFI does not have a discovery day.']
+          });
+        }
+        // Validate the discovery day.
+        if (discoveryDayHasPassed(latestVersion.discoveryDay.occurringAt)) {
+          return respond(400, {
+            discoveryDay: ['Discovery Day has already taken place.']
+          });
+        }
+        // Validate the vendor.
+        const validatedVendor = await validateUserId(UserModel, request.body.vendorId, UserType.Vendor, true);
+        if (validatedVendor.tag === 'invalid') {
+          return respond(400, {
+            vendorId: validatedVendor.value
           });
         }
         const validatedAttendees = validateAttendees(request.body.attendees, latestVersion.discoveryDay.occurringAt);
@@ -225,7 +233,6 @@ export const resource: Resource = {
             rfiId: validatedRfi.value
           });
         }
-        // Validate the new attendees.
         const rfi = validatedRfi.value;
         const latestVersion = RfiSchema.getLatestVersion(rfi);
         if (!latestVersion || !latestVersion.discoveryDay) {
@@ -233,6 +240,13 @@ export const resource: Resource = {
             rfiId: ['RFI does not have a discovery day.']
           });
         }
+        // Validate the discovery day.
+        if (discoveryDayHasPassed(latestVersion.discoveryDay.occurringAt)) {
+          return respond(400, {
+            discoveryDay: ['Discovery Day has already taken place.']
+          });
+        }
+        // Validate the new attendees.
         const existingDdr = await findDiscoveryDayResponse(UserModel, rfi, vendor._id);
         const validatedAttendees = validateAttendees(request.body.attendees, latestVersion.discoveryDay.occurringAt, get(existingDdr, 'attendees'));
         if (validatedAttendees.tag === 'invalid') {
@@ -326,6 +340,14 @@ export const resource: Resource = {
           return basicResponse(400, request.session, makeJsonResponseBody(validatedRfi.value));
         }
         const rfi = validatedRfi.value;
+        const latestVersion = RfiSchema.getLatestVersion(rfi);
+        if (!latestVersion || !latestVersion.discoveryDay) {
+          return basicResponse(500, request.session, makeJsonResponseBody(['RFI does not have a discovery day.']));
+        }
+        // Validate the discovery day.
+        if (discoveryDayHasPassed(latestVersion.discoveryDay.occurringAt)) {
+          return basicResponse(400, request.session, makeJsonResponseBody(['Discovery Day has already taken place.']));
+        }
         let deletedDdr: RfiSchema.DiscoveryDayResponse | undefined;
         const oldResponses = rfi.discoveryDayResponses;
         rfi.discoveryDayResponses = oldResponses.filter(ddr => {

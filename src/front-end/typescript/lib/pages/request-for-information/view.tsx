@@ -300,7 +300,7 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
       <Link onClick={respondToRfi} button color='primary' className='text-nowrap'>
         Respond to RFI
       </Link>
-      {version.discoveryDay && rfiStatus === RfiStatus.Open
+      {version.discoveryDay && rfiStatus === RfiStatus.Open && !RfiResource.discoveryDayHasPassed(version.discoveryDay.occurringAt)
         ? (<Link onClick={attendDiscoveryDay} button color='info' className='text-nowrap mr-md-3 mr-0 ml-3 ml-md-0'>
             {alreadyRespondedToDiscoveryDay ? 'View Discovery Day Registration' : 'Attend Discovery Day'}
           </Link>)

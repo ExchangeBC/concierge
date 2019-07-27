@@ -11,7 +11,7 @@ import { HttpMethod } from 'shared/lib/types';
 
 export type Models<AvailableModels, RequiredModels extends keyof AvailableModels> = Pick<AvailableModels, RequiredModels>;
 
-// TODO unused, but would be useful when we have
+// TODO unused, but would be useful if we implement
 // type-safe URL parsing.
 /*export interface ReadOneRequestParams {
   id: string;

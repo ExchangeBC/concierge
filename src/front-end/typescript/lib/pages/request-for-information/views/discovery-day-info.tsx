@@ -26,6 +26,9 @@ const DiscoveryDay: View<{ discoveryDay?: RfiResource.PublicDiscoveryDay }> = ({
   );
   return (
     <Row>
+      {RfiResource.discoveryDayHasPassed(discoveryDay.occurringAt)
+        ? (<Col xs='12'><div className='font-weight-bold pb-3'>Please note that this Discovery Day has already taken place.</div></Col>)
+        : null}
       <Col xs='12'>
         {description ? (<Markdown source={description} className='pb-3' openLinksInNewTabs />) : null}
       </Col>

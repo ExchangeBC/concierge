@@ -30,6 +30,7 @@ export interface CreateValidationErrors {
   permissions?: string[];
   contentType?: string[];
   rfiId?: string[];
+  discoveryDay?: string[];
   vendorId?: string[];
   attendees?: AttendeeValidationErrors[];
 }

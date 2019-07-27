@@ -13,9 +13,9 @@ import LoadingButton from 'front-end/lib/views/loading-button';
 import React from 'react';
 import { Col, Row } from 'reactstrap';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
-import { PublicDiscoveryDay, PublicRfi } from 'shared/lib/resources/request-for-information';
+import { discoveryDayHasPassed, PublicDiscoveryDay, PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
 import { PublicUser } from 'shared/lib/resources/user';
-import { ADT, UserType } from 'shared/lib/types';
+import { ADT, RfiStatus, UserType } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
 export interface RouteParams {
@@ -133,8 +133,11 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
     const rfiResult = await api.readOneRfi(rfiId);
     if (rfiResult.tag === 'invalid') { return fail(notFoundRoute); }
     const rfi = rfiResult.value;
+    const rfiStatus = rfiToRfiStatus(rfi);
+    if (rfiStatus !== RfiStatus.Open) { return fail(notFoundRoute); }
     if (!rfi.latestVersion.discoveryDay) { return fail(notFoundRoute); }
     const discoveryDay = rfi.latestVersion.discoveryDay;
+    if (discoveryDayHasPassed(discoveryDay.occurringAt)) { return fail(notFoundRoute); }
     const ddrResult = await api.readOneDdr(sessionUser.id, rfi._id);
     const ddr = ddrResult.tag === 'valid' ? ddrResult.value : null;
     return valid(immutable({

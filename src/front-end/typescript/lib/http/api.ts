@@ -228,10 +228,15 @@ export async function createFile(file: CreateFileRequestBody): Promise<ValidOrIn
   }
 }
 
-interface RawRfiVersion extends Omit<RfiResource.PublicVersion, 'createdAt' | 'closingAt' | 'attachments'> {
+interface RawDiscoveryDay extends Omit<RfiResource.PublicDiscoveryDay, 'occurringAt'> {
+  occurringAt: string;
+}
+
+interface RawRfiVersion extends Omit<RfiResource.PublicVersion, 'createdAt' | 'closingAt' | 'attachments' | 'discoveryDay'> {
   createdAt: string;
   closingAt: string;
   attachments: RawFile[];
+  discoveryDay: RawDiscoveryDay;
 }
 
 interface RawRfi extends Omit<RfiResource.PublicRfi, 'createdAt' | 'publishedAt' | 'latestVersion'> {
@@ -249,6 +254,10 @@ function rawRfiToPublicRfi(raw: RawRfi): RfiResource.PublicRfi {
       ...raw.latestVersion,
       createdAt: new Date(raw.latestVersion.createdAt),
       closingAt: new Date(raw.latestVersion.closingAt),
+      discoveryDay: raw.latestVersion.discoveryDay && {
+        ...raw.latestVersion.discoveryDay,
+        occurringAt: new Date(raw.latestVersion.discoveryDay.occurringAt)
+      },
       attachments: raw.latestVersion.attachments.map(file => rawFileToPublicFile(file)),
       addenda: raw.latestVersion.addenda.map(addendum => ({
         ...addendum,

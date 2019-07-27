@@ -474,7 +474,7 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
 };
 
 const ConditionalAttendees: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (!state.attendees) { return null; }
+  if (!state.existingDiscoveryDay || !state.attendees) { return null; }
   const dispatchAttendees: Dispatch<Attendees.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'attendees' as const, value }));
   const numVendors = state.attendees.groups.length;
   let numAttendees = 0;
@@ -490,7 +490,7 @@ const ConditionalAttendees: ComponentView<State, Msg> = ({ state, dispatch }) =>
       }
     });
   });
-  const isDisabled = !state.isEditing;
+  const isDisabled = !state.isEditing || RfiResource.discoveryDayHasPassed(state.existingDiscoveryDay.occurringAt);
   return (
     <div className='mt-5 pt-5 border-top'>
       <Row className='mb-5'>
