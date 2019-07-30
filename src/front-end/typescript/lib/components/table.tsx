@@ -85,7 +85,7 @@ export const DefaultTHView: View<THProps> = ({ id, style, className, children, i
         toggle: () => dispatch({ tag: 'toggleTooltip', value: index })
       };
   return (
-    <th key={id} id={id} style={style} className={className}>
+    <th key={id} id={id} style={{ height: '4rem', ...style }} className={className}>
       {children}
       <ConditionalTooltip data={tooltipData} />
     </th>
