@@ -161,7 +161,7 @@ export const view: ComponentView<State, Msg> = props => {
         <Nav className='mb-5 flex-nowrap' tabs>
           <TabLink id='details' {...props} />
           <TabLink id='discoveryDay' {...props} />
-          <TabLink id='responses' {...props} />
+          {state.responses ? (<TabLink id='responses' {...props} />) : null}
         </Nav>
       </div>
       <TabContent activeTab={state.activeTab}>
