@@ -64,7 +64,7 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
 
     case 'groupTitle':
       return (
-        <td className='bg-light font-size-base align-middle' colSpan={NUM_COLUMNS - 1}>
+        <td className='bg-light font-size-base align-middle text-wrap' colSpan={NUM_COLUMNS - 1}>
           <Link route={{ tag: 'userView', value: { profileUserId: content.value._id }}} className='mr-2' newTab>
             {profileToName(content.value.profile)}
           </Link>
