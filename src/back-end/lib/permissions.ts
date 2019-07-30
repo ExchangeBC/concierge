@@ -171,3 +171,7 @@ export async function deleteDiscoveryDayResponse(UserModel: UserSchema.Model, se
 export function createRfiResponse(session: Session): boolean {
   return isVendor(session);
 }
+
+export async function readManyRfiResponses(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
+  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
+}

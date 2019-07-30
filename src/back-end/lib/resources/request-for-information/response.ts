@@ -11,7 +11,7 @@ import { validateFileIdArray, validateRfiId, validateUserId } from 'back-end/lib
 import { isObject } from 'lodash';
 import { getString, getStringArray } from 'shared/lib';
 import { CreateRequestBody, CreateValidationErrors, PublicRfiResponse } from 'shared/lib/resources/request-for-information/response';
-import { Omit, RfiStatus } from 'shared/lib/types';
+import { Omit, PaginatedList, RfiStatus } from 'shared/lib/types';
 import { getInvalidValue, invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
 async function validateCreateRequestBody(RfiResponseModel: RfiResponseSchema.Model, RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, body: CreateRequestBody, session: Session): Promise<ValidOrInvalid<InstanceType<RfiResponseSchema.Model>, CreateValidationErrors>> {
@@ -43,6 +43,8 @@ async function validateCreateRequestBody(RfiResponseModel: RfiResponseSchema.Mod
 }
 
 type CreateResponseBody = JsonResponseBody<PublicRfiResponse | CreateValidationErrors>;
+
+type ReadManyResponseBody = JsonResponseBody<PaginatedList<PublicRfiResponse> | string[]>;
 
 type RequiredModels = 'RfiResponse' | 'Rfi' | 'User' | 'File';
 
@@ -86,6 +88,45 @@ export const resource: Resource = {
           case 'invalid':
             return respond(400, validatedVersion.value);
         }
+      }
+    };
+  },
+
+  /**
+   * Only Program Staff can read many RFI responses.
+   * The `rfiId` query parameter must be supplied, clamping the list
+   * of RFI responses in the response to the supplied RFI.
+   */
+
+  readMany(Models) {
+    const RfiResponseModel = Models.RfiResponse;
+    const RfiModel = Models.Rfi;
+    const FileModel = Models.File;
+    const UserModel = Models.User;
+    return {
+      async transformRequest({ body }) {
+        return body;
+      },
+      async respond(request): Promise<Response<ReadManyResponseBody, Session>> {
+        const respond = (code: number, body: ReadManyResponseBody) => basicResponse(code, request.session, body);
+        if (!(await permissions.readManyRfiResponses(UserModel, request.session))) {
+          return respond(401, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
+        }
+        const validatedRfi = await validateRfiId(RfiModel, request.query.rfiId || '', undefined, true);
+        if (validatedRfi.tag === 'invalid') {
+          return respond(400, makeJsonResponseBody(validatedRfi.value));
+        }
+        const rfiResponses = await RfiResponseModel.find({ rfi: validatedRfi.value._id });
+        const publicRfiResponses: PublicRfiResponse[] = [];
+        for (const rfiResponse of rfiResponses) {
+          publicRfiResponses.push(await RfiResponseSchema.makePublicRfiResponse(RfiModel, UserModel, FileModel, rfiResponse, request.session));
+        }
+        return respond(200, makeJsonResponseBody({
+          total: publicRfiResponses.length,
+          count: publicRfiResponses.length,
+          offset: 0,
+          items: publicRfiResponses
+        }));
       }
     };
   }
