@@ -85,7 +85,8 @@ const tableHeadCells: Table.THSpec[] = [
     children: 'Attachment Name',
     style: {
       minWidth: '360px',
-      width: '80%'
+      width: '80%',
+      height: '4rem'
     }
   },
   {
@@ -93,7 +94,8 @@ const tableHeadCells: Table.THSpec[] = [
     className: 'text-right',
     style: {
       minWidth: '210px',
-      width: '20%'
+      width: '20%',
+      height: '4rem'
     }
   }
 ];

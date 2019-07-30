@@ -226,14 +226,16 @@ const tableHeadCells: Table.THSpec[] = [
     children: (<span>Attendee Name<span className='text-primary ml-1'>*</span></span>),
     style: {
       minWidth: '240px',
-      width: '30%'
+      width: '30%',
+      height: '4rem'
     }
   },
   {
     children: (<span>Attendee Email Address<span className='text-primary ml-1'>*</span></span>),
     style: {
       minWidth: '240px',
-      width: '30%'
+      width: '30%',
+      height: '4rem'
     }
   },
   {
@@ -241,7 +243,8 @@ const tableHeadCells: Table.THSpec[] = [
     className: 'text-center',
     style: {
       minWidth: '110px',
-      width: '15%'
+      width: '15%',
+      height: '4rem'
     }
   },
   {
@@ -249,14 +252,16 @@ const tableHeadCells: Table.THSpec[] = [
     className: 'text-center',
     style: {
       minWidth: '110px',
-      width: '15%'
+      width: '15%',
+      height: '4rem'
     }
   },
   {
     children: ' ',
     style: {
       minWidth: '70px',
-      width: '10%'
+      width: '10%',
+      height: '4rem'
     }
   }
 ];
