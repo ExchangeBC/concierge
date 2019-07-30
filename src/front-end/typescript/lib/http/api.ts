@@ -416,7 +416,6 @@ export async function deleteDdr(vendorId: string, rfiId: string): Promise<ValidO
 interface RawRfiResponse extends Pick<RfiResponseResource.PublicRfiResponse, '_id'> {
   createdAt: string;
   createdBy: RawUser;
-  rfi: RawRfi;
   attachments: RawFile[];
 }
 
@@ -425,7 +424,6 @@ function rawRfiResponseToPublicRfiResponse(raw: RawRfiResponse): RfiResponseReso
     ...raw,
     createdAt: new Date(raw.createdAt),
     createdBy: rawUserToPublicUser(raw.createdBy),
-    rfi: rawRfiToPublicRfi(raw.rfi),
     attachments: raw.attachments.map(file => rawFileToPublicFile(file))
   };
 }

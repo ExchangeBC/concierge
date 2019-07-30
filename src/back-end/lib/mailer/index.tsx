@@ -71,12 +71,14 @@ export async function createForgotPasswordToken(email: string, token: string, us
 
 interface RfiResponseReceivedParams {
   rfiResponse: PublicRfiResponse;
+  rfi: RfiSchema.Data;
 }
 
 export async function rfiResponseReceived(params: RfiResponseReceivedParams): Promise<void> {
-  const { rfiResponse } = params;
-  const { rfi } = rfiResponse;
-  const rfiName = rfi.latestVersion.rfiNumber;
+  const { rfi, rfiResponse } = params;
+  const latestVersion = RfiSchema.getLatestVersion(rfi);
+  if (!latestVersion) { return; }
+  const rfiName = latestVersion.rfiNumber;
   const vendorName = profileToName(rfiResponse.createdBy.profile) || '[Undefined Vendor Name]';
   const subject = `${rfiName}: RFI Response Received`;
   await send({
@@ -89,9 +91,9 @@ export async function rfiResponseReceived(params: RfiResponseReceivedParams): Pr
         id: rfiResponse.createdBy._id
       },
       rfi: {
-        title: rfi.latestVersion.title,
-        rfiNumber: rfi.latestVersion.rfiNumber,
-        id: rfi._id
+        title: latestVersion.title,
+        rfiNumber: latestVersion.rfiNumber,
+        id: rfi._id.toString()
       },
       attachments: rfiResponse.attachments.map(file => ({
         name: file.originalName,

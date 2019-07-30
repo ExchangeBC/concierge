@@ -14,7 +14,12 @@ import { CreateRequestBody, CreateValidationErrors, PublicRfiResponse } from 'sh
 import { Omit, PaginatedList, RfiStatus } from 'shared/lib/types';
 import { getInvalidValue, invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
-async function validateCreateRequestBody(RfiResponseModel: RfiResponseSchema.Model, RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, body: CreateRequestBody, session: Session): Promise<ValidOrInvalid<InstanceType<RfiResponseSchema.Model>, CreateValidationErrors>> {
+interface ValidatedCreateRequestBody {
+  rfiResponse: InstanceType<RfiResponseSchema.Model>;
+  rfi: RfiSchema.Data;
+}
+
+async function validateCreateRequestBody(RfiResponseModel: RfiResponseSchema.Model, RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, body: CreateRequestBody, session: Session): Promise<ValidOrInvalid<ValidatedCreateRequestBody, CreateValidationErrors>> {
   // Get raw values.
   const createdBy = getString(session.user, 'id');
   const { rfiId, attachments } = body;
@@ -31,7 +36,10 @@ async function validateCreateRequestBody(RfiResponseModel: RfiResponseSchema.Mod
       rfi: validatedRfi.value._id,
       attachments: validatedAttachments.value.map(file => file._id)
     };
-    return valid(new RfiResponseModel(data));
+    return valid({
+      rfiResponse: new RfiResponseModel(data),
+      rfi: validatedRfi.value
+    });
   } else {
     // If anything is invalid, return the validation errors.
     return invalid({
@@ -74,19 +82,20 @@ export const resource: Resource = {
             permissions: [permissions.ERROR_MESSAGE]
           });
         }
-        const validatedVersion = await validateCreateRequestBody(RfiResponseModel, RfiModel, UserModel, FileModel, request.body, request.session);
-        switch (validatedVersion.tag) {
+        const validated = await validateCreateRequestBody(RfiResponseModel, RfiModel, UserModel, FileModel, request.body, request.session);
+        switch (validated.tag) {
           case 'valid':
-            const rfiResponse = validatedVersion.value;
+            const rfiResponse = validated.value.rfiResponse;
             await rfiResponse.save();
-            const publicRfiResponse = await RfiResponseSchema.makePublicRfiResponse(RfiModel, UserModel, FileModel, rfiResponse, request.session);
+            const publicRfiResponse = await RfiResponseSchema.makePublicRfiResponse(UserModel, FileModel, rfiResponse, request.session);
             // notify program staff
             mailer.rfiResponseReceived({
-              rfiResponse: publicRfiResponse
+              rfiResponse: publicRfiResponse,
+              rfi: validated.value.rfi
             });
             return respond(201, publicRfiResponse);
           case 'invalid':
-            return respond(400, validatedVersion.value);
+            return respond(400, validated.value);
         }
       }
     };
@@ -119,7 +128,7 @@ export const resource: Resource = {
         const rfiResponses = await RfiResponseModel.find({ rfi: validatedRfi.value._id });
         const publicRfiResponses: PublicRfiResponse[] = [];
         for (const rfiResponse of rfiResponses) {
-          publicRfiResponses.push(await RfiResponseSchema.makePublicRfiResponse(RfiModel, UserModel, FileModel, rfiResponse, request.session));
+          publicRfiResponses.push(await RfiResponseSchema.makePublicRfiResponse(UserModel, FileModel, rfiResponse, request.session));
         }
         return respond(200, makeJsonResponseBody({
           total: publicRfiResponses.length,

@@ -44,7 +44,7 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
   switch (data.tag) {
     case 'vendor':
       return (
-        <td className='bg-light font-size-base align-middle' colSpan={NUM_COLUMNS}>
+        <td className='bg-light font-size-base text-wrap'>
           <Link route={{ tag: 'userView', value: { profileUserId: data.value._id }}} className='mr-2' newTab>
             {profileToName(data.value.profile)}
           </Link>
@@ -53,21 +53,21 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
           {')'}
         </td>
       )
+    case 'dateSubmitted':
+      return (
+        <td className='bg-light align-top text-right'>
+          {formatDate(data.value)}
+        </td>
+      );
     case 'attachment':
       return (
-        <td className='align-middle'>
+        <td className='align-top' colSpan={NUM_COLUMNS}>
           <div className='d-flex flex-nowrap'>
             <Icon name='paperclip' color='secondary' className='mr-2 mt-1 flex-shrink-0' width={1} height={1} />
             <Link href={makeFileBlobPath(data.value._id)} className='d-block' download>
               {data.value.originalName}
             </Link>
           </div>
-        </td>
-      );
-    case 'dateSubmitted':
-      return (
-        <td className='align-middle'>
-          {formatDate(data.value)}
         </td>
       );
   }
@@ -77,15 +77,16 @@ const tableHeadCells: Table.THSpec[] = [
   {
     children: 'Attachment Name',
     style: {
-      minWidth: '240px',
-      width: '75%'
+      minWidth: '360px',
+      width: '80%'
     }
   },
   {
     children: 'Date Submitted',
+    className: 'text-right',
     style: {
-      minWidth: '110px',
-      width: '25%'
+      minWidth: '140px',
+      width: '20%'
     }
   }
 ];
@@ -132,15 +133,14 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
 function tableBodyRows(responses: PublicRfiResponse[]): Table.RowsSpec<TableCellData> {
   const rows: TableCellData[][] = responses.reduce((tableRows: TableCellData[][], response) => {
     // Add vendor title row.
-    tableRows.push([{
-      tag: 'vendor',
-      value: response.createdBy
-    }]);
+    tableRows.push([
+      { tag: 'vendor', value: response.createdBy },
+      { tag:  'dateSubmitted', value: response.createdAt }
+    ]);
     // Add attachment rows.
     return tableRows.concat(response.attachments.reduce((responseRows: TableCellData[][], attachment) => {
       responseRows.push([
-        { tag:  'attachment', value: attachment },
-        { tag:  'dateSubmitted', value: attachment.createdAt }
+        { tag:  'attachment', value: attachment }
       ]);
       return responseRows;
     }, []));

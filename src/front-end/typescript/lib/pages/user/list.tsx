@@ -42,7 +42,10 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
     case 'userType':
       return wrap(userTypeToTitleCase(data.value));
     case 'name':
-      return wrap((<Link onClick={() => data.value.dispatch({ tag: 'viewUser', value: data.value.userId })}>{data.value.text}</Link>));
+    return (
+      <td className='align-top text-wrap'>
+        <Link onClick={() => data.value.dispatch({ tag: 'viewUser', value: data.value.userId })}>{data.value.text}</Link>
+      </td>);
     case 'publicSectorEntity':
       return wrap(data.value);
     case 'email':
