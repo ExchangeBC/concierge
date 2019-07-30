@@ -496,22 +496,26 @@ const ConditionalAttendees: ComponentView<State, Msg> = ({ state, dispatch }) =>
       <Row className='mb-5'>
         <Col xs='12'>
           <Stats>
-            <BigStat color='info' count={numAttendees} label={(<span>Total<br />Attendees</span>)} />
+            <BigStat color='info' count={numAttendees} label={(<span>{numAttendees === 1 ? 'Person' : 'People'}<br />Attending</span>)} />
             <SmallStats a={{ color: 'info', count: numInPerson, label: 'In-Person' }} b={{ color: 'primary', count: numRemote, label: 'Remote' }} />
-            <BigStat color='primary' count={numVendors} label={(<span>Vendors<br />Attending</span>)} />
+            <BigStat color='primary' count={numVendors} label={(<span>Vendor{numVendors === 1 ? '' : 's'}<br />Attending</span>)} />
           </Stats>
         </Col>
       </Row>
-      <Row className='mb-3'>
-        <Col xs='12'>
-          <h4>Attendee(s)</h4>
-        </Col>
-      </Row>
-      <Row>
-        <Col xs='12'>
-          <Attendees.view dispatch={dispatchAttendees} state={state.attendees} disabled={isDisabled} />
-        </Col>
-      </Row>
+      {numAttendees > 0
+        ? (<div>
+            <Row className='mb-3'>
+              <Col xs='12'>
+                <h4>Attendee(s)</h4>
+              </Col>
+            </Row>
+            <Row>
+              <Col xs='12'>
+                <Attendees.view dispatch={dispatchAttendees} state={state.attendees} disabled={isDisabled} />
+              </Col>
+            </Row>
+          </div>)
+        : null}
     </div>
   );
 };

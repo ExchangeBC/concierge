@@ -351,6 +351,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isDisabled = isLoading || !RfiForm.isValid(state.valid.rfiForm);
   const isDetailsTab = state.valid.rfiForm.activeTab === 'details';
   const isDiscoveryDayTab = state.valid.rfiForm.activeTab === 'discoveryDay';
+  const isResponsesTab = state.valid.rfiForm.activeTab === 'responses';
   const hasExistingDiscoveryDay = !!getExistingDiscoveryDay(state);
   if (isDetailsTab && isEditing) {
     return (
@@ -419,6 +420,12 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
         </FixedBar>
       );
     }
+  } else if (isResponsesTab) {
+    return (
+      <FixedBar>
+        <Link route={viewRoute} button color='info' disabled={isLoading} className='text-nowrap' newTab>View RFI</Link>
+      </FixedBar>
+    );
   } else {
     // This branch should never be evaluated.
     return null;

@@ -18,6 +18,7 @@ interface AnchorProps extends BaseProps {
   color?: TextColor;
   nav?: boolean;
   newTab?: boolean;
+  download?: boolean;
 }
 
 interface ButtonProps extends BaseProps {
@@ -40,7 +41,8 @@ function AnchorLink(props: AnchorProps) {
     href = '#',
     route,
     onClick,
-    newTab = false
+    newTab = false,
+    download = false
   } = props;
   // Give precedence to the `route` prop over the `href` prop.
   const finalHref: string
@@ -58,7 +60,7 @@ function AnchorLink(props: AnchorProps) {
     if (!disabled) { onClick(); }
   });
   return (
-    <a href={finalHref} onClick={finalOnClick} className={finalClassName} target={newTab ? '_blank' : undefined}>
+    <a href={finalHref} onClick={finalOnClick} className={finalClassName} target={newTab ? '_blank' : undefined} download={download}>
       {children}
     </a>
   );

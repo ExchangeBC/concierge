@@ -218,9 +218,6 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
           {content.value.map((s, i) => (<div key={i}>{s}</div>))}
         </td>
       );
-
-    default:
-      return null;
   }
 };
 
@@ -402,7 +399,7 @@ export interface ViewProps extends ComponentViewProps<State,  Msg> {
   disabled ?: boolean;
 }
 
-function tableBodyRows(groups: AttendeeGroup[], dispatch: Dispatch<Msg>, disabled?: boolean): Array<Array<Table.TDSpec<TableCellData>>> {
+function tableBodyRows(groups: AttendeeGroup[], dispatch: Dispatch<Msg>, disabled?: boolean): Table.RowsSpec<TableCellData> {
   const rows: TableCellContent[][] = groups.reduce((tableRows: TableCellContent[][], group, groupIndex) => {
     // Add group title row.
     if (group.vendor) {

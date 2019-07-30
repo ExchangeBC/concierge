@@ -268,6 +268,7 @@ const router: Router<Route> = {
               switch (getQueryParamString(query, 'activeTab')) {
                 case 'details': return 'details';
                 case 'discoveryDay': return 'discoveryDay';
+                case 'responses': return 'responses';
                 default: return undefined;
               }
             })()

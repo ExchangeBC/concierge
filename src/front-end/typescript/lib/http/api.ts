@@ -442,3 +442,21 @@ export async function createRfiResponse(rfiResponse: RfiResponseResource.CreateR
       return invalid({});
   }
 }
+
+type RawReadManyRfiResponsesResponseBody = PaginatedList<RawRfiResponse>;
+
+export type ReadManyRfiResponsesResponseBody = PaginatedList<RfiResponseResource.PublicRfiResponse>;
+
+export async function readManyRfiResponses(rfiId: string): Promise<ValidOrInvalid<ReadManyRfiResponsesResponseBody, null>> {
+  const response = await request(HttpMethod.Get, `requestForInformationResponses?rfiId=${rfiId}`);
+  switch (response.status) {
+    case 200:
+      const rawResponseBody = response.data as RawReadManyRfiResponsesResponseBody;
+      return valid({
+        ...rawResponseBody,
+        items: rawResponseBody.items.map(rawRfi => rawRfiResponseToPublicRfiResponse(rawRfi))
+      });
+    default:
+      return invalid(null);
+  }
+}

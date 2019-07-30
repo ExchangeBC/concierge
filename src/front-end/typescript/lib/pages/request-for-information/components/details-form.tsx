@@ -25,7 +25,6 @@ import { Addendum, ADT, Omit, profileToName, UserType, userTypeToTitleCase, Veri
 import { getInvalidValue, invalid, valid, validateCategories, Validation } from 'shared/lib/validators';
 import { MAX_GRACE_PERIOD_DAYS, MIN_GRACE_PERIOD_DAYS, validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validateGracePeriodDays, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
 
-const FALLBACK_NAME = 'No Name Provided';
 const DEFAULT_CLOSING_TIME = '14:00';
 
 export const TAB_NAME = 'Details';
@@ -119,8 +118,8 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
   if (result.tag === 'valid') {
     // Function to sort users by name.
     const comparator = (a: PublicUser, b: PublicUser): number => {
-      const aName = profileToName(a.profile) || FALLBACK_NAME;
-      const bName = profileToName(b.profile) || FALLBACK_NAME;
+      const aName = profileToName(a.profile);
+      const bName = profileToName(b.profile);
       return aName.localeCompare(bName, 'en', { sensitivity: 'base' });
     };
     // Function to filter users by type, whether they have accepted terms, and active status.
@@ -140,7 +139,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
   const userToOption = (user: PublicUser): SelectMulti.Option => {
     return {
       value: user._id,
-      label: profileToName(user.profile) || FALLBACK_NAME
+      label: profileToName(user.profile)
     };
   };
   const getRfiString = (k: string | string[]): string => getString(existingRfi, ['latestVersion'].concat(k));

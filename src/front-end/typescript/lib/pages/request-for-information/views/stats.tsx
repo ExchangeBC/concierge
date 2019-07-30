@@ -19,7 +19,7 @@ interface StatsProps extends BaseProps {
 
 export const Stats: View<StatsProps> = ({ className, style, children }) => {
   return (
-    <div className={`d-flex flex-nowrap align-items-stretch ${className || ''}`} style={style}>
+    <div className={`d-flex flex-nowrap align-items-stretch ${className || ''}`} style={{ overflowY: 'hidden', overflowX: 'auto', ...style }}>
       {children.reduce((acc: Array<ReactElement | null>, child, i) => {
         return [
           ...acc,
@@ -38,10 +38,10 @@ type BigStatProps = BaseProps & Stat;
 export const BigStat: View<BigStatProps> = ({ className, style, count, label, color }) => {
   return (
     <div className={`d-flex flex-nowrap align-items-center text-center ${className || ''}`} style={style}>
-      <div className={`text-${color} font-weight-bold mr-3`} style={{ fontSize: '2.5rem', lineHeight: '1' }}>
+      <div className={`text-${color} font-weight-bold mr-3 text-nowrap`} style={{ fontSize: '2.5rem', lineHeight: '1' }}>
         {count}
       </div>
-      <div className='small font-weight-bold text-secondary text-uppercase'>
+      <div className='small font-weight-bold text-secondary text-uppercase text-nowrap'>
         {label}
       </div>
     </div>
@@ -56,11 +56,11 @@ interface SmallStatsProps extends BaseProps {
 export const SmallStats: View<SmallStatsProps> = ({ a, b, className, style }) => {
   return (
     <div className={`d-flex flex-nowrap align-items-center font-weight-bold small ${className || ''}`} style={style}>
-      <div className='d-flex flex-column align-items-stretch text-center mr-2'>
+      <div className='d-flex flex-column align-items-stretch text-center mr-2 text-nowrap'>
         <div className={`text-${a.color}`}>{a.count}</div>
         <div className={`text-${b.color}`}>{b.count}</div>
       </div>
-      <div className='d-flex flex-column align-items-stretch text-left text-secondary text-uppercase'>
+      <div className='d-flex flex-column align-items-stretch text-left text-secondary text-uppercase text-nowrap'>
         <div>{a.label}</div>
         <div>{b.label}</div>
       </div>

@@ -118,9 +118,17 @@ export function makeTDSpec<Data>(data: Data): TDSpec<Data> {
 
 export type TDProps<Data> = TDSpec<Data>;
 
+export type RowSpec<Data> = Array<TDSpec<Data>>;
+
+export type RowsSpec<Data> = Array<RowSpec<Data>>;
+
+export type RowProps<Data> = Array<TDProps<Data>>;
+
+export type RowsProps<Data> = Array<RowProps<Data>>;
+
 interface TBodyProps<Data> {
   id: string;
-  rows: Array<Array<TDProps<Data>>>;
+  rows: RowsProps<Data>;
   TDView: View<TDProps<Data>>;
   borderless?: boolean;
 }
@@ -145,7 +153,7 @@ export function makeTBody<Data>(): View<TBodyProps<Data>> {
 
 interface ViewProps<Data> extends ComponentViewProps<State<Data>, Msg> {
   headCells: THSpec[];
-  bodyRows: Array<Array<TDSpec<Data>>>;
+  bodyRows: RowsSpec<Data>;
   className?: string;
   style?: CSSProperties;
   borderless?: boolean;
