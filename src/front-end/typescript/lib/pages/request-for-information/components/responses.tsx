@@ -5,10 +5,11 @@ import { BigStat, SmallStats, Stats } from 'front-end/lib/pages/request-for-info
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
+import { reduce } from 'lodash';
 import moment from 'moment';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
-import { compareDates, diffDates, formatDate } from 'shared/lib';
+import { compareDates, diffDates, formatDateAndTime } from 'shared/lib';
 import { PublicFile } from 'shared/lib/resources/file';
 import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
 import { PublicRfi } from 'shared/lib/resources/request-for-information';
@@ -26,9 +27,15 @@ export interface Params {
 export type Msg
   = ADT<'table', Table.Msg>
 
+interface RfiResponse {
+  createdBy: PublicRfiResponse['createdBy'];
+  createdAt: PublicRfiResponse['createdAt'];
+  attachments: PublicRfiResponse['attachments'];
+}
+
 interface ValidState {
   rfi: PublicRfi;
-  responses: PublicRfiResponse[];
+  responses: RfiResponse[];
   table: Immutable<Table.State<TableCellData>>;
 };
 
@@ -44,7 +51,7 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
   switch (data.tag) {
     case 'vendor':
       return (
-        <td className='bg-light font-size-base text-wrap'>
+        <td className='bg-light font-size-base text-wrap' colSpan={NUM_COLUMNS}>
           <Link route={{ tag: 'userView', value: { profileUserId: data.value._id }}} className='mr-2' newTab>
             {profileToName(data.value.profile)}
           </Link>
@@ -53,21 +60,21 @@ const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
           {')'}
         </td>
       )
-    case 'dateSubmitted':
-      return (
-        <td className='bg-light align-top text-right'>
-          {formatDate(data.value)}
-        </td>
-      );
     case 'attachment':
       return (
-        <td className='align-top' colSpan={NUM_COLUMNS}>
+        <td className='align-top'>
           <div className='d-flex flex-nowrap'>
             <Icon name='paperclip' color='secondary' className='mr-2 mt-1 flex-shrink-0' width={1} height={1} />
             <Link href={makeFileBlobPath(data.value._id)} className='d-block' download>
               {data.value.originalName}
             </Link>
           </div>
+        </td>
+      );
+    case 'dateSubmitted':
+      return (
+        <td className='align-top text-right'>
+          {formatDateAndTime(data.value, true)}
         </td>
       );
   }
@@ -85,7 +92,7 @@ const tableHeadCells: Table.THSpec[] = [
     children: 'Date Submitted',
     className: 'text-right',
     style: {
-      minWidth: '140px',
+      minWidth: '210px',
       width: '20%'
     }
   }
@@ -96,14 +103,27 @@ const TableComponent: Table.TableComponent<TableCellData> = Table.component();
 export const init: Init<Params, State> = async ({ rfi }) => {
   const result = await api.readManyRfiResponses(rfi._id);
   if (result.tag === 'invalid') { return invalid(null); }
-  const responses = result.value.items.sort((a, b) => {
-    // Show newest responses first.
-    const dateComparison = compareDates(a.createdAt, b.createdAt) * -1;
-    if (dateComparison === 0) {
-      return profileToName(a.createdBy.profile).localeCompare(profileToName(b.createdBy.profile));
-    }
-    return dateComparison;
-  });
+  const responsesByVendor: Record<string, PublicRfiResponse[]> = result.value.items.reduce((acc: Record<string, PublicRfiResponse[]>, response) => {
+    const vendorId = response.createdBy._id;
+    acc[vendorId] = acc[vendorId] || [];
+    acc[vendorId].push(response);
+    return acc;
+  }, {});
+  // Combine all of a vendor's responses into a single response.
+  // Each response's attachments are sorted by creation date, newest first.
+  // All responses are sorted alphabetically by vendor's name.
+  const responses: RfiResponse[] = reduce(responsesByVendor, (acc: RfiResponse[], v, k) => {
+      acc.push({
+        createdBy: v[0].createdBy,
+        createdAt: v[0].createdAt,
+        attachments: v
+          .reduce((acc: PublicFile[], { attachments }) => [...acc, ...attachments], [])
+          // Show newest attachments first.
+          .sort((a, b) => compareDates(a.createdAt, b.createdAt) * -1)
+      });
+      return acc;
+    }, [])
+    .sort((a, b) => profileToName(a.createdBy.profile).localeCompare(profileToName(b.createdBy.profile)));
   return valid({
     rfi,
     responses,
@@ -130,17 +150,17 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
   }
 };
 
-function tableBodyRows(responses: PublicRfiResponse[]): Table.RowsSpec<TableCellData> {
+function tableBodyRows(responses: RfiResponse[]): Table.RowsSpec<TableCellData> {
   const rows: TableCellData[][] = responses.reduce((tableRows: TableCellData[][], response) => {
     // Add vendor title row.
     tableRows.push([
-      { tag: 'vendor', value: response.createdBy },
-      { tag:  'dateSubmitted', value: response.createdAt }
+      { tag: 'vendor', value: response.createdBy }
     ]);
     // Add attachment rows.
     return tableRows.concat(response.attachments.reduce((responseRows: TableCellData[][], attachment) => {
       responseRows.push([
-        { tag:  'attachment', value: attachment }
+        { tag:  'attachment', value: attachment },
+        { tag:  'dateSubmitted', value: attachment.createdAt }
       ]);
       return responseRows;
     }, []));
