@@ -1,6 +1,5 @@
 import * as Table from 'front-end/lib/components/table';
 import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild, View } from 'front-end/lib/framework';
-import * as api from 'front-end/lib/http/api';
 import { BigStat, SmallStats, Stats } from 'front-end/lib/pages/request-for-information/views/stats';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import Icon from 'front-end/lib/views/icon';
@@ -15,12 +14,12 @@ import { PublicRfi } from 'shared/lib/resources/request-for-information';
 import { PublicRfiResponse } from 'shared/lib/resources/request-for-information/response';
 import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, profileToName } from 'shared/lib/types';
-import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
 export const TAB_NAME = 'Responses';
 
 export interface Params {
   rfi: PublicRfi;
+  responses: PublicRfiResponse[];
 }
 
 export type Msg
@@ -32,13 +31,11 @@ interface RfiResponse {
   attachments: PublicRfiResponse['attachments'];
 }
 
-interface ValidState {
+export interface State {
   rfi: PublicRfi;
   responses: RfiResponse[];
   table: Immutable<Table.State<TableCellData>>;
 };
-
-export type State = ValidOrInvalid<ValidState, null>;
 
 type TableCellData
   = ADT<'vendor', PublicUser>
@@ -101,10 +98,8 @@ const tableHeadCells: Table.THSpec[] = [
 
 const TableComponent: Table.TableComponent<TableCellData> = Table.component();
 
-export const init: Init<Params, State> = async ({ rfi }) => {
-  const result = await api.readManyRfiResponses(rfi._id);
-  if (result.tag === 'invalid') { return invalid(null); }
-  const responsesByVendor: Record<string, PublicRfiResponse[]> = result.value.items.reduce((acc: Record<string, PublicRfiResponse[]>, response) => {
+export const init: Init<Params, State> = async ({ rfi, responses }) => {
+  const responsesByVendor: Record<string, PublicRfiResponse[]> = responses.reduce((acc: Record<string, PublicRfiResponse[]>, response) => {
     const vendorId = response.createdBy._id;
     acc[vendorId] = acc[vendorId] || [];
     acc[vendorId].push(response);
@@ -113,7 +108,7 @@ export const init: Init<Params, State> = async ({ rfi }) => {
   // Combine all of a vendor's responses into a single response.
   // Each response's attachments are sorted by creation date, newest first.
   // All responses are sorted alphabetically by vendor's name.
-  const responses: RfiResponse[] = reduce(responsesByVendor, (acc: RfiResponse[], v, k) => {
+  const transformedResponses: RfiResponse[] = reduce(responsesByVendor, (acc: RfiResponse[], v, k) => {
       // Sort to ensure newest responses are first,
       // so `createdAt` reflects the most recent response, and
       // the attachments are shown in reverse order of submission.
@@ -126,15 +121,15 @@ export const init: Init<Params, State> = async ({ rfi }) => {
       return acc;
     }, [])
     .sort((a, b) => profileToName(a.createdBy.profile).localeCompare(profileToName(b.createdBy.profile)));
-  return valid({
+  return {
     rfi,
-    responses,
+    responses: transformedResponses,
     table: immutable(await TableComponent.init({
       TDView,
       THView: Table.DefaultTHView,
       idNamespace: 'rfi-responses'
     }))
-  });
+  };
 };
 
 export const update: Update<State, Msg> = ({ state, msg }) => {
@@ -143,7 +138,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       return updateComponentChild({
         state,
         mapChildMsg: value => ({ tag: 'table' as const, value }),
-        childStatePath: ['value', 'table'],
+        childStatePath: ['table'],
         childUpdate: TableComponent.update,
         childMsg: msg.value
       });
@@ -174,7 +169,7 @@ function tableBodyRows(responses: RfiResponse[]): Table.RowsSpec<TableCellData> 
 }
 
 const ResponsesReceived: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (state.tag === 'invalid' || !state.value.responses.length) { return null; }
+  if (!state.responses.length) { return null; }
   const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, value => ({ tag:  'table' as const, value }));
   return (
     <div>
@@ -188,8 +183,8 @@ const ResponsesReceived: ComponentView<State, Msg> = ({ state, dispatch }) => {
           <TableComponent.view
             className='text-nowrap'
             headCells={tableHeadCells}
-            bodyRows={tableBodyRows(state.value.responses)}
-            state={state.value.table}
+            bodyRows={tableBodyRows(state.responses)}
+            state={state.table}
             dispatch={dispatchTable} />
         </Col>
       </Row>
@@ -199,8 +194,7 @@ const ResponsesReceived: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 export const view: ComponentView<State, Msg> = props => {
   const { state } = props;
-  if (state.tag === 'invalid') { return null; }
-  const { responses, rfi } = state.value;
+  const { responses, rfi } = state;
   const { closingAt, gracePeriodDays, addenda } = rfi.latestVersion;
   const numResponses = responses.length;
   const numAddenda = addenda.length;

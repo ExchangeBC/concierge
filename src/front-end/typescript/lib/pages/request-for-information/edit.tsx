@@ -13,10 +13,11 @@ import FixedBar from 'front-end/lib/views/layout/fixed-bar';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { default as React } from 'react';
-import { Button, Col, Row } from 'reactstrap';
+import { Col, Row } from 'reactstrap';
 import { getString } from 'shared/lib';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
+import { PublicRfiResponse } from 'shared/lib/resources/request-for-information/response';
 import { ADT, UserType } from 'shared/lib/types';
 import { allValid, getInvalidValue, valid, ValidOrInvalid } from 'shared/lib/validators';
 
@@ -44,12 +45,14 @@ export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 export interface ValidState {
   rfi: RfiResource.PublicRfi;
   rfiForm: Immutable<RfiForm.State>;
+  rfiResponses: PublicRfiResponse[];
 };
 
 export interface State {
   previewLoading: number;
   publishLoading: number;
   cancelEventLoading: number;
+  startEditingLoading: number;
   hasTriedPublishing: boolean;
   promptChangeTabConfirmation?: RfiForm.Msg;
   promptCancelConfirmation: boolean;
@@ -58,11 +61,12 @@ export interface State {
   valid?: ValidState;
 };
 
-async function resetRfiForm(existingRfi: RfiResource.PublicRfi, activeTab?: RfiForm.TabId): Promise<Immutable<RfiForm.State>> {
+async function resetRfiForm(existingRfi: RfiResource.PublicRfi, rfiResponses?: PublicRfiResponse[], activeTab?: RfiForm.TabId): Promise<Immutable<RfiForm.State>> {
   return immutable(await RfiForm.init({
     formType: 'edit',
     existingRfi,
-    activeTab
+    activeTab,
+    rfiResponses
   }));
 }
 
@@ -70,6 +74,7 @@ const initState: State = {
   previewLoading: 0,
   publishLoading: 0,
   cancelEventLoading: 0,
+  startEditingLoading: 0,
   promptChangeTabConfirmation: undefined,
   promptCancelConfirmation: false,
   promptPublishConfirmation: false,
@@ -83,36 +88,37 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
 
   async success({ routeParams, dispatch, shared }) {
     const { rfiId, activeTab } = routeParams;
-    const result = await api.readOneRfi(rfiId);
-    switch (result.tag) {
-      case 'valid':
-        if (shared.sessionUser.type === UserType.ProgramStaff && !(await api.hasUserAcceptedTerms(shared.sessionUser.id))) {
-          dispatch(replaceRoute({
-            tag: 'termsAndConditions' as const,
-            value: {
-              warningId: WarningId.EditRfi,
-              redirectOnAccept: router.routeToUrl({
-                tag: 'requestForInformationEdit',
-                value: routeParams
-              }),
-              redirectOnSkip: router.routeToUrl({
-                tag: 'requestForInformationList',
-                value: null
-              })
-            }
-          }));
-          return initState;
-        } else {
-          return {
-            ...initState,
-            valid: {
-              rfi: result.value,
-              rfiForm: await resetRfiForm(result.value, activeTab)
-            }
-          };
+    const rfiResult = await api.readOneRfi(rfiId);
+    if (rfiResult.tag === 'invalid') { return initState; }
+    const rfi = rfiResult.value;
+    const rfiResponsesResult = await api.readManyRfiResponses(rfi._id);
+    if (rfiResponsesResult.tag === 'invalid') { return initState; }
+    const rfiResponses = rfiResponsesResult.value.items;
+    if (shared.sessionUser.type === UserType.ProgramStaff && !(await api.hasUserAcceptedTerms(shared.sessionUser.id))) {
+      dispatch(replaceRoute({
+        tag: 'termsAndConditions' as const,
+        value: {
+          warningId: WarningId.EditRfi,
+          redirectOnAccept: router.routeToUrl({
+            tag: 'requestForInformationEdit',
+            value: routeParams
+          }),
+          redirectOnSkip: router.routeToUrl({
+            tag: 'requestForInformationList',
+            value: null
+          })
         }
-      case 'invalid':
-        return initState;
+      }));
+      return initState;
+    } else {
+      return {
+        ...initState,
+        valid: {
+          rfi,
+          rfiForm: await resetRfiForm(rfi, rfiResponses, activeTab),
+          rfiResponses
+        }
+      };
     }
   },
 
@@ -144,6 +150,8 @@ const startPublishLoading: UpdateState<State> = makeStartLoading('publishLoading
 const stopPublishLoading: UpdateState<State>  = makeStopLoading('publishLoading');
 const startCancelEventLoading: UpdateState<State> = makeStartLoading('cancelEventLoading');
 const stopCancelEventLoading: UpdateState<State>  = makeStopLoading('cancelEventLoading');
+const startStartEditingLoading: UpdateState<State> = makeStartLoading('startEditingLoading');
+const stopStartEditingLoading: UpdateState<State>  = makeStopLoading('startEditingLoading');
 
 function getExistingDiscoveryDay(state: State): RfiResource.PublicDiscoveryDay | undefined {
   return state.valid && state.valid.rfi.latestVersion.discoveryDay;
@@ -199,7 +207,7 @@ async function updateRfi(state: Immutable<State>, requestBody: ValidOrInvalid<Rf
         case 'valid':
           state = state
             .setIn(['valid', 'rfi'], result.value)
-            .setIn(['valid', 'rfiForm'], await resetRfiForm(result.value, valid.rfiForm.activeTab));
+            .setIn(['valid', 'rfiForm'], await resetRfiForm(result.value, valid.rfiResponses, valid.rfiForm.activeTab));
           break;
         case 'invalid':
           state = fail(state, result.value);
@@ -251,13 +259,26 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         state,
         async state => {
           if (state.valid && shouldResetRfiForm) {
-            state = state.setIn(['valid', 'rfiForm'], await resetRfiForm(state.valid.rfi, state.valid.rfiForm.activeTab));
+            state = state.setIn(['valid', 'rfiForm'], await resetRfiForm(state.valid.rfi, state.valid.rfiResponses, state.valid.rfiForm.activeTab));
           }
           return state;
         }
       ];
     case 'startEditing':
-      return [setIsEditing(state, true)];
+      return [
+        startStartEditingLoading(state),
+        async state => {
+          state = stopStartEditingLoading(state);
+          if (!state.valid) { return state; }
+          // Reset the RFI form with fresh data before editing.
+          const result = await api.readOneRfi(state.valid.rfi._id);
+          if (result.tag === 'invalid') { return state; }
+          state = state
+            .setIn(['valid', 'rfi'], result.value)
+            .setIn(['valid', 'rfiForm'], await resetRfiForm(result.value, state.valid.rfiResponses, state.valid.rfiForm.activeTab));
+          return setIsEditing(state, true);
+        }
+      ];
     case 'cancelEditing':
       state = state.set('hasTriedPublishing', false);
       if (!state.promptCancelConfirmation) {
@@ -269,7 +290,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         setIsEditing(state, false),
         async (state) => {
           if (!state.valid) { return state; }
-          return state.setIn(['valid', 'rfiForm'], await resetRfiForm(state.valid.rfi, state.valid.rfiForm.activeTab));
+          return state.setIn(['valid', 'rfiForm'], await resetRfiForm(state.valid.rfi, state.valid.rfiResponses, state.valid.rfiForm.activeTab));
         }
       ];
     case 'preview':
@@ -347,7 +368,8 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isPreviewLoading = state.previewLoading > 0;
   const isPublishLoading = state.publishLoading > 0;
   const isCancelEventLoading = state.cancelEventLoading > 0;
-  const isLoading = isPreviewLoading || isPublishLoading || isCancelEventLoading;
+  const isStartEditingLoading = state.startEditingLoading > 0;
+  const isLoading = isPreviewLoading || isPublishLoading || isCancelEventLoading || isStartEditingLoading;
   const isDisabled = isLoading || !RfiForm.isValid(state.valid.rfiForm);
   const isDetailsTab = state.valid.rfiForm.activeTab === 'details';
   const isDiscoveryDayTab = state.valid.rfiForm.activeTab === 'discoveryDay';
@@ -368,9 +390,9 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   } else if (isDetailsTab && !isEditing) {
     return (
       <FixedBar>
-        <Button color='primary' onClick={startEditing} disabled={isLoading} className='text-nowrap'>
+        <LoadingButton color='primary' onClick={startEditing} loading={isStartEditingLoading} disabled={isDisabled} className='text-nowrap'>
           Edit Details
-        </Button>
+        </LoadingButton>
         <Link route={viewRoute} button color='info' disabled={isLoading} className='ml-3 ml-md-0 mr-md-3 text-nowrap' newTab>View RFI</Link>
       </FixedBar>
     );
@@ -404,9 +426,9 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
     if (hasExistingDiscoveryDay) {
       return (
         <FixedBar>
-          <Button color='primary' onClick={startEditing} disabled={isLoading} className='text-nowrap'>
+          <LoadingButton color='primary' onClick={startEditing} loading={isStartEditingLoading} disabled={isDisabled} className='text-nowrap'>
             Edit Discovery Day Session
-          </Button>
+          </LoadingButton>
           <LoadingButton color='danger' onClick={cancelEvent} loading={isCancelEventLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
             Cancel Discovery Day Session
           </LoadingButton>

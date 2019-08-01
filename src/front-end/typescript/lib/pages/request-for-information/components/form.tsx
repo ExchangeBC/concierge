@@ -7,6 +7,7 @@ import { default as React } from 'react';
 import { Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
 import { PublicRfi } from 'shared/lib/resources/request-for-information';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
+import { PublicRfiResponse } from 'shared/lib/resources/request-for-information/response';
 import { ADT, Omit } from 'shared/lib/types';
 
 export const ERROR_MESSAGE = `Please fix the errors below, and try submitting the form again. If you don't see any errors below, you may need to review the information in a different tab, and resolve any issues there.`;
@@ -28,6 +29,7 @@ export interface Params {
   formType: 'create' | 'edit',
   existingRfi?: PublicRfi;
   activeTab?: TabId;
+  rfiResponses?: PublicRfiResponse[];
 }
 
 export type Msg
@@ -58,7 +60,7 @@ export function getDdrUpdates(state: State): DiscoveryDayForm.DdrUpdate[] {
   return DiscoveryDayForm.getDdrUpdates(state.discoveryDay);
 }
 
-export const init: Init<Params, State> = async ({ formType, existingRfi, activeTab }) => {
+export const init: Init<Params, State> = async ({ formType, existingRfi, activeTab, rfiResponses }) => {
   const isCreateForm = formType === 'create';
   const isEditForm = formType === 'edit';
   const isEditing = isCreateForm;
@@ -78,9 +80,10 @@ export const init: Init<Params, State> = async ({ formType, existingRfi, activeT
         ? existingRfi && existingDiscoveryDay && existingRfi.discoveryDayResponses
         : undefined
     })),
-    responses: showResponses && existingRfi
+    responses: showResponses && existingRfi && rfiResponses
       ? immutable(await Responses.init({
-          rfi: existingRfi
+          rfi: existingRfi,
+          responses: rfiResponses
         }))
       : undefined
   };
