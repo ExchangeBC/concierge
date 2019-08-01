@@ -45,20 +45,22 @@ const ViewModal: View<ViewModalProps> = ({ dispatch, modal }) => {
     <Modal isOpen={open} toggle={closeModal}>
       <ModalHeader className='align-items-center' toggle={closeModal} close={(<Icon name='times' color='secondary' onClick={closeModal} style={{ cursor: 'pointer' }}/>)}>{content.title}</ModalHeader>
       <ModalBody>{content.body}</ModalBody>
-      <ModalFooter className='d-flex flex-md-row-reverse justify-content-start align-items-center'>
-        {content.actions.map(({ button, text, color, msg }, i) => {
-          const props = {
-            key: `modal-action-${i}`,
-            color,
-            onClick: () => dispatch(msg),
-            className: i === 0 ? 'mx-0' : 'ml-3 mr-0 ml-md-0 mr-md-3'
-          };
-          if (button) {
-            return (<Link button {...props}>{text}</Link>);
-          } else {
-            return (<Link {...props}>{text}</Link>);
-          }
-        })}
+      <ModalFooter className='p-0' style={{ overflowX: 'auto', justifyContent: 'normal' }}>
+        <div className='p-3 d-flex flex-md-row-reverse justify-content-start align-items-center text-nowrap flex-grow-1'>
+          {content.actions.map(({ button, text, color, msg }, i) => {
+            const props = {
+              key: `modal-action-${i}`,
+              color,
+              onClick: () => dispatch(msg),
+              className: i === 0 ? 'mx-0' : 'ml-3 mr-0 ml-md-0 mr-md-3'
+            };
+            if (button) {
+              return (<Link button {...props}>{text}</Link>);
+            } else {
+              return (<Link {...props}>{text}</Link>);
+            }
+          })}
+        </div>
       </ModalFooter>
     </Modal>
   );

@@ -160,8 +160,8 @@ export const view: ComponentView<State, Msg> = props => {
   const dispatchResponses: Dispatch<Responses.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'responses' as const, value }));
   return (
     <div>
-      <div style={{ overflowX: 'auto' }}>
-        <Nav className='mb-5 flex-nowrap' tabs>
+      <div className='d-flex mb-5' style={{ overflowX: 'auto' }}>
+        <Nav className='flex-nowrap' tabs>
           <TabLink id='details' {...props} />
           <TabLink id='discoveryDay' {...props} />
           {state.responses ? (<TabLink id='responses' {...props} />) : null}
