@@ -23,6 +23,16 @@ export const TAB_NAME = 'Discovery Day';
 
 const DEFAULT_TIME = '14:00';
 
+const DESCRIPTION_DEFAULT_TEXT = `
+The purpose of a Discovery Day Session is to provide vendors with an opportunity for shared mutual understanding through a discussion with the buyer before submitting a response to the RFI.  In-person attendance is recommended, but remote access is also offered (noting that the Province cannot guarantee the accessibility or quality of remote attendance).
+
+At the Discovery Day Session, an overview of between two and five Requests for Information (RFIs) will be presented to registered vendors by representatives from the public-sector buyer teams. After this overview, public-sector buyer teams and vendors will move into break-out sessions for a group discussion on a specific RFI.  This is an opportunity for vendors to ask questions and make suggestions about any aspect of the RFI.
+
+Please note that vendors will not be presenting at Discovery Day Sessions, nor are they required to discuss their specific ideas during the break-out sessions.  Rather, the discussion will help vendors to understand the public-sector buyer’s current situation and vision for the future, and will help buyers to understand possible limitations and concerns from the vendor community.
+
+If more than one RFI in a single Discovery Day Session is of interest, vendors should register multiple people as the break-out sessions will be occurring simultaneously.
+`.trim();
+
 export interface Params {
   showToggle: boolean;
   existingDiscoveryDay?: RfiResource.PublicDiscoveryDay;
@@ -176,7 +186,7 @@ export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryD
       required: false,
       label: 'Description (Optional)',
       placeholder: 'Provide a brief description of the session.',
-      value: getDdString('description'),
+      value: existingDiscoveryDay ? getDdString('description') : DESCRIPTION_DEFAULT_TEXT,
       help: {
         text: (<span>You can use <Link href={MARKDOWN_HELP_URL} newTab>Markdown</Link> to describe this session.</span>),
         show: false
