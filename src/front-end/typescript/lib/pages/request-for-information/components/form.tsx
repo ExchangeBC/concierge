@@ -161,7 +161,7 @@ export const view: ComponentView<State, Msg> = props => {
   return (
     <div>
       <div className='d-flex mb-5' style={{ overflowX: 'auto' }}>
-        <Nav className='flex-nowrap' tabs>
+        <Nav className='flex-grow-1 flex-nowrap' tabs>
           <TabLink id='details' {...props} />
           <TabLink id='discoveryDay' {...props} />
           {state.responses ? (<TabLink id='responses' {...props} />) : null}
