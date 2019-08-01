@@ -173,12 +173,12 @@ export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryD
     }),
     description: LongText.init({
       id: 'discovery-day-description',
-      required: true,
+      required: false,
       label: 'Description (Optional)',
-      placeholder: 'Provide a brief description of the Discovery Day session.',
+      placeholder: 'Provide a brief description of the session.',
       value: getDdString('description'),
       help: {
-        text: (<span>You can use <Link href={MARKDOWN_HELP_URL} newTab>Markdown</Link> to describe this Discovery Day session.</span>),
+        text: (<span>You can use <Link href={MARKDOWN_HELP_URL} newTab>Markdown</Link> to describe this session.</span>),
         show: false
       }
     }),
@@ -204,7 +204,7 @@ export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryD
       placeholder: 'Visible to all users.',
       value: getDdString('location'),
       help: {
-        text: 'The Discovery Day\'s general location that is visible to all users. For example, "Victoria, BC."',
+        text: 'The session\'s general location that is visible to all users. For example, "Victoria, BC."',
         show: false
       }
     }),
@@ -216,7 +216,7 @@ export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryD
       placeholder: 'Only visible to in-person attendees.',
       value: getDdString('venue'),
       help: {
-        text: 'The Discovery Day\'s specific venue that will only be emailed to in-person attendees. For example, "563 Superior St, Victoria, BC, V8V 1T7."',
+        text: 'The session\'s specific venue that will only be emailed to in-person attendees. For example, "563 Superior St, Victoria, BC, V8V 1T7."',
         show: false
       }
     }),
@@ -379,7 +379,7 @@ const Toggle: ComponentView<State, Msg> = ({ state, dispatch }) => {
     <div className='mb-4'>
       <Row>
         <Col xs='12'>
-          <FormSectionHeading text='Discovery Day' />
+          <FormSectionHeading text='Discovery Day Session' />
         </Col>
       </Row>
       {state.showToggle

@@ -408,7 +408,7 @@ const view: ComponentView<State, Msg> = props => {
     <div>
       <Row className='mb-5'>
         <Col xs='12' className='d-flex flex-column'>
-          <h1>Discovery Day Registration</h1>
+          <h1>Discovery Day Session Registration</h1>
           <h3>{version.rfiNumber}: {version.title}</h3>
         </Col>
       </Row>
@@ -422,7 +422,7 @@ const view: ComponentView<State, Msg> = props => {
         <Col xs='12' className='d-flex flex-column'>
           <h2>Attendee(s)</h2>
           <p>
-            Please complete the following form to register one of more of your company's representatives to attend this RFI's Discovery Day. If you are not personally attending, please clear your name and email from the list of attendees, and add the information of your colleague(s) that will be.
+            Please complete the following form to register one of more of your company's representatives to attend this RFI's Discovery Day session. If you are not personally attending, please clear your name and email from the list of attendees, and add the information of your colleague(s) that will be.
           </p>
         </Col>
       </Row>
@@ -442,7 +442,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   viewBottomBar,
   getAlerts: emptyPageAlerts,
   getMetadata(state) {
-    const title = `Attend Discovery Day${state.tag === 'valid' ? ' — ' + state.value.rfi.latestVersion.rfiNumber : ''}`;
+    const title = `Attend Discovery Day Session${state.tag === 'valid' ? ' — ' + state.value.rfi.latestVersion.rfiNumber : ''}`;
     return makePageMetadata(title);
   },
   getBreadcrumbs(state) {
@@ -465,7 +465,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
         })
       },
       {
-        text: 'Attend Discovery Day'
+        text: 'Attend Discovery Day Session'
       }
     ];
   },
@@ -473,7 +473,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     if (state.tag === 'invalid') { return null; }
     if (state.value.promptCancelRegistration) {
       return {
-        title: 'Cancel Discovery Day Registration?',
+        title: 'Cancel Discovery Day Session Registration?',
         body: 'All attendees will be notified of the cancellation by email.',
         onCloseMsg: { tag: 'hideCancelRegistrationPrompt', value: undefined },
         actions: [
@@ -512,7 +512,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     } else if (state.value.promptSubmitEdit) {
       return {
         title: 'Submit Changes to Registration?',
-        body: 'Please ensure all of the information you have provided is correct. Attendees will be notified of any changes to their attendance by email. Any new attendees will be sent a confirmation email explaining how to attend the Discovery Day either in-person or remotely.',
+        body: 'Please ensure all of the information you have provided is correct. Attendees will be notified of any changes to their attendance by email. Any new attendees will be sent a confirmation email explaining how to attend the Discovery Day session either in-person or remotely.',
         onCloseMsg: { tag: 'hideSubmitEditPrompt', value: undefined },
         actions: [
           {
@@ -530,7 +530,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
       }
     } else if (state.value.promptCancelCreate) {
       return {
-        title: 'Cancel Discovery Day Registration?',
+        title: 'Cancel Discovery Day Session Registration?',
         body: 'Any information that you have entered will be lost if you choose to cancel.',
         onCloseMsg: { tag: 'hideCancelCreatePrompt', value: undefined },
         actions: [

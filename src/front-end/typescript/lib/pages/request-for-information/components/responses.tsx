@@ -6,7 +6,6 @@ import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
 import { reduce } from 'lodash';
-import moment from 'moment';
 import { default as React } from 'react';
 import { Col, Row } from 'reactstrap';
 import { compareDates, diffDates, formatDateAndTime } from 'shared/lib';
@@ -115,13 +114,14 @@ export const init: Init<Params, State> = async ({ rfi }) => {
   // Each response's attachments are sorted by creation date, newest first.
   // All responses are sorted alphabetically by vendor's name.
   const responses: RfiResponse[] = reduce(responsesByVendor, (acc: RfiResponse[], v, k) => {
+      // Sort to ensure newest responses are first,
+      // so `createdAt` reflects the most recent response, and
+      // the attachments are shown in reverse order of submission.
+      const vendorResponses = v.sort((a, b) => compareDates(a.createdAt, b.createdAt) * -1);
       acc.push({
-        createdBy: v[0].createdBy,
-        createdAt: v[0].createdAt,
-        attachments: v
-          .reduce((acc: PublicFile[], { attachments }) => [...acc, ...attachments], [])
-          // Show newest attachments first.
-          .sort((a, b) => compareDates(a.createdAt, b.createdAt) * -1)
+        createdBy: vendorResponses[0].createdBy,
+        createdAt: vendorResponses[0].createdAt,
+        attachments: vendorResponses.reduce((acc: PublicFile[], { attachments }) => [...acc, ...attachments], [])
       });
       return acc;
     }, [])
@@ -204,14 +204,14 @@ export const view: ComponentView<State, Msg> = props => {
   const { closingAt, gracePeriodDays, addenda } = rfi.latestVersion;
   const numResponses = responses.length;
   const numAddenda = addenda.length;
-  let numOnClosingDate = 0;
+  let numByClosingTime = 0;
   let numDuringGracePeriod = 0;
   responses.forEach(response => {
     const diffDays = diffDates(response.createdAt, closingAt, 'days');
-    const onClosingDay = diffDays > -1 && diffDays < 1 && moment(response.createdAt).get('date') === moment(closingAt).get('date');
+    const byClosingTime = diffDays <= 0;
     const duringGracePeriod = diffDays > 0 && diffDays <= gracePeriodDays;
-    if (onClosingDay) {
-      numOnClosingDate++;
+    if (byClosingTime) {
+      numByClosingTime++;
     }
     if (duringGracePeriod) {
       numDuringGracePeriod++;
@@ -228,7 +228,7 @@ export const view: ComponentView<State, Msg> = props => {
         <Col xs='12'>
           <Stats>
             <BigStat color='info' count={numResponses} label={(<span>Response{numResponses === 1 ? '' : 's'}<br />Received</span>)} />
-            <SmallStats a={{ color: 'info', count: numOnClosingDate, label: 'Received on Closing Date' }} b={{ color: 'primary', count: numDuringGracePeriod, label: 'Received During Grace Period' }} />
+            <SmallStats a={{ color: 'info', count: numByClosingTime, label: 'Received by closing time' }} b={{ color: 'primary', count: numDuringGracePeriod, label: 'Received during grace period' }} />
             <BigStat color='primary' count={numAddenda} label={(<span>Addend{numAddenda === 1 ? 'um' : 'a'}<br />Issued</span>)} />
           </Stats>
         </Col>

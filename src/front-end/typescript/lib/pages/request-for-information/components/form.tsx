@@ -13,7 +13,7 @@ export const ERROR_MESSAGE = `Please fix the errors below, and try submitting th
 
 export type TabId = 'details' | 'discoveryDay' | 'responses';
 
-function tabIdToName(id: TabId): string {
+export function tabIdToName(id: TabId): string {
   switch (id) {
     case 'details':
       return DetailsForm.TAB_NAME

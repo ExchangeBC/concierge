@@ -200,7 +200,7 @@ export interface LinkProps {
   url: string;
 }
 
-const Link: View<LinkProps> = ({ text, url }) => {
+export const Link: View<LinkProps> = ({ text, url }) => {
   return (
     <a href={url} target='_blank' style={styles.classes.link}>
       {text}

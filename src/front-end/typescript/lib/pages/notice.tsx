@@ -83,7 +83,9 @@ function noticeIdToState(noticeId: NoticeId): State {
     case 'rfiResponseSubmitted':
       return {
         title: 'Thank you',
-        body: 'Your response to this Request for Information has been successfully submitted.',
+        body: (
+          <p>Your response to this Request for Information has been successfully submitted. You may return to the RFI's <Link route={{ tag: 'requestForInformationRespond', value: { rfiId: noticeId.value }}}>Respond</Link> page to upload additional attachments as needed before the RFI closes.</p>
+        ),
         button: {
           text: 'View all RFIs',
           route: {

@@ -391,7 +391,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
       return (
         <FixedBar>
           <LoadingButton color='primary' onClick={publish} loading={isPublishLoading} disabled={isDisabled} className='text-nowrap'>
-            Publish Discovery Day
+            Publish Discovery Day Session
           </LoadingButton>
           <LoadingButton color='info' onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
             Preview RFI
@@ -405,10 +405,10 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
       return (
         <FixedBar>
           <Button color='primary' onClick={startEditing} disabled={isLoading} className='text-nowrap'>
-            Edit Discovery Day
+            Edit Discovery Day Session
           </Button>
           <LoadingButton color='danger' onClick={cancelEvent} loading={isCancelEventLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
-            Cancel Discovery Day
+            Cancel Discovery Day Session
           </LoadingButton>
           <Link route={viewRoute} button color='info' disabled={isLoading} className='text-nowrap' newTab>View RFI</Link>
         </FixedBar>
@@ -488,17 +488,21 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
       errors: initializationErrors.concat(validationErrors)
     };
   },
-  getMetadata() {
-    return makePageMetadata('Edit a Request for Information');
+  getMetadata(state) {
+    if (state.valid) {
+      return makePageMetadata(`${RfiForm.tabIdToName(state.valid.rfiForm.activeTab)} — ${state.valid.rfi.latestVersion.rfiNumber}`);
+    } else {
+      return makePageMetadata('Edit a Request for Information');
+    }
   },
   getBreadcrumbs: emptyPageBreadcrumbs,
   getModal(state) {
     if (!state.valid) { return null; }
     const isDiscoveryDayTab = state.valid.rfiForm.activeTab === 'discoveryDay';
     const hasExistingDiscoveryDay = !!getExistingDiscoveryDay(state);
-    const changes = isDiscoveryDayTab && !hasExistingDiscoveryDay ? 'Discovery Day' : 'changes';
+    const changes = isDiscoveryDayTab && !hasExistingDiscoveryDay ? 'Discovery Day session' : 'changes';
     const publishBody = `
-      ${isDiscoveryDayTab && !hasExistingDiscoveryDay ? 'This Discovery Day will be visible to the public once it has been published.' : 'Any changes that you have made will be visible to the public once they have been published.'}
+      ${isDiscoveryDayTab && !hasExistingDiscoveryDay ? 'This Discovery Day session will be visible to the public once it has been published.' : 'Any changes that you have made will be visible to the public once they have been published.'}
       ${isDiscoveryDayTab && hasExistingDiscoveryDay ? ' Attendees will be notified via email of any changes to their attendance.' : ''}
     `.replace('\n', ' ').trim();
     if (state.promptPublishConfirmation) {
@@ -560,7 +564,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
       };
     } else if (state.promptCancelEventConfirmation) {
       return {
-        title: 'Cancel Discovery Day?',
+        title: 'Cancel Discovery Day session?',
         body: 'All registered attendees will be notified that the session has been cancelled.',
         onCloseMsg: { tag: 'hideCancelEventConfirmationPrompt', value: undefined },
         actions: [

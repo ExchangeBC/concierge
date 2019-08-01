@@ -336,7 +336,13 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
           <h3>{version.title}</h3>
           <p className='mt-2'>
             Please submit your response to this Request for Information by following the instructions defined
-            in its <a href={router.routeToUrl(viewRfiRoute(rfi))}>description</a>.
+            under the "Responses" heading in its <a href={router.routeToUrl(viewRfiRoute(rfi))}>description</a>.
+            In addition to the required documents, you can also include an (optional) cover letter
+            summarising your response and describing the attachments you will be uploading.
+          </p>
+          <p>
+            While you will not be able to edit your response after you have submitted it,
+            you can return to this page to upload additional attachments as needed before the RFI closes.
           </p>
         </Col>
       </Row>
@@ -385,7 +391,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     if (!state.promptSubmitConfirmation) { return null; }
     return {
       title: 'Submit Response to RFI?',
-      body: 'You will not be able to edit your response once it has been submitted.',
+      body: 'You will not be able to edit your response once it has been submitted. However, you can return to this page to upload additional attachments as needed before the RFI closes.',
       onCloseMsg: { tag: 'hideSubmitConfirmationPrompt', value: undefined },
       actions: [
         {

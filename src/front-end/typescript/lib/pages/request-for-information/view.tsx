@@ -187,7 +187,7 @@ const Details: View<{ rfi: PublicRfi }> = ({ rfi }) => {
   ];
   const discoveryDayValues = version.discoveryDay
     ? [(<a href={`#${DISCOVERY_DAY_ID}`}>View Discovery Day Information</a>)]
-    : ['No Discovery Day'];
+    : ['No Discovery Day session'];
   const attachmentsValues = version.attachments.length
     ? [(<a href={`#${ATTACHMENTS_ID}`}>View Attachments</a>)]
     : ['No attachments'];
@@ -225,7 +225,7 @@ const DiscoveryDay: View<{ discoveryDay?: RfiResource.PublicDiscoveryDay }> = ({
   if (!discoveryDay) { return null; }
   return (
     <div className='pt-5 mt-5 border-top' id={DISCOVERY_DAY_ID}>
-      <FormSectionHeading text='Discovery Day' />
+      <FormSectionHeading text='Discovery Day Session' />
       <DiscoveryDayInfo discoveryDay={discoveryDay} />
     </div>
   );
@@ -302,7 +302,7 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
       </Link>
       {version.discoveryDay && rfiStatus === RfiStatus.Open && !RfiResource.discoveryDayHasPassed(version.discoveryDay.occurringAt)
         ? (<Link onClick={attendDiscoveryDay} button color='info' className='text-nowrap mr-md-3 mr-0 ml-3 ml-md-0'>
-            {alreadyRespondedToDiscoveryDay ? 'View Discovery Day Registration' : 'Attend Discovery Day'}
+            {alreadyRespondedToDiscoveryDay ? 'View Discovery Day Session Registration' : 'Attend Discovery Day Session'}
           </Link>)
         : null}
       <div className='text-secondary font-weight-bold d-none d-md-block mr-auto'>I want to...</div>
@@ -392,7 +392,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     } else if (state.promptDiscoveryDayConfirmation) {
       return {
         title: 'Review Terms and Conditions',
-        body: 'You must accept the Procurement Concierge Terms and Conditions in order to attend this RFI\'s Discovery Day.',
+        body: 'You must accept the Procurement Concierge Terms and Conditions in order to attend this RFI\'s Discovery Day session.',
         onCloseMsg: { tag: 'hideDiscoveryDayConfirmationPrompt', value: undefined },
         actions: [
           {

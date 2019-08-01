@@ -88,8 +88,13 @@ export const resource: Resource = {
             const rfiResponse = validated.value.rfiResponse;
             await rfiResponse.save();
             const publicRfiResponse = await RfiResponseSchema.makePublicRfiResponse(UserModel, FileModel, rfiResponse, request.session);
+            // notify vendor
+            mailer.rfiResponseReceivedToVendor({
+              rfi: validated.value.rfi,
+              to: publicRfiResponse.createdBy.email
+            });
             // notify program staff
-            mailer.rfiResponseReceived({
+            mailer.rfiResponseReceivedToProgramStaff({
               rfiResponse: publicRfiResponse,
               rfi: validated.value.rfi
             });
