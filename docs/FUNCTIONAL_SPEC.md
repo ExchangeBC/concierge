@@ -11,8 +11,8 @@ This document details the expected functionality of the Procurement Concierge Pr
     + [Specification Structure](#specification-structure)
   * [Feature Definitions](#feature-definitions)
     + [Feature Definition Structure](#feature-definition-structure)
-    + [Feature Example 1](#feature-example-1)
-    + [Feature Example 2](#feature-example-2)
+    + [Feature Definition Example 1](#feature-definition-example-1)
+    + [Feature Definition Example 3](#feature-definition-example-3)
     + [Tips for Writing Feature Definitions](#tips-for-writing-feature-definitions)
 - [Specifications](#specifications)
   * [User Management](#user-management)
@@ -128,14 +128,14 @@ Given [PREMISE]
 When [ACTION]  
 [And [ADDITIONAL_ACTION]]  
 Then [OUTCOME]  
-[And [ADDITIONAL_OUTCOME]]  
+[And [ADDITIONAL_OUTCOME]].
 ```
 
 Note that the "And" clauses are optional, and each line in a feature definition ends with two blank spaces, which is how new lines are authored in Markdown.
 
 The following snippets provide examples of how actual feature definitions should be authored.
 
-#### Feature Example 1
+#### Feature Definition Example 1
 
 ```markdown
 Given the Program Staff has accepted the terms and conditions  
@@ -143,7 +143,7 @@ When the Program Staff clicks a link to a User's profile
 Then the Program Staff is shown the User's profile.
 ```
 
-#### Feature Example 2
+#### Feature Definition Example 3
 
 ```markdown
 Given the Program Staff has accepted the terms and conditions  
