@@ -7,11 +7,13 @@ This document details the expected functionality of the Procurement Concierge Pr
 <!-- toc -->
 
 - [Contribution Guidelines](#contribution-guidelines)
-      - [Specification Structure](#specification-structure)
-      - [Feature Definition Structure](#feature-definition-structure)
-      - [Feature Example 1](#feature-example-1)
-      - [Feature Example 2](#feature-example-2)
-    + [General Guidelines for Writing Feature Definitions](#general-guidelines-for-writing-feature-definitions)
+  * [Specification Definitions](#specification-definitions)
+    + [Specification Structure](#specification-structure)
+  * [Feature Definitions](#feature-definitions)
+    + [Feature Definition Structure](#feature-definition-structure)
+    + [Feature Example 1](#feature-example-1)
+    + [Feature Example 2](#feature-example-2)
+    + [Tips for Writing Feature Definitions](#tips-for-writing-feature-definitions)
 - [Specification](#specification)
   * [User Management](#user-management)
     + [Program Staff](#program-staff)
@@ -70,6 +72,8 @@ This section describes the structure of this document, and how to add to, or mod
 This document is written in Markdown, and is stored in the web app's GitHub repository to ensure
 its version history is tracked with Git.
 
+### Specification Definitions
+
 All functional specifications are listed under the [Specification](#specification) heading.
 Each specification describes a subset of the web app's features, typically limited to a specific domain.
 For example, a specification may describe all features related to "Requests for Information".
@@ -86,7 +90,7 @@ The user persona groupings are:
 The following snippet describes the structure of a specification, and can be used as a template when
 adding new specifications to this document.
 
-##### Specification Structure
+#### Specification Structure
 
 ```markdown
 ### [Specification Name, e.g. "Requests for Information"]
@@ -112,9 +116,11 @@ adding new specifications to this document.
 [List of Features]
 ```
 
+### Feature Definitions
+
 Each feature defined under each user persona should be structured using the following syntax (similar to Cucumber's BDD language, [Gherkin](https://cucumber.io/docs/gherkin/reference/)):
 
-##### Feature Definition Structure
+#### Feature Definition Structure
 
 ```markdown
 Given [PREMISE]  
@@ -129,7 +135,7 @@ Note that the "And" clauses are optional, and each line in a feature definition 
 
 The following snippets provide examples of how actual feature definitions should be authored.
 
-##### Feature Example 1
+#### Feature Example 1
 
 ```markdown
 Given the Program Staff has accepted the terms and conditions  
@@ -137,7 +143,7 @@ When the Program Staff clicks a link to a User's profile
 Then the Program Staff is shown the User's profile.
 ```
 
-##### Feature Example 2
+#### Feature Example 2
 
 ```markdown
 Given the Program Staff has accepted the terms and conditions  
@@ -146,7 +152,7 @@ When the Program Staff changes the Buyer's verification status using a dropdown
 Then the Buyer's verification status is changed to the Program Staff's selection.
 ```
 
-#### General Guidelines for Writing Feature Definitions
+#### Tips for Writing Feature Definitions
 
 - Always capitalise user personas, and refer to them explicitly. For example, "Given the **P**rogram **S**taff...". i.e. Never refer to users with pronouns (e.g. "they").
 - Each clause in a feature definition should be separated by a new line (two blank spaces at the end of each line in Markdown).
