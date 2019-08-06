@@ -20,49 +20,49 @@ This document details the expected functionality of the Procurement Concierge Pr
     + [Buyers](#buyers)
     + [Vendors](#vendors)
     + [Anonymous Users](#anonymous-users)
-  * [All Users](#all-users)
+    + [All Users](#all-users)
   * [Requests for Information](#requests-for-information)
     + [Program Staff](#program-staff-1)
     + [Buyers](#buyers-1)
     + [Vendors](#vendors-1)
     + [Anonymous Users](#anonymous-users-1)
-  * [All Users](#all-users-1)
+    + [All Users](#all-users-1)
   * [Requests for Information Responses](#requests-for-information-responses)
     + [Program Staff](#program-staff-2)
     + [Buyers](#buyers-2)
     + [Vendors](#vendors-2)
     + [Anonymous Users](#anonymous-users-2)
-  * [All Users](#all-users-2)
+    + [All Users](#all-users-2)
   * [Discovery Day Sessions](#discovery-day-sessions)
     + [Program Staff](#program-staff-3)
     + [Buyers](#buyers-3)
     + [Vendors](#vendors-3)
     + [Anonymous Users](#anonymous-users-3)
-  * [All Users](#all-users-3)
+    + [All Users](#all-users-3)
   * [Discovery Day Sessions](#discovery-day-sessions-1)
     + [Program Staff](#program-staff-4)
     + [Buyers](#buyers-4)
     + [Vendors](#vendors-4)
     + [Anonymous Users](#anonymous-users-4)
-  * [All Users](#all-users-4)
+    + [All Users](#all-users-4)
   * [Vendor-Initiated Ideas](#vendor-initiated-ideas)
     + [Program Staff](#program-staff-5)
     + [Buyers](#buyers-5)
     + [Vendors](#vendors-5)
     + [Anonymous Users](#anonymous-users-5)
-  * [All Users](#all-users-5)
+    + [All Users](#all-users-5)
   * [Static Pages](#static-pages)
     + [Program Staff](#program-staff-6)
     + [Buyers](#buyers-6)
     + [Vendors](#vendors-6)
     + [Anonymous Users](#anonymous-users-6)
-  * [All Users](#all-users-6)
+    + [All Users](#all-users-6)
   * [Feedback](#feedback)
     + [Program Staff](#program-staff-7)
     + [Buyers](#buyers-7)
     + [Vendors](#vendors-7)
     + [Anonymous Users](#anonymous-users-7)
-  * [All Users](#all-users-7)
+    + [All Users](#all-users-7)
 
 <!-- tocstop -->
 
@@ -111,7 +111,7 @@ adding new specifications to this document.
 
 [List of Features]
 
-### All Users
+#### All Users
 
 [List of Features]
 ```
@@ -179,7 +179,7 @@ TODO
 
 TODO
 
-### All Users
+#### All Users
 
 TODO
 
@@ -201,7 +201,7 @@ TODO
 
 TODO
 
-### All Users
+#### All Users
 
 TODO
 
@@ -223,7 +223,7 @@ TODO
 
 TODO
 
-### All Users
+#### All Users
 
 TODO
 
@@ -245,7 +245,7 @@ TODO
 
 TODO
 
-### All Users
+#### All Users
 
 TODO
 
@@ -267,7 +267,7 @@ TODO
 
 TODO
 
-### All Users
+#### All Users
 
 TODO
 
@@ -289,7 +289,7 @@ TODO
 
 TODO
 
-### All Users
+#### All Users
 
 TODO
 
@@ -311,7 +311,7 @@ TODO
 
 TODO
 
-### All Users
+#### All Users
 
 TODO
 
@@ -333,6 +333,6 @@ TODO
 
 TODO
 
-### All Users
+#### All Users
 
 TODO
