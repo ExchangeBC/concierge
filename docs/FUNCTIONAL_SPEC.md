@@ -12,7 +12,7 @@ This document details the expected functionality of the Procurement Concierge Pr
   * [Feature Definitions](#feature-definitions)
     + [Feature Definition Structure](#feature-definition-structure)
     + [Feature Definition Example 1](#feature-definition-example-1)
-    + [Feature Definition Example 3](#feature-definition-example-3)
+    + [Feature Definition Example 2](#feature-definition-example-2)
     + [Tips for Writing Feature Definitions](#tips-for-writing-feature-definitions)
 - [Specifications](#specifications)
   * [User Management](#user-management)
@@ -39,30 +39,24 @@ This document details the expected functionality of the Procurement Concierge Pr
     + [Vendors](#vendors-3)
     + [Anonymous Users](#anonymous-users-3)
     + [All Users](#all-users-3)
-  * [Discovery Day Sessions](#discovery-day-sessions-1)
+  * [Vendor-Initiated Ideas](#vendor-initiated-ideas)
     + [Program Staff](#program-staff-4)
     + [Buyers](#buyers-4)
     + [Vendors](#vendors-4)
     + [Anonymous Users](#anonymous-users-4)
     + [All Users](#all-users-4)
-  * [Vendor-Initiated Ideas](#vendor-initiated-ideas)
+  * [Static Pages](#static-pages)
     + [Program Staff](#program-staff-5)
     + [Buyers](#buyers-5)
     + [Vendors](#vendors-5)
     + [Anonymous Users](#anonymous-users-5)
     + [All Users](#all-users-5)
-  * [Static Pages](#static-pages)
+  * [Feedback](#feedback)
     + [Program Staff](#program-staff-6)
     + [Buyers](#buyers-6)
     + [Vendors](#vendors-6)
     + [Anonymous Users](#anonymous-users-6)
     + [All Users](#all-users-6)
-  * [Feedback](#feedback)
-    + [Program Staff](#program-staff-7)
-    + [Buyers](#buyers-7)
-    + [Vendors](#vendors-7)
-    + [Anonymous Users](#anonymous-users-7)
-    + [All Users](#all-users-7)
 
 <!-- tocstop -->
 
@@ -143,7 +137,7 @@ When the Program Staff clicks a link to a User's profile
 Then the Program Staff is shown the User's profile.
 ```
 
-#### Feature Definition Example 3
+#### Feature Definition Example 2
 
 ```markdown
 Given the Program Staff has accepted the terms and conditions  
@@ -154,7 +148,8 @@ Then the Buyer's verification status is changed to the Program Staff's selection
 
 #### Tips for Writing Feature Definitions
 
-- Always capitalise user personas, and refer to them explicitly. For example, "Given the **P**rogram **S**taff...". i.e. Never refer to users with pronouns (e.g. "they").
+- Each feature definition should explicitly define its premises. For example, note how "Feature Definition Example 2" above does not implicitly rely on the premise that a Program Staff has accepted the terms and conditions from "Feature Definition Example 1" to view a Buyer's profile. In other words, a feature definition should not rely on premises from other definitions — they should be as comprehensive as possible.
+- Always capitalise user personas, and refer to them explicitly. For example, "Given the **P**rogram **S**taff...". i.e. Never refer to users with pronouns (e.g. "they"). If you need to refer to a generic user, simply refer to them as "User."
 - Each clause in a feature definition should be separated by a new line (two blank spaces at the end of each line in Markdown).
 - Multiple features should be separated by a paragraph (a full blank line between feature definitions in Markdown).
 - Other than capitalisation, feature definitions (generally) do not require punctuation, except for a full stop at the end of the definition.
@@ -206,28 +201,6 @@ TODO
 TODO
 
 ### Requests for Information Responses
-
-#### Program Staff
-
-TODO
-
-#### Buyers
-
-TODO
-
-#### Vendors
-
-TODO
-
-#### Anonymous Users
-
-TODO
-
-#### All Users
-
-TODO
-
-### Discovery Day Sessions
 
 #### Program Staff
 
