@@ -14,7 +14,7 @@ This document details the expected functionality of the Procurement Concierge Pr
     + [Feature Example 1](#feature-example-1)
     + [Feature Example 2](#feature-example-2)
     + [Tips for Writing Feature Definitions](#tips-for-writing-feature-definitions)
-- [Specification](#specification)
+- [Specifications](#specifications)
   * [User Management](#user-management)
     + [Program Staff](#program-staff)
     + [Buyers](#buyers)
@@ -74,7 +74,7 @@ its version history is tracked with Git.
 
 ### Specification Definitions
 
-All functional specifications are listed under the [Specification](#specification) heading.
+All functional specifications are listed under the [Specifications](#specifications) heading.
 Each specification describes a subset of the web app's features, typically limited to a specific domain.
 For example, a specification may describe all features related to "Requests for Information".
 
@@ -159,7 +159,7 @@ Then the Buyer's verification status is changed to the Program Staff's selection
 - Multiple features should be separated by a paragraph (a full blank line between feature definitions in Markdown).
 - Other than capitalisation, feature definitions (generally) do not require punctuation, except for a full stop at the end of the definition.
 
-## Specification
+## Specifications
 
 ### User Management
 
