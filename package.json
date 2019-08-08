@@ -24,7 +24,7 @@
     "typedoc:build": "npm run back-end:typedoc; npm run front-end:typedoc; npm run shared:typedoc",
     "typedoc:start": "npx serve --config typedoc/serve.json typedoc",
     "docs:readme-toc": "npx markdown-toc -i README.md",
-    "docs:functional-spec-toc": "npx markdown-toc -i docs/FUNCTIONAL_SPEC.md",
+    "docs:functional-spec-toc": "npx markdown-toc --maxdepth 5 -i docs/FUNCTIONAL_SPEC.md",
     "docs:licenses": "npx license-checker > OPEN_SOURCE_LICENSES.txt"
   },
   "repository": {
