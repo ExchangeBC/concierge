@@ -178,99 +178,99 @@ TODO
 Given the User is viewing the sign in page  
 And the User has an account  
 When the User enters a valid email address and password correctly  
-And clicks “Sign In”  
-Then the User is directed to the RFIs page  
+And clicks "Sign In"  
+Then the User is directed to the RFIs page.
 
 ###### Scenario: User does not supply correct email address and/or password when attempting to sign in  
 Given the User is viewing the sign in page  
 When the User enters a valid email address and/or password incorrectly  
-And clicks “Sign In”  
-Then the User is presented with an error message  
+And clicks "Sign In"  
+Then the User is presented with an error message.
 
 ###### Scenario: User attempts to sign in, but does not have an account
-Given the User is viewing the sign in page
-And the User does not have an account
-When the User clicks “sign up here”
-Then the User is directed to the sign up: step 1 page
+Given the User is viewing the sign in page  
+And the User does not have an account  
+When the User clicks "sign up here"  
+Then the User is directed to the sign up: step 1 page.
 
 ##### Sign Up 
 
 ###### Scenario: User wants to sign up for a Public Sector Buyer account  
 Given the User is viewing the sign up: step 1 page  
-When the User clicks “Select” in the Public Sector Buyer card  
-Then the User is directed to the sign up: step 2 page for Public Sector Buyers  
+When the User clicks "Select" in the Public Sector Buyer card  
+Then the User is directed to the sign up: step 2 page for Public Sector Buyers.
 
 ###### Scenario: User wants to sign up for a Vendor account  
 Given the User is viewing the sign up: step 1 page  
-When the User clicks “Select” in the Vendor card  
-Then the User is directed to the sign up: step 2 page for Vendors  
+When the User clicks "Select" in the Vendor card  
+Then the User is directed to the sign up: step 2 page for Vendors.
 
 ###### Scenario: User supplies valid email address and password (and password confirmation) when signing up for a Public Sector Buyer account  
 Given the User is viewing the sign up: step 2 page for Public Sector Buyers  
 When the User enters a valid email address and password (and password confirmation) correctly  
-And clicks “Next”  
-Then the User is directed to the sign up: step 3 page for Public Sector Buyers  
+And clicks "Next"  
+Then the User is directed to the sign up: step 3 page for Public Sector Buyers.
 
 ###### Scenario: User supplies email address already associated with a Public Sector Buyer account when signing up for a Public Sector Buyer account  
 Given the User is viewing the sign up: step 2 page for Public Sector Buyers  
 And the User has an active account  
 When the User enters a valid email address and password (and password confirmation) correctly  
-And clicks “Next”  
-Then the User is directed to the sign up: step 3 page for Public Sector Buyers  
+And clicks "Next"  
+Then the User is directed to the sign up: step 3 page for Public Sector Buyers.
 
 ###### Scenario: User supplies email address already associated with a Public Sector Buyer account and has completed the registration process  
 Given the User is viewing the sign up: step 4 page for Public Sector Buyers  
 And the User has an active account  
-When the User clicks “Create Account”  
+When the User clicks "Create Account"  
 Then the User is redirected to the sign up: step 2 page for Public Sector Buyers  
-And the User is presented with an error message  
+And the User is presented with an error message.
 
 ###### Scenario: User supplies an invalid email address when signing up for a Public Sector Buyer account  
 Given the User is viewing the sign up: step 2 page for Public Sector Buyers  
 When the User enters an invalid email address and password (and password confirmation) correctly  
-Then the User is presented with an error message, “Please enter a valid email.”  
+Then the User is presented with an error message, "Please enter a valid email."
 
 ###### Scenario: User supplies password confirmation incorrectly when signing up for a Public Sector Buyer account  
 Given the User is viewing the sign up: step 2 page for Public Sector Buyers  
 When the User enters a valid email address and password but re-enter the password confirmation incorrectly  
-Then the User is presented with the error message, “Password confirmation doesn’t match original password.”   
+Then the User is presented with the error message, "Password confirmation doesn’t match original password."
 
 ###### Scenario: User completes step 3 of 4 when signing up for a Public Sector Buyer account  
 Given the User is viewing the sign up: step 3 page for Public Sector Buyers  
 When the User provides all required information  
-And clicks “Next”  
-Then the User is directed to the sign up: step 4 page for Public Sector Buyers  
+And clicks "Next"  
+Then the User is directed to the sign up: step 4 page for Public Sector Buyers.
 
 ###### Scenario: User completes step 4 of 4 when signing up for a Public Sector Buyer account  
 Given the User is viewing the sign up: step 4 page for Public Sector Buyers  
 And the User does not already have an account associated with the email address the User has supplied  
 When the User provides at least one Industry Sector   
 And the User provides at least one Area of Interest  
-And clicks “Create Account”  
+And clicks "Create Account"  
 Then the User is directed to the terms and conditions page  
-And the User is sent an email to confirm that the User’s account has been created  
+And the User is sent an email to confirm that the User’s account has been created.
 
 ###### Scenario: User wants to add an Industry Sector when creating a Public Sector Buyer account  
 Given the User is viewing the sign up: step 4 page for Public Sector Buyers  
-When the User clicks “Add” to add an Industry Sector  
-Then an additional Industry Sector dropdown field will appear  
+When the User clicks "Add" to add an Industry Sector  
+Then an additional Industry Sector dropdown field will appear.
 
 ###### Scenario: User wants to add an Area of Interest when creating a Public Sector Buyer account  
 Given the User is viewing the sign up: step 4 page for Public Sector Buyers  
-When the User clicks “Add” to add an Area of Interest  
-Then an additional Area of Interest dropdown field will appear  
+When the User clicks "Add" to add an Area of Interest  
+Then an additional Area of Interest dropdown field will appear.
 
 ###### Scenario: User wants to remove an Industry Sector when creating a Public Sector Buyer account  
 Given the User is viewing the sign up: step 4 page for Public Sector Buyers  
 And at least two Industry Sector dropdown fields are present  
 When the User clicks the trash can icon next to an Industry Sector dropdown field  
-Then the Industry Sector dropdown field is removed  
+Then the Industry Sector dropdown field is removed.
 
 ###### Scenario: User wants to remove an Area of Interest when creating a Public Sector Buyer account  
 Given the User is viewing the sign up: step 4 page for Public Sector Buyers  
 And at least two Area of Interest dropdown fields are present  
 When the User clicks the trash can icon next to an Area of Interest dropdown field  
-Then the Area of Interest dropdown field is removed
+Then the Area of Interest dropdown field is removed.
 
 TO DO: VENDOR SIGN UP, PROGRAM STAFF SIGN UP  
 
@@ -279,63 +279,63 @@ TO DO: VENDOR SIGN UP, PROGRAM STAFF SIGN UP
 ###### Scenario: User has forgotten the password associated with the User’s account when attempting to sign in  
 Given the User is viewing the sign in page  
 And the User has forgotten the password associated with the User’s account  
-When the User clicks “Forgotten Your Password?”  
-Then the User is directed to the forgot password page  
+When the User clicks "Forgotten Your Password?"  
+Then the User is directed to the forgot password page.
 
 ###### Scenario: User supplies a valid email address when requesting to reset the User’s password  
 Given the User is viewing the forgot password page  
 And the User has an account  
 When the User enters a valid email address  
-And clicks “Reset Password”  
+And clicks "Reset Password"  
 Then the User is directed to a confirmation page  
-And the User is sent an email with a link to reset the password associated with the User’s account  
+And the User is sent an email with a link to reset the password associated with the User’s account.
 
 ###### Scenario: User supplies an invalid email address when requesting to reset the User’s password  
 Given the User is viewing the forgot password page  
 When the User enters an invalid email address  
-Then the User is presented with an error message, “Please enter a valid email.”  
+Then the User is presented with an error message, "Please enter a valid email."
 
 ###### Scenario: User has submitted a request to reset the password associated with the User’s account  
 Given the User has requested the password associated with the User’s account to be reset  
 And the User has received the reset password email  
-When the User clicks “Reset Your Password” in the reset password email  
-Then the User is directed to the reset password page  
+When the User clicks "Reset Your Password" in the reset password email  
+Then the User is directed to the reset password page.
 
 ###### Scenario: User supplies new password and correctly re-enters the new password when attempting to reset the User’s password  
 Given the User is viewing the reset password page  
 When the User enters a new password and re-enters the new password correctly  
-And clicks “Reset Password”  
-Then the User is directed to a confirmation page  
+And clicks "Reset Password"  
+Then the User is directed to a confirmation page.
 
 ###### Scenario: User supplies new password and incorrectly re-enters the new password when attempting to reset the User’s password  
 Given the User is viewing the reset password page  
 When the User enters a new password and re-enters the new password incorrectly  
-Then the User is presented with an error message  
+Then the User is presented with an error message.
 
 ##### Change Password
 
 ###### Scenario: User wants to change the password associated with the User’s account
 Given the User is signed in  
 And the User is viewing the User’s profile  
-When the User clicks “Change Password”  
-Then the User is directed to the change password page  
+When the User clicks "Change Password"  
+Then the User is directed to the change password page.
 
 ###### Scenario: User supplies current password and new password correctly when attempting to change the User’s password  
 Given the User is viewing the change password page  
 When the User enters the User’s current password and new password correctly  
-And clicks “Update Password”  
-Then the User is directed to a confirmation page  
+And clicks "Update Password"  
+Then the User is directed to a confirmation page.
 
 ###### Scenario: User supplies current password incorrectly and new password correctly when attempting to change the User’s password  
 Given the User is viewing the change password page  
 When the User enters the User’s current password incorrectly and new password correctly  
-And clicks “Update Password”  
-Then the User is presented with the error message, “Please enter your correct password.”  
+And clicks "Update Password"  
+Then the User is presented with the error message, "Please enter your correct password."
 
 ###### Scenario: User supplies current password and new password correctly and new password confirmation incorrectly when attempting to change the User’s password  
 Given the User is viewing the change password page  
 When the User enters the User’s current password and new password correctly but re-enters the new password confirmation incorrectly  
-Then the User is presented with the error message, “Password confirmation doesn’t match original password.” 
+Then the User is presented with the error message, "Password confirmation doesn’t match original password."
 
 #### All Users
 
@@ -344,43 +344,43 @@ Then the User is presented with the error message, “Password confirmation does
 ###### Scenario: User skips terms and conditions during initial registration  
 Given the User is viewing the terms and conditions page  
 And the User has been directed to the terms and conditions after completing the registration process  
-When the User clicks “Skip”  
+When the User clicks "Skip"  
 Then the User is directed to the RFIs page  
-And the User’s profile will state, “You have not agreed to the Terms & Conditions.”
+And the User’s profile will state, "You have not agreed to the Terms & Conditions."
 
 ###### Scenario: User skips terms and conditions when reviewing on User profile  
 Given the User is viewing the terms and conditions page  
 And the User has not accepted the terms and conditions  
-When the User clicks “Skip”  
+When the User clicks "Skip"  
 Then the User is directed to the User’s profile page  
-And the User’s profile will state, “You have not agreed to the Terms & Conditions.”  
+And the User’s profile will state, "You have not agreed to the Terms & Conditions."
 
 ###### Scenario: User accepts the terms and conditions during initial registration  
 Given the User is viewing the terms and conditions page  
 And the User has not accepted the terms and conditions  
-When the User clicks “I Accept”  
+When the User clicks "I Accept"  
 Then the User is directed to the RFIs page  
-And the User’s profile will state, “You agreed to the Terms and Conditions on [date] at [time].”  
+And the User’s profile will state, "You agreed to the Terms and Conditions on [date] at [time]."
 
 ###### Scenario: User accepts the terms and conditions from the User’s profile  
 Given the User is viewing the terms and conditions page  
 And the User has not accepted the terms and conditions  
 And the User is signed in  
-When the User clicks “I Accept”  
+When the User clicks "I Accept"  
 Then the User is directed to the User’s profile page  
-And the User’s profile will state, “You agreed to the Terms and Conditions on [date] and [time].”  
+And the User’s profile will state, "You agreed to the Terms and Conditions on [date] and [time]."
 
 ###### Scenario: User has not accepted the terms and conditions  
 Given the User has not accepted the terms and conditions  
 And the User is signed in  
 When the User views the User’s profile  
-Then the User’s profile will state, “You have not agreed to the Terms & Conditions.”  
+Then the User’s profile will state, "You have not agreed to the Terms & Conditions."
 
 ###### Scenario: User has accepted the terms and conditions  
 Given the User has accepted the terms and conditions  
 And the User is signed in  
 When the User views the User’s profile  
-Then the User’s profile will state, “You agreed to the Terms and Conditions on [date] and [time].”  
+Then the User’s profile will state, "You agreed to the Terms and Conditions on [date] and [time]."
 
 TO DO
 
