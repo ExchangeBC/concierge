@@ -22,6 +22,7 @@ import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import * as RfiResponseSchema from 'back-end/lib/schemas/request-for-information/response';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
+import * as ViSchema from 'back-end/lib/schemas/vendor-idea';
 import { addHooksToRoute, namespaceRoute, notFoundJsonRoute, Route, Router } from 'back-end/lib/server';
 import { concat, flatten, flow, map } from 'lodash/fp';
 import * as mongoose from 'mongoose';
@@ -44,7 +45,8 @@ export function createModels(): AvailableModels {
     File: mongoose.model('File', FileSchema.schema),
     Rfi: mongoose.model('Rfi', RfiSchema.schema),
     RfiPreview: mongoose.model('RfiPreview', RfiSchema.schema),
-    RfiResponse: mongoose.model('RfiResponse', RfiResponseSchema.schema)
+    RfiResponse: mongoose.model('RfiResponse', RfiResponseSchema.schema),
+    VendorIdea: mongoose.model('VendorIdea', ViSchema.schema)
   };
 };
 

@@ -5,6 +5,7 @@ import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import * as RfiResponseSchema from 'back-end/lib/schemas/request-for-information/response';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
+import * as ViSchema from 'back-end/lib/schemas/vendor-idea';
 import { ErrorResponseBody, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, TextResponseBody } from 'back-end/lib/server';
 import { AuthLevel, UserType } from 'shared/lib/types';
 
@@ -17,9 +18,9 @@ export interface AvailableModels {
   ForgotPasswordToken: ForgotPasswordTokenSchema.Model;
   File: FileSchema.Model;
   Rfi: RfiSchema.Model;
-  // Use the same code as RFIs for RFI Previews.
-  RfiPreview: RfiSchema.Model;
+  RfiPreview: RfiSchema.Model; // Use the same code as RFIs for RFI Previews.
   RfiResponse: RfiResponseSchema.Model;
+  VendorIdea: ViSchema.Model;
 }
 
 export type FileUploadMetadata = AuthLevel<UserType> | null;
