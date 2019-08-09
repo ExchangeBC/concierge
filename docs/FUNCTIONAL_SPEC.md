@@ -165,15 +165,61 @@ Then the Buyer's verification status is changed to the Program Staff's selection
 
 #### Program Staff
 
-TODO
+TODO: VIEW/EDIT PROFILE
+
+##### Sign Up
+
+###### Scenario: Program Staff wants to create a Program Staff account  
+Given the Program Staff is viewing the users listing page  
+When the Program Staff clicks "Create a Program Staff Account"  
+Then the Program Staff is directed to the sign up: step 1 page for Program Staff.
+
+###### Scenario: Program Staff supplies valid email address and password (and password confirmation) when creating a Program Staff account  
+Given the Program Staff is viewing the sign up: step 1 page for Program Staff  
+When the Program Staff enters a valid email address and password (and password confirmation) correctly  
+And clicks "Next"  
+Then the Program Staff is directed to the sign up: step 2 page for Program Staff.
+
+###### Scenario: Program Staff supplies email address already associated with an account when creating a Program Staff account
+Given the Program Staff is viewing the sign up: step 1 page for Program Staff  
+And the new Program Staff has an active account  
+When the Program Staff enters a valid email address and password (and password confirmation) correctly  
+And clicks "Next"  
+Then the Program Staff is directed to the sign up: step 2 page for Program Staff.
+
+###### Scenario: Program Staff supplies email address already associated with an account and has completed the registration process for a Program Staff account
+Given the Program Staff is viewing the sign up: step 2 page for Program Staff  
+And the new Program Staff has an active account  
+When the Program Staff clicks "Create Account"  
+Then the Program Staff is redirected to the sign up: step 1 page for Program Staff  
+And the Program Staff is presented with an error message.
+
+###### Scenario: Program Staff supplies an invalid email address when creating a Program Staff account  
+Given the Program Staff is viewing the sign up: step 1 page for Program Staff  
+When the Program Staff enters an invalid email address and password (and password confirmation) correctly  
+Then the Program Staff is presented with an error message, "Please enter a valid email."  
+
+###### Scenario: Program Staff supplies password confirmation incorrectly when creating a Program Staff account  
+Given the Program Staff is viewing the sign up: step 1 page for Program Staff  
+When the Program Staff enters a valid email address and password but re-enter the password confirmation incorrectly  
+Then the Program Staff is presented with the error message, "Password confirmation doesn’t match original password."  
+
+###### Scenario: Program Staff completes registration process for creating a Program Staff account  
+Given the Program Staff is viewing the sign up: step 2 page for Program Staff  
+And the new Program Staff does not already have an account associated with the email address   
+When the Program Staff supplies all required information  
+And clicks "Create Account"  
+Then the Program Staff is directed to the user listing page  
+And the new Program Staff will receive  
+And the new Program Staff is sent an email to confirm that the Program Staff’s account has been created.  
 
 #### Buyers
 
-TODO
+TODO: VIEW/EDIT PROFILE, DEACTIVATE ACCOUNT
 
 #### Vendors
 
-TODO
+TODO: VIEW/EDIT PROFILE, DEACTIVATE ACCOUNT
 
 #### Anonymous Users
 
@@ -216,14 +262,14 @@ When the User enters a valid email address and password (and password confirmati
 And clicks "Next"  
 Then the User is directed to the sign up: step 3 page for Public Sector Buyers.
 
-###### Scenario: User supplies email address already associated with a Public Sector Buyer account when signing up for a Public Sector Buyer account  
+###### Scenario: User supplies email address already associated with an account when signing up for a Public Sector Buyer account  
 Given the User is viewing the sign up: step 2 page for Public Sector Buyers  
 And the User has an active account  
 When the User enters a valid email address and password (and password confirmation) correctly  
 And clicks "Next"  
 Then the User is directed to the sign up: step 3 page for Public Sector Buyers.
 
-###### Scenario: User supplies email address already associated with a Public Sector Buyer account and has completed the registration process  
+###### Scenario: User supplies email address already associated with an account and has completed the registration process for a Public Sector Buyer account 
 Given the User is viewing the sign up: step 4 page for Public Sector Buyers  
 And the User has an active account  
 When the User clicks "Create Account"  
@@ -277,7 +323,82 @@ And at least two Area of Interest dropdown fields are present
 When the User clicks the trash can icon next to an Area of Interest dropdown field  
 Then the Area of Interest dropdown field is removed.
 
-TO DO: VENDOR SIGN UP, PROGRAM STAFF SIGN UP  
+###### Scenario: User supplies valid email address and password (and password confirmation) when signing up for a Vendor account  
+Given the User is viewing the sign up: step 2 page for Vendors  
+When the User enters a valid email address and password (and password confirmation) correctly  
+And clicks "Next"  
+Then the User is directed to the sign up: step 3 page for Vendors.  
+
+###### Scenario: User supplies email address already associated with an account when signing up for a Vendor account  
+Given the User is viewing the sign up: step 2 page for Vendors  
+And the User has an active account  
+When the User enters a valid email address and password (and password confirmation) correctly  
+And clicks "Next"  
+Then the User is directed to the sign up: step 3 page for Vendors.  
+
+###### Scenario: User supplies email address already associated with an account and has completed the registration process for a Vendor account  
+Given the User is viewing the sign up: step 4 page for Vendors  
+And the User has an active account  
+When the User clicks "Create Account"  
+Then the User is redirected to the sign up: step 2 page for Vendors  
+And the User is presented with an error message.  
+
+###### Scenario: User supplies an invalid email address when signing up for a Vendor account  
+Given the User is viewing the sign up: step 2 page for Vendors  
+When the User enters an invalid email address and password (and password confirmation) correctly  
+Then the User is presented with an error message, "Please enter a valid email."  
+
+###### Scenario: User supplies password confirmation incorrectly when signing up for a Vendor account  
+Given the User is viewing the sign up: step 2 page for Vendors  
+When the User enters a valid email address and password but re-enter the password confirmation incorrectly  
+Then the User is presented with the error message, "Password confirmation doesn’t match original password."  
+
+###### Scenario: User completes step 3 of 4 when signing up for a Vendor account  
+Given the User is viewing the sign up: step 3 page for Vendors  
+When the User provides all required information  
+And clicks "Next"  
+Then the User is directed to the sign up: step 4 page for Vendors.  
+
+###### Scenario: User’s Head Office Location is located within British Columbia  
+Given the User is viewing the sign up: step 3 page for Vendors  
+When the User selects “British Columbia” from the “Head Office Location” dropdown list  
+Then the “City” field is presented as a required field  
+
+###### Scenario: User’s Head Office Location is located anywhere other than British Columbia  
+Given the User is viewing the sign up: step 3 page for Vendors  
+When the User selects any option other than “British Columbia” from the “Head Office Location” dropdown list  
+Then the “City” field remains an optional field  
+
+###### Scenario: User completes step 4 of 4 when signing up for a Vendor account  
+Given the User is viewing the sign up: step 4 page for Vendors  
+And the User does not already have an account associated with the email address the User has supplied  
+When the User provides at least one Industry Sector  
+And the User provides at least one Area of Interest  
+And clicks "Create Account"  
+Then the User is directed to the terms and conditions page  
+And the User is sent an email to confirm that the User’s account has been created.  
+
+###### Scenario: User wants to add an Industry Sector when creating a Vendor account  
+Given the User is viewing the sign up: step 4 page for Vendors  
+When the User clicks "Add" to add an Industry Sector  
+Then an additional Industry Sector dropdown field will appear.  
+
+###### Scenario: User wants to add an Area of Interest when creating a Vendor account  
+Given the User is viewing the sign up: step 4 page for Vendors  
+When the User clicks "Add" to add an Area of Interest  
+Then an additional Area of Interest dropdown field will appear.  
+
+###### Scenario: User wants to remove an Industry Sector when creating a Vendor account  
+Given the User is viewing the sign up: step 4 page for Vendors  
+And at least two Industry Sector dropdown fields are present  
+When the User clicks the trash can icon next to an Industry Sector dropdown field  
+Then the Industry Sector dropdown field is removed.  
+
+###### Scenario: User wants to remove an Area of Interest when creating a Vendor account  
+Given the User is viewing the sign up: step 4 page for Vendors  
+And at least two Area of Interest dropdown fields are present  
+When the User clicks the trash can icon next to an Area of Interest dropdown field  
+Then the Area of Interest dropdown field is removed.  
 
 ##### Forgot/Reset Password
 
@@ -387,7 +508,7 @@ And the User is signed in
 When the User views the User’s profile  
 Then the User’s profile will state, "You agreed to the Terms and Conditions on [date] and [time]."
 
-TO DO
+TO DO: SIGN OUT, REACTIVATE ACCOUNT
 
 ### Requests for Information
 
