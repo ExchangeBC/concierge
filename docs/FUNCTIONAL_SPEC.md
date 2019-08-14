@@ -165,8 +165,6 @@ Then the Buyer's verification status is changed to the Program Staff's selection
 
 #### Program Staff
 
-TODO: VIEW/EDIT PROFILE
-
 ##### Sign Up
 
 ###### Scenario: Program Staff wants to create a Program Staff account  
@@ -213,13 +211,185 @@ Then the Program Staff is directed to the user listing page
 And the new Program Staff will receive  
 And the new Program Staff is sent an email to confirm that the Program Staff’s account has been created.  
 
+##### Managing User Profiles
+
+###### Scenario: Program Staff wants to view a list of all system users  
+Given the Program Staff is signed in    
+When the Program Staff clicks "Users" in the main navigation bar  
+Then the Program Staff is directed to the user listing page.
+
+###### Scenario: Program Staff wants to filter the list of all system users  
+Given the Program Staff is signed in  
+And is viewing the user listing page  
+When the Program Staff selects a filter using an available dropdown  
+Then the user listing table data is filtered accordingly.
+
+###### Scenario: Program Staff wants to search the list of all system users  
+Given the Program Staff is signed in  
+And is viewing the user listing page  
+When the Program Staff enters at least two characters into the available search bar  
+Then the user listing table data is filtered accordingly.
+ 
+###### Scenario: Program Staff wants to view another user's profile and has accepted the terms and conditions  
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the user listing page  
+When the Program Staff clicks the user's name to view the user's profile  
+Then the Program Staff is directed to the appropriate user's profile page.
+
+###### Scenario: Program Staff wants to view another user's profile and has not accepted the terms and conditions  
+
+Given the Program Staff is signed in  
+And has not accepted the terms and conditions
+And is viewing the user listing page  
+When the Program Staff clicks the user's name to view the user's profile  
+Then the Program Staff is presented with an alert to review the terms and conditions.
+
+###### Scenario: Program Staff wants to update a Public Sector Buyer's account status  
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing a Buyer's user profile  
+When the Program Staff changes the Buyer's account status using the available dropdown  
+Then the Buyer's account status is changed to the Program Staff's selection  
+And the Buyer is sent an email to notify of the account status change.
+
+###### Scenario: Program Staff wants to initiate the deactivation of another Program Staff's account  
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing a Program Staff's user profile  
+When the Program Staff clicks "Deactivate Account"  
+Then the Program Staff is presented with an alert to confirm the deactivation of a Program Staff's account.
+
+###### Scenario: Program Staff wants to confirm the deactivation of another Program Staff's account  
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm the deactivation of a Program Staff's account  
+When the Program Staff clicks "Yes, deactivate this account"  
+Then the other Program Staff's account is deactivated  
+And the other Program Staff is sent an email notification  
+And the Program Staff is directed to the user listing page.
+
+###### Scenario: Program Staff wants to cancel the deactivation of another Program Staff's account  
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm the deactivation of a Program Staff's account  
+When the Program Staff clicks "Cancel"  
+Then the alert closes  
+And the Program Staff is directed back to the other Program Staff's user profile.
+
 #### Buyers
 
-TODO: VIEW/EDIT PROFILE, DEACTIVATE ACCOUNT
+##### User Profile
+
+###### Scenario: Buyer wants to add an Industry Sector when editing the Buyer’s user profile  
+Given the Buyer is signed in  
+And the Buyer is viewing the Buyer’s user profile  
+And the Buyer’s user profile is open for editing by the Buyer  
+When the Buyer clicks “Add” to add an Industry Sector  
+Then an additional Industry Sector dropdown field will appear.
+
+###### Scenario: Buyer wants to add an Area of Interest when editing the Buyer’s user profile  
+Given the Buyer is signed in  
+And the Buyer is viewing the Buyer’s user profile  
+And the Buyer’s user profile is open for editing by the Buyer  
+When the Buyer clicks “Add” to add an Area of Interest    
+Then an additional Area of Interest dropdown field will appear.
+
+###### Scenario: Buyer wants to remove an Industry Sector when editing the Buyer’s user profile  
+Given the Buyer is signed in  
+And the Buyer is viewing the Buyer’s user profile  
+And the Buyer’s user profile is open for editing by the Buyer  
+And at least two Industry Sector dropdown fields are present  
+When the Buyer clicks the trash can icon next to an Industry Sector dropdown field  
+Then the Industry Sector dropdown field is removed.
+
+###### Scenario: Buyer wants to remove an Area of Interest when editing the Buyer’s user profile  
+Given the Buyer is signed in  
+And the Buyer is viewing the Buyer’s user profile  
+And the Buyer’s user profile is open for editing by the Buyer  
+And at least two Area of Interest dropdown fields are present  
+When the Buyer clicks the trash can icon next to an Area of Interest dropdown field  
+Then the Area of Interest dropdown field is removed.
+
+##### Account Deactivation
+
+###### Scenario: Buyer wants to initiate the deactivation of the Buyer's account  
+Given the Buyer is signed in   
+And the Buyer is viewing the Buyer's user profile  
+When the Buyer clicks "Deactivate Account"  
+Then the Buyer is presented with an alert to confirm the deactivation of the Buyer's account.
+
+###### Scenario: Buyer wants to confirm the deactivation of the Buyer's account  
+Given the Buyer is signed in  
+And is viewing the alert to confirm the deactivation of the Buyer's account  
+When the Buyer clicks "Yes, deactivate my account"  
+Then the Buyer's account is deactivated  
+And the Buyer is sent an email notification  
+And the Buyer is directed to the landing page.
+
+###### Scenario: Buyer wants to cancel the deactivation of the Buyer's account  
+Given the Buyer is signed in  
+And is viewing the alert to confirm the deactivation of the Buyer's account  
+When the Buyer clicks "Cancel"  
+Then the alert closes  
+And the Buyer is directed back to the Buyer's user profile.
 
 #### Vendors
 
-TODO: VIEW/EDIT PROFILE, DEACTIVATE ACCOUNT
+##### User Profile
+
+###### Scenario: Vendor wants to add an Industry Sector when editing the Vendor’s user profile  
+Given the Vendor is signed in  
+And the Vendor is viewing the Vendor’s user profile  
+And the Vendor’s user profile is open for editing by the Vendor  
+When the Vendor clicks “Add” to add an Industry Sector  
+Then an additional Industry Sector dropdown field will appear.
+
+###### Scenario: Vendor wants to add an Area of Interest when editing the Vendor’s user profile  
+Given the Vendor is signed in  
+And the Vendor is viewing the Vendor’s user profile  
+And the Vendor’s user profile is open for editing by the Vendor  
+When the Vendor clicks “Add” to add an Area of Interest    
+Then an additional Area of Interest dropdown field will appear.
+
+###### Scenario: Vendor wants to remove an Industry Sector when editing the Vendor’s user profile  
+Given the Vendor is signed in  
+And the Vendor is viewing the Vendor’s user profile  
+And the Vendor’s user profile is open for editing by the Vendor  
+And at least two Industry Sector dropdown fields are present  
+When the Vendor clicks the trash can icon next to an Industry Sector dropdown field  
+Then the Industry Sector dropdown field is removed.
+
+###### Scenario: Vendor wants to remove an Area of Interest when editing the Vendor’s user profile  
+Given the Vendor is signed in  
+And the Vendor is viewing the Vendor’s user profile  
+And the Vendor’s user profile is open for editing by the Vendor  
+And at least two Area of Interest dropdown fields are present  
+When the Vendor clicks the trash can icon next to an Area of Interest dropdown field  
+Then the Area of Interest dropdown field is removed.
+
+##### Account Deactivation
+
+###### Scenario: Vendor wants to initiate the deactivation of the Vendor's account  
+Given the Vendor is signed in   
+And the Vendor is viewing the Vendor's user profile  
+When the Vendor clicks "Deactivate Account"  
+Then the Vendor is presented with an alert to confirm the deactivation of the Vendor's account.
+
+###### Scenario: Vendor wants to confirm the deactivation of the Vendor's account  
+Given the Vendor is signed in  
+And is viewing the alert to confirm the deactivation of the Vendor's account  
+When the Vendor clicks "Yes, deactivate my account"  
+Then the Vendor's account is deactivated  
+And the Vendor is sent an email notification  
+And the Vendor is directed to the landing page.
+
+###### Scenario: Vendor wants to cancel the deactivation of the Vendor's account  
+Given the Vendor is signed in  
+And is viewing the alert to confirm the deactivation of the Vendor's account  
+When the Vendor clicks "Cancel"  
+Then the alert closes  
+And the Vendor is directed back to the Vendor's user profile.
 
 #### Anonymous Users
 
@@ -461,7 +631,7 @@ Then the User is presented with the error message, "Please enter your correct pa
 ###### Scenario: User supplies current password and new password correctly and new password confirmation incorrectly when attempting to change the User’s password  
 Given the User is viewing the change password page  
 When the User enters the User’s current password and new password correctly but re-enters the new password confirmation incorrectly  
-Then the User is presented with the error message, "Password confirmation doesn’t match original password."
+Then the User is presented with the error message, "Password confirmation doesn’t match original password."  
 
 #### All Users
 
@@ -508,7 +678,74 @@ And the User is signed in
 When the User views the User’s profile  
 Then the User’s profile will state, "You agreed to the Terms and Conditions on [date] and [time]."
 
-TO DO: SIGN OUT, REACTIVATE ACCOUNT
+###### Scenario: User is presented with an alert to review the terms and conditions and wants to do so  
+Given the User has not accepted the terms and conditions  
+And has been presented with an alert to review the terms and conditions when attempting to complete an action  
+When the User clicks "Review Terms & Conditions"  
+Then the User is directed to the terms and conditions page.  
+
+###### Scenario: User is presented with an alert to review the terms and conditions and does not want to do so
+Given the User has not accepted the terms and conditions  
+And has been presented with an alert to review the terms and conditions when attempting to complete an action  
+When the User clicks "Go Back"  
+Then the User is directed back to the page the User was previously on.
+
+##### User Profile
+
+###### Scenario: User wants to view the User's user profile  
+Given the User is signed in  
+When the User clicks “My Profile” in the main navigation bar  
+Then the User is directed the User’s user profile.
+
+###### Scenario: User wants to edit the User's user profile  
+Given the User is signed in  
+And the User is viewing the User’s user profile  
+When the User clicks “Edit Profile”  
+Then the User’s user profile becomes open for editing by the User.
+
+###### Scenario: User changes the User’s user profile information and wants to cancel the changes made  
+Given the User is signed in  
+And the User is viewing the User’s user profile  
+And the User’s user profile is open for editing by the User  
+When the User clicks “Cancel”  
+Then the User’s changes made to the User’s user profile (if any) are cancelled  
+And the User’s user profile is closed for editing.
+
+###### Scenario: User changes the User’s user profile information and wants to save the changes made  
+Given the User is signed in  
+And the User is viewing the User’s user profile  
+And the User’s user profile is open for editing by the User  
+When the User changes their user profile information  
+And clicks “Save Changes”  
+And the User has supplied all required information  
+Then the User’s user profile information is updated with the new information supplied by the User  
+And the User’s user profile is closed for editing.
+
+###### Scenario: User attempts to save changes made to User’s user profile and has not provided all required information  
+Given the User is signed in  
+And the User is viewing the User’s user profile  
+And the User’s user profile is open for editing by the User  
+When the User changes their user profile information  
+And the User has not supplied all required information  
+Then the User must supply the required information to activate the “Save Changes” button.
+
+##### Sign Out
+
+###### Scenario: User wants to sign out  
+Given the User is signed in  
+When the User clicks "Sign Out" in the main navigation bar  
+Then the User is signed out  
+And is directed to a confirmation page.
+
+##### Account Reactivation 
+
+###### Scenario: User wants to reactivate the User's deactivated account  
+Given the User is viewing the sign in page  
+And the User has an account that has been deactivated  
+When the User enters the email address and password associated with the User's deactivated account correctly  
+And clicks "Sign In"  
+Then the User's account is reactivated  
+And the User is directed to the RFIs page.
 
 ### Requests for Information
 
