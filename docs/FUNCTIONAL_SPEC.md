@@ -1165,23 +1165,132 @@ Then the RFI listing table data is filtered accordingly.
 
 #### Program Staff
 
-TODO
+###### Scenario: Program Staff wants to view the responses received for an RFI
+Given the Program Staff is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI management screen  
+When the Program Staff selects the “Responses” tab  
+Then the Program Staff is presented with information regarding the responses submitted by Vendors to the RFI.
+
+###### Scenario: Program Staff wants to view the profile of the Vendor that submitted a response to the RFI
+Given the Program Staff is signed in  
+And has agreed to the terms and conditions  
+And is viewing the “Responses” tab of the RFI page  
+When the Program Staff clicks the Vendor Name’s link  
+Then a new tab is opened by the Program Staff’s browser  
+And the Program Staff is directed to the Vendor’s profile.
+
+###### Scenario: Program Staff wants to email the Vendor that submitted a response to the RFI
+Given the Program Staff is signed in  
+And has agreed to the terms and conditions  
+And is viewing the “Responses” tab of the RFI page  
+When the Program Staff clicks the Vendor’s email address link  
+Then the Program Staff’s email client is opened  
+And an email draft is created and addressed to the Vendor’s email address.
+
+###### Scenario: Program Staff wants to download an attachment submitted by a Vendor in response to the RFI
+Given the Program Staff is signed in  
+And has agreed to the terms and conditions  
+And is viewing the “Responses” tab of the RFI page  
+When the Program Staff clicks the attachment link  
+Then the attachment is downloaded by the Program Staff’s browser.
 
 #### Buyers
 
-TO DO
-
 #### Vendors
 
-TODO
+###### Scenario: Vendor wants to respond to an RFI and has agreed to the terms and conditions
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI description page  
+When the Vendor clicks “Respond to RFI”   
+Then the Vendor is directed to the RFI response page. 
+
+###### Scenario: Vendor wants to respond to an RFI and has not agreed to the terms and conditions
+Given the Vendor is signed in  
+And has not agreed to the terms and conditions  
+And is viewing the RFI description page  
+When the Vendor clicks “Respond to RFI”  
+Then the Vendor is presented with an alert to review the terms and conditions.
+
+###### Scenario: Vendor wants to navigate to the RFI description from the RFI response page
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI response page  
+When the Vendor clicks the RFI description link  
+Then the Vendor is directed to the RFI description page.
+
+###### Scenario: Vendor wants to add an attachment to the Vendor’s response to the RFI
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI response page  
+When the Vendor clicks “Add Attachment”  
+Then the Vendor is presented with a window to select the file to be attached to the RFI response.
+
+###### Scenario: Vendor wants to edit an attachment’s title for the Vendor’s response to the RFI
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI response page  
+And has added at least one attachment  
+When the Vendor clicks the input field for the attachment’s filename  
+Then the Vendor may enter a new title for the attachment.
+
+###### Scenario: Vendor wants to remove an attachment from the Vendor’s response to the RFI
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI response page  
+And has added at least one attachment  
+When the Vendor clicks the trash can icon next to the input field for the attachment’s title  
+Then the attachment is removed.
+
+###### Scenario: Vendor wants to cancel the Vendor’s response to the RFI
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI response page  
+When the Vendor clicks “Cancel”  
+Then the Vendor is directed back to the RFI description page.
+
+###### Scenario: Vendor has added at least one attachment to the Vendor’s response to the RFI
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI response page  
+When the Vendor adds at least one attachment  
+Then the “Submit Response” button becomes active.
+
+###### Scenario: Vendor wants to submit the Vendor’s response to the RFI
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI response page  
+And has added at least one attachment  
+When the Vendor clicks “Submit Response”  
+Then the Vendor is presented with an alert to confirm that the Vendor wants to submit the Vendor’s response to the RFI.
+
+###### Scenario: Vendor wants to confirm the Vendor’s request to submit the Vendor’s response to the RFI
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the alert to confirm that the Vendor wants to submit the Vendor’s response to the RFI  
+When the Vendor clicks “Submit Response”  
+Then the alert closes  
+And the Vendor is directed to a confirmation page  
+And the Vendor is sent an email to confirm that the Vendor’s response to the RFI has been received.
+
+###### Scenario: Vendor wants to cancel the Vendor’s request to submit the Vendor’s response to the RFI
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the alert to confirm that the Vendor wants to submit the Vendor’s response to the RFI  
+When the Vendor clicks “Cancel”  
+Then the alert closes  
+And the Vendor is directed back to the RFI response page.
 
 #### Anonymous Users
 
-TODO
+###### Scenario: User wants to respond to an RFI that the User is viewing
+Given the User is viewing the RFI description page  
+And is not signed in  
+When the User clicks “Respond to RFI”  
+Then the User is directed to the sign in page.
 
 #### All Users
-
-TODO
 
 ### Discovery Day Sessions
 
