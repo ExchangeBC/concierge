@@ -751,23 +751,415 @@ And the User is directed to the RFIs page.
 
 #### Program Staff
 
-TODO
+##### Viewing RFIs
+
+###### Scenario: Program Staff wants to view the details of an RFI and has accepted the terms and conditions  
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI listing page  
+When the Program Staff clicks the RFI’s title  
+Then the Program Staff is directed to the RFI’s management page.
+
+###### Scenario: Program Staff wants to view the details of an RFI and has not accepted the terms and conditions  
+Given the Program Staff is signed in  
+And has not accepted the terms and conditions  
+And is viewing the RFI listing page  
+When the Program Staff clicks the RFI’s title  
+Then the Program Staff is presented with an alert to review the terms and conditions.
+
+###### Scenario: Program Staff wants to view the RFI description page
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+When the Program Staff clicks "View RFI"  
+Then the Program Staff is directed to the RFI's description page.
+
+###### Scenario: Program Staff wants to view an attachment located on the RFI description page  
+Given the Program Staff is viewing the RFI description page  
+And there is at least one attachment associated with the RFI  
+When the Program Staff clicks the attachment link  
+Then the attachment is downloaded by the Program Staff’s browser.
+
+##### RFI Management
+
+###### Scenario: Program Staff wants to create an RFI and has accepted the terms and conditions
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI listing page  
+When the Program Staff clicks “Create an RFI”  
+Then the Program Staff is directed to “Create a Request for Information (RFI)” page.
+
+###### Scenario: Program Staff wants to create an RFI and has not accepted the terms and conditions
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI listing page  
+When the Program Staff clicks “Create an RFI”  
+Then the Program Staff is presented with an alert to review the terms and conditions.
+
+###### Scenario: Program Staff has begun creating an RFI and wants to cancel
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+When the Program Staff clicks “Cancel”  
+Then the Program Staff is presented with an alert to confirm that the Program Staff wants to cancel creating an RFI.
+
+###### Scenario: Program Staff wants to confirm the cancellation of creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to cancel creating an RFI  
+When the Program Staff clicks, “Yes, I want to cancel”  
+Then the alert closes  
+And the information that the Program Staff entered on the "Create a Request for Information (RFI)" page is not saved  
+And the Program Staff is directed to the RFI listing page.
+
+###### Scenario: Program Staff wants to cancel the cancellation of creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to cancel creating an RFI  
+When the Program Staff clicks “Go Back”  
+Then the alert closes  
+And the Program Staff is directed back to the “Create a Request for Information (RFI)” page.
+
+###### Scenario: Program Staff has supplied all required information for creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+When the Program Staff has supplied all required information for the RFI  
+Then the “Publish RFI” button becomes active  
+And the “Preview RFI” button becomes active.
+
+###### Scenario: Program Staff has not supplied all required information for creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+When the Program Staff has not supplied all required information for the RFI  
+Then the “Publish RFI” button remains inactive  
+And the “Preview RFI” button remains inactive.
+
+###### Scenario: Program Staff wants to see a preview of the RFI before it is published
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+And has supplied all required information for the RFI  
+When the Program Staff clicks “Preview RFI”  
+Then the Program Staff is directed to the RFI description page.
+
+###### Scenario: Program Staff has supplied all required information and attempts to publish an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+And has supplied all required information for the RFI  
+When the Program Staff clicks “Publish RFI”  
+Then the Program Staff is presented with an alert to confirm that the Program Staff wants to publish the RFI.
+
+###### Scenario: Program Staff wants to confirm the publishing of an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to publish the RFI  
+When the Program Staff clicks, “Yes, publish RFI”  
+Then the alert closes  
+And the RFI is published to the RFI listing page  
+And the Program Staff is directed to RFI management page.
+
+###### Scenario: Program Staff wants to cancel the publishing of an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to publish the RFI  
+When the Program Staff clicks “Cancel”  
+Then the alert closes  
+And the Program Staff is directed back to the “Create a Request for Information (RFI)” page.
+
+###### Scenario: Program Staff wants to add commodity code when creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+When the Program Staff clicks “Add” to add a Commodity Code  
+Then an additional Commodity Code dropdown field will appear.
+
+###### Scenario: Program Staff wants to remove a commodity code when creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+When the Program Staff clicks the trash can icon next to a Commodity Code dropdown field  
+Then the Commodity Code dropdown field is removed.
+
+###### Scenario: Program Staff wants to add an attachment when creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+When the Program Staff clicks “Add Attachment”  
+Then the Program Staff is presented with a window to select the file to be attached to the RFI.
+
+###### Scenario: Program Staff wants to edit an attachment’s title when creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+And has added at least one attachment  
+When the Program Staff clicks the input field for the attachment’s file name  
+Then the Program Staff may enter a new title for the attachment.
+
+###### Scenario: Program Staff wants to remove an attachment when creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+And has added at least one attachment  
+When the Program Staff clicks the trash can icon next to the input field for the attachment’s title  
+Then the attachment is removed.
+
+###### Scenario: Program Staff wants to add an addendum when creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+When the Program Staff clicks “Add Addendum”  
+Then an “Addendum” textarea box will appear at the top of the “Addenda” section.
+
+###### Scenario: Program Staff wants to edit an addendum when creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+And has added at least one addendum  
+When the Program Staff clicks the “Addendum” textarea box  
+Then the Program Staff may enter new text or replace existing text within the “Addendum” textarea box.
+
+###### Scenario: Program Staff wants to remove addendum when creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+And has added at least one addendum  
+When the Program Staff clicks the trash can icon next to the “Addendum” textarea box  
+Then the addendum is removed.
+
+###### Scenario: Program Staff wants to edit a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Details” tab of the RFI management page  
+When the Program Staff clicks “Edit Details”  
+Then the RFI becomes open for editing by the Program Staff.
+
+###### Scenario: Program Staff wants to cancel editing a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff   
+When the Program Staff clicks “Cancel”  
+Then the Program Staff is presented with an alert to confirm that the Program Staff wants to cancel the editing of the RFI.
+
+###### Scenario: Program Staff wants to confirm the cancellation of editing an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to cancel the editing of the RFI  
+When the Program Staff clicks, “Yes, I want to cancel”  
+Then the alert closes  
+And the Program Staff's changes to the RFI are not saved  
+And the Program Staff is directed back to the RFI management page.
+
+###### Scenario: Program Staff wants to cancel the cancellation of editing an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm the cancellation of editing an RFI  
+When the Program Staff clicks “Go Back”  
+Then the alert closes  
+And the Program Staff is directed back to the RFI management page.
+
+###### Scenario: Program Staff has supplied all required information when editing a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff  
+When the Program Staff has supplied all required information for the RFI  
+Then the “Publish Changes” button remains active  
+And the “Preview Changes” button remains active.
+
+###### Scenario: Program Staff has not supplied all required information when editing a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff   
+When the Program Staff has not supplied all required information for the RFI  
+Then the “Publish Changes” button becomes inactive  
+And the “Preview Changes” button becomes inactive.
+
+###### Scenario: Program Staff wants to see a preview of the RFI before the Program Staff’s changes are published
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff  
+And has supplied all required information for the RFI  
+When the Program Staff clicks “Preview Changes”  
+Then the Program Staff is directed to the RFI description page.
+
+###### Scenario: Program Staff attempts to publish changes to a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff  
+When the Program Staff clicks “Publish Changes”  
+Then the Program Staff is presented with an alert to confirm that the Program Staff wants to publish changes to the RFI.
+
+###### Scenario: Program Staff wants to confirm publishing changes to a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to publish changes to the RFI  
+When the Program Staff clicks “Yes, publish changes”  
+Then the alert closes  
+And the RFI is updated with the new information supplied by the Program Staff  
+And the Program Staff is directed back to the RFI management page.
+
+###### Scenario: Program Staff wants to cancel publishing changes to a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to publish changes to the RFI  
+When the Program Staff clicks “Cancel”  
+Then the alert closes  
+And the Program Staff’s changes made to the RFI (if any) are not saved  
+And the Program Staff is directed back to the RFI management page.
+
+###### Scenario: Program Staff wants to add commodity code when editing a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff   
+When the Program Staff clicks “Add” to add a Commodity Code  
+Then an additional Commodity Code dropdown field will appear.
+
+###### Scenario: Program Staff wants to remove a commodity code when editing a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff  
+When the Program Staff clicks the trash can icon next to a Commodity Code dropdown field  
+Then the Commodity Code dropdown field is removed.
+
+###### Scenario: Program Staff wants to add an attachment when editing a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff   
+When the Program Staff clicks “Add Attachment”  
+Then the Program Staff is presented with a window to select the file to be attached to the RFI.
+
+###### Scenario: Program Staff wants to edit an attachment’s title that was attached when editing a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff   
+And has added at least one attachment while editing the published RFI  
+When the Program Staff clicks the input field for the attachment’s file name  
+Then the Program Staff may enter a new title for the attachment.
+
+###### Scenario: Program Staff wants to edit an attachment’s title that was attached during the creation of the published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff   
+And at least one attachment was attached when the RFI was created  
+When the Program Staff clicks the input field for the attachment’s file name  
+Then the Program Staff is not able to enter a new title for the attachment.
+
+###### Scenario: Program Staff wants to remove an attachment when editing a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff  
+And at least one attachment has been added to the RFI  
+When the Program Staff clicks the trash can icon next to the input field for the attachment’s title   
+Then the attachment is removed.
+
+###### Scenario: Program Staff wants to add an addendum when editing an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff  
+When the Program Staff clicks “Add Addendum”  
+Then an “Addendum” textarea box will appear at the top of the “Addenda” section.
+
+###### Scenario: Program Staff wants to edit an addendum when editing an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff  
+And at least one addendum has been added to the RFI  
+When the Program Staff clicks the “Addendum” textarea box  
+Then the Program Staff may enter new text or replace existing text within the “Addendum” textarea box.
+
+###### Scenario: Program Staff wants to remove addendum when editing an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff  
+And at least one addendum has been added to the RFI  
+When the Program Staff clicks the trash can icon next to the “Addendum” textarea box  
+Then the addendum is removed.
 
 #### Buyers
 
-TODO
+##### Viewing RFIs
+
+###### Scenario: Buyer wants to view the details of an RFI  
+Given the Buyer is viewing the RFI listing page  
+When the Buyer clicks the RFI’s title  
+Then the Buyer is directed to the RFI description page.
+
+###### Scenario: Buyer wants to view an attachment associated with an RFI  
+Given the Buyer is viewing the RFI description page  
+And there is at least one attachment associated with the RFI  
+When the Buyer clicks the attachment link  
+Then the attachment is downloaded by the Buyer’s browser.
+
+###### Scenario: Buyer wants to email the contact associated with an RFI  
+Given the Buyer is viewing the RFI description page  
+When the Buyer clicks the RFI contact’s email link  
+Then the Buyer’s email client is opened  
+And an email draft is created and addressed to the RFI contact’s email address.
 
 #### Vendors
 
-TODO
+##### Viewing RFIs
+
+###### Scenario: Vendor wants to view the details of an RFI  
+Given the Vendor is viewing the RFI listing page  
+When the Vendor clicks the RFI’s title  
+Then the Vendor is directed to the RFI description page.
+
+###### Scenario: Vendor wants to view an attachment associated with an RFI  
+Given the Vendor is viewing the RFI description page  
+And there is at least one attachment associated with the RFI  
+When the Vendor clicks the attachment link  
+Then the attachment is downloaded by the Vendor’s browser.
 
 #### Anonymous Users
 
-TODO
+##### Viewing RFIs
+
+###### Scenario: User wants to view the details of an RFI  
+Given the User is viewing the RFI listing page  
+When the User clicks the RFI’s title  
+Then the User is directed to the RFI description page.
+
+###### Scenario: User wants to view an attachment associated with an RFI  
+Given the User is viewing the RFI description page  
+And there is at least one attachment associated with the RFI  
+When the User clicks the attachment link  
+Then the attachment is downloaded by the User’s browser.
 
 #### All Users
 
-TODO
+##### Viewing RFIs
+
+###### Scenario: User wants to view a list of all RFIs  
+Given the User is viewing the landing page (or any other page within the web app)  
+When the User clicks “RFIs”  
+Then the User is directed to the RFI listing page.
+
+###### Scenario: User wants to filter the list of RFIs  
+Given the User is viewing the RFI listing page  
+When the User selects a filter using an available dropdown  
+Then the RFI listing table data is filtered accordingly.
+
+###### Scenario: User wants to search the list of RFIs  
+Given the User is viewing the RFI listing page  
+When the User enters at least two characters into the available search bar  
+Then the RFI listing table data is filtered accordingly.
 
 ### Requests for Information Responses
 
@@ -777,7 +1169,7 @@ TODO
 
 #### Buyers
 
-TODO
+TO DO
 
 #### Vendors
 
