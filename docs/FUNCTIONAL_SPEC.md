@@ -165,15 +165,231 @@ Then the Buyer's verification status is changed to the Program Staff's selection
 
 #### Program Staff
 
-TODO
+##### Sign Up
+
+###### Scenario: Program Staff wants to create a Program Staff account  
+Given the Program Staff is viewing the users listing page  
+When the Program Staff clicks "Create a Program Staff Account"  
+Then the Program Staff is directed to the sign up: step 1 page for Program Staff.
+
+###### Scenario: Program Staff supplies valid email address and password (and password confirmation) when creating a Program Staff account  
+Given the Program Staff is viewing the sign up: step 1 page for Program Staff  
+When the Program Staff enters a valid email address and password (and password confirmation) correctly  
+And clicks "Next"  
+Then the Program Staff is directed to the sign up: step 2 page for Program Staff.
+
+###### Scenario: Program Staff supplies email address already associated with an account when creating a Program Staff account
+Given the Program Staff is viewing the sign up: step 1 page for Program Staff  
+And the new Program Staff has an active account  
+When the Program Staff enters a valid email address and password (and password confirmation) correctly  
+And clicks "Next"  
+Then the Program Staff is directed to the sign up: step 2 page for Program Staff.
+
+###### Scenario: Program Staff supplies email address already associated with an account and has completed the registration process for a Program Staff account
+Given the Program Staff is viewing the sign up: step 2 page for Program Staff  
+And the new Program Staff has an active account  
+When the Program Staff clicks "Create Account"  
+Then the Program Staff is redirected to the sign up: step 1 page for Program Staff  
+And the Program Staff is presented with an error message.
+
+###### Scenario: Program Staff supplies an invalid email address when creating a Program Staff account  
+Given the Program Staff is viewing the sign up: step 1 page for Program Staff  
+When the Program Staff enters an invalid email address and password (and password confirmation) correctly  
+Then the Program Staff is presented with an error message, "Please enter a valid email."  
+
+###### Scenario: Program Staff supplies password confirmation incorrectly when creating a Program Staff account  
+Given the Program Staff is viewing the sign up: step 1 page for Program Staff  
+When the Program Staff enters a valid email address and password but re-enter the password confirmation incorrectly  
+Then the Program Staff is presented with the error message, "Password confirmation doesn’t match original password."  
+
+###### Scenario: Program Staff completes registration process for creating a Program Staff account  
+Given the Program Staff is viewing the sign up: step 2 page for Program Staff  
+And the new Program Staff does not already have an account associated with the email address   
+When the Program Staff supplies all required information  
+And clicks "Create Account"  
+Then the Program Staff is directed to the user listing page  
+And the new Program Staff will receive  
+And the new Program Staff is sent an email to confirm that the Program Staff’s account has been created.  
+
+##### Managing User Profiles
+
+###### Scenario: Program Staff wants to view a list of all system users  
+Given the Program Staff is signed in    
+When the Program Staff clicks "Users" in the main navigation bar  
+Then the Program Staff is directed to the user listing page.
+
+###### Scenario: Program Staff wants to filter the list of all system users  
+Given the Program Staff is signed in  
+And is viewing the user listing page  
+When the Program Staff selects a filter using an available dropdown  
+Then the user listing table data is filtered accordingly.
+
+###### Scenario: Program Staff wants to search the list of all system users  
+Given the Program Staff is signed in  
+And is viewing the user listing page  
+When the Program Staff enters at least two characters into the available search bar  
+Then the user listing table data is filtered accordingly.
+ 
+###### Scenario: Program Staff wants to view another user's profile and has accepted the terms and conditions  
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the user listing page  
+When the Program Staff clicks the user's name to view the user's profile  
+Then the Program Staff is directed to the appropriate user's profile page.
+
+###### Scenario: Program Staff wants to view another user's profile and has not accepted the terms and conditions  
+
+Given the Program Staff is signed in  
+And has not accepted the terms and conditions
+And is viewing the user listing page  
+When the Program Staff clicks the user's name to view the user's profile  
+Then the Program Staff is presented with an alert to review the terms and conditions.
+
+###### Scenario: Program Staff wants to update a Public Sector Buyer's account status  
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing a Buyer's user profile  
+When the Program Staff changes the Buyer's account status using the available dropdown  
+Then the Buyer's account status is changed to the Program Staff's selection  
+And the Buyer is sent an email to notify of the account status change.
+
+###### Scenario: Program Staff wants to initiate the deactivation of another Program Staff's account  
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing a Program Staff's user profile  
+When the Program Staff clicks "Deactivate Account"  
+Then the Program Staff is presented with an alert to confirm the deactivation of a Program Staff's account.
+
+###### Scenario: Program Staff wants to confirm the deactivation of another Program Staff's account  
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm the deactivation of a Program Staff's account  
+When the Program Staff clicks "Yes, deactivate this account"  
+Then the other Program Staff's account is deactivated  
+And the other Program Staff is sent an email notification  
+And the Program Staff is directed to the user listing page.
+
+###### Scenario: Program Staff wants to cancel the deactivation of another Program Staff's account  
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm the deactivation of a Program Staff's account  
+When the Program Staff clicks "Cancel"  
+Then the alert closes  
+And the Program Staff is directed back to the other Program Staff's user profile.
 
 #### Buyers
 
-TODO
+##### User Profile
+
+###### Scenario: Buyer wants to add an Industry Sector when editing the Buyer’s user profile  
+Given the Buyer is signed in  
+And the Buyer is viewing the Buyer’s user profile  
+And the Buyer’s user profile is open for editing by the Buyer  
+When the Buyer clicks “Add” to add an Industry Sector  
+Then an additional Industry Sector dropdown field will appear.
+
+###### Scenario: Buyer wants to add an Area of Interest when editing the Buyer’s user profile  
+Given the Buyer is signed in  
+And the Buyer is viewing the Buyer’s user profile  
+And the Buyer’s user profile is open for editing by the Buyer  
+When the Buyer clicks “Add” to add an Area of Interest    
+Then an additional Area of Interest dropdown field will appear.
+
+###### Scenario: Buyer wants to remove an Industry Sector when editing the Buyer’s user profile  
+Given the Buyer is signed in  
+And the Buyer is viewing the Buyer’s user profile  
+And the Buyer’s user profile is open for editing by the Buyer  
+And at least two Industry Sector dropdown fields are present  
+When the Buyer clicks the trash can icon next to an Industry Sector dropdown field  
+Then the Industry Sector dropdown field is removed.
+
+###### Scenario: Buyer wants to remove an Area of Interest when editing the Buyer’s user profile  
+Given the Buyer is signed in  
+And the Buyer is viewing the Buyer’s user profile  
+And the Buyer’s user profile is open for editing by the Buyer  
+And at least two Area of Interest dropdown fields are present  
+When the Buyer clicks the trash can icon next to an Area of Interest dropdown field  
+Then the Area of Interest dropdown field is removed.
+
+##### Account Deactivation
+
+###### Scenario: Buyer wants to initiate the deactivation of the Buyer's account  
+Given the Buyer is signed in   
+And the Buyer is viewing the Buyer's user profile  
+When the Buyer clicks "Deactivate Account"  
+Then the Buyer is presented with an alert to confirm the deactivation of the Buyer's account.
+
+###### Scenario: Buyer wants to confirm the deactivation of the Buyer's account  
+Given the Buyer is signed in  
+And is viewing the alert to confirm the deactivation of the Buyer's account  
+When the Buyer clicks "Yes, deactivate my account"  
+Then the Buyer's account is deactivated  
+And the Buyer is sent an email notification  
+And the Buyer is directed to the landing page.
+
+###### Scenario: Buyer wants to cancel the deactivation of the Buyer's account  
+Given the Buyer is signed in  
+And is viewing the alert to confirm the deactivation of the Buyer's account  
+When the Buyer clicks "Cancel"  
+Then the alert closes  
+And the Buyer is directed back to the Buyer's user profile.
 
 #### Vendors
 
-TODO
+##### User Profile
+
+###### Scenario: Vendor wants to add an Industry Sector when editing the Vendor’s user profile  
+Given the Vendor is signed in  
+And the Vendor is viewing the Vendor’s user profile  
+And the Vendor’s user profile is open for editing by the Vendor  
+When the Vendor clicks “Add” to add an Industry Sector  
+Then an additional Industry Sector dropdown field will appear.
+
+###### Scenario: Vendor wants to add an Area of Interest when editing the Vendor’s user profile  
+Given the Vendor is signed in  
+And the Vendor is viewing the Vendor’s user profile  
+And the Vendor’s user profile is open for editing by the Vendor  
+When the Vendor clicks “Add” to add an Area of Interest    
+Then an additional Area of Interest dropdown field will appear.
+
+###### Scenario: Vendor wants to remove an Industry Sector when editing the Vendor’s user profile  
+Given the Vendor is signed in  
+And the Vendor is viewing the Vendor’s user profile  
+And the Vendor’s user profile is open for editing by the Vendor  
+And at least two Industry Sector dropdown fields are present  
+When the Vendor clicks the trash can icon next to an Industry Sector dropdown field  
+Then the Industry Sector dropdown field is removed.
+
+###### Scenario: Vendor wants to remove an Area of Interest when editing the Vendor’s user profile  
+Given the Vendor is signed in  
+And the Vendor is viewing the Vendor’s user profile  
+And the Vendor’s user profile is open for editing by the Vendor  
+And at least two Area of Interest dropdown fields are present  
+When the Vendor clicks the trash can icon next to an Area of Interest dropdown field  
+Then the Area of Interest dropdown field is removed.
+
+##### Account Deactivation
+
+###### Scenario: Vendor wants to initiate the deactivation of the Vendor's account  
+Given the Vendor is signed in   
+And the Vendor is viewing the Vendor's user profile  
+When the Vendor clicks "Deactivate Account"  
+Then the Vendor is presented with an alert to confirm the deactivation of the Vendor's account.
+
+###### Scenario: Vendor wants to confirm the deactivation of the Vendor's account  
+Given the Vendor is signed in  
+And is viewing the alert to confirm the deactivation of the Vendor's account  
+When the Vendor clicks "Yes, deactivate my account"  
+Then the Vendor's account is deactivated  
+And the Vendor is sent an email notification  
+And the Vendor is directed to the landing page.
+
+###### Scenario: Vendor wants to cancel the deactivation of the Vendor's account  
+Given the Vendor is signed in  
+And is viewing the alert to confirm the deactivation of the Vendor's account  
+When the Vendor clicks "Cancel"  
+Then the alert closes  
+And the Vendor is directed back to the Vendor's user profile.
 
 #### Anonymous Users
 
@@ -216,14 +432,14 @@ When the User enters a valid email address and password (and password confirmati
 And clicks "Next"  
 Then the User is directed to the sign up: step 3 page for Public Sector Buyers.
 
-###### Scenario: User supplies email address already associated with a Public Sector Buyer account when signing up for a Public Sector Buyer account  
+###### Scenario: User supplies email address already associated with an account when signing up for a Public Sector Buyer account  
 Given the User is viewing the sign up: step 2 page for Public Sector Buyers  
 And the User has an active account  
 When the User enters a valid email address and password (and password confirmation) correctly  
 And clicks "Next"  
 Then the User is directed to the sign up: step 3 page for Public Sector Buyers.
 
-###### Scenario: User supplies email address already associated with a Public Sector Buyer account and has completed the registration process  
+###### Scenario: User supplies email address already associated with an account and has completed the registration process for a Public Sector Buyer account 
 Given the User is viewing the sign up: step 4 page for Public Sector Buyers  
 And the User has an active account  
 When the User clicks "Create Account"  
@@ -277,7 +493,82 @@ And at least two Area of Interest dropdown fields are present
 When the User clicks the trash can icon next to an Area of Interest dropdown field  
 Then the Area of Interest dropdown field is removed.
 
-TO DO: VENDOR SIGN UP, PROGRAM STAFF SIGN UP  
+###### Scenario: User supplies valid email address and password (and password confirmation) when signing up for a Vendor account  
+Given the User is viewing the sign up: step 2 page for Vendors  
+When the User enters a valid email address and password (and password confirmation) correctly  
+And clicks "Next"  
+Then the User is directed to the sign up: step 3 page for Vendors.  
+
+###### Scenario: User supplies email address already associated with an account when signing up for a Vendor account  
+Given the User is viewing the sign up: step 2 page for Vendors  
+And the User has an active account  
+When the User enters a valid email address and password (and password confirmation) correctly  
+And clicks "Next"  
+Then the User is directed to the sign up: step 3 page for Vendors.  
+
+###### Scenario: User supplies email address already associated with an account and has completed the registration process for a Vendor account  
+Given the User is viewing the sign up: step 4 page for Vendors  
+And the User has an active account  
+When the User clicks "Create Account"  
+Then the User is redirected to the sign up: step 2 page for Vendors  
+And the User is presented with an error message.  
+
+###### Scenario: User supplies an invalid email address when signing up for a Vendor account  
+Given the User is viewing the sign up: step 2 page for Vendors  
+When the User enters an invalid email address and password (and password confirmation) correctly  
+Then the User is presented with an error message, "Please enter a valid email."  
+
+###### Scenario: User supplies password confirmation incorrectly when signing up for a Vendor account  
+Given the User is viewing the sign up: step 2 page for Vendors  
+When the User enters a valid email address and password but re-enter the password confirmation incorrectly  
+Then the User is presented with the error message, "Password confirmation doesn’t match original password."  
+
+###### Scenario: User completes step 3 of 4 when signing up for a Vendor account  
+Given the User is viewing the sign up: step 3 page for Vendors  
+When the User provides all required information  
+And clicks "Next"  
+Then the User is directed to the sign up: step 4 page for Vendors.  
+
+###### Scenario: User’s Head Office Location is located within British Columbia  
+Given the User is viewing the sign up: step 3 page for Vendors  
+When the User selects “British Columbia” from the “Head Office Location” dropdown list  
+Then the “City” field is presented as a required field  
+
+###### Scenario: User’s Head Office Location is located anywhere other than British Columbia  
+Given the User is viewing the sign up: step 3 page for Vendors  
+When the User selects any option other than “British Columbia” from the “Head Office Location” dropdown list  
+Then the “City” field remains an optional field  
+
+###### Scenario: User completes step 4 of 4 when signing up for a Vendor account  
+Given the User is viewing the sign up: step 4 page for Vendors  
+And the User does not already have an account associated with the email address the User has supplied  
+When the User provides at least one Industry Sector  
+And the User provides at least one Area of Interest  
+And clicks "Create Account"  
+Then the User is directed to the terms and conditions page  
+And the User is sent an email to confirm that the User’s account has been created.  
+
+###### Scenario: User wants to add an Industry Sector when creating a Vendor account  
+Given the User is viewing the sign up: step 4 page for Vendors  
+When the User clicks "Add" to add an Industry Sector  
+Then an additional Industry Sector dropdown field will appear.  
+
+###### Scenario: User wants to add an Area of Interest when creating a Vendor account  
+Given the User is viewing the sign up: step 4 page for Vendors  
+When the User clicks "Add" to add an Area of Interest  
+Then an additional Area of Interest dropdown field will appear.  
+
+###### Scenario: User wants to remove an Industry Sector when creating a Vendor account  
+Given the User is viewing the sign up: step 4 page for Vendors  
+And at least two Industry Sector dropdown fields are present  
+When the User clicks the trash can icon next to an Industry Sector dropdown field  
+Then the Industry Sector dropdown field is removed.  
+
+###### Scenario: User wants to remove an Area of Interest when creating a Vendor account  
+Given the User is viewing the sign up: step 4 page for Vendors  
+And at least two Area of Interest dropdown fields are present  
+When the User clicks the trash can icon next to an Area of Interest dropdown field  
+Then the Area of Interest dropdown field is removed.  
 
 ##### Forgot/Reset Password
 
@@ -340,7 +631,7 @@ Then the User is presented with the error message, "Please enter your correct pa
 ###### Scenario: User supplies current password and new password correctly and new password confirmation incorrectly when attempting to change the User’s password  
 Given the User is viewing the change password page  
 When the User enters the User’s current password and new password correctly but re-enters the new password confirmation incorrectly  
-Then the User is presented with the error message, "Password confirmation doesn’t match original password."
+Then the User is presented with the error message, "Password confirmation doesn’t match original password."  
 
 #### All Users
 
@@ -387,51 +678,619 @@ And the User is signed in
 When the User views the User’s profile  
 Then the User’s profile will state, "You agreed to the Terms and Conditions on [date] and [time]."
 
-TO DO
+###### Scenario: User is presented with an alert to review the terms and conditions and wants to do so  
+Given the User has not accepted the terms and conditions  
+And has been presented with an alert to review the terms and conditions when attempting to complete an action  
+When the User clicks "Review Terms & Conditions"  
+Then the User is directed to the terms and conditions page.  
+
+###### Scenario: User is presented with an alert to review the terms and conditions and does not want to do so
+Given the User has not accepted the terms and conditions  
+And has been presented with an alert to review the terms and conditions when attempting to complete an action  
+When the User clicks "Go Back"  
+Then the User is directed back to the page the User was previously on.
+
+##### User Profile
+
+###### Scenario: User wants to view the User's user profile  
+Given the User is signed in  
+When the User clicks “My Profile” in the main navigation bar  
+Then the User is directed the User’s user profile.
+
+###### Scenario: User wants to edit the User's user profile  
+Given the User is signed in  
+And the User is viewing the User’s user profile  
+When the User clicks “Edit Profile”  
+Then the User’s user profile becomes open for editing by the User.
+
+###### Scenario: User changes the User’s user profile information and wants to cancel the changes made  
+Given the User is signed in  
+And the User is viewing the User’s user profile  
+And the User’s user profile is open for editing by the User  
+When the User clicks “Cancel”  
+Then the User’s changes made to the User’s user profile (if any) are cancelled  
+And the User’s user profile is closed for editing.
+
+###### Scenario: User changes the User’s user profile information and wants to save the changes made  
+Given the User is signed in  
+And the User is viewing the User’s user profile  
+And the User’s user profile is open for editing by the User  
+When the User changes their user profile information  
+And clicks “Save Changes”  
+And the User has supplied all required information  
+Then the User’s user profile information is updated with the new information supplied by the User  
+And the User’s user profile is closed for editing.
+
+###### Scenario: User attempts to save changes made to User’s user profile and has not provided all required information  
+Given the User is signed in  
+And the User is viewing the User’s user profile  
+And the User’s user profile is open for editing by the User  
+When the User changes their user profile information  
+And the User has not supplied all required information  
+Then the User must supply the required information to activate the “Save Changes” button.
+
+##### Sign Out
+
+###### Scenario: User wants to sign out  
+Given the User is signed in  
+When the User clicks "Sign Out" in the main navigation bar  
+Then the User is signed out  
+And is directed to a confirmation page.
+
+##### Account Reactivation 
+
+###### Scenario: User wants to reactivate the User's deactivated account  
+Given the User is viewing the sign in page  
+And the User has an account that has been deactivated  
+When the User enters the email address and password associated with the User's deactivated account correctly  
+And clicks "Sign In"  
+Then the User's account is reactivated  
+And the User is directed to the RFIs page.
 
 ### Requests for Information
 
 #### Program Staff
 
-TODO
+##### Viewing RFIs
+
+###### Scenario: Program Staff wants to view the details of an RFI and has accepted the terms and conditions  
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI listing page  
+When the Program Staff clicks the RFI’s title  
+Then the Program Staff is directed to the RFI’s management page.
+
+###### Scenario: Program Staff wants to view the details of an RFI and has not accepted the terms and conditions  
+Given the Program Staff is signed in  
+And has not accepted the terms and conditions  
+And is viewing the RFI listing page  
+When the Program Staff clicks the RFI’s title  
+Then the Program Staff is presented with an alert to review the terms and conditions.
+
+###### Scenario: Program Staff wants to view the RFI description page
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+When the Program Staff clicks "View RFI"  
+Then the Program Staff is directed to the RFI's description page.
+
+###### Scenario: Program Staff wants to view an attachment located on the RFI description page  
+Given the Program Staff is viewing the RFI description page  
+And there is at least one attachment associated with the RFI  
+When the Program Staff clicks the attachment link  
+Then the attachment is downloaded by the Program Staff’s browser.
+
+##### RFI Management
+
+###### Scenario: Program Staff wants to create an RFI and has accepted the terms and conditions
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI listing page  
+When the Program Staff clicks “Create an RFI”  
+Then the Program Staff is directed to “Create a Request for Information (RFI)” page.
+
+###### Scenario: Program Staff wants to create an RFI and has not accepted the terms and conditions
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI listing page  
+When the Program Staff clicks “Create an RFI”  
+Then the Program Staff is presented with an alert to review the terms and conditions.
+
+###### Scenario: Program Staff has begun creating an RFI and wants to cancel
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+When the Program Staff clicks “Cancel”  
+Then the Program Staff is presented with an alert to confirm that the Program Staff wants to cancel creating an RFI.
+
+###### Scenario: Program Staff wants to confirm the cancellation of creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to cancel creating an RFI  
+When the Program Staff clicks, “Yes, I want to cancel”  
+Then the alert closes  
+And the information that the Program Staff entered on the "Create a Request for Information (RFI)" page is not saved  
+And the Program Staff is directed to the RFI listing page.
+
+###### Scenario: Program Staff wants to cancel the cancellation of creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to cancel creating an RFI  
+When the Program Staff clicks “Go Back”  
+Then the alert closes  
+And the Program Staff is directed back to the “Create a Request for Information (RFI)” page.
+
+###### Scenario: Program Staff has supplied all required information for creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+When the Program Staff has supplied all required information for the RFI  
+Then the “Publish RFI” button becomes active  
+And the “Preview RFI” button becomes active.
+
+###### Scenario: Program Staff has not supplied all required information for creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+When the Program Staff has not supplied all required information for the RFI  
+Then the “Publish RFI” button remains inactive  
+And the “Preview RFI” button remains inactive.
+
+###### Scenario: Program Staff wants to see a preview of the RFI before it is published
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+And has supplied all required information for the RFI  
+When the Program Staff clicks “Preview RFI”  
+Then the Program Staff is directed to the RFI description page.
+
+###### Scenario: Program Staff has supplied all required information and attempts to publish an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+And has supplied all required information for the RFI  
+When the Program Staff clicks “Publish RFI”  
+Then the Program Staff is presented with an alert to confirm that the Program Staff wants to publish the RFI.
+
+###### Scenario: Program Staff wants to confirm the publishing of an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to publish the RFI  
+When the Program Staff clicks, “Yes, publish RFI”  
+Then the alert closes  
+And the RFI is published to the RFI listing page  
+And the Program Staff is directed to RFI management page.
+
+###### Scenario: Program Staff wants to cancel the publishing of an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to publish the RFI  
+When the Program Staff clicks “Cancel”  
+Then the alert closes  
+And the Program Staff is directed back to the “Create a Request for Information (RFI)” page.
+
+###### Scenario: Program Staff wants to add commodity code when creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+When the Program Staff clicks “Add” to add a Commodity Code  
+Then an additional Commodity Code dropdown field will appear.
+
+###### Scenario: Program Staff wants to remove a commodity code when creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+When the Program Staff clicks the trash can icon next to a Commodity Code dropdown field  
+Then the Commodity Code dropdown field is removed.
+
+###### Scenario: Program Staff wants to add an attachment when creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+When the Program Staff clicks “Add Attachment”  
+Then the Program Staff is presented with a window to select the file to be attached to the RFI.
+
+###### Scenario: Program Staff wants to edit an attachment’s title when creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+And has added at least one attachment  
+When the Program Staff clicks the input field for the attachment’s file name  
+Then the Program Staff may enter a new title for the attachment.
+
+###### Scenario: Program Staff wants to remove an attachment when creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+And has added at least one attachment  
+When the Program Staff clicks the trash can icon next to the input field for the attachment’s title  
+Then the attachment is removed.
+
+###### Scenario: Program Staff wants to add an addendum when creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+When the Program Staff clicks “Add Addendum”  
+Then an “Addendum” textarea box will appear at the top of the “Addenda” section.
+
+###### Scenario: Program Staff wants to edit an addendum when creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+And has added at least one addendum  
+When the Program Staff clicks the “Addendum” textarea box  
+Then the Program Staff may enter new text or replace existing text within the “Addendum” textarea box.
+
+###### Scenario: Program Staff wants to remove addendum when creating an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Create a Request for Information (RFI)” page  
+And has added at least one addendum  
+When the Program Staff clicks the trash can icon next to the “Addendum” textarea box  
+Then the addendum is removed.
+
+###### Scenario: Program Staff wants to edit a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the “Details” tab of the RFI management page  
+When the Program Staff clicks “Edit Details”  
+Then the RFI becomes open for editing by the Program Staff.
+
+###### Scenario: Program Staff wants to cancel editing a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff   
+When the Program Staff clicks “Cancel”  
+Then the Program Staff is presented with an alert to confirm that the Program Staff wants to cancel the editing of the RFI.
+
+###### Scenario: Program Staff wants to confirm the cancellation of editing an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to cancel the editing of the RFI  
+When the Program Staff clicks, “Yes, I want to cancel”  
+Then the alert closes  
+And the Program Staff's changes to the RFI are not saved  
+And the Program Staff is directed back to the RFI management page.
+
+###### Scenario: Program Staff wants to cancel the cancellation of editing an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm the cancellation of editing an RFI  
+When the Program Staff clicks “Go Back”  
+Then the alert closes  
+And the Program Staff is directed back to the RFI management page.
+
+###### Scenario: Program Staff has supplied all required information when editing a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff  
+When the Program Staff has supplied all required information for the RFI  
+Then the “Publish Changes” button remains active  
+And the “Preview Changes” button remains active.
+
+###### Scenario: Program Staff has not supplied all required information when editing a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff   
+When the Program Staff has not supplied all required information for the RFI  
+Then the “Publish Changes” button becomes inactive  
+And the “Preview Changes” button becomes inactive.
+
+###### Scenario: Program Staff wants to see a preview of the RFI before the Program Staff’s changes are published
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff  
+And has supplied all required information for the RFI  
+When the Program Staff clicks “Preview Changes”  
+Then the Program Staff is directed to the RFI description page.
+
+###### Scenario: Program Staff attempts to publish changes to a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff  
+When the Program Staff clicks “Publish Changes”  
+Then the Program Staff is presented with an alert to confirm that the Program Staff wants to publish changes to the RFI.
+
+###### Scenario: Program Staff wants to confirm publishing changes to a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to publish changes to the RFI  
+When the Program Staff clicks “Yes, publish changes”  
+Then the alert closes  
+And the RFI is updated with the new information supplied by the Program Staff  
+And the Program Staff is directed back to the RFI management page.
+
+###### Scenario: Program Staff wants to cancel publishing changes to a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to publish changes to the RFI  
+When the Program Staff clicks “Cancel”  
+Then the alert closes  
+And the Program Staff’s changes made to the RFI (if any) are not saved  
+And the Program Staff is directed back to the RFI management page.
+
+###### Scenario: Program Staff wants to add commodity code when editing a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff   
+When the Program Staff clicks “Add” to add a Commodity Code  
+Then an additional Commodity Code dropdown field will appear.
+
+###### Scenario: Program Staff wants to remove a commodity code when editing a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff  
+When the Program Staff clicks the trash can icon next to a Commodity Code dropdown field  
+Then the Commodity Code dropdown field is removed.
+
+###### Scenario: Program Staff wants to add an attachment when editing a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff   
+When the Program Staff clicks “Add Attachment”  
+Then the Program Staff is presented with a window to select the file to be attached to the RFI.
+
+###### Scenario: Program Staff wants to edit an attachment’s title that was attached when editing a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff   
+And has added at least one attachment while editing the published RFI  
+When the Program Staff clicks the input field for the attachment’s file name  
+Then the Program Staff may enter a new title for the attachment.
+
+###### Scenario: Program Staff wants to edit an attachment’s title that was attached during the creation of the published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff   
+And at least one attachment was attached when the RFI was created  
+When the Program Staff clicks the input field for the attachment’s file name  
+Then the Program Staff is not able to enter a new title for the attachment.
+
+###### Scenario: Program Staff wants to remove an attachment when editing a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff  
+And at least one attachment has been added to the RFI  
+When the Program Staff clicks the trash can icon next to the input field for the attachment’s title   
+Then the attachment is removed.
+
+###### Scenario: Program Staff wants to add an addendum when editing an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff  
+When the Program Staff clicks “Add Addendum”  
+Then an “Addendum” textarea box will appear at the top of the “Addenda” section.
+
+###### Scenario: Program Staff wants to edit an addendum when editing an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff  
+And at least one addendum has been added to the RFI  
+When the Program Staff clicks the “Addendum” textarea box  
+Then the Program Staff may enter new text or replace existing text within the “Addendum” textarea box.
+
+###### Scenario: Program Staff wants to remove addendum when editing an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the RFI management page  
+And the RFI management page is open for editing by the Program Staff  
+And at least one addendum has been added to the RFI  
+When the Program Staff clicks the trash can icon next to the “Addendum” textarea box  
+Then the addendum is removed.
 
 #### Buyers
 
-TODO
+##### Viewing RFIs
+
+###### Scenario: Buyer wants to view the details of an RFI  
+Given the Buyer is viewing the RFI listing page  
+When the Buyer clicks the RFI’s title  
+Then the Buyer is directed to the RFI description page.
+
+###### Scenario: Buyer wants to view an attachment associated with an RFI  
+Given the Buyer is viewing the RFI description page  
+And there is at least one attachment associated with the RFI  
+When the Buyer clicks the attachment link  
+Then the attachment is downloaded by the Buyer’s browser.
+
+###### Scenario: Buyer wants to email the contact associated with an RFI  
+Given the Buyer is viewing the RFI description page  
+When the Buyer clicks the RFI contact’s email link  
+Then the Buyer’s email client is opened  
+And an email draft is created and addressed to the RFI contact’s email address.
 
 #### Vendors
 
-TODO
+##### Viewing RFIs
+
+###### Scenario: Vendor wants to view the details of an RFI  
+Given the Vendor is viewing the RFI listing page  
+When the Vendor clicks the RFI’s title  
+Then the Vendor is directed to the RFI description page.
+
+###### Scenario: Vendor wants to view an attachment associated with an RFI  
+Given the Vendor is viewing the RFI description page  
+And there is at least one attachment associated with the RFI  
+When the Vendor clicks the attachment link  
+Then the attachment is downloaded by the Vendor’s browser.
 
 #### Anonymous Users
 
-TODO
+##### Viewing RFIs
+
+###### Scenario: User wants to view the details of an RFI  
+Given the User is viewing the RFI listing page  
+When the User clicks the RFI’s title  
+Then the User is directed to the RFI description page.
+
+###### Scenario: User wants to view an attachment associated with an RFI  
+Given the User is viewing the RFI description page  
+And there is at least one attachment associated with the RFI  
+When the User clicks the attachment link  
+Then the attachment is downloaded by the User’s browser.
 
 #### All Users
 
-TODO
+##### Viewing RFIs
+
+###### Scenario: User wants to view a list of all RFIs  
+Given the User is viewing the landing page (or any other page within the web app)  
+When the User clicks “RFIs”  
+Then the User is directed to the RFI listing page.
+
+###### Scenario: User wants to filter the list of RFIs  
+Given the User is viewing the RFI listing page  
+When the User selects a filter using an available dropdown  
+Then the RFI listing table data is filtered accordingly.
+
+###### Scenario: User wants to search the list of RFIs  
+Given the User is viewing the RFI listing page  
+When the User enters at least two characters into the available search bar  
+Then the RFI listing table data is filtered accordingly.
 
 ### Requests for Information Responses
 
 #### Program Staff
 
-TODO
+###### Scenario: Program Staff wants to view the responses received for an RFI
+Given the Program Staff is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI management screen  
+When the Program Staff selects the “Responses” tab  
+Then the Program Staff is presented with information regarding the responses submitted by Vendors to the RFI.
+
+###### Scenario: Program Staff wants to view the profile of the Vendor that submitted a response to the RFI
+Given the Program Staff is signed in  
+And has agreed to the terms and conditions  
+And is viewing the “Responses” tab of the RFI page  
+When the Program Staff clicks the Vendor Name’s link  
+Then a new tab is opened by the Program Staff’s browser  
+And the Program Staff is directed to the Vendor’s profile.
+
+###### Scenario: Program Staff wants to email the Vendor that submitted a response to the RFI
+Given the Program Staff is signed in  
+And has agreed to the terms and conditions  
+And is viewing the “Responses” tab of the RFI page  
+When the Program Staff clicks the Vendor’s email address link  
+Then the Program Staff’s email client is opened  
+And an email draft is created and addressed to the Vendor’s email address.
+
+###### Scenario: Program Staff wants to download an attachment submitted by a Vendor in response to the RFI
+Given the Program Staff is signed in  
+And has agreed to the terms and conditions  
+And is viewing the “Responses” tab of the RFI page  
+When the Program Staff clicks the attachment link  
+Then the attachment is downloaded by the Program Staff’s browser.
 
 #### Buyers
 
-TODO
-
 #### Vendors
 
-TODO
+###### Scenario: Vendor wants to respond to an RFI and has agreed to the terms and conditions
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI description page  
+When the Vendor clicks “Respond to RFI”   
+Then the Vendor is directed to the RFI response page. 
+
+###### Scenario: Vendor wants to respond to an RFI and has not agreed to the terms and conditions
+Given the Vendor is signed in  
+And has not agreed to the terms and conditions  
+And is viewing the RFI description page  
+When the Vendor clicks “Respond to RFI”  
+Then the Vendor is presented with an alert to review the terms and conditions.
+
+###### Scenario: Vendor wants to navigate to the RFI description from the RFI response page
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI response page  
+When the Vendor clicks the RFI description link  
+Then the Vendor is directed to the RFI description page.
+
+###### Scenario: Vendor wants to add an attachment to the Vendor’s response to the RFI
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI response page  
+When the Vendor clicks “Add Attachment”  
+Then the Vendor is presented with a window to select the file to be attached to the RFI response.
+
+###### Scenario: Vendor wants to edit an attachment’s title for the Vendor’s response to the RFI
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI response page  
+And has added at least one attachment  
+When the Vendor clicks the input field for the attachment’s filename  
+Then the Vendor may enter a new title for the attachment.
+
+###### Scenario: Vendor wants to remove an attachment from the Vendor’s response to the RFI
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI response page  
+And has added at least one attachment  
+When the Vendor clicks the trash can icon next to the input field for the attachment’s title  
+Then the attachment is removed.
+
+###### Scenario: Vendor wants to cancel the Vendor’s response to the RFI
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI response page  
+When the Vendor clicks “Cancel”  
+Then the Vendor is directed back to the RFI description page.
+
+###### Scenario: Vendor has added at least one attachment to the Vendor’s response to the RFI
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI response page  
+When the Vendor adds at least one attachment  
+Then the “Submit Response” button becomes active.
+
+###### Scenario: Vendor wants to submit the Vendor’s response to the RFI
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the RFI response page  
+And has added at least one attachment  
+When the Vendor clicks “Submit Response”  
+Then the Vendor is presented with an alert to confirm that the Vendor wants to submit the Vendor’s response to the RFI.
+
+###### Scenario: Vendor wants to confirm the Vendor’s request to submit the Vendor’s response to the RFI
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the alert to confirm that the Vendor wants to submit the Vendor’s response to the RFI  
+When the Vendor clicks “Submit Response”  
+Then the alert closes  
+And the Vendor is directed to a confirmation page  
+And the Vendor is sent an email to confirm that the Vendor’s response to the RFI has been received.
+
+###### Scenario: Vendor wants to cancel the Vendor’s request to submit the Vendor’s response to the RFI
+Given the Vendor is signed in  
+And has agreed to the terms and conditions  
+And is viewing the alert to confirm that the Vendor wants to submit the Vendor’s response to the RFI  
+When the Vendor clicks “Cancel”  
+Then the alert closes  
+And the Vendor is directed back to the RFI response page.
 
 #### Anonymous Users
 
-TODO
+###### Scenario: User wants to respond to an RFI that the User is viewing
+Given the User is viewing the RFI description page  
+And is not signed in  
+When the User clicks “Respond to RFI”  
+Then the User is directed to the sign in page.
 
 #### All Users
-
-TODO
 
 ### Discovery Day Sessions
 
