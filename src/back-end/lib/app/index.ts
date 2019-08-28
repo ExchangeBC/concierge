@@ -13,6 +13,8 @@ import RfiPreviewResource from 'back-end/lib/resources/request-for-information/p
 import RfiResponseResource from 'back-end/lib/resources/request-for-information/response';
 import SessionResource from 'back-end/lib/resources/session';
 import UserResource from 'back-end/lib/resources/user';
+import ViResource from 'back-end/lib/resources/vendor-idea';
+import ViLogItemResource from 'back-end/lib/resources/vendor-idea/log-item';
 import FrontEndRouter from 'back-end/lib/routers/front-end';
 import StatusRouter from 'back-end/lib/routers/status';
 import * as FeedbackSchema from 'back-end/lib/schemas/feedback';
@@ -74,7 +76,9 @@ export function createRouter(params: CreateRouterParams): Router<SupportedReques
     RfiResource,
     RfiPreviewResource,
     DiscoveryDayResponseResource,
-    RfiResponseResource
+    RfiResponseResource,
+    ViResource,
+    ViLogItemResource
   ];
 
   // Define CRUD routes.

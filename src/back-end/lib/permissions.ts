@@ -16,6 +16,11 @@ export function isBuyer(session: Session): boolean {
   return !!session.user && session.user.type === UserType.Buyer;
 }
 
+export async function isVerifiedBuyerAndHasAcceptedTerms(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
+  const result = await validateUserId(UserModel, get(session.user, 'id', ''), UserType.Buyer, true, true);
+  return result.tag === 'valid';
+}
+
 export function isProgramStaff(session: Session): boolean {
   return !!session.user && session.user.type === UserType.ProgramStaff;
 }
@@ -27,6 +32,11 @@ export async function isProgramStaffAndHasAcceptedTerms(UserModel: UserSchema.Mo
 
 export function isVendor(session: Session): boolean {
   return !!session.user && session.user.type === UserType.Vendor;
+}
+
+export async function isVendorAndHasAcceptedTerms(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
+  const result = await validateUserId(UserModel, get(session.user, 'id', ''), UserType.Vendor, true);
+  return result.tag === 'valid';
 }
 
 export function isOwnAccount(session: Session, id: string): boolean {
@@ -173,5 +183,34 @@ export function createRfiResponse(session: Session): boolean {
 }
 
 export async function readManyRfiResponses(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
+  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
+}
+
+// Vendor Ideas.
+
+export async function createVendorIdea(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
+  return (await isVendorAndHasAcceptedTerms(UserModel, session));
+}
+
+export async function readOneVendorIdea(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
+  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session))
+      || (await isVendorAndHasAcceptedTerms(UserModel, session))
+      || (await isVerifiedBuyerAndHasAcceptedTerms(UserModel, session));
+}
+
+export async function readManyVendorIdeas(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
+  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session))
+      || (await isVendorAndHasAcceptedTerms(UserModel, session))
+      || (await isVerifiedBuyerAndHasAcceptedTerms(UserModel, session));
+}
+
+export async function updateVendorIdea(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
+  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session))
+      || (await isVendorAndHasAcceptedTerms(UserModel, session));
+}
+
+// Vendor Idea Log Items.
+
+export async function createVendorIdeaLogItem(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
   return (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
 }

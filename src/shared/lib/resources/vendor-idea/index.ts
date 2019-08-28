@@ -1,7 +1,7 @@
 import { PublicFile } from 'shared/lib/resources/file';
 import { PublicUser } from 'shared/lib/resources/user';
 import { LogItemTypeStatus, PublicLogItem } from 'shared/lib/resources/vendor-idea/log-item';
-import { ADT, UserType } from 'shared/lib/types';
+import { ADT, Omit, UserType } from 'shared/lib/types';
 
 export type InnovationDefinition
   = ADT<'newTechnology'>
@@ -67,6 +67,7 @@ export interface PublicVendorIdeaForBuyers extends PublicVendorIdeaBase<UserType
 export interface PublicVendorIdeaForVendors extends PublicVendorIdeaBase<UserType.Vendor> {
   latestVersion: PublicVersionForVendors;
   latestStatus: LogItemTypeStatus;
+  createdBy: PublicUser;
 }
 
 export interface PublicVendorIdeaForProgramStaff extends PublicVendorIdeaBase<UserType.ProgramStaff> {
@@ -114,12 +115,13 @@ export type PublicVendorIdeaSlim
   | PublicVendorIdeaSlimForVendors
   | PublicVendorIdeaSlimForProgramStaff;
 
-// TODO validation error types
-// TODO read many paginated response type
+export interface VersionEligibilityCreateRequestBody extends Omit<VersionEligibility, 'innovationDefinitions'> {
+  innovationDefinitions: any;
+}
 
 export interface CreateRequestBody {
   description: VersionDescription;
-  eligibility: VersionEligibility;
+  eligibility: VersionEligibilityCreateRequestBody;
   contact: VersionContact;
   attachments: string[];
 }
@@ -136,7 +138,7 @@ export interface VersionDescriptionValidationErrors {
 export interface VersionEligibilityValidationErrors {
   existingPurchase?: string[];
   productOffering?: string[];
-  innovationDefinitions?: string[];
+  innovationDefinitions?: string[][];
 }
 
 export interface VersionContactValidationErrors {
@@ -146,6 +148,8 @@ export interface VersionContactValidationErrors {
 }
 
 export interface CreateValidationErrors {
+  permissions?: string[];
+  createdBy?: string[];
   description?: VersionDescriptionValidationErrors;
   eligibility?: VersionEligibilityValidationErrors;
   contact?: VersionContactValidationErrors;
@@ -154,6 +158,6 @@ export interface CreateValidationErrors {
 
 export type UpdateRequestBody = CreateRequestBody;
 
-export interface UpdateValidationErrors extends CreateValidationErrors {
+export interface UpdateValidationErrors extends Omit<CreateValidationErrors, 'createdBy'> {
   vendorIdeaId?: string[];
 }

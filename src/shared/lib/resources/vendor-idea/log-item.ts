@@ -24,6 +24,49 @@ export enum LogItemType {
   GeneralNote = 'GENERAL_NOTE'
 }
 
+export function parseLogItemType(raw: string): LogItemType | null {
+  switch (raw) {
+    case 'APPLICATION_SUBMITTED':
+      return LogItemType.ApplicationSubmitted;
+    case 'UNDER_REVIEW':
+      return LogItemType.UnderReview;
+    case 'EDITS_REQUIRED':
+      return LogItemType.EditsRequired;
+    case 'EDITS_SUBMITTED':
+      return LogItemType.EditsSubmitted;
+    case 'ELIGIBLE':
+      return LogItemType.Eligible;
+    case 'INELIGIBLE':
+      return LogItemType.Ineligible;
+    case 'UNDER_PROCUREMENT':
+      return LogItemType.UnderProcurement;
+    case 'CLOSED_PURCHASED_FROM_VENDOR':
+      return LogItemType.ClosedPurchasedFromVendor;
+    case 'CLOSED_PURCHASED_FROM_ANOTHER_VENDOR':
+      return LogItemType.ClosedPurchasedFromAnotherVendor;
+    case 'CLOSED_OTHER':
+      return LogItemType.ClosedOther;
+    case 'BUYER_INITIATED_INTEREST':
+      return LogItemType.BuyerInitiatedInterest;
+    case 'MATCH_INITIATED':
+      return LogItemType.MatchInitiated;
+    case 'MATCH_MEETING_HELD':
+      return LogItemType.MatchMeetingHeld;
+    case 'PURCHASE_DIRECT_AWARD_WITH_NOI':
+      return LogItemType.PurchaseDirectAwardWithNoi;
+    case 'PURCHASE_DIRECT_AWARD_WITHOUT_NOI':
+      return LogItemType.PurchaseDirectAwardWithoutNoi;
+    case 'PURCHASE_SOLICITATION_BC_BID':
+      return LogItemType.PurchaseSolicitationBcBid;
+    case 'PURCHASE_SOLICITATION_SELECTED_VENDORS':
+      return LogItemType.PurchaseSolicitationSelectedVendors;
+    case 'GENERAL_NOTE':
+      return LogItemType.GeneralNote;
+    default:
+      return null;
+  }
+}
+
 export type LogItemTypeStatus
   = LogItemType.ApplicationSubmitted
   | LogItemType.UnderReview
@@ -50,7 +93,7 @@ export type LogItemTypeOther
 
 export interface PublicLogItem {
   createdAt: Date;
-  createdBy: PublicUser;
+  createdBy?: PublicUser;
   type: LogItemType;
   note?: string;
 }
@@ -98,4 +141,17 @@ export function getLatestStatus(logItems: BasicLogItem[]): LogItemTypeStatus | n
     }
   }
   return foundItem && foundItem.type;
+}
+
+export interface CreateRequestBody {
+  vendorIdeaId: string;
+  type: string;
+  note?: string;
+}
+
+export interface CreateValidationErrors {
+  permissions?: string[];
+  vendorIdeaId?: string[];
+  type?: string[];
+  note?: string[];
 }

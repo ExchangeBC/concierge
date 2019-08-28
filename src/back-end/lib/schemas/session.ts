@@ -6,7 +6,7 @@ import mongooseDefault from 'mongoose';
 import { PublicSession } from 'shared/lib/resources/session';
 import { parseUserType, UserType } from 'shared/lib/types';
 
-interface SessionUser {
+export interface SessionUser {
   id: mongoose.Types.ObjectId;
   type: UserType;
   email: string;

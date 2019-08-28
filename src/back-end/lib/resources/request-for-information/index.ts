@@ -194,7 +194,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
               });
               const rfi = new RfiModel({
                 createdAt: version.createdAt,
-                // TODO publishedAt will need to change when we add drafts.
+                // TODO publishedAt will need to change if drafts are added.
                 publishedAt: version.createdAt,
                 versions: [version],
                 discoveryDayResponses: []
