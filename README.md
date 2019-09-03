@@ -43,7 +43,7 @@ The source code is split into four parts:
 ### Front-End (`src/front-end`)
 
 A TypeScript single-page application using React, Immutable.js, Bootstrap and SASS.
-The front-end is build system is executed by Grunt.
+The front-end's build system is executed by Grunt.
 
 The front-end's state management framework (`src/front-end/lib/framework.tsx`) provides type-safe state management, and is heavily influenced by the [Elm Architecture](https://guide.elm-lang.org/architecture/). If you've used Redux before, you will find this to be very similar since Redux is also based on the Elm Architecture. The main difference is that this project's framework derives greater inspiration from the Elm Architecture and it aims to be far more type-safe than Redux.
 
@@ -232,7 +232,7 @@ Using an environment's deployment shell, run `npm run migrations:up` or `npm run
 
 ### Backups
 
-Automated backups are currently performed once per day at 12:00 AM UTC.  A rolling set of 7 backups is kept (1 weeks worth), and as each new backup that is created it replaces the oldest in the set.  The automated backups are completed using the BC Developers' Exchange Backup Utility located here: https://github.com/BCDevExchange/devexUtils/tree/master/backup
+Automated backups are currently performed once per day at 12:00 AM UTC.  A rolling set of 7 backups is kept (1 week's worth), and as each new backup is created it replaces the oldest in the set.  The automated backups are completed using the BC Developers' Exchange Backup Utility located here: https://github.com/BCDevExchange/devexUtils/tree/master/backup
 
 Backups are stored in OpenShift on a separate provisioned volume.  For instructions on how to deploy and configure the MongoDB backup utility to your OpenShift project, please refer to: https://github.com/BCDevExchange/devexUtils/blob/master/openshift/README.md
 
