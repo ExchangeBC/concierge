@@ -107,7 +107,6 @@ export interface PublicVendorIdeaSlimForVendors extends PublicVendorIdeaSlimBase
 
 export interface PublicVendorIdeaSlimForProgramStaff extends PublicVendorIdeaSlimBase<UserType.ProgramStaff> {
   latestStatus: LogItemTypeStatus;
-  createdBy: PublicUser;
 }
 
 export type PublicVendorIdeaSlim

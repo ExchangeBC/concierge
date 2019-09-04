@@ -139,20 +139,9 @@ async function makePublicVendorIdeaSlimForBuyers(UserModel: UserSchema.Model, vi
 }
 
 async function makePublicVendorIdeaSlimForProgramStaff(UserModel: UserSchema.Model, vi: Data): Promise<PublicVendorIdeaSlimForProgramStaff> {
-  const latestVersion = getLatestVersion(vi);
-  if (!latestVersion) { throw new Error('Vendor Idea does not have at least one version'); }
-  const latestStatus = getLatestStatus(vi.log);
-  if (!latestStatus) { throw new Error('Vendor Idea does not have at least one status'); }
   return {
-    userType: UserType.ProgramStaff,
-    _id: vi._id.toString(),
-    createdAt: vi.createdAt,
-    latestVersion: {
-      createdAt: latestVersion.createdAt,
-      description: latestVersion.description
-    },
-    latestStatus,
-    createdBy: await UserSchema.findPublicUserByIdUnsafely(UserModel, vi.createdBy)
+    ...(await makePublicVendorIdeaSlimForVendors(UserModel, vi)),
+    userType: UserType.ProgramStaff
   };
 }
 

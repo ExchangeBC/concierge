@@ -8,6 +8,8 @@ import * as RfiResource from 'shared/lib/resources/request-for-information';
 import * as RfiResponseResource from 'shared/lib/resources/request-for-information/response';
 import * as SessionResource from 'shared/lib/resources/session';
 import * as UserResource from 'shared/lib/resources/user';
+import * as ViResource from 'shared/lib/resources/vendor-idea';
+import * as LogItemResource from 'shared/lib/resources/vendor-idea/log-item';
 import { HttpMethod, Omit, PaginatedList } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
@@ -456,5 +458,271 @@ export async function readManyRfiResponses(rfiId: string): Promise<ValidOrInvali
       });
     default:
       return invalid(null);
+  }
+}
+
+interface RawLogItem extends Omit<LogItemResource.PublicLogItem, 'createdAt' | 'createdBy'> {
+  createdAt: string;
+  createdBy?: RawUser;
+}
+
+function rawLogItemToPublicLogItem(raw: RawLogItem): LogItemResource.PublicLogItem {
+  return {
+    ...raw,
+    createdAt: new Date(raw.createdAt),
+    createdBy: raw.createdBy && rawUserToPublicUser(raw.createdBy)
+  };
+}
+
+interface RawViVersionForBuyers extends Omit<ViResource.PublicVersionForBuyers, 'createdAt' | 'attachments'> {
+  createdAt: string;
+  attachments: RawFile[];
+}
+
+function rawViVersionForBuyersToPublicViVersionForBuyers(raw: RawViVersionForBuyers): ViResource.PublicVersionForBuyers {
+  return {
+    ...raw,
+    createdAt: new Date(raw.createdAt),
+    attachments: raw.attachments.map(file => rawFileToPublicFile(file))
+  };
+}
+
+interface RawViVersionForProgramStaff extends Omit<ViResource.PublicVersionForProgramStaff, 'createdAt' | 'createdBy' | 'attachments'> {
+  createdAt: string;
+  createdBy: RawUser;
+  attachments: RawFile[];
+}
+
+function rawViVersionForProgramStaffToPublicViVersionForProgramStaff(raw: RawViVersionForProgramStaff): ViResource.PublicVersionForProgramStaff {
+  return {
+    ...raw,
+    createdAt: new Date(raw.createdAt),
+    createdBy: rawUserToPublicUser(raw.createdBy),
+    attachments: raw.attachments.map(file => rawFileToPublicFile(file))
+  };
+}
+
+interface RawViVersionForVendors extends Omit<ViResource.PublicVersionForVendors, 'createdAt' | 'attachments'> {
+  createdAt: string;
+  attachments: RawFile[];
+}
+
+function rawViVersionForVendorsToPublicViVersionForVendors(raw: RawViVersionForVendors): ViResource.PublicVersionForVendors {
+  return {
+    ...raw,
+    createdAt: new Date(raw.createdAt),
+    attachments: raw.attachments.map(file => rawFileToPublicFile(file))
+  };
+}
+
+interface RawViForBuyers extends Omit<ViResource.PublicVendorIdeaForBuyers, 'createdAt' | 'latestVersion'> {
+  createdAt: string;
+  latestVersion: RawViVersionForBuyers;
+}
+
+function rawViForBuyersToPublicViForBuyers(raw: RawViForBuyers): ViResource.PublicVendorIdeaForBuyers {
+  return {
+    ...raw,
+    createdAt: new Date(raw.createdAt),
+    latestVersion: rawViVersionForBuyersToPublicViVersionForBuyers(raw.latestVersion)
+  };
+}
+
+interface RawViForVendors extends Omit<ViResource.PublicVendorIdeaForVendors, 'createdAt' | 'latestVersion' | 'createdBy'> {
+  createdAt: string;
+  latestVersion: RawViVersionForVendors;
+  createdBy: RawUser;
+}
+
+function rawViForVendorsToPublicViForVendors(raw: RawViForVendors): ViResource.PublicVendorIdeaForVendors {
+  return {
+    ...raw,
+    createdAt: new Date(raw.createdAt),
+    latestVersion: rawViVersionForVendorsToPublicViVersionForVendors(raw.latestVersion),
+    createdBy: rawUserToPublicUser(raw.createdBy)
+  };
+}
+
+interface RawViForProgramStaff extends Omit<ViResource.PublicVendorIdeaForProgramStaff, 'createdAt' | 'latestVersion' | 'createdBy' | 'log'> {
+  createdAt: string;
+  latestVersion: RawViVersionForProgramStaff;
+  createdBy: RawUser;
+  log: RawLogItem[];
+}
+
+function rawViForProgramStaffToPublicViForProgramStaff(raw: RawViForProgramStaff): ViResource.PublicVendorIdeaForProgramStaff {
+  return {
+    ...raw,
+    createdAt: new Date(raw.createdAt),
+    latestVersion: rawViVersionForProgramStaffToPublicViVersionForProgramStaff(raw.latestVersion),
+    createdBy: rawUserToPublicUser(raw.createdBy),
+    log: raw.log.map(item => rawLogItemToPublicLogItem(item))
+  };
+}
+
+// Only vendors create vendor ideas.
+export async function createVi(vi: ViResource.CreateRequestBody): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForVendors, ViResource.CreateValidationErrors>> {
+  const response = await request(HttpMethod.Post, 'vendorIdeas', vi);
+  switch (response.status) {
+    case 201:
+      const rawVi = response.data as RawViForVendors;
+      return valid(rawViForVendorsToPublicViForVendors(rawVi));
+    case 400:
+      return invalid(response.data as ViResource.CreateValidationErrors);
+    default:
+      return invalid({});
+  }
+}
+
+interface RawViVersionSlim extends Omit<ViResource.PublicVersionSlim, 'createdAt'> {
+  createdAt: string;
+}
+
+interface RawViSlimForBuyers extends Omit<ViResource.PublicVendorIdeaSlimForBuyers, 'createdAt' | 'latestVersion'> {
+  createdAt: string;
+  latestVersion: RawViVersionSlim;
+}
+
+function rawViSlimForBuyersToPublicViSlimForBuyers(raw: RawViSlimForBuyers): ViResource.PublicVendorIdeaSlimForBuyers {
+  return {
+    ...raw,
+    createdAt: new Date(raw.createdAt),
+    latestVersion: {
+      ...raw.latestVersion,
+      createdAt: new Date(raw.createdAt)
+    }
+  };
+}
+
+function rawViSlimForVendorsToPublicViSlimForVendors(raw: RawViSlimForVendors): ViResource.PublicVendorIdeaSlimForVendors {
+  return {
+    ...raw,
+    createdAt: new Date(raw.createdAt),
+    latestVersion: {
+      ...raw.latestVersion,
+      createdAt: new Date(raw.createdAt)
+    }
+  };
+}
+
+function rawViSlimForProgramStaffToPublicViSlimForProgramStaff(raw: RawViSlimForProgramStaff): ViResource.PublicVendorIdeaSlimForProgramStaff {
+  return {
+    ...raw,
+    createdAt: new Date(raw.createdAt),
+    latestVersion: {
+      ...raw.latestVersion,
+      createdAt: new Date(raw.createdAt)
+    }
+  };
+}
+
+interface RawViSlimForVendors extends Omit<ViResource.PublicVendorIdeaSlimForVendors, 'createdAt' | 'latestVersion'> {
+  createdAt: string;
+  latestVersion: RawViVersionSlim;
+}
+
+interface RawViSlimForProgramStaff extends Omit<ViResource.PublicVendorIdeaSlimForProgramStaff, 'createdAt' | 'latestVersion'> {
+  createdAt: string;
+  latestVersion: RawViVersionSlim;
+}
+
+export async function readManyViForBuyers(id: string): Promise<ValidOrInvalid<PaginatedList<ViResource.PublicVendorIdeaSlimForBuyers>, null>> {
+  const response = await request(HttpMethod.Get, 'vendorIdeas');
+  switch (response.status) {
+    case 200:
+      const raw = response.data as PaginatedList<RawViSlimForBuyers>;
+      return valid({
+        ...raw,
+        items: raw.items.map(i => rawViSlimForBuyersToPublicViSlimForBuyers(i))
+      });
+    default:
+      return invalid(null);
+  }
+}
+
+export async function readManyViForVendors(id: string): Promise<ValidOrInvalid<PaginatedList<ViResource.PublicVendorIdeaSlimForVendors>, null>> {
+  const response = await request(HttpMethod.Get, 'vendorIdeas');
+  switch (response.status) {
+    case 200:
+      const raw = response.data as PaginatedList<RawViSlimForVendors>;
+      return valid({
+        ...raw,
+        items: raw.items.map(i => rawViSlimForVendorsToPublicViSlimForVendors(i))
+      });
+    default:
+      return invalid(null);
+  }
+}
+
+export async function readManyViForProgramStaff(id: string): Promise<ValidOrInvalid<PaginatedList<ViResource.PublicVendorIdeaSlimForProgramStaff>, null>> {
+  const response = await request(HttpMethod.Get, 'vendorIdeas');
+  switch (response.status) {
+    case 200:
+      const raw = response.data as PaginatedList<RawViSlimForProgramStaff>;
+      return valid({
+        ...raw,
+        items: raw.items.map(i => rawViSlimForProgramStaffToPublicViSlimForProgramStaff(i))
+      });
+    default:
+      return invalid(null);
+  }
+}
+
+export async function readOneViForBuyers(id: string): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForBuyers, null>> {
+  const response = await request(HttpMethod.Get, `vendorIdeas/${id}`);
+  switch (response.status) {
+    case 200:
+      const rawVi = response.data as RawViForBuyers;
+      return valid(rawViForBuyersToPublicViForBuyers(rawVi));
+    default:
+      return invalid(null);
+  }
+}
+
+export async function readOneViForProgramStaff(id: string): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForProgramStaff, null>> {
+  const response = await request(HttpMethod.Get, `vendorIdeas/${id}`);
+  switch (response.status) {
+    case 200:
+      const rawVi = response.data as RawViForProgramStaff;
+      return valid(rawViForProgramStaffToPublicViForProgramStaff(rawVi));
+    default:
+      return invalid(null);
+  }
+}
+
+export async function readOneViForVendors(id: string): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForVendors, null>> {
+  const response = await request(HttpMethod.Get, `vendorIdeas/${id}`);
+  switch (response.status) {
+    case 200:
+      const rawVi = response.data as RawViForVendors;
+      return valid(rawViForVendorsToPublicViForVendors(rawVi));
+    default:
+      return invalid(null);
+  }
+}
+
+export async function updateViForVendors(vi: ViResource.UpdateRequestBody, id: string): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForVendors, ViResource.UpdateValidationErrors>> {
+  const response = await request(HttpMethod.Put, `vendorIdeas/${id}`, vi);
+  switch (response.status) {
+    case 200:
+      const rawVi = response.data as RawViForVendors;
+      return valid(rawViForVendorsToPublicViForVendors(rawVi));
+    case 400:
+      return invalid(response.data as ViResource.UpdateValidationErrors);
+    default:
+      return invalid({});
+  }
+}
+
+export async function updateViForProgramStaff(vi: ViResource.UpdateRequestBody, id: string): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForProgramStaff, ViResource.UpdateValidationErrors>> {
+  const response = await request(HttpMethod.Put, `vendorIdeas/${id}`, vi);
+  switch (response.status) {
+    case 200:
+      const rawVi = response.data as RawViForProgramStaff;
+      return valid(rawViForProgramStaffToPublicViForProgramStaff(rawVi));
+    case 400:
+      return invalid(response.data as ViResource.UpdateValidationErrors);
+    default:
+      return invalid({});
   }
 }
