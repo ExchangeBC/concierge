@@ -28,9 +28,15 @@ function getMongoUrl(): string | null {
   const user = get('MONGODB_USER', '');
   const password = get('MONGODB_PASSWORD', '');
   const databaseName = get('MONGODB_DATABASE_NAME', '');
+  const replicaSetName = get('MONGODB_REPLICA_NAME', '')
   // Support OpenShift's environment variables.
   if (host && port && user && password && databaseName) {
-    return `mongodb://${user}:${password}@${host}:${port}/${databaseName}`;
+    const mongoUrl = `mongodb://${user}:${password}@${host}:${port}/${databaseName}`;
+    if (replicaSetName) {
+      return `${mongoUrl}?replicaSet=${replicaSetName}`
+    } else {
+      return mongoUrl
+    }
   } else {
     // Return standard MONGO_URL as fallback.
     return get('MONGO_URL', '') || null;
