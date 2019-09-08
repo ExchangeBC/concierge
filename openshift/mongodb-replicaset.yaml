@@ -62,7 +62,7 @@ parameters:
   - name: VOLUME_CAPACITY
     displayName: "Volume Capacity"
     description: "Volume space available for data, e.g. 512Mi, 2Gi."
-    value: "1Gi"
+    value: "5Gi"
     required: true
 
   - name: MEMORY_LIMIT
@@ -157,8 +157,12 @@ objects:
               readinessProbe:
                 exec:
                   command:
-                    - stat
-                    - /tmp/initialized
+                    - /bin/sh
+                    - '-i'
+                    - '-c'
+                    - >-
+                      mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p
+                      $MONGODB_PASSWORD --eval="quit()"
       volumeClaimTemplates:
         - metadata:
             name: mongo-data
