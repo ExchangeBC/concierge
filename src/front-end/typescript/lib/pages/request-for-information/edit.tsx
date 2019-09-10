@@ -390,7 +390,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   } else if (isDetailsTab && !isEditing) {
     return (
       <FixedBar>
-        <LoadingButton color='primary' onClick={startEditing} loading={isStartEditingLoading} disabled={isDisabled} className='text-nowrap'>
+        <LoadingButton color='primary' onClick={startEditing} loading={isStartEditingLoading} disabled={isLoading} className='text-nowrap'>
           Edit Details
         </LoadingButton>
         <Link route={viewRoute} button color='info' disabled={isLoading} className='ml-3 ml-md-0 mr-md-3 text-nowrap' newTab>View RFI</Link>
@@ -426,10 +426,10 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
     if (hasExistingDiscoveryDay) {
       return (
         <FixedBar>
-          <LoadingButton color='primary' onClick={startEditing} loading={isStartEditingLoading} disabled={isDisabled} className='text-nowrap'>
+          <LoadingButton color='primary' onClick={startEditing} loading={isStartEditingLoading} disabled={isLoading} className='text-nowrap'>
             Edit Discovery Day Session
           </LoadingButton>
-          <LoadingButton color='danger' onClick={cancelEvent} loading={isCancelEventLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
+          <LoadingButton color='danger' onClick={cancelEvent} loading={isCancelEventLoading} disabled={isLoading} className='mx-3 text-nowrap'>
             Cancel Discovery Day Session
           </LoadingButton>
           <Link route={viewRoute} button color='info' disabled={isLoading} className='text-nowrap' newTab>View RFI</Link>
