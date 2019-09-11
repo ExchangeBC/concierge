@@ -11,8 +11,7 @@ export { Option, Value } from 'front-end/lib/views/form-field/lib/select';
 
 export const DEFAULT_SELECT_MULTI_FIELDS = [{
   value: undefined,
-  errors: [],
-  removable: false
+  errors: []
 }];
 
 export interface State {

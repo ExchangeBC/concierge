@@ -38,12 +38,12 @@ function makeCreateRequestBody(body: object): CreateRequestBody {
     eligibility: {
       existingPurchase: get(body, ['eligibility', 'existingPurchase']),
       productOffering: getString(body, ['eligibility', 'productOffering']),
-      innovationDefinitions: getStringArray(body, ['eligibility', 'innovationDefinitions'])
+      innovationDefinitions: get(body, ['eligibility', 'innovationDefinitions'], [])
     },
     contact: {
       name: getString(body, ['contact', 'name']),
       email: getString(body, ['contact', 'email']),
-      phoneNumber: getString(body, ['contact', 'phoneNumber'])
+      phoneNumber: get(body, ['contact', 'phoneNumber'])
     },
     attachments: getStringArray(body, 'attachments')
   };

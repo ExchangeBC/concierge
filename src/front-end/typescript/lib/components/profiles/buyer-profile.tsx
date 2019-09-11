@@ -14,8 +14,7 @@ import { BuyerProfileValidationErrors, validateBuyerProfile } from 'shared/lib/v
 
 const DEFAULT_SELECT_MULTI_FIELDS = [{
   value: undefined,
-  errors: [],
-  removable: false
+  errors: []
 }];
 
 export type ValidationErrors = BuyerProfileValidationErrors;
@@ -147,7 +146,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
     }),
     contactCity: ShortText.init({
       id: 'buyer-profile-contact-city',
-      type: 'email',
+      type: 'text',
       required: true,
       label: 'City',
       placeholder: 'City'
@@ -160,6 +159,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
         idNamespace: 'buyer-industry-sectors',
         label: 'Industry Sector(s)',
         required: true,
+        minFields: 1,
         fields: DEFAULT_SELECT_MULTI_FIELDS
       }
     })),
@@ -171,6 +171,7 @@ export const init: Init<Params, State> = async ({ profile }) => {
         idNamespace: 'buyer-categories',
         label: 'Area(s) of Interest',
         required: true,
+        minFields: 1,
         fields: DEFAULT_SELECT_MULTI_FIELDS
       }
     })),

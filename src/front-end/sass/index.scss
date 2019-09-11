@@ -178,7 +178,8 @@ pre {
 label {
   @extend .py-1;
 
-  .custom-checkbox & {
+  .custom-checkbox &,
+  .custom-radio & {
     @extend .font-size-base;
     @extend .py-0;
   }

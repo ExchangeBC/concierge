@@ -1,13 +1,12 @@
 import { Immutable, View } from 'front-end/lib/framework';
 import Icon from 'front-end/lib/views/icon';
-import { cloneDeep, get, reduce } from 'lodash';
+import { cloneDeep, reduce } from 'lodash';
 import { default as React, ReactElement } from 'react';
 import { Alert, Button, FormGroup, FormText, Label } from 'reactstrap';
 
 export interface Field<Value> {
   value: Value;
   errors: string[];
-  removable?: boolean;
 }
 
 export function makeField<Value>(value: Value, errors: string[] = []): Field<Value> {
@@ -20,9 +19,11 @@ export function makeField<Value>(value: Value, errors: string[] = []): Field<Val
 export interface State<Value> {
   idNamespace: string;
   label?: string;
+  description?: string;
   reverseFieldOrderInView?: boolean;
   required: boolean;
   fields: Array<Field<Value>>;
+  minFields?: number;
   help?: {
     text: string | ReactElement;
     show: boolean;
@@ -38,8 +39,7 @@ export function getFieldValues<Value>(state: State<Value>): Value[] {
 export function setFieldValues<Value>(state: Immutable<State<Value>>, values: Value[]): Immutable<State<Value>> {
   const fields = values.map((value, i) => {
     return {
-      ...makeField(value),
-      removable: get(state.fields, [i, 'removable'], true)
+      ...makeField(value)
     };
   });
   return state.set('fields', fields);
@@ -65,6 +65,7 @@ export interface ChildProps<ExtraProps, Value> {
   disabled: boolean;
   onChange: OnChange<Value>;
   extraProps: ExtraProps;
+  removable: boolean;
   onRemove(): void;
 }
 
@@ -96,7 +97,7 @@ const ConditionalHelpToggle: View<Props<any, any, any>> = ({ state, toggleHelp, 
         color='secondary'
         width={1}
         height={1}
-        className='ml-3 text-hover-dark'
+        className='ml-3 text-hover-dark flex-shrink-0'
         style={{ cursor: 'pointer' }}
         onClick={() => toggleHelp()} />
     );
@@ -172,7 +173,7 @@ export function ConditionalRemoveButton<Value>(props: ChildProps<any, Value>) {
   if (props.disabled) {
     return null;
   } else {
-    const { removable = true } = props.field;
+    const { removable } = props;
     const className = `${!removable ? 'disabled' : ''} btn btn-sm btn-link text-hover-danger`;
     return (
       <Icon
@@ -209,7 +210,8 @@ export function DefaultChild<ExtraProps, Value>(props: DefaultChildProps<ExtraPr
 
 function Children<OnAddParams, ChildExtraProps, Value>(props: Props<OnAddParams, ChildExtraProps, Value>) {
   const { Child, state, onChange, onRemove, formGroupClassName = '', extraChildProps, disabled = false } = props;
-  const { fields, idNamespace, reverseFieldOrderInView = false } = state;
+  const { fields, idNamespace, reverseFieldOrderInView = false, minFields = 0 } = state;
+  const removable = fields.length > minFields;
   const children = fields.reduce((acc, field, i) => {
     const id = `${idNamespace}-${i}`;
     const invalid = !!field.errors.length;
@@ -225,7 +227,8 @@ function Children<OnAddParams, ChildExtraProps, Value>(props: Props<OnAddParams,
           onChange={onChange(i)}
           onRemove={onRemove(i)}
           extraProps={extraChildProps}
-          disabled={disabled} />
+          disabled={disabled}
+          removable={removable} />
         <ConditionalFieldErrors {...field} />
       </FormGroup>
     );
@@ -250,6 +253,7 @@ export function view<OnAddParams, ChildExtraProps, Value>(props: Props<OnAddPara
         <ConditionalAddButton {...props} />
         <ConditionalHelpToggle {...props} />
       </div>
+      {state.description ? (<p>{state.description}</p>) : null}
       <ConditionalHelp {...props} />
       <Children {...props} />
     </FormGroup >

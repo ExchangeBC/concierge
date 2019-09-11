@@ -38,6 +38,7 @@ const init: Init<Params, State> = async () => {
         idNamespace: 'buyer-industry-sectors',
         label: 'Industry Sector(s)',
         required: true,
+        minFields: 1,
         fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
       }
     })),
@@ -49,6 +50,7 @@ const init: Init<Params, State> = async () => {
         idNamespace: 'buyer-categories',
         label: 'Area(s) of Interest',
         required: true,
+        minFields: 1,
         fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
       }
     }))

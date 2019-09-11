@@ -27,7 +27,7 @@ export interface VersionEligibility {
 export interface VersionContact {
   name: string;
   email: string;
-  phoneNumber: string;
+  phoneNumber?: string;
 }
 
 export interface PublicVersionBase {
@@ -114,13 +114,9 @@ export type PublicVendorIdeaSlim
   | PublicVendorIdeaSlimForVendors
   | PublicVendorIdeaSlimForProgramStaff;
 
-export interface VersionEligibilityCreateRequestBody extends Omit<VersionEligibility, 'innovationDefinitions'> {
-  innovationDefinitions: any;
-}
-
 export interface CreateRequestBody {
   description: VersionDescription;
-  eligibility: VersionEligibilityCreateRequestBody;
+  eligibility: VersionEligibility;
   contact: VersionContact;
   attachments: string[];
 }
@@ -138,6 +134,7 @@ export interface VersionEligibilityValidationErrors {
   existingPurchase?: string[];
   productOffering?: string[];
   innovationDefinitions?: string[][];
+  numInnovationDefinitions?: string[];
 }
 
 export interface VersionContactValidationErrors {

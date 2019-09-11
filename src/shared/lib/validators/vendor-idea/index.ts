@@ -1,5 +1,5 @@
 import { getString } from 'shared/lib';
-import { InnovationDefinition, VersionContact, VersionContactValidationErrors, VersionDescription, VersionDescriptionValidationErrors, VersionEligibility, VersionEligibilityCreateRequestBody, VersionEligibilityValidationErrors } from 'shared/lib/resources/vendor-idea';
+import { InnovationDefinition, VersionContact, VersionContactValidationErrors, VersionDescription, VersionDescriptionValidationErrors, VersionEligibility, VersionEligibilityValidationErrors } from 'shared/lib/resources/vendor-idea';
 import { allValid, ArrayValidation, getInvalidValue, invalid, optional, valid, validateArray, validateCategories, validateEmail, validateGenericString, validateIndustrySectors, validatePhoneNumber, Validation, ValidOrInvalid } from 'shared/lib/validators';
 import * as validators from 'shared/lib/validators';
 
@@ -56,6 +56,10 @@ export function validateEligibilityProductOffering(raw: string): Validation<stri
   return validateGenericString(raw, 'Product Offering Explanation', 1, 5000);
 }
 
+export function validateEligibilityInnovationDefinitionOtherText(raw: string): Validation<string> {
+  return validateGenericString(raw, 'Other Description', 1, 500);
+}
+
 export function validateEligibilityInnovationDefinition(raw: any): Validation<InnovationDefinition> {
   const tag = getString(raw, 'tag');
   const value = getString(raw, 'value');
@@ -69,11 +73,8 @@ export function validateEligibilityInnovationDefinition(raw: any): Validation<In
     case 'improvementToExistingTechnology':
       return valid({ tag: 'improvementToExistingTechnology', value: undefined });
     case 'other':
-      const validatedValue = validateGenericString(value, 'Other Description', 1, 500);
-      if (validatedValue.tag === 'valid') {
-        return valid({ tag: 'other', value: validatedValue.value });
-      }
-      break;
+      const validatedValue = validateEligibilityInnovationDefinitionOtherText(value);
+      return validators.mapValid(validatedValue, v => ({ tag: 'other', value: v }));
   }
   return invalid([`${raw} is not a valid Innovation Definition.`]);
 }
@@ -82,11 +83,12 @@ export function validateEligibilityInnovationDefinitions(innovationDefinitions: 
   return validateArray(innovationDefinitions, validateEligibilityInnovationDefinition);
 }
 
-export function validateEligibility(raw: VersionEligibilityCreateRequestBody): ValidOrInvalid<VersionEligibility, VersionEligibilityValidationErrors> {
+export function validateEligibility(raw: VersionEligibility): ValidOrInvalid<VersionEligibility, VersionEligibilityValidationErrors> {
   const validatedExistingPurchase = validateEligibilityExistingPurchase(raw.existingPurchase);
   const validatedProductOffering = validateEligibilityProductOffering(raw.productOffering);
   const validatedInnovationDefinitions = validateEligibilityInnovationDefinitions(raw.innovationDefinitions);
-  if (allValid([validatedExistingPurchase, validatedProductOffering, validatedInnovationDefinitions])) {
+  const enoughNumInnovationDefinitions = validatedInnovationDefinitions.tag === 'valid' && !!validatedInnovationDefinitions.value.length;
+  if (enoughNumInnovationDefinitions && allValid([validatedExistingPurchase, validatedProductOffering, validatedInnovationDefinitions])) {
     return valid({
       existingPurchase: validatedExistingPurchase.value,
       productOffering: validatedProductOffering.value,
@@ -96,7 +98,8 @@ export function validateEligibility(raw: VersionEligibilityCreateRequestBody): V
     return invalid({
       existingPurchase: getInvalidValue(validatedExistingPurchase, undefined),
       productOffering: getInvalidValue(validatedProductOffering, undefined),
-      innovationDefinitions: getInvalidValue(validatedInnovationDefinitions, undefined)
+      innovationDefinitions: getInvalidValue(validatedInnovationDefinitions, undefined),
+      numInnovationDefinitions: enoughNumInnovationDefinitions ? undefined : ['Please select at least one innovation definition.']
     });
   }
 }
@@ -109,7 +112,7 @@ export function validateContactEmail(raw: string): Validation<string> {
   return validateEmail(raw);
 }
 
-export function validateContactPhoneNumber(raw: string): Validation<string | undefined> {
+export function validateContactPhoneNumber(raw: string | undefined): Validation<string | undefined> {
   return optional(v => validatePhoneNumber(v), raw);
 }
 

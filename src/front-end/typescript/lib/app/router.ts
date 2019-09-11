@@ -331,6 +331,53 @@ const router: Router<Route> = {
       }
     },
     {
+      path: '/vendor-ideas/create',
+      makeRoute() {
+        return {
+          tag: 'viCreate',
+          value: null
+        };
+      }
+    },
+    {
+      path: '/vendor-ideas/:viId/edit',
+      makeRoute({ params, query }) {
+        return {
+          tag: 'viEdit',
+          value: {
+            viId: getParamString(params, 'viId'),
+            activeTab: (() => {
+              switch (getQueryParamString(query, 'activeTab')) {
+                case 'management': return 'management';
+                case 'application': return 'application';
+                default: return undefined;
+              }
+            })()
+          }
+        };
+      }
+    },
+    {
+      path: '/vendor-ideas/:viId/view',
+      makeRoute({ params }) {
+        return {
+          tag: 'viView',
+          value: {
+            viId: getParamString(params, 'viId')
+          }
+        };
+      }
+    },
+    {
+      path: '/vendor-ideas',
+      makeRoute() {
+        return {
+          tag: 'viList',
+          value: null
+        };
+      }
+    },
+    {
       path: '/notice/change-password',
       makeRoute() {
         return {
@@ -514,6 +561,14 @@ const router: Router<Route> = {
         return `/requests-for-information/${route.value.rfiId}/attend-discovery-day`;
       case 'requestForInformationList':
         return '/requests-for-information';
+      case 'viCreate':
+        return '/vendor-ideas/create';
+      case 'viEdit':
+        return `/vendor-ideas/${route.value.viId}/edit${route.value.activeTab ? `?activeTab=${encodeURIComponent(route.value.activeTab)}` : ''}`;
+      case 'viView':
+        return `/vendor-ideas/${route.value.viId}/view`;
+      case 'viList':
+        return '/vendor-ideas';
       case 'markdown':
         return (() => {
           switch (route.value.documentId) {

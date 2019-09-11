@@ -25,6 +25,10 @@ import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
 import * as PageUserList from 'front-end/lib/pages/user/list';
 import * as PageUserView from 'front-end/lib/pages/user/view';
+import * as PageViCreate from 'front-end/lib/pages/vendor-idea/create';
+import * as PageViEdit from 'front-end/lib/pages/vendor-idea/edit';
+import * as PageViList from 'front-end/lib/pages/vendor-idea/list';
+import * as PageViView from 'front-end/lib/pages/vendor-idea/view';
 import { ValidOrInvalid } from 'shared/lib/validators';
 
 function setSession(state: Immutable<State>, validated: ValidOrInvalid<Session, null>): Immutable<State> {
@@ -310,6 +314,58 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
         childGetModal: PageRequestForInformationList.component.getModal,
         mapChildMsg(value) {
           return { tag: 'pageRequestForInformationList' as const, value };
+        }
+      });
+
+    case 'viCreate':
+      return await initAppChildPage({
+        ...defaultPageInitParams,
+        childStatePath: ['pages', 'viCreate'],
+        childRouteParams: route.value,
+        childInit: PageViCreate.component.init,
+        childGetMetadata: PageViCreate.component.getMetadata,
+        childGetModal: PageViCreate.component.getModal,
+        mapChildMsg(value) {
+          return { tag: 'pageViCreate' as const, value };
+        }
+      });
+
+    case 'viEdit':
+      return await initAppChildPage({
+        ...defaultPageInitParams,
+        childStatePath: ['pages', 'viEdit'],
+        childRouteParams: route.value,
+        childInit: PageViEdit.component.init,
+        childGetMetadata: PageViEdit.component.getMetadata,
+        childGetModal: PageViEdit.component.getModal,
+        mapChildMsg(value) {
+          return { tag: 'pageViEdit' as const, value };
+        }
+      });
+
+    case 'viView':
+      return await initAppChildPage({
+        ...defaultPageInitParams,
+        childStatePath: ['pages', 'viView'],
+        childRouteParams: route.value,
+        childInit: PageViView.component.init,
+        childGetMetadata: PageViView.component.getMetadata,
+        childGetModal: PageViView.component.getModal,
+        mapChildMsg(value) {
+          return { tag: 'pageViView' as const, value };
+        }
+      });
+
+    case 'viList':
+      return await initAppChildPage({
+        ...defaultPageInitParams,
+        childStatePath: ['pages', 'viList'],
+        childRouteParams: route.value,
+        childInit: PageViList.component.init,
+        childGetMetadata: PageViList.component.getMetadata,
+        childGetModal: PageViList.component.getModal,
+        mapChildMsg(value) {
+          return { tag: 'pageViList' as const, value };
         }
       });
 
@@ -636,6 +692,50 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         childUpdate: PageRequestForInformationList.component.update,
         childGetMetadata: PageRequestForInformationList.component.getMetadata,
         childGetModal: PageRequestForInformationList.component.getModal,
+        childMsg: msg.value
+      });
+
+    case 'pageViCreate':
+      return updateAppChildPage({
+        ...defaultPageUpdateParams,
+        mapChildMsg: value => ({ tag: 'pageViCreate', value }),
+        childStatePath: ['pages', 'viCreate'],
+        childUpdate: PageViCreate.component.update,
+        childGetMetadata: PageViCreate.component.getMetadata,
+        childGetModal: PageViCreate.component.getModal,
+        childMsg: msg.value
+      });
+
+    case 'pageViEdit':
+      return updateAppChildPage({
+        ...defaultPageUpdateParams,
+        mapChildMsg: value => ({ tag: 'pageViEdit', value }),
+        childStatePath: ['pages', 'viEdit'],
+        childUpdate: PageViEdit.component.update,
+        childGetMetadata: PageViEdit.component.getMetadata,
+        childGetModal: PageViEdit.component.getModal,
+        childMsg: msg.value
+      });
+
+    case 'pageViView':
+      return updateAppChildPage({
+        ...defaultPageUpdateParams,
+        mapChildMsg: value => ({ tag: 'pageViView', value }),
+        childStatePath: ['pages', 'viView'],
+        childUpdate: PageViView.component.update,
+        childGetMetadata: PageViView.component.getMetadata,
+        childGetModal: PageViView.component.getModal,
+        childMsg: msg.value
+      });
+
+    case 'pageViList':
+      return updateAppChildPage({
+        ...defaultPageUpdateParams,
+        mapChildMsg: value => ({ tag: 'pageViList', value }),
+        childStatePath: ['pages', 'viList'],
+        childUpdate: PageViList.component.update,
+        childGetMetadata: PageViList.component.getMetadata,
+        childGetModal: PageViList.component.getModal,
         childMsg: msg.value
       });
 

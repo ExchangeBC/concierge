@@ -27,6 +27,10 @@ import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
 import * as PageUserList from 'front-end/lib/pages/user/list';
 import * as PageUserView from 'front-end/lib/pages/user/view';
+import * as PageViCreate from 'front-end/lib/pages/vendor-idea/create';
+import * as PageViEdit from 'front-end/lib/pages/vendor-idea/edit';
+import * as PageViList from 'front-end/lib/pages/vendor-idea/list';
+import * as PageViView from 'front-end/lib/pages/vendor-idea/view';
 import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
 import { default as React } from 'react';
@@ -256,6 +260,42 @@ const ViewActiveRoute: ComponentView<State, Msg> = ({ state, dispatch }) => {
           pageState={state.pages.requestForInformationList}
           mapPageMsg={value => ({ tag: 'pageRequestForInformationList', value })}
           component={PageRequestForInformationList.component} />
+      );
+
+    case 'viCreate':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.viCreate}
+          mapPageMsg={value => ({ tag: 'pageViCreate', value })}
+          component={PageViCreate.component} />
+      );
+
+    case 'viEdit':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.viEdit}
+          mapPageMsg={value => ({ tag: 'pageViEdit', value })}
+          component={PageViEdit.component} />
+      );
+
+    case 'viView':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.viView}
+          mapPageMsg={value => ({ tag: 'pageViView', value })}
+          component={PageViView.component} />
+      );
+
+    case 'viList':
+      return (
+        <ViewPage
+          dispatch={dispatch}
+          pageState={state.pages.viList}
+          mapPageMsg={value => ({ tag: 'pageViList', value })}
+          component={PageViList.component} />
       );
 
     case 'markdown':

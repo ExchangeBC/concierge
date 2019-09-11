@@ -22,6 +22,10 @@ import * as PageSignUpVendor from 'front-end/lib/pages/sign-up/vendor';
 import * as PageTermsAndConditions from 'front-end/lib/pages/terms-and-conditions';
 import * as PageUserList from 'front-end/lib/pages/user/list';
 import * as PageUserView from 'front-end/lib/pages/user/view';
+import * as PageViCreate from 'front-end/lib/pages/vendor-idea/create';
+import * as PageViEdit from 'front-end/lib/pages/vendor-idea/edit';
+import * as PageViList from 'front-end/lib/pages/vendor-idea/list';
+import * as PageViView from 'front-end/lib/pages/vendor-idea/view';
 import { PublicSession } from 'shared/lib/resources/session';
 import { ADT } from 'shared/lib/types';
 
@@ -48,6 +52,10 @@ export type Route
   | ADT<'requestForInformationRespond', PageRequestForInformationRespond.RouteParams>
   | ADT<'requestForInformationAttendDiscoveryDay', PageRequestForInformationAttendDiscoveryDay.RouteParams>
   | ADT<'requestForInformationList', PageRequestForInformationList.RouteParams>
+  | ADT<'viCreate', PageViCreate.RouteParams>
+  | ADT<'viEdit', PageViEdit.RouteParams>
+  | ADT<'viView', PageViView.RouteParams>
+  | ADT<'viList', PageViList.RouteParams>
   | ADT<'markdown', PageMarkdown.RouteParams>
   | ADT<'notice', PageNotice.RouteParams>
   | ADT<'feedback', PageFeedback.RouteParams>;
@@ -87,6 +95,10 @@ export interface State {
     requestForInformationRespond?: Immutable<PageRequestForInformationRespond.State>;
     requestForInformationAttendDiscoveryDay?: Immutable<PageRequestForInformationAttendDiscoveryDay.State>;
     requestForInformationList?: Immutable<PageRequestForInformationList.State>;
+    viCreate?: Immutable<PageViCreate.State>;
+    viEdit?: Immutable<PageViEdit.State>;
+    viView?: Immutable<PageViView.State>;
+    viList?: Immutable<PageViList.State>;
     markdown?: Immutable<PageMarkdown.State>;
     notice?: Immutable<PageNotice.State>;
     feedback?: Immutable<PageFeedback.State>;
@@ -117,6 +129,10 @@ type InnerMsg
   | ADT<'pageRequestForInformationRespond', PageRequestForInformationRespond.Msg>
   | ADT<'pageRequestForInformationAttendDiscoveryDay', PageRequestForInformationAttendDiscoveryDay.Msg>
   | ADT<'pageRequestForInformationList', PageRequestForInformationList.Msg>
+  | ADT<'pageViCreate', PageViCreate.Msg>
+  | ADT<'pageViEdit', PageViEdit.Msg>
+  | ADT<'pageViView', PageViView.Msg>
+  | ADT<'pageViList', PageViList.Msg>
   | ADT<'pageMarkdown', PageMarkdown.Msg>
   | ADT<'pageNotice', PageNotice.Msg>
   | ADT<'pageFeedback', PageFeedback.Msg>

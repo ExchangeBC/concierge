@@ -45,7 +45,7 @@ const ConditionalHelpToggle: View<Props<any, any, any>> = ({ state, toggleHelp, 
         color='secondary'
         width={1}
         height={1}
-        className='ml-2 text-hover-dark'
+        className='ml-2 text-hover-dark flex-shrink-0'
         style={{ cursor: 'pointer' }}
         onClick={e => { toggleHelp(); e.preventDefault(); }} />
     );

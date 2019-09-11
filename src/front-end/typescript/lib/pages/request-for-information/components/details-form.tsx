@@ -150,16 +150,14 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
     .map((value: string, index: number): FormFieldMulti.Field<SelectMulti.Value> => {
       return {
         value: { label: value, value },
-        errors: [],
-        removable: index !== 0
+        errors: []
       };
     });
   const existingAddenda = get(existingRfi, ['latestVersion', 'addenda'], [])
     .map((value: Addendum, index: number) => {
       return {
         value: LongTextMulti.makeExistingValue(value.description),
-        errors: [],
-        removable: true
+        errors: []
       };
     });
   const existingBuyerContact = get(existingRfi, ['latestVersion', 'buyerContact'], undefined);
@@ -253,16 +251,16 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
         idNamespace: 'rfi-categories',
         label: 'Commodity Code(s)',
         required: true,
+        minFields: 1,
         fields: existingCategoryFields.length ? existingCategoryFields : [{
           value: undefined,
-          errors: [],
-          removable: false
+          errors: []
         }]
       }
     })),
     attachments: immutable(await FileMulti.init({
       formFieldMulti: {
-        idNamespace: 'rfi-categories',
+        idNamespace: 'rfi-attachments',
         label: 'Attachments (Optional)',
         required: false,
         fields: get(existingRfi, ['latestVersion', 'attachments'], [])
