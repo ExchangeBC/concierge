@@ -504,6 +504,20 @@ const router: Router<Route> = {
       }
     },
     {
+      path: '/notice/vendor-ideas/edited-by-vendor',
+      makeRoute() {
+        return {
+          tag: 'notice',
+          value: {
+            noticeId: {
+              tag: 'viEditedByVendor',
+              value: undefined
+            }
+          }
+        }
+      }
+    },
+    {
       path: '*',
       makeRoute() {
         return {
@@ -623,6 +637,8 @@ const router: Router<Route> = {
               return '/notice/feedback-submitted'
             case 'viCreated':
               return '/notice/vendor-ideas/created';
+            case 'viEditedByVendor':
+              return '/notice/vendor-ideas/edited-by-vendor';
           }
         })();
     }
