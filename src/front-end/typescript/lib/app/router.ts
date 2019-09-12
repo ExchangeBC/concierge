@@ -490,6 +490,20 @@ const router: Router<Route> = {
       }
     },
     {
+      path: '/notice/vendor-ideas/created',
+      makeRoute() {
+        return {
+          tag: 'notice',
+          value: {
+            noticeId: {
+              tag: 'viCreated',
+              value: undefined
+            }
+          }
+        }
+      }
+    },
+    {
       path: '*',
       makeRoute() {
         return {
@@ -607,6 +621,8 @@ const router: Router<Route> = {
               return '/not-found';
             case 'feedbackSubmitted':
               return '/notice/feedback-submitted'
+            case 'viCreated':
+              return '/notice/vendor-ideas/created';
           }
         })();
     }

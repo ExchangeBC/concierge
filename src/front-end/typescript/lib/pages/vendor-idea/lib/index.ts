@@ -1,6 +1,10 @@
+import * as api from 'front-end/lib/http/api';
+import * as IntakeForm from 'front-end/lib/pages/vendor-idea/components/intake-form';
 import { BootstrapColor } from 'front-end/lib/types';
+import { CreateRequestBody, CreateValidationErrors } from 'shared/lib/resources/vendor-idea';
 import { LogItemType } from 'shared/lib/resources/vendor-idea/log-item';
 import { ADT } from 'shared/lib/types';
+import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
 type LogItemTypeCopy
   = ADT<'badge', [BootstrapColor, string]> // [badge color, badge text]
@@ -45,5 +49,21 @@ export function logItemTypeToCopy(itemType: LogItemType): LogItemTypeCopy {
       return { tag: 'label', value: 'Purchase — Solicitation (Selected Vendors)' };
     case LogItemType.GeneralNote:
       return { tag: 'label', value: 'General Note' };
+  }
+}
+
+export async function makeRequestBody(state: IntakeForm.State): Promise<ValidOrInvalid<CreateRequestBody, CreateValidationErrors>> {
+  const values = IntakeForm.getValues(state);
+  const uploadedFiles = await api.uploadFiles(values.attachments);
+  switch (uploadedFiles.tag) {
+    case 'valid':
+      return valid({
+        ...values,
+        attachments: uploadedFiles.value
+      });
+    case 'invalid':
+      return invalid({
+        attachments: uploadedFiles.value
+      });
   }
 }

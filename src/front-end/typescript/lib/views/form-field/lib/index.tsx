@@ -31,6 +31,7 @@ export interface Props<ChildState extends State<Value>, ChildExtraProps, Value> 
   disabled?: boolean;
   Child: View<ChildProps<ChildState, ChildExtraProps, Value>>;
   labelClassName?: string;
+  className?: string;
   extraProps: ChildExtraProps;
   toggleHelp?(): void;
   onChange(value: Value): void;
@@ -101,14 +102,14 @@ const ConditionalErrors: View<State<any>> = ({ errors }) => {
 }
 
 export function view<ChildState extends State<Value>, ChildExtraProps, Value>(props: Props<ChildState, ChildExtraProps, Value>) {
-  const { state, disabled = false, Child, onChange, extraProps } = props;
+  const { state, disabled = false, Child, onChange, extraProps, className = '' } = props;
   const invalid = !!state.errors.length;
-  const className = invalid ? 'is-invalid' : '';
+  const childClassName = invalid ? 'is-invalid' : '';
   return (
-    <FormGroup className={`form-field-${state.id}`}>
+    <FormGroup className={`form-field-${state.id} ${className}`}>
       <ConditionalLabel {...props} />
       <ConditionalHelp {...props} />
-      <Child state={state} onChange={onChange} className={className} extraProps={extraProps} disabled={disabled} />
+      <Child state={state} onChange={onChange} className={childClassName} extraProps={extraProps} disabled={disabled} />
       <ConditionalErrors {...state} />
     </FormGroup>
   );

@@ -20,7 +20,7 @@ interface ExtraProps {
   autoFocus?: boolean;
 }
 
-export interface Props extends Pick<FormField.Props<State, ExtraProps, Value>, 'toggleHelp' | 'disabled' | 'onChange'> {
+export interface Props extends Pick<FormField.Props<State, ExtraProps, Value>, 'toggleHelp' | 'disabled' | 'onChange' | 'className'> {
   state: State;
   onChangeDebounced?: OnChangeDebounced;
   onEnter?: OnEnter;
@@ -69,7 +69,7 @@ const Child: View<FormField.ChildProps<State, ExtraProps, Value>> = props => {
   );
 };
 
-export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter, toggleHelp, style, disabled = false, autoFocus }) => {
+export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter, toggleHelp, style, disabled = false, autoFocus, className }) => {
   const extraProps: ExtraProps = {
     onKeyUp: makeOnKeyUp(onEnter),
     onChangeDebounced,
@@ -83,6 +83,7 @@ export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter,
       onChange={onChange}
       toggleHelp={toggleHelp}
       extraProps={extraProps}
-      disabled={disabled} />
+      disabled={disabled}
+      className={className} />
   );
 };

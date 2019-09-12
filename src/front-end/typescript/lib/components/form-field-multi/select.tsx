@@ -125,9 +125,11 @@ interface Props extends ComponentViewProps<State, Msg> {
   disabled?: boolean;
   labelClassName?: string;
   labelWrapperClassName?: string;
+  formGroupClassName?: string;
+  className?: string;
 }
 
-export const view: View<Props> = ({ state, dispatch, disabled = false, labelClassName, labelWrapperClassName }) => {
+export const view: View<Props> = ({ state, dispatch, disabled = false, labelClassName, labelWrapperClassName, formGroupClassName, className }) => {
   const onChange = (index: number): FormFieldMulti.OnChange<Value> => value => {
     dispatch({
       tag: 'change',
@@ -151,7 +153,9 @@ export const view: View<Props> = ({ state, dispatch, disabled = false, labelClas
       autoFocus: state.autoFocus
     },
     labelClassName,
-    labelWrapperClassName
+    labelWrapperClassName,
+    formGroupClassName,
+    className
   };
   return (
     <FormFieldMulti.view {...formFieldProps} />

@@ -79,6 +79,7 @@ export interface Props<OnAddParams, ChildExtraProps, Value> {
   AddButton: View<AddButtonProps<OnAddParams>>;
   addButtonProps: AddButtonProps<OnAddParams>;
   Child: View<ChildProps<ChildExtraProps, Value>>;
+  className?: string;
   formGroupClassName?: string;
   labelWrapperClassName?: string;
   labelClassName?: string;
@@ -145,7 +146,7 @@ const ConditionalHelp: View<Props<any, any, any>> = ({ state, disabled = false }
   const { help } = state;
   if (help && help.show && !disabled) {
     return (
-      <Alert color='primary'>
+      <Alert color='primary' className='mt-4'>
         {help.text}
       </Alert>
     );
@@ -217,7 +218,7 @@ function Children<OnAddParams, ChildExtraProps, Value>(props: Props<OnAddParams,
     const invalid = !!field.errors.length;
     const childClassName = invalid ? 'is-invalid' : '';
     const child = (
-      <FormGroup key={`form-field-multi-child-${i}`} className={formGroupClassName}>
+      <FormGroup key={`form-field-multi-child-${i}`} className={`${formGroupClassName} ${i === fields.length - 1 ? 'mb-0' : ''}`}>
         <Child
           key={`form-field-multi-child-${i}`}
           id={id}
@@ -245,15 +246,15 @@ function Children<OnAddParams, ChildExtraProps, Value>(props: Props<OnAddParams,
 };
 
 export function view<OnAddParams, ChildExtraProps, Value>(props: Props<OnAddParams, ChildExtraProps, Value>) {
-  const { state, labelWrapperClassName = '' } = props;
+  const { state, labelWrapperClassName = '', className = '' } = props;
   return (
-    <FormGroup className={`form-field-${state.idNamespace}`}>
+    <FormGroup className={`form-field-${state.idNamespace} ${className}`}>
       <div className={`d-flex flex-wrap align-items-center mb-2 ${labelWrapperClassName}`}>
         <ConditionalLabel {...props} />
         <ConditionalAddButton {...props} />
         <ConditionalHelpToggle {...props} />
       </div>
-      {state.description ? (<p>{state.description}</p>) : null}
+      {state.description ? (<p className={state.fields.length ? 'mb-4' : 'mb-0'}>{state.description}</p>) : null}
       <ConditionalHelp {...props} />
       <Children {...props} />
     </FormGroup >

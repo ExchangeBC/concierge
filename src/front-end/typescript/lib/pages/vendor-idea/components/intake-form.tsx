@@ -1,7 +1,7 @@
 import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
 import * as FormFieldMulti from 'front-end/lib/components/form-field-multi/lib/index';
 import * as SelectMulti from 'front-end/lib/components/form-field-multi/select';
-import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import { Component, ComponentView, Dispatch, Immutable, immutable, Init, mapComponentDispatch, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import * as LongText from 'front-end/lib/views/form-field/long-text';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Link from 'front-end/lib/views/link';
@@ -145,7 +145,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
       }
     }),
     innovationDefinitionOtherText: LongText.init({
-      id: 'vi-innovation-definition-other-texet',
+      id: 'vi-innovation-definition-other-text',
       required: true,
       label: '',
       placeholder: 'Please limit your response to 50 words.',
@@ -170,29 +170,25 @@ export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
     industrySectors: immutable(await SelectMulti.init({
       options: AVAILABLE_INDUSTRY_SECTORS.toJS().map(value => ({ label: value, value })),
       placeholder: 'Select Industry Sector',
+      isCreatable: true,
       formFieldMulti: {
         idNamespace: 'vi-industry-sectors',
         label: 'Identify the industry sector(s) that apply to the product or service.',
         required: true,
         minFields: 1,
-        fields: existingCategoryFields.length ? existingCategoryFields : [{
-          value: undefined,
-          errors: []
-        }]
+        fields: existingCategoryFields.length ? existingCategoryFields : SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
       }
     })),
     categories: immutable(await SelectMulti.init({
       options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value })),
       placeholder: 'Select Area of Interest',
+      isCreatable: true,
       formFieldMulti: {
         idNamespace: 'rfi-categories',
         label: 'Identify the area(s) of interest that apply to the product or service.',
         required: true,
         minFields: 1,
-        fields: existingCategoryFields.length ? existingCategoryFields : [{
-          value: undefined,
-          errors: []
-        }]
+        fields: existingCategoryFields.length ? existingCategoryFields : SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
       }
     })),
     contactName: ShortText.init({
@@ -216,7 +212,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
       required: false,
       type: 'text',
       label: 'Phone Number',
-      placeholder: 'Phone-Number',
+      placeholder: 'Phone Number',
       value: getVi(['contact', 'phoneNumber'], '')
     }),
     attachments: immutable(await FileMulti.init({
@@ -237,6 +233,20 @@ export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
   };
 };
 
+function onChangeInnovationDefinition(state: Immutable<State>, change: [InnovationDefinition, boolean]): Immutable<State> {
+  // Remove the associated innovation definition.
+  state = state.set('innovationDefinitions', state.innovationDefinitions.filter(value => {
+    return value.tag !== change[0].tag;
+  }));
+  // Add the innovation definition to list if required.
+  if (change[1]) {
+    state = state.set('innovationDefinitions', state.innovationDefinitions.concat([change[0]]));
+  } else if (change[0].tag === 'other' && !change[1]) {
+    state = state.setIn(['innovationDefinitionOtherText', 'errors'], []);
+  }
+  return state;
+};
+
 export const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'onChangeHasExistingPurchase':
@@ -250,17 +260,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'onChangeInnovationDefinitionOtherText':
       return [updateValue(state, 'innovationDefinitionOtherText', msg.value)];
     case 'onChangeInnovationDefinition':
-      // Remove the associated innovation definition.
-      state = state.set('innovationDefinitions', state.innovationDefinitions.filter(value => {
-        return value.tag !== msg.value[0].tag;
-      }));
-      // Add the innovation definition to list if required.
-      if (msg.value[1]) {
-        state = state.set('innovationDefinitions', state.innovationDefinitions.concat([msg.value[0]]));
-      } else if (msg.value[0].tag === 'other' && !msg.value[1]) {
-        state = state.setIn(['innovationDefinitionOtherText', 'errors'], []);
-      }
-      return [state];
+      return [onChangeInnovationDefinition(state, msg.value)];
     case 'onChangeTitle':
       return [updateValue(state, 'title', msg.value)];
     case 'onChangeSummary':
@@ -280,7 +280,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
         childMsg: msg.value
       })[0];
       const validatedIndustrySectors = validateIndustrySectors(SelectMulti.getValuesAsStrings(state.industrySectors));
-      state = state.set('industrySectors', SelectMulti.setErrors(state.categories, getInvalidValue(validatedIndustrySectors, [])));
+      state = state.set('industrySectors', SelectMulti.setErrors(state.industrySectors, getInvalidValue(validatedIndustrySectors, [])));
       return [state];
     case 'onChangeCategories':
       state = updateComponentChild({
@@ -310,20 +310,12 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'validateProductOffering':
       return [validateValue(state, 'productOffering', validateEligibilityProductOffering)];
     case 'validateInnovationDefinitionOtherText':
-    return [
-      validateValue(state, 'innovationDefinitionOtherText', validateEligibilityInnovationDefinitionOtherText),
-      async (state, dispatch) => {
-        // update innovation definition state.
-        dispatch({
-          tag: 'onChangeInnovationDefinition',
-          value: [
-            { tag: 'other', value: state.innovationDefinitionOtherText.value },
-            true
-          ]
-        });
-        return state;
-      }
-    ];
+    state = validateValue(state, 'innovationDefinitionOtherText', validateEligibilityInnovationDefinitionOtherText);
+    state = onChangeInnovationDefinition(state, [
+      { tag: 'other', value: state.innovationDefinitionOtherText.value },
+      true
+    ]);
+    return [state];
     case 'validateTitle':
       return [validateValue(state, 'title', validateDescriptionTitle)];
     case 'validateSummary':
@@ -433,7 +425,9 @@ const Attachments: ComponentView<State, Msg> = ({ state, dispatch }) => {
             dispatch={dispatchAttachments}
             disabled={isDisabled}
             labelClassName='h3'
-            labelWrapperClassName='mb-4' />
+            labelWrapperClassName='mb-4'
+            formGroupClassName='col-xs-12 px-0 col-md-9 pl-md-0'
+            className='mb-0' />
         </Col>
       </Row>
     </div>
@@ -502,7 +496,7 @@ const Eligibility: ComponentView<State, Msg> = ({ state, dispatch }) => {
       </Row>
       <Row className='mb-4'>
         <Col xs='12' md='10' lg='8'>
-          <FieldLabel required text='Has this, or a similar product or service, been sold to the Province of BC before?' />
+          <FieldLabel required text='Has this, or a similar product or service, been sold to the Province of BC before?' className='pt-0' />
           <div>
             <Checkbox radio id='vi-has-existing-purchase-yes' label='Yes' disabled={isDisabled} checked={state.hasExistingPurchase} onChange={v => v && onChangeHasExistingPurchase(true)} inline />
             <Checkbox radio id='vi-has-existing-purchase-no' label='No' disabled={isDisabled} checked={!state.hasExistingPurchase} onChange={v => v && onChangeHasExistingPurchase(false)} inline />
@@ -513,6 +507,7 @@ const Eligibility: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Col xs='12' md='10' lg='8'>
           {state.hasExistingPurchase
             ? (<LongText.view
+                style={{ minHeight: '240px' }}
                 state={state.existingPurchaseSummary}
                 disabled={isDisabled}
                 onChangeDebounced={onChangeDebounced('validateExistingPurchaseSummary')}
@@ -532,6 +527,7 @@ const Eligibility: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <Row className='mb-4'>
         <Col xs='12' md='10' lg='8'>
           <LongText.view
+            style={{ minHeight: '240px' }}
             state={state.productOffering}
             disabled={isDisabled}
             toggleHelp={toggleHelp('productOffering')}
@@ -541,7 +537,7 @@ const Eligibility: ComponentView<State, Msg> = ({ state, dispatch }) => {
       </Row>
       <Row>
         <Col xs='12' md='10' lg='8'>
-          <FieldLabel required text='Indicate which of the definition(s) of innovation apply to your product or service. Select all that apply:' />
+          <FieldLabel required text='Indicate which of the definition(s) of innovation apply to your product or service. Please select at least one and all that apply:' />
           <div>
             <InnovationDefinitionCheckbox def={{ tag: 'newTechnology', value: undefined }} label='An invention, new technology or new process that is not currently available in the marketplace.' />
             <InnovationDefinitionCheckbox def={{ tag: 'existingTechnologyNotPurchased', value: undefined }} label='Goods or services that are available in the marketplace that the Province of BC has not yet purchased.' />
@@ -551,12 +547,113 @@ const Eligibility: ComponentView<State, Msg> = ({ state, dispatch }) => {
             <InnovationDefinitionCheckbox def={{ tag: 'other', value: state.innovationDefinitionOtherText.value }} label='Other' />
             <div className='pl-4'>
               <LongText.view
+                style={{ minHeight: '100px' }}
                 state={state.innovationDefinitionOtherText}
                 disabled={isDisabled || !getInnovationDefinitionOther(state.innovationDefinitions)}
                 onChangeDebounced={onChangeDebounced('validateInnovationDefinitionOtherText')}
-                onChange={onChangeLongText('onChangeInnovationDefinitionOtherText')} />
+                onChange={onChangeLongText('onChangeInnovationDefinitionOtherText')}
+                className='mb-0' />
             </div>
           </div>
+        </Col>
+      </Row>
+    </div>
+  );
+};
+
+const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  const isDisabled = !state.isEditing;
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeLongText = (tag: any) => LongText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
+  const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeCategories' as const, value }));
+  const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeIndustrySectors' as const, value }));
+  return (
+    <div className='mb-5'>
+      <Row className='mb-4'>
+        <Col xs='12' md='10' lg='8'>
+          <h3 className='mb-4'>Section 3: Description</h3>
+          <p>If your VII is accepted into the Procurement Concierge Program, please note that information about the VII will be made available to Public Sector Buyers on the program's web application.</p>
+          <p className='mb-0'>As authentication cannot absolutely guarantee that only public sector staff will have access to the information about the VII, please do not include details related to confidential information or trade secrets.</p>
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12' md='10' lg='8'>
+          <ShortText.view
+            state={state.title}
+            disabled={isDisabled}
+            onChangeDebounced={onChangeDebounced('validateTitle')}
+            onChange={onChangeShortText('onChangeTitle')} />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12' md='10' lg='8'>
+          <LongText.view
+            style={{ minHeight: '120px' }}
+            state={state.summary}
+            disabled={isDisabled}
+            onChangeDebounced={onChangeDebounced('validateSummary')}
+            onChange={onChangeLongText('onChangeSummary')} />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12' md='10' lg='8'>
+          <SelectMulti.view
+            state={state.industrySectors}
+            dispatch={dispatchIndustrySectors}
+            disabled={isDisabled}
+            formGroupClassName='col-xs-12 px-0 col-md-9 pl-md-0' />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12' md='10' lg='8'>
+          <SelectMulti.view
+            state={state.categories}
+            dispatch={dispatchCategories}
+            disabled={isDisabled}
+            className='mb-0'
+            formGroupClassName='col-xs-12 px-0 col-md-9 pl-md-0' />
+        </Col>
+      </Row>
+    </div>
+  );
+};
+
+const Contact: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  const isDisabled = !state.isEditing;
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
+  return (
+    <div className='mb-5'>
+      <Row className='mb-4'>
+        <Col xs='12' md='10' lg='8'>
+          <h3 className='mb-4'>Section 4: Contact Information</h3>
+          <p className='mb-0'>Please provide the contact information for the individual that the Procurement Concierge Program should discuss the VII with.</p>
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12' md='5' lg='4'>
+          <ShortText.view
+            state={state.contactName}
+            disabled={isDisabled}
+            onChangeDebounced={onChangeDebounced('validateContactName')}
+            onChange={onChangeShortText('onChangeContactName')} />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs='12' md='5' lg='4'>
+          <ShortText.view
+            state={state.emailAddress}
+            disabled={isDisabled}
+            onChangeDebounced={onChangeDebounced('validateEmailAddress')}
+            onChange={onChangeShortText('onChangeEmailAddress')} />
+        </Col>
+        <Col xs='12' md='5' lg='4'>
+          <ShortText.view
+            state={state.phoneNumber}
+            disabled={isDisabled}
+            onChangeDebounced={onChangeDebounced('validatePhoneNumber')}
+            onChange={onChangeShortText('onChangePhoneNumber')} />
         </Col>
       </Row>
     </div>
@@ -568,6 +665,8 @@ export const view: ComponentView<State, Msg> = props => {
     <div>
       <Attachments {...props} />
       <Eligibility {...props} />
+      <Description {...props} />
+      <Contact {...props} />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { Set } from 'immutable';
+import * as immutable from 'immutable';
 import { isEmpty } from 'lodash';
 import moment from 'moment';
 import AVAILABLE_HEAD_OFFICE_LOCATIONS from 'shared/data/head-office-locations';
@@ -130,7 +130,7 @@ export async function validateArrayAsync<A, B>(raw: A[], validate: (v: A) => Pro
   }
 }
 
-export function validateStringInArray(value: string, availableValues: Set<string>, name: string, indefiniteArticle = 'a', caseSensitive = false): Validation<string> {
+export function validateStringInArray(value: string, availableValues: immutable.Set<string>, name: string, indefiniteArticle = 'a', caseSensitive = false): Validation<string> {
   if (!value) {
     return invalid([`Please select ${indefiniteArticle} ${name}`]);
   }
@@ -279,7 +279,8 @@ export function validatePhoneType(phoneType: string): Validation<PhoneType> {
 }
 
 export function validateCategories(categories: string[], name = 'Category', indefiniteArticle = 'a'): ArrayValidation<string> {
-  return validateArray(categories, raw => validateGenericString(raw, name));
+  const result = validateArray(categories, raw => validateGenericString(raw, name));
+  return mapValid(result, v => Array.from(new Set(v)));
 }
 
 export function validatePositionTitle(positionTitle: string): Validation<string> {
@@ -287,7 +288,8 @@ export function validatePositionTitle(positionTitle: string): Validation<string>
 }
 
 export function validateIndustrySectors(industrySectors: string[]): ArrayValidation<string> {
-  return validateArray(industrySectors, raw => validateGenericString(raw, 'Industry Sector'));
+  const result = validateArray(industrySectors, raw => validateGenericString(raw, 'Industry Sector'));
+  return mapValid(result, v => Array.from(new Set(v)));
 }
 
 export function validateIndigenousOwnership(raw: string): Validation<string> {

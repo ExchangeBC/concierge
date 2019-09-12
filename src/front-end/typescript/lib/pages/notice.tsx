@@ -17,7 +17,8 @@ export type NoticeId
   | ADT<'rfiResponseSubmitted', RfiId>
   | ADT<'rfiNonVendorResponse', RfiId>
   | ADT<'rfiExpiredResponse', RfiId>
-  | ADT<'ddrSubmitted', RfiId>;
+  | ADT<'ddrSubmitted', RfiId>
+  | ADT<'viCreated'>;
 
 function noticeIdToState(noticeId: NoticeId): State {
   switch (noticeId.tag) {
@@ -139,6 +140,24 @@ function noticeIdToState(noticeId: NoticeId): State {
             value: {
               rfiId: noticeId.value
             }
+          }
+        }
+      };
+
+    case 'viCreated':
+      return {
+        title: 'Thank You',
+        body: (
+          <div>
+            <p>Your Vendor-Initiated Idea application has been received.</p>
+            <p>Please note that it may take up to four weeks to review and process your application. A staff member of the Procurement Concierge Program will be in touch with you shortly.</p>
+          </div>
+        ),
+        button: {
+          text: 'View My Vendor-Initiated Ideas',
+          route: {
+            tag: 'viList' as const,
+            value: null
           }
         }
       };

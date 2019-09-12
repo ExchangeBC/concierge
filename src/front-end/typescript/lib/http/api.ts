@@ -1,3 +1,4 @@
+import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
 import { prefixRequest } from 'front-end/lib/http';
 import shajs from 'sha.js';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
@@ -11,7 +12,7 @@ import * as UserResource from 'shared/lib/resources/user';
 import * as ViResource from 'shared/lib/resources/vendor-idea';
 import * as LogItemResource from 'shared/lib/resources/vendor-idea/log-item';
 import { HttpMethod, Omit, PaginatedList } from 'shared/lib/types';
-import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
+import { ArrayValidation, invalid, valid, validateArrayAsync, ValidOrInvalid } from 'shared/lib/validators';
 
 const request = prefixRequest('api');
 
@@ -228,6 +229,23 @@ export async function createFile(file: CreateFileRequestBody): Promise<ValidOrIn
     default:
       return invalid([]);
   }
+}
+
+/**
+ * Uploads a set of files to the back-end and returns
+ * a promise of their `_id`s.
+ */
+
+export async function uploadFiles(files: FileMulti.Value[]): Promise<ArrayValidation<string>> {
+  return validateArrayAsync(files, async file => {
+    switch (file.tag) {
+      case 'existing':
+        return valid(file.value._id);
+      case 'new':
+        const result = await createFile(file.value);
+        return result.tag === 'valid' ? valid(result.value._id) : result;
+    }
+  });
 }
 
 interface RawDiscoveryDay extends Omit<RfiResource.PublicDiscoveryDay, 'occurringAt'> {

@@ -21,7 +21,8 @@ export enum WarningId {
   CreateRfi = 'CREATE_RFI',
   EditRfi = 'EDIT_RFI',
   SignUpProgramStaff = 'SIGN_UP_PROGRAM_STAFF',
-  UserViewAsProgramStaff = 'USER_VIEW_AS_PROGRAM_STAFF'
+  UserViewAsProgramStaff = 'USER_VIEW_AS_PROGRAM_STAFF',
+  CreateVi = 'CREATE_VI'
 }
 
 function warningIdToString(warningId: WarningId): string {
@@ -38,6 +39,8 @@ function warningIdToString(warningId: WarningId): string {
       return 'You must accept the terms and conditions in order to create a Program Staff account.';
     case WarningId.UserViewAsProgramStaff:
       return 'You must accept the terms and conditions in order to view user profiles.';
+    case WarningId.CreateVi:
+      return 'You must accept the terms and conditions in order to submit a Vendor-Initiated Idea application.';
   }
 }
 
@@ -55,6 +58,8 @@ export function parseWarningId(raw: string): WarningId | null {
       return WarningId.SignUpProgramStaff;
     case WarningId.UserViewAsProgramStaff:
       return WarningId.UserViewAsProgramStaff;
+    case WarningId.CreateVi:
+      return WarningId.CreateVi;
     default:
       return null
   }

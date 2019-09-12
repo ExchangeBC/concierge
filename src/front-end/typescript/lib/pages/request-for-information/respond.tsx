@@ -4,7 +4,6 @@ import { Route, SharedState } from 'front-end/lib/app/types';
 import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
 import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, replaceRoute, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
-import { uploadFiles } from 'front-end/lib/pages/request-for-information/lib';
 import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
 import FixedBar from 'front-end/lib/views/layout/fixed-bar';
 import Link from 'front-end/lib/views/link';
@@ -243,7 +242,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
             return stopLoading(state)
               .setIn(['init', 'value', 'attachments'], FileMulti.setErrors(attachments, errors));
           };
-          const uploadedFiles = await uploadFiles(FileMulti.getValues(attachments));
+          const uploadedFiles = await api.uploadFiles(FileMulti.getValues(attachments));
           if (uploadedFiles.tag === 'invalid') { return fail(state, uploadedFiles.value); }
           const result = await api.createRfiResponse({
             rfiId: rfi._id,
