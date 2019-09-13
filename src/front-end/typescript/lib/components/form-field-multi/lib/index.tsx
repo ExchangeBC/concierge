@@ -70,6 +70,7 @@ export interface ChildProps<ExtraProps, Value> {
 }
 
 export interface AddButtonProps<OnAddParams> {
+  text?: string;
   onAdd(params?: OnAddParams): void;
 }
 

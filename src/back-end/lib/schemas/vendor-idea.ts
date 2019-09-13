@@ -154,6 +154,7 @@ async function makePublicVendorIdeaSlimForVendors(UserModel: UserSchema.Model, v
     userType: UserType.Vendor,
     _id: vi._id.toString(),
     createdAt: vi.createdAt,
+    createdBy: await UserSchema.findPublicUserByIdUnsafely(UserModel, vi.createdBy),
     latestVersion: {
       createdAt: latestVersion.createdAt,
       description: latestVersion.description

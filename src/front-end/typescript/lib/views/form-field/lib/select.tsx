@@ -4,8 +4,8 @@ import React from 'react';
 import Select from 'react-select';
 import { Props as SelectProps } from 'react-select/lib/Select';
 
-export interface Option {
-  value: string;
+export interface Option<Value = string> {
+  value: Value;
   label: string;
 }
 

@@ -7,3 +7,5 @@ export const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'Procurement.Concierge
 export const FALLBACK_USER_NAME = 'No Name Provided';
 
 export const MARKDOWN_HELP_URL = 'https://www.markdownguide.org/cheat-sheet';
+
+export const VI_APPLICATION_DOWNLOAD_URL = '/api/fileBlobsByAlias/vendor-idea-detailed-application';

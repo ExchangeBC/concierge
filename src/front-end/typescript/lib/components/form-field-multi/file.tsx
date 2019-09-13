@@ -186,7 +186,7 @@ const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => 
   );
 };
 
-function AddButton(props: FormFieldMulti.AddButtonProps<File>) {
+export function AddButton(props: FormFieldMulti.AddButtonProps<File>) {
   const onChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.currentTarget.files && event.currentTarget.files[0];
     if (file) {
@@ -205,7 +205,7 @@ function AddButton(props: FormFieldMulti.AddButtonProps<File>) {
         value=''
         onChange={onChange} />
       <Button color='info' size='sm'>
-        Add Attachment
+        {props.text || 'Add Attachment'}
       </Button>
     </div>
   );

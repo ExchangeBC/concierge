@@ -644,7 +644,7 @@ interface RawViSlimForProgramStaff extends Omit<ViResource.PublicVendorIdeaSlimF
   latestVersion: RawViVersionSlim;
 }
 
-export async function readManyViForBuyers(id: string): Promise<ValidOrInvalid<PaginatedList<ViResource.PublicVendorIdeaSlimForBuyers>, null>> {
+export async function readManyVisForBuyers(): Promise<ValidOrInvalid<PaginatedList<ViResource.PublicVendorIdeaSlimForBuyers>, null>> {
   const response = await request(HttpMethod.Get, 'vendorIdeas');
   switch (response.status) {
     case 200:
@@ -658,7 +658,7 @@ export async function readManyViForBuyers(id: string): Promise<ValidOrInvalid<Pa
   }
 }
 
-export async function readManyViForVendors(id: string): Promise<ValidOrInvalid<PaginatedList<ViResource.PublicVendorIdeaSlimForVendors>, null>> {
+export async function readManyVisForVendors(): Promise<ValidOrInvalid<PaginatedList<ViResource.PublicVendorIdeaSlimForVendors>, null>> {
   const response = await request(HttpMethod.Get, 'vendorIdeas');
   switch (response.status) {
     case 200:
@@ -672,7 +672,7 @@ export async function readManyViForVendors(id: string): Promise<ValidOrInvalid<P
   }
 }
 
-export async function readManyViForProgramStaff(id: string): Promise<ValidOrInvalid<PaginatedList<ViResource.PublicVendorIdeaSlimForProgramStaff>, null>> {
+export async function readManyVisForProgramStaff(): Promise<ValidOrInvalid<PaginatedList<ViResource.PublicVendorIdeaSlimForProgramStaff>, null>> {
   const response = await request(HttpMethod.Get, 'vendorIdeas');
   switch (response.status) {
     case 200:

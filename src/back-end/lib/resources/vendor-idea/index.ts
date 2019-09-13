@@ -184,7 +184,7 @@ const resource: Resource = {
           const items: PublicVendorIdeaSlim[] = [];
           for await (const idea of query) {
             if (!request.session.user) { continue; }
-            const isVendorsOwnIdea = request.session.user.type === UserType.Vendor && idea.createdBy === request.session.user.id;
+            const isVendorsOwnIdea = request.session.user.type === UserType.Vendor && idea.createdBy.toString() === request.session.user.id.toString();
             const isBuyerEligibleIdea = request.session.user.type === UserType.Buyer && getLatestStatus(idea.log) === LogItemType.Eligible;
             const isProgramStaff = request.session.user.type === UserType.ProgramStaff;
             if (isVendorsOwnIdea || isBuyerEligibleIdea || isProgramStaff) {

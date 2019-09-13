@@ -103,10 +103,12 @@ export type PublicVendorIdeaSlimForBuyers = PublicVendorIdeaSlimBase<UserType.Bu
 
 export interface PublicVendorIdeaSlimForVendors extends PublicVendorIdeaSlimBase<UserType.Vendor> {
   latestStatus: LogItemTypeStatus;
+  createdBy: PublicUser;
 }
 
 export interface PublicVendorIdeaSlimForProgramStaff extends PublicVendorIdeaSlimBase<UserType.ProgramStaff> {
   latestStatus: LogItemTypeStatus;
+  createdBy: PublicUser;
 }
 
 export type PublicVendorIdeaSlim

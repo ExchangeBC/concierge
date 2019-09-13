@@ -1,415 +1,361 @@
-import { CONTACT_EMAIL } from 'front-end/config';
-import { makePageMetadata } from 'front-end/lib';
-import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, newRoute, PageBreadcrumbs, PageComponent, PageInit, Update, View } from 'front-end/lib/framework';
-import * as api from 'front-end/lib/http/api';
-import { publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
-import DiscoveryDayInfo from 'front-end/lib/pages/request-for-information/views/discovery-day-info';
-import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
-import FormSectionHeading from 'front-end/lib/views/form-section-heading';
-import Icon from 'front-end/lib/views/icon';
-import FixedBar from 'front-end/lib/views/layout/fixed-bar';
+import { VI_APPLICATION_DOWNLOAD_URL } from 'front-end/config';
+import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
+import { Route } from 'front-end/lib/app/types';
+import * as TableComponent from 'front-end/lib/components/table';
+import { ComponentView, Dispatch, GlobalComponentMsg, Immutable, immutable, Init, mapComponentDispatch, newRoute, PageGetModal, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import { hasUserAcceptedTerms, readManyVisForVendors } from 'front-end/lib/http/api';
+import { getLogItemTypeStatusDropdownItems } from 'front-end/lib/pages/vendor-idea/lib';
+import LogItemTypeBadge from 'front-end/lib/pages/vendor-idea/views/log-item-type-badge';
+import * as Select from 'front-end/lib/views/form-field/select';
+import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Link from 'front-end/lib/views/link';
-import Markdown from 'front-end/lib/views/markdown';
 import { default as React, ReactElement } from 'react';
 import { Col, Row } from 'reactstrap';
-import { compareDates, formatDate, formatTime } from 'shared/lib';
-import * as DdrResource from 'shared/lib/resources/discovery-day-response';
-import * as FileResource from 'shared/lib/resources/file';
-import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
-import * as RfiResource from 'shared/lib/resources/request-for-information';
-import { PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
+import { compareDates, rawFormatDate } from 'shared/lib';
 import { PublicSessionUser } from 'shared/lib/resources/session';
-import { Addendum, ADT, RfiStatus, UserType } from 'shared/lib/types';
+import { PublicVendorIdeaSlimForVendors } from 'shared/lib/resources/vendor-idea';
+import { LogItemType, parseLogItemType } from 'shared/lib/resources/vendor-idea/log-item';
+import { ADT, profileToName } from 'shared/lib/types';
 
-const ERROR_MESSAGE = 'The Request for Information you are looking for is not available.';
-const DISCOVERY_DAY_ID = 'discovery-day';
-const ATTACHMENTS_ID = 'attachments';
-
-export interface RouteParams {
-  rfiId: string;
-  preview?: boolean;
+function formatTableDate(date: Date): string {
+  return rawFormatDate(date, 'YYYY-MM-DD', false);
 }
 
-export type InnerMsg
-  = ADT<'hideResponseConfirmationPrompt'>
-  | ADT<'hideDiscoveryDayConfirmationPrompt'>
-  | ADT<'respondToRfi'>
-  | ADT<'attendDiscoveryDay'>;
+// Define Table component.
+
+type TableCellData
+  = ADT<'status', LogItemType>
+  | ADT<'title', { title: string, viId: string, dispatch: Dispatch<Msg> }>
+  | ADT<'dateSubmitted', Date>
+  | ADT<'lastUpdated', Date>;
+
+const Table: TableComponent.TableComponent<TableCellData> = TableComponent.component();
+
+const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
+  const wrap = (child: string | null | ReactElement<any>, wrapText = false, center = false) => {
+    return (<td className={`${wrapText ? 'text-wrap' : ''} ${center ? 'text-center' : ''} align-top`}>{child}</td>);
+  };
+  switch (data.tag) {
+    case 'status':
+      return wrap((<LogItemTypeBadge logItemType={data.value} />));
+    case 'title':
+      return wrap((
+        <Link onClick={() => data.value.dispatch({ tag: 'editVi', value: data.value.viId })} className='mb-1'>
+          {data.value.title}
+        </Link>
+      ), true);
+    case 'dateSubmitted':
+    case 'lastUpdated':
+      return wrap(formatTableDate(data.value));
+  }
+}
+
+interface VendorIdea extends PublicVendorIdeaSlimForVendors {
+  createdByName: string;
+}
+
+export interface State {
+  createLoading: number;
+  promptCreateConfirmation: boolean;
+  promptEditConfirmation?: string;
+  vis: VendorIdea[];
+  visibleVis: VendorIdea[];
+  sessionUser: PublicSessionUser;
+  statusFilter: Select.State;
+  searchFilter: ShortText.State;
+  table: Immutable<TableComponent.State<TableCellData>>;
+};
+
+type FormFieldKeys
+  = 'statusFilter'
+  | 'searchFilter';
+
+export interface Params {
+  sessionUser: PublicSessionUser;
+}
+
+type InnerMsg
+  = ADT<'statusFilter', Select.Value>
+  | ADT<'searchFilter', string>
+  | ADT<'table', TableComponent.Msg>
+  | ADT<'createVi'>
+  | ADT<'editVi', string>
+  | ADT<'hideCreateConfirmationPrompt'>
+  | ADT<'hideEditConfirmationPrompt'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
-export interface State {
-  infoAlerts: string[];
-  preview: boolean;
-  promptResponseConfirmation: boolean;
-  promptDiscoveryDayConfirmation: boolean;
-  // TODO refactor how sessionUser, rfi and ddr exist on state
-  // once we have better session retrieval in the front-end.
-  // See pages/request-for-information/request.tsx for a good example
-  // of handling valid/invalid state initialization for pages.
-  sessionUser?: PublicSessionUser;
-  rfi?: PublicRfi;
-  ddr?: DdrResource.PublicDiscoveryDayResponse;
-};
-
-const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParams, shared }) => {
-  const { rfiId, preview = false } = routeParams;
-  const { session } = shared;
-  const sessionUser = session && session.user;
-  const defaultState: State = {
-    infoAlerts: [],
-    preview,
-    promptResponseConfirmation: false,
-    promptDiscoveryDayConfirmation: false,
-    sessionUser
-  };
-  const rfiResult = preview ? await api.readOneRfiPreview(rfiId) : await api.readOneRfi(rfiId);
-  switch (rfiResult.tag) {
-    case 'valid':
-      const rfi = rfiResult.value;
-      // Show newest addenda first.
-      rfi.latestVersion.addenda.reverse();
-      // Determine if the user has already sent a Discovery Day Response,
-      // if they are a Vendor.
-      let ddr: DdrResource.PublicDiscoveryDayResponse | undefined;
-      if (sessionUser && sessionUser.type === UserType.Vendor) {
-        const ddrResult = await api.readOneDdr(sessionUser.id, rfi._id);
-        if (ddrResult.tag === 'valid') {
-          ddr = ddrResult.value;
-        }
-      }
-      // Determine infoAlerts to display on the page.
-      const infoAlerts: string[] = [];
-      if (preview) {
-        infoAlerts.push('This is a preview. All "Published" and "Last Updated" dates on this page are only relevant to the preview, and do not reflect the dates associated with the original RFI.');
-      } else {
-        // Use `mightViewResponseButtons` to only show response-related infoAlerts
-        // to unauthenticated users and Vendor.
-        const mightViewResponseButtons = sessionUser && sessionUser.type === UserType.Vendor || !sessionUser;
-        const rfiStatus = rfiToRfiStatus(rfi);
-        if (mightViewResponseButtons && rfiStatus === RfiStatus.Closed) {
-          infoAlerts.push(`This RFI is still accepting responses up to ${rfi.latestVersion.gracePeriodDays} calendar days after the closing date and time.`);
-        }
-        if (mightViewResponseButtons && rfiStatus === RfiStatus.Expired) {
-          infoAlerts.push('This RFI is no longer accepting responses.');
-        }
-        const updatedAt = rfi.latestVersion.createdAt;
-        if (rfiStatus === RfiStatus.Open && updatedAt && compareDates(rfi.publishedAt, updatedAt) === -1) {
-          infoAlerts.push(`This RFI was last updated on ${formatDate(updatedAt)}.`);
-        }
-      }
-      return {
-        ...defaultState,
-        infoAlerts,
-        rfi,
-        ddr
-      };
-    case 'invalid':
-      return defaultState;
+export const init: Init<Params, State> = async ({ sessionUser }) => {
+  const result = await readManyVisForVendors();
+  let vis: VendorIdea[] = [];
+  if (result.tag === 'valid') {
+    vis = result.value.items
+      .map(vi => ({ ...vi, createdByName: profileToName(vi.createdBy.profile) }))
+      // Sort vendor ideas by date submitted.
+      .sort((a, b) => {
+        return compareDates(a.createdAt, b.createdAt) * -1;
+      });
   }
+  return {
+    createLoading: 0,
+    promptCreateConfirmation: false,
+    promptEditConfirmation: undefined,
+    sessionUser,
+    vis,
+    visibleVis: vis,
+    statusFilter: Select.init({
+      id: 'vi-list-filter-status',
+      required: false,
+      label: 'Status',
+      placeholder: 'All',
+      options: getLogItemTypeStatusDropdownItems()
+    }),
+    searchFilter: ShortText.init({
+      id: 'rfi-list-filter-search',
+      type: 'text',
+      required: false,
+      placeholder: 'Search'
+    }),
+    table: immutable(await Table.init({
+      idNamespace: 'rfi-list',
+      THView: TableComponent.DefaultTHView,
+      TDView
+    }))
+  };
 };
 
-const update: Update<State, Msg> = ({ state, msg }) => {
-  if (!state.rfi) { return [state]; }
+function viMatchesStatus(vi: VendorIdea, filterStatus: LogItemType | null): boolean {
+  if (!filterStatus) { return false; }
+  return vi.latestStatus === filterStatus;
+}
+
+function viMatchesSearch(vi: VendorIdea, query: RegExp): boolean {
+  return !!vi.latestVersion.description.title.match(query) || !!vi.createdByName.match(query);
+}
+
+function updateAndQuery<K extends FormFieldKeys>(state: Immutable<State>, key: K, value: State[K]['value']): Immutable<State> {
+  // Update state with the filter value.
+  state = state.setIn([key, 'value'], value);
+  // Query the list of available RFIs based on all filters' state.
+  const statusQuery = state.statusFilter.value && state.statusFilter.value.value;
+  const rawSearchQuery = state.searchFilter.value;
+  const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split(/\s+/).join('.*'), 'i') : null;
+  const vis = state.vis.filter(vi => {
+    let match = true;
+    match = match && (!statusQuery || viMatchesStatus(vi, parseLogItemType(statusQuery)));
+    match = match && (!searchQuery || viMatchesSearch(vi, searchQuery));
+    return match;
+  });
+  return state.set('visibleVis', vis); ;
+}
+
+const startCreateLoading: UpdateState<State> = makeStartLoading('createLoading');
+const stopCreateLoading: UpdateState<State> = makeStopLoading('createLoading');
+
+export const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
-    case 'hideResponseConfirmationPrompt':
-      return [state.set('promptResponseConfirmation', false)];
-    case 'hideDiscoveryDayConfirmationPrompt':
-      return [state.set('promptDiscoveryDayConfirmation', false)];
-    case 'respondToRfi':
-      return [
+    case 'statusFilter':
+      return [updateAndQuery(state, 'statusFilter', msg.value)];
+    case 'searchFilter':
+      return [updateAndQuery(state, 'searchFilter', msg.value)];
+    case 'table':
+      return updateComponentChild({
         state,
+        mapChildMsg: value => ({ tag: 'table' as const, value }),
+        childStatePath: ['table'],
+        childUpdate: Table.update,
+        childMsg: msg.value
+      });
+    case 'createVi':
+      return [
+        startCreateLoading(state),
         async (state, dispatch) => {
-          if (!state.rfi) {
-            return null;
-          } else if (state.promptResponseConfirmation || !state.sessionUser || (await api.hasUserAcceptedTerms(state.sessionUser.id))) {
+          state = stopCreateLoading(state);
+          if (state.promptCreateConfirmation || (await hasUserAcceptedTerms(state.sessionUser.id))) {
             dispatch(newRoute({
-              tag: 'requestForInformationRespond',
-              value: {
-                rfiId: state.rfi._id
-              }
+              tag: 'viCreate',
+              value: null
             }));
             return null;
           } else {
-            return state.set('promptResponseConfirmation', true);
+            return state.set('promptCreateConfirmation', true);
           }
         }
       ];
-    case 'attendDiscoveryDay':
+    case 'editVi':
       return [
         state,
         async (state, dispatch) => {
-          if (!state.rfi) {
-            return null;
-          } else if (state.promptDiscoveryDayConfirmation || !state.sessionUser || (await api.hasUserAcceptedTerms(state.sessionUser.id))) {
+          if (state.promptEditConfirmation || (await hasUserAcceptedTerms(state.sessionUser.id))) {
             dispatch(newRoute({
-              tag: 'requestForInformationAttendDiscoveryDay',
-              value: {
-                rfiId: state.rfi._id
-              }
+              tag: 'viEdit',
+              value: { viId: msg.value }
             }));
             return null;
           } else {
-            return state.set('promptDiscoveryDayConfirmation', true);
+            return state.set('promptEditConfirmation', msg.value);
           }
         }
       ];
+    case 'hideCreateConfirmationPrompt':
+      return [state.set('promptCreateConfirmation', false)];
+    case 'hideEditConfirmationPrompt':
+      return [state.set('promptEditConfirmation', undefined)];
     default:
       return [state];
   }
 };
 
-interface DetailProps {
-  title: string;
-  values: Array<string | ReactElement<any>>;
-}
-
-const Detail: View<DetailProps> = ({ title, values }) => {
-  values = values.map((v, i) => (<div key={`${title}-${i}`}>{v}</div>));
+const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   return (
-    <Row className='align-items-start mb-3'>
-      <Col xs='12' md='5' className='font-weight-bold text-secondary text-center text-md-right'>{title}</Col>
-      <Col xs='12' md='7' className='text-center text-md-left'>{values}</Col>
-    </Row>
-  );
-};
-
-const Details: View<{ rfi: PublicRfi }> = ({ rfi }) => {
-  const version = rfi.latestVersion;
-  const contactValues = [
-    `${version.programStaffContact.firstName} ${version.programStaffContact.lastName}`,
-    version.programStaffContact.positionTitle,
-    (<a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>)
-  ];
-  const statusValues = [
-    (<StatusBadge rfi={rfi} />)
-  ];
-  const discoveryDayValues = version.discoveryDay
-    ? [(<a href={`#${DISCOVERY_DAY_ID}`}>View Discovery Day Information</a>)]
-    : ['No Discovery Day session'];
-  const attachmentsValues = version.attachments.length
-    ? [(<a href={`#${ATTACHMENTS_ID}`}>View Attachments</a>)]
-    : ['No attachments'];
-  return (
-    <Row>
-      <Col xs='12' md='7'>
-        <Detail title='Public Sector Entity' values={[version.publicSectorEntity]} />
-        <Detail title='Contact' values={contactValues} />
-        <Detail title='Commodity Code(s)' values={version.categories} />
-      </Col>
-      <Col xs='12' md='5'>
-        <Detail title='Status' values={statusValues} />
-        <Detail title='Closing Date' values={[formatDate(version.closingAt)]} />
-        <Detail title='Closing Time' values={[formatTime(version.closingAt, true)]} />
-        <Detail title='Discovery Day' values={discoveryDayValues} />
-        <Detail title='Attachments' values={attachmentsValues} />
-      </Col>
-    </Row>
-  );
-}
-
-const Description: View<{ value: string }> = ({ value }) => {
-  return (
-    <div className='mt-5 pt-5 border-top'>
+    <div>
       <Row>
         <Col xs='12'>
-          <Markdown source={value} openLinksInNewTabs />
+          <h3 className='mb-3'>
+            Submission(s)
+          </h3>
+        </Col>
+      </Row>
+      <Row className='d-none d-md-flex align-items-end'>
+        <Col xs='12' md='5' lg='4'>
+          <Select.view
+            state={state.statusFilter}
+            onChange={onChangeSelect('statusFilter')} />
+        </Col>
+        <Col xs='12' md='4' className='ml-md-auto'>
+          <ShortText.view
+            state={state.searchFilter}
+            onChange={onChangeShortText('searchFilter')} />
         </Col>
       </Row>
     </div>
   );
-}
-
-const DiscoveryDay: View<{ discoveryDay?: RfiResource.PublicDiscoveryDay }> = ({ discoveryDay }) => {
-  if (!discoveryDay) { return null; }
-  return (
-    <div className='pt-5 mt-5 border-top' id={DISCOVERY_DAY_ID}>
-      <FormSectionHeading text='Discovery Day Session' />
-      <DiscoveryDayInfo discoveryDay={discoveryDay} />
-    </div>
-  );
-}
-
-const Attachments: View<{ files: FileResource.PublicFile[] }> = ({ files }) => {
-  if (!files.length) { return null; }
-  const children = files.map((file, i) => {
-    return (
-      <div className='d-flex align-items-start mb-3' key={`view-rfi-attachment-${i}`}>
-        <Icon name='paperclip' color='secondary' className='mr-3 mt-1 flex-shrink-0' width={1.1} height={1.1} />
-        <Link href={makeFileBlobPath(file._id)} className='d-block' download>
-          {file.originalName}
-        </Link>
-      </div>
-    );
-  });
-  return (
-    <div className='pt-5 mt-5 border-top' id={ATTACHMENTS_ID}>
-      <FormSectionHeading text='Attachments' />
-      <Row>
-        <Col xs='12'>
-          {children}
-        </Col>
-      </Row>
-    </div>
-  );
-}
-
-const Addenda: View<{ addenda: Addendum[] }> = ({ addenda }) => {
-  if (!addenda.length) { return null; }
-  const children = addenda.map((addendum, i) => {
-    return (
-      <div key={`view-rfi-addendum-${i}`} className={`pb-${i === addenda.length - 1 ? '0' : '4'} w-100`}>
-        <Col xs='12' md={{ size: 10, offset: 1 }} className={i !== 0 ? 'pt-4 border-top' : ''}>
-          <Markdown source={addendum.description} className='mb-2' openLinksInNewTabs />
-        </Col>
-        <Col xs='12' md={{ size: 10, offset: 1 }} className='d-flex flex-column flex-md-row justify-content-between text-secondary'>
-          <small>{publishedDateToString(addendum.createdAt)}</small>
-          <small>{updatedDateToString(addendum.updatedAt)}</small>
-        </Col>
-      </div>
-    );
-  });
-  return (
-    <Row className='mt-5 pt-5 border-top'>
-      <Col xs='12'>
-        <h3 className='pb-3'>Addenda</h3>
-      </Col>
-      {children}
-    </Row>
-  );
-}
-
-function showButtons(rfiStatus: RfiStatus, userType?: UserType): boolean {
-  return (!userType || userType === UserType.Vendor) && !!rfiStatus && rfiStatus !== RfiStatus.Expired;
-}
-
-const viewBottomBar: ComponentView<State, Msg> = props => {
-  const { state, dispatch } = props;
-  // Do not show buttons for previews.
-  if (state.preview || !state.rfi) { return null; }
-  // Only show these buttons for Vendors and unauthenticated users.
-  const rfiStatus = rfiToRfiStatus(state.rfi);
-  if (!showButtons(rfiStatus, state.sessionUser && state.sessionUser.type)) { return null; }
-  const version = state.rfi.latestVersion;
-  const alreadyRespondedToDiscoveryDay = !!state.ddr;
-  const attendDiscoveryDay = () => dispatch({ tag: 'attendDiscoveryDay', value: undefined });
-  const respondToRfi = () => dispatch({ tag: 'respondToRfi', value: undefined });
-  return (
-    <FixedBar>
-      <Link onClick={respondToRfi} button color='primary' className='text-nowrap'>
-        Respond to RFI
-      </Link>
-      {version.discoveryDay && rfiStatus === RfiStatus.Open && !RfiResource.discoveryDayHasPassed(version.discoveryDay.occurringAt)
-        ? (<Link onClick={attendDiscoveryDay} button color='info' className='text-nowrap mr-md-3 mr-0 ml-3 ml-md-0'>
-            {alreadyRespondedToDiscoveryDay ? 'View Discovery Day Session Registration' : 'Attend Discovery Day Session'}
-          </Link>)
-        : null}
-      <div className='text-secondary font-weight-bold d-none d-md-block mr-auto'>I want to...</div>
-    </FixedBar>
-  );
 };
 
-const view: ComponentView<State, Msg> = props => {
-  const { state } = props;
-  if (!state.rfi) { return null; }
-  const rfi = state.rfi;
-  const version = state.rfi.latestVersion;
+const tableHeadCells: TableComponent.THSpec[] = [
+  {
+    children: 'Status',
+    style: {
+      width: '15%'
+    }
+  },
+  {
+    children: 'Title',
+    style: {
+      minWidth: '340px',
+      width: '65%'
+    }
+  },
+  {
+    children: 'Date Submitted',
+    style: {
+      width: '10%'
+    }
+  },
+  {
+    children: 'Last Updated',
+    style: {
+      width: '10%'
+    }
+  }
+];
+
+function tableBodyRows(vis: VendorIdea[], dispatch: Dispatch<Msg>): Array<Array<TableComponent.TDSpec<TableCellData>>> {
+  return vis.map(vi => {
+    return [
+      TableComponent.makeTDSpec({ tag: 'status' as const, value: vi.latestStatus }),
+      TableComponent.makeTDSpec({
+        tag: 'title' as const,
+        value: {
+          viId: vi._id,
+          title: vi.latestVersion.description.title,
+          dispatch
+        }
+      }),
+      TableComponent.makeTDSpec({ tag: 'dateSubmitted' as const, value: vi.createdAt }),
+      TableComponent.makeTDSpec({ tag: 'lastUpdated' as const, value: vi.latestVersion.createdAt })
+    ];
+  });
+}
+
+const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
+  if (!state.vis.length) { return (<div>There are no VIIs currently available.</div>); }
+  if (!state.visibleVis.length) { return (<div>There are no VIIs that match the search criteria.</div>); }
+  const dispatchTable: Dispatch<TableComponent.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
+  return (
+    <Table.view
+      className='text-nowrap'
+      style={{ lineHeight: '1.5rem' }}
+      headCells={tableHeadCells}
+      bodyRows={tableBodyRows(state.visibleVis, dispatch)}
+      state={state.table}
+      dispatch={dispatchTable} />
+  );
+}
+
+export const view: ComponentView<State, Msg> = props => {
   return (
     <div>
       <Row className='mb-5'>
-        <Col xs='12' className='d-flex flex-column text-center align-items-center'>
-          <h1 className='h4'>RFI Number: {version.rfiNumber}</h1>
-          <h2 className='h1'>{version.title}</h2>
-          <div className='text-secondary small'>
-            {publishedDateToString(rfi.publishedAt)}
-          </div>
-          <div className='text-secondary small'>
-            {updatedDateToString(version.createdAt)}
+        <Col xs='12' md='9' lg='8'>
+          <h1>My Vendor-Initiated Ideas</h1>
+          <p>
+            To submit a Vendor-Initiated Idea (VII), <b>please download and fill out the detailed information portion of the application</b> using the "Download Application" button below. Once the application has been completed, you may submit your idea for the Procurement Concierge Program's staff to review by clicking the "Create Vendor-Initiated Idea" button and filling out the form provided.
+          </p>
+          <div className='d-flex flex-column flex-md-row'>
+            <Link button download color='primary' href={VI_APPLICATION_DOWNLOAD_URL} className='mr-0 mr-md-2 mb-2 mb-md-0'>1. Download Application</Link>
+            <Link button color='info-alt' route={{ tag: 'viCreate', value: null }}>2. Create Vendor-Initiated Idea</Link>
           </div>
         </Col>
       </Row>
-      <Details rfi={rfi} />
-      <Description value={version.description} />
-      <DiscoveryDay discoveryDay={version.discoveryDay} />
-      <Attachments files={version.attachments} />
-      <Addenda addenda={version.addenda} />
+      <Filters {...props} />
+      <ConditionalTable {...props} />
     </div>
   );
 };
 
-export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
-  init,
-  update,
-  view,
-  viewBottomBar,
-  getAlerts(state) {
+export const getModal: PageGetModal<State, Msg> = state => {
+  if (state.promptCreateConfirmation) {
     return {
-      ...emptyPageAlerts(),
-      info: state.infoAlerts,
-      errors: !state.rfi ? [ERROR_MESSAGE] : []
+      title: 'Review Terms and Conditions',
+      body: 'You must accept the Procurement Concierge Terms and Conditions in order to create a Vendor-Initiated Idea.',
+      onCloseMsg: { tag: 'hideCreateConfirmationPrompt', value: undefined },
+      actions: [
+        {
+          text: 'Review Terms & Conditions',
+          color: 'primary',
+          button: true,
+          msg: { tag: 'createVi', value: undefined }
+        },
+        {
+          text: 'Go Back',
+          color: 'secondary',
+          msg: { tag: 'hideCreateConfirmationPrompt', value: undefined }
+        }
+      ]
     };
-  },
-  getMetadata(state) {
-    const name = state.rfi ? state.rfi.latestVersion.rfiNumber : 'Request for Information';
-    const title = `${name}${state.preview ? ' Preview' : ''}`;
-    return makePageMetadata(title);
-  },
-  getBreadcrumbs(state) {
-    const breadcrumbs: PageBreadcrumbs<Msg> = [{
-      text: 'RFIs',
-      onClickMsg: newRoute({
-        tag: 'requestForInformationList',
-        value: null
-      })
-    }];
-    breadcrumbs.push({
-      text: state.rfi ? state.rfi.latestVersion.rfiNumber : 'Request for Information'
-    });
-    return breadcrumbs;
-  },
-  getModal(state) {
-    if (!state.rfi) { return null; }
-    if (state.promptResponseConfirmation) {
-      return {
-        title: 'Review Terms and Conditions',
-        body: 'You must accept the Procurement Concierge Terms and Conditions in order to respond to this Request for Information.',
-        onCloseMsg: { tag: 'hideResponseConfirmationPrompt', value: undefined },
-        actions: [
-          {
-            text: 'Review Terms & Conditions',
-            color: 'primary',
-            button: true,
-            msg: { tag: 'respondToRfi', value: undefined }
-          },
-          {
-            text: 'Go Back',
-            color: 'secondary',
-            msg: { tag: 'hideResponseConfirmationPrompt', value: undefined }
-          }
-        ]
-      };
-    } else if (state.promptDiscoveryDayConfirmation) {
-      return {
-        title: 'Review Terms and Conditions',
-        body: 'You must accept the Procurement Concierge Terms and Conditions in order to attend this RFI\'s Discovery Day session.',
-        onCloseMsg: { tag: 'hideDiscoveryDayConfirmationPrompt', value: undefined },
-        actions: [
-          {
-            text: 'Review Terms & Conditions',
-            color: 'primary',
-            button: true,
-            msg: { tag: 'attendDiscoveryDay', value: undefined }
-          },
-          {
-            text: 'Go Back',
-            color: 'secondary',
-            msg: { tag: 'hideDiscoveryDayConfirmationPrompt', value: undefined }
-          }
-        ]
-      }
-    } else {
-      return null;
-    }
+  } else if (state.promptEditConfirmation) {
+    return {
+      title: 'Review Terms and Conditions',
+      body: 'You must accept the Procurement Concierge Terms and Conditions in order to view or edit a Vendor-Initiated Idea.',
+      onCloseMsg: { tag: 'hideEditConfirmationPrompt', value: undefined },
+      actions: [
+        {
+          text: 'Review Terms & Conditions',
+          color: 'primary',
+          button: true,
+          msg: { tag: 'editVi', value: state.promptEditConfirmation }
+        },
+        {
+          text: 'Go Back',
+          color: 'secondary',
+          msg: { tag: 'hideEditConfirmationPrompt', value: undefined }
+        }
+      ]
+    };
+  } else {
+    return null;
   }
 };

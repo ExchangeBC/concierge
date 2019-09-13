@@ -236,7 +236,7 @@ const Attachments: View<{ files: FileResource.PublicFile[] }> = ({ files }) => {
   const children = files.map((file, i) => {
     return (
       <div className='d-flex align-items-start mb-3' key={`view-rfi-attachment-${i}`}>
-        <Icon name='paperclip' color='secondary' className='mr-3 mt-1 flex-shrink-0' width={1.1} height={1.1} />
+        <Icon name='paperclip' color='secondary' className='mr-2 mt-1 flex-shrink-0' width={1.1} height={1.1} />
         <Link href={makeFileBlobPath(file._id)} className='d-block' download>
           {file.originalName}
         </Link>
