@@ -5,7 +5,7 @@ import * as TableComponent from 'front-end/lib/components/table';
 import { ComponentView, Dispatch, GlobalComponentMsg, Immutable, immutable, Init, mapComponentDispatch, newRoute, PageGetModal, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import { hasUserAcceptedTerms, readManyVisForProgramStaff } from 'front-end/lib/http/api';
 import { getLogItemTypeStatusDropdownItems } from 'front-end/lib/pages/vendor-idea/lib';
-import LogItemTypeBadge from 'front-end/lib/pages/vendor-idea/views/log-item-type-badge';
+import { LogItemTypeBadge } from 'front-end/lib/pages/vendor-idea/views/log-item-type-badge';
 import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Icon from 'front-end/lib/views/icon';
@@ -287,7 +287,7 @@ export const view: ComponentView<State, Msg> = props => {
           <h1>Vendor-Initiated Ideas</h1>
         </Col>
       </Row>
-      <Row className='mb-5'>
+      <Row className='mb-4'>
         <Col xs='12' md='9' lg='8'>
           <div className='mb-3 d-flex flex-column flex-md-row align-items-start align-items-md-center'>
             <h3 className='mb-0 mr-md-3 mb-3 mb-md-0'>Application Template</h3>

@@ -17,12 +17,14 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
   const isMyProfileRoute = activeRoute.tag === 'userView' && activeRoute.value.profileUserId === get(session, ['user', 'id']);
   const isUserListRoute = activeRoute.tag === 'userList';
   const isRequestForInformationListRoute = activeRoute.tag === 'requestForInformationList';
+  const isVendorIdeaListRoute = activeRoute.tag === 'viList';
   const isLandingRoute = activeRoute.tag === 'landing';
-  const activeClass = (active: boolean) => active ? 'font-weight-bold text-decoration-underline' : '';
+  const activeClass = (active: boolean) => active ? 'font-weight-bold o-100' : '';
   const onClick = () => toggleIsOpen(false);
-  const linkClassName = (isActive: boolean) => `${activeClass(isActive)} text-white px-0 px-md-3`;
+  const linkClassName = (isActive: boolean) => `o-75 ${activeClass(isActive)} text-white px-0 px-md-3`;
   const landingRoute: Route = { tag: 'landing', value: null };
   const rfiListRoute: Route = { tag: 'requestForInformationList', value: null };
+  const viListRoute: Route = { tag: 'viList', value: null };
   const userListRoute: Route = { tag: 'userList', value: null };
   if (!session || !session.user) {
     return (
@@ -31,7 +33,7 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
           <Link nav route={landingRoute} className={linkClassName(isLandingRoute)} onClick={onClick}>Home</Link>
         </NavItem>
         <NavItem>
-          <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
+          <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>Requests for Information</Link>
         </NavItem>
       </Nav>
     );
@@ -50,7 +52,10 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
             <Link nav route={landingRoute} className={linkClassName(isLandingRoute)} onClick={onClick}>Home</Link>
           </NavItem>
           <NavItem>
-            <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
+            <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>Requests for Information</Link>
+          </NavItem>
+          <NavItem>
+            <Link nav route={viListRoute} className={linkClassName(isVendorIdeaListRoute)} onClick={onClick}>Vendor-Initiated Ideas</Link>
           </NavItem>
           <NavItem>
             <Link nav route={myProfileRoute} className={linkClassName(isMyProfileRoute)} onClick={onClick}>My Profile</Link>
@@ -64,7 +69,10 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
             <Link nav route={landingRoute} className={linkClassName(isLandingRoute)} onClick={onClick}>Home</Link>
           </NavItem>
           <NavItem>
-            <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
+            <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>Requests for Information</Link>
+          </NavItem>
+          <NavItem>
+            <Link nav route={viListRoute} className={linkClassName(isVendorIdeaListRoute)} onClick={onClick}>My Vendor-Initiated Ideas</Link>
           </NavItem>
           <NavItem>
             <Link nav route={myProfileRoute} className={linkClassName(isMyProfileRoute)} onClick={onClick}>My Profile</Link>
@@ -78,7 +86,10 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
             <Link nav route={landingRoute} className={linkClassName(isLandingRoute)} onClick={onClick}>Home</Link>
           </NavItem>
           <NavItem>
-            <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>RFIs</Link>
+            <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>Requests for Information</Link>
+          </NavItem>
+          <NavItem>
+            <Link nav route={viListRoute} className={linkClassName(isVendorIdeaListRoute)} onClick={onClick}>Vendor-Initiated Ideas</Link>
           </NavItem>
           <NavItem>
             <Link nav route={userListRoute} className={linkClassName(isUserListRoute)} onClick={onClick}>Users</Link>
@@ -101,7 +112,7 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
     return (
       <Nav navbar className='ml-md-auto'>
         <NavItem className='d-none d-md-block'>
-          <Link nav color='white' className='px-0 px-md-3' disabled>{session.user.email}</Link>
+          <Link nav color='white' className='px-0 px-md-3' style={{ opacity: 0.4 }} disabled>{session.user.email}</Link>
         </NavItem>
         <NavItem>
           <Link nav route={signOutRoute} color='white' onClick={onClick} className='px-0 pl-md-3'>Sign Out</Link>

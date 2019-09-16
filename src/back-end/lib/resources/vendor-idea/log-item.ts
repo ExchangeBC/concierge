@@ -51,7 +51,7 @@ const resource: Resource = {
             type: validatedType.value
           });
         }
-        const validatedNote = validateLogItemNote(request.body.type);
+        const validatedNote = validateLogItemNote(request.body.note);
         if (validatedNote.tag === 'invalid') {
           return respond(400, {
             type: validatedNote.value

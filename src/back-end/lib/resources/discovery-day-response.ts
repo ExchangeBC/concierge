@@ -82,7 +82,7 @@ export const resource: Resource = {
           });
         }
         // Validate the vendor.
-        const validatedVendor = await validateUserId(UserModel, request.body.vendorId, UserType.Vendor, true);
+        const validatedVendor = await validateUserId(UserModel, request.body.vendorId, [UserType.Vendor], true);
         if (validatedVendor.tag === 'invalid') {
           return respond(400, {
             vendorId: validatedVendor.value
@@ -219,7 +219,7 @@ export const resource: Resource = {
       },
       async respond(request): Promise<Response<UpdateResponseBody, Session>> {
         const respond = (code: number, body: PublicDiscoveryDayResponse | UpdateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
-        const validatedVendor = await validateUserId(UserModel, request.params.id, UserType.Vendor, true);
+        const validatedVendor = await validateUserId(UserModel, request.params.id, [UserType.Vendor], true);
         if (validatedVendor.tag === 'invalid' || !(await permissions.updateDiscoveryDayResponse(UserModel, request.session, validatedVendor.value._id))) {
           return respond(401, {
             permissions: [permissions.ERROR_MESSAGE]
@@ -330,7 +330,7 @@ export const resource: Resource = {
         return request.body;
       },
       async respond(request) {
-        const validatedVendor = await validateUserId(UserModel, request.params.id, UserType.Vendor, true);
+        const validatedVendor = await validateUserId(UserModel, request.params.id, [UserType.Vendor], true);
         if (validatedVendor.tag === 'invalid' || !(await permissions.deleteDiscoveryDayResponse(UserModel, request.session, validatedVendor.value._id))) {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         }

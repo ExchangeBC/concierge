@@ -3,7 +3,7 @@ import * as IntakeForm from 'front-end/lib/pages/vendor-idea/components/intake-f
 import { BootstrapColor } from 'front-end/lib/types';
 import { Option } from 'front-end/lib/views/form-field/lib/select';
 import { CreateRequestBody, CreateValidationErrors } from 'shared/lib/resources/vendor-idea';
-import { LogItemType, logItemTypeIsStatus } from 'shared/lib/resources/vendor-idea/log-item';
+import { LogItemType, logItemTypeIsStatus, logItemTypeIsSystem } from 'shared/lib/resources/vendor-idea/log-item';
 import { ADT } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
@@ -19,7 +19,7 @@ export function logItemTypeToCopy(itemType: LogItemType): LogItemTypeCopy {
     case LogItemType.UnderReview:
       return { tag: 'badge', value: ['warning', 'Under Review'] };
     case LogItemType.EditsRequired:
-      return { tag: 'badge', value: ['info', 'Edits Required'] };
+      return { tag: 'badge', value: ['warning', 'Edits Required'] };
     case LogItemType.EditsSubmitted:
       return { tag: 'badge', value: ['info', 'Edits Submitted'] };
     case LogItemType.Eligible:
@@ -62,7 +62,7 @@ export function getLogItemTypeDropdownItems(): Array<Option<LogItemType>> {
       case 'badgeAndLabel':
         return { value, label: `${copy.value[1]}: ${copy.value[2]}` };
       case 'label':
-        return null;
+        return { value, label: copy.value };
     }
   };
   return [
@@ -93,6 +93,10 @@ export function getLogItemTypeDropdownItems(): Array<Option<LogItemType>> {
 
 export function getLogItemTypeStatusDropdownItems(): Array<Option<LogItemType>> {
   return getLogItemTypeDropdownItems().filter(({ value }) => logItemTypeIsStatus(value));
+}
+
+export function getLogItemTypeNonSystemDropdownItems(): Array<Option<LogItemType>> {
+  return getLogItemTypeDropdownItems().filter(({ value }) => !logItemTypeIsSystem(value));
 }
 
 export async function makeRequestBody(state: IntakeForm.State): Promise<ValidOrInvalid<CreateRequestBody, CreateValidationErrors>> {

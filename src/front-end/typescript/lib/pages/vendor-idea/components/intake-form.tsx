@@ -115,6 +115,13 @@ export function getValues(state: State): Values {
 
 export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
   const getVi = (kp: string[], fallback: any) => get(existingVi, ['latestVersion', ...kp], fallback);
+  const existingIndustrySectorFields = getVi(['description', 'industrySectors'], [])
+    .map((value: string): FormFieldMulti.Field<SelectMulti.Value> => {
+      return {
+        value: { label: value, value },
+        errors: []
+      };
+    });
   const existingCategoryFields = getVi(['description', 'categories'], [])
     .map((value: string): FormFieldMulti.Field<SelectMulti.Value> => {
       return {
@@ -132,7 +139,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
       placeholder: 'Please limit your response to 300 words.',
       value: getVi(['eligibility', 'existingPurchase'], '')
     }),
-    searchDeclaration: !!existingVi,
+    searchDeclaration: existingVi ? !getVi(['eligibility', 'existingPurchase'], undefined) : false,
     productOffering: LongText.init({
       id: 'vi-product-offering',
       required: true,
@@ -176,7 +183,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
         label: 'Identify the industry sector(s) that apply to the product or service.',
         required: true,
         minFields: 1,
-        fields: existingCategoryFields.length ? existingCategoryFields : SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
+        fields: existingIndustrySectorFields.length ? existingIndustrySectorFields : SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
       }
     })),
     categories: immutable(await SelectMulti.init({
@@ -352,7 +359,7 @@ export function setErrors(state: Immutable<State>, errors: CreateValidationError
   return state
     .setIn(['existingPurchaseSummary', 'errors'], getErrors(['eligibility', 'existingPurchase']))
     .setIn(['productOffering', 'errors'], getErrors(['eligibility', 'productOffering']))
-    .setIn(['innovationDefinitionOtherText'], getErrors(['eligibility', 'innovationDefinitions']).reduce((acc: string[], v: string[][], i: number) => {
+    .setIn(['innovationDefinitionOtherText', 'errors'], getErrors(['eligibility', 'innovationDefinitions']).reduce((acc: string[], v: string[][], i: number) => {
       const def = state.innovationDefinitions[i];
       if (def && def.tag === 'other') {
         return v;
@@ -624,7 +631,7 @@ const Contact: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
   return (
-    <div className='mb-5'>
+    <div>
       <Row className='mb-4'>
         <Col xs='12' md='10' lg='8'>
           <h3 className='mb-4'>Section 4: Contact Information</h3>

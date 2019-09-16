@@ -10,6 +10,6 @@ export function validateLogItemType(raw: string): Validation<LogItemType> {
   }
 }
 
-export function validateLogItemNote(raw: string): Validation<string | undefined> {
+export function validateLogItemNote(raw: string | undefined): Validation<string | undefined> {
   return optional(v => validateGenericString(v, 'Comments/Notes', 1, 5000), raw);
 }

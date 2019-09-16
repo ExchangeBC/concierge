@@ -466,14 +466,14 @@ const view: ComponentView<State, Msg> = props => {
     <div>
       <Row className='mb-5 mb-md-2 justify-content-md-between'>
         <Col xs='12' md='auto'>
-          <h1 className='mb-3 mb-md-0'>Requests for Information (RFIs)</h1>
+          <h1 className='mb-3 mb-md-0'>Requests for Information</h1>
         </Col>
         <ConditionalCreateButton {...props} />
       </Row>
       <Row className='mb-3 d-none d-md-flex'>
         <Col xs='12' md='8'>
           <p>
-            Click on an RFI's title in the table below to view it.
+            Click on a Request for Information's (RFI's) title in the table below to view it.
           </p>
         </Col>
       </Row>

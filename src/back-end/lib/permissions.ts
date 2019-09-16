@@ -17,7 +17,7 @@ export function isBuyer(session: Session): boolean {
 }
 
 export async function isVerifiedBuyerAndHasAcceptedTerms(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  const result = await validateUserId(UserModel, get(session.user, 'id', ''), UserType.Buyer, true, true);
+  const result = await validateUserId(UserModel, get(session.user, 'id', ''), [UserType.Buyer], true, true);
   return result.tag === 'valid';
 }
 
@@ -26,7 +26,7 @@ export function isProgramStaff(session: Session): boolean {
 }
 
 export async function isProgramStaffAndHasAcceptedTerms(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  const result = await validateUserId(UserModel, get(session.user, 'id', ''), UserType.ProgramStaff, true);
+  const result = await validateUserId(UserModel, get(session.user, 'id', ''), [UserType.ProgramStaff], true);
   return result.tag === 'valid';
 }
 
@@ -35,7 +35,7 @@ export function isVendor(session: Session): boolean {
 }
 
 export async function isVendorAndHasAcceptedTerms(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  const result = await validateUserId(UserModel, get(session.user, 'id', ''), UserType.Vendor, true);
+  const result = await validateUserId(UserModel, get(session.user, 'id', ''), [UserType.Vendor], true);
   return result.tag === 'valid';
 }
 
@@ -199,8 +199,8 @@ export async function readOneVendorIdea(UserModel: UserSchema.Model, session: Se
 }
 
 export async function readManyVendorIdeas(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session))
-      || (await isVendorAndHasAcceptedTerms(UserModel, session))
+  return isProgramStaff(session)
+      || isVendor(session)
       || (await isVerifiedBuyerAndHasAcceptedTerms(UserModel, session));
 }
 

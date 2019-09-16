@@ -492,6 +492,17 @@ function rawLogItemToPublicLogItem(raw: RawLogItem): LogItemResource.PublicLogIt
   };
 }
 
+export async function createViLogItem(body: LogItemResource.CreateRequestBody): Promise<ValidOrInvalid<LogItemResource.PublicLogItem, LogItemResource.CreateValidationErrors>> {
+  const response = await request(HttpMethod.Post, `vendorIdeaLogItems`, body);
+  switch (response.status) {
+    case 201:
+      const rawResponseBody = response.data as RawLogItem;
+      return valid(rawLogItemToPublicLogItem(rawResponseBody));
+    default:
+      return invalid(response.data);
+  }
+}
+
 interface RawViVersionForBuyers extends Omit<ViResource.PublicVersionForBuyers, 'createdAt' | 'attachments'> {
   createdAt: string;
   attachments: RawFile[];

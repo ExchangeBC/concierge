@@ -212,6 +212,26 @@ nav.navbar .nav-link:hover {
 
 // Custom utilities.
 
+.o-0 {
+  opacity: 0 !important;
+}
+
+.o-25 {
+  opacity: 0.25 !important;
+}
+
+.o-50 {
+  opacity: 0.50 !important;
+}
+
+.o-75 {
+  opacity: 0.75 !important;
+}
+
+.o-100 {
+  opacity: 1 !important;
+}
+
 .font-size-small {
   font-size: $font-size-sm;
 }

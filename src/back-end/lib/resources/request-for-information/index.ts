@@ -20,7 +20,7 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
   const createdBy = getString(session.user, 'id');
   const { rfiNumber, title, publicSectorEntity, description, discoveryDay, closingDate, closingTime, gracePeriodDays, buyerContact, programStaffContact, categories, attachments, addenda } = body;
   // Validate individual values.
-  const validatedCreatedBy = await validateUserId(UserModel, createdBy, UserType.ProgramStaff);
+  const validatedCreatedBy = await validateUserId(UserModel, createdBy, [UserType.ProgramStaff]);
   const validatedClosingDate = validateClosingDate(closingDate);
   const validatedClosingTime = validateClosingTime(closingTime, getValidValue(validatedClosingDate, ''));
   const validatedGracePeriodDays = validateGracePeriodDays(gracePeriodDays);
@@ -33,8 +33,8 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
   const validatedDiscoveryDay = validateDiscoveryDay(discoveryDay);
   const validatedAddenda = validateAddendumDescriptions(addenda);
   const validatedAttachments = await validateFileIdArray(FileModel, attachments);
-  const validatedBuyerContact = await validateUserId(UserModel, buyerContact, UserType.Buyer, true, true);
-  const validatedProgramStaffContact = await validateUserId(UserModel, programStaffContact, UserType.ProgramStaff, true);
+  const validatedBuyerContact = await validateUserId(UserModel, buyerContact, [UserType.Buyer], true, true);
+  const validatedProgramStaffContact = await validateUserId(UserModel, programStaffContact, [UserType.ProgramStaff], true);
   // Check if the payload is valid.
   if (allValid([validatedCreatedBy, validatedClosingDate, validatedClosingTime, validatedGracePeriodDays, validatedRfiNumber, validatedTitle, validatedDescription, validatedPublicSectorEntity, validatedNumCategories, validatedCategories, validatedDiscoveryDay, validatedAddenda, validatedAttachments, validatedBuyerContact, validatedProgramStaffContact])) {
     // If everything is valid, return the version.

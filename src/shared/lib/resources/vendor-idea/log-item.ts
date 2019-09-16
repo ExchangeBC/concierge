@@ -126,6 +126,11 @@ export function logItemTypeIsEvent(item: LogItemType): item is LogItemTypeEvent 
       || item === LogItemType.PurchaseSolicitationSelectedVendors;
 }
 
+export function logItemTypeIsSystem(item: LogItemType): boolean {
+  return item === LogItemType.ApplicationSubmitted
+      || item === LogItemType.EditsSubmitted;
+}
+
 export function logItemTypeIsOther(item: LogItemType): item is LogItemTypeOther {
   return item === LogItemType.GeneralNote;
 }

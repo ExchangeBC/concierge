@@ -54,7 +54,7 @@ function makeUpdateRequestBody(body: object): UpdateRequestBody {
 }
 
 async function validateCreateRequestBody(UserModel: UserSchema.Model, FileModel: FileSchema.Model, body: CreateRequestBody, sessionUser: SessionUser): Promise<ValidOrInvalid<ViSchema.Version, CreateValidationErrors>> {
-  const validatedCreatedBy = await validateUserId(UserModel, sessionUser.id, UserType.Vendor, true);
+  const validatedCreatedBy = await validateUserId(UserModel, sessionUser.id, [UserType.Vendor], true);
   const validatedAttachments = await validateFileIdArray(FileModel, body.attachments);
   const validatedEligibility = validateEligibility(body.eligibility);
   const validatedContact = validateContact(body.contact);
@@ -79,16 +79,29 @@ async function validateCreateRequestBody(UserModel: UserSchema.Model, FileModel:
   }
 }
 
-async function validateUpdateRequestBody(UserModel: UserSchema.Model, FileModel: FileSchema.Model, body: UpdateRequestBody, sessionUser: SessionUser): Promise<ValidOrInvalid<ViSchema.Version, UpdateValidationErrors>> {
-  const result = await validateCreateRequestBody(UserModel, FileModel, body, sessionUser);
-  switch (result.tag) {
-    case 'valid':
-      return result;
-    case 'invalid':
-      return invalid({
-        ...result.value,
-        createdBy: undefined
-      });
+async function validateUpdateRequestBody(UserModel: UserSchema.Model, FileModel: FileSchema.Model, body: CreateRequestBody, sessionUser: SessionUser): Promise<ValidOrInvalid<ViSchema.Version, CreateValidationErrors>> {
+  const validatedCreatedBy = await validateUserId(UserModel, sessionUser.id, [UserType.ProgramStaff, UserType.Vendor], true);
+  const validatedAttachments = await validateFileIdArray(FileModel, body.attachments);
+  const validatedEligibility = validateEligibility(body.eligibility);
+  const validatedContact = validateContact(body.contact);
+  const validatedDescription = validateDescription(body.description);
+  if (allValid([validatedCreatedBy, validatedAttachments, validatedEligibility, validatedContact, validatedDescription])) {
+    return valid({
+      createdAt: new Date(),
+      createdBy: (validatedCreatedBy.value as InstanceType<UserSchema.Model>)._id,
+      attachments: (validatedAttachments.value as Array<InstanceType<FileSchema.Model>>).map(file => file._id),
+      eligibility: validatedEligibility.value,
+      contact: validatedContact.value,
+      description: validatedDescription.value
+    } as ViSchema.Version);
+  } else {
+    return invalid({
+      createdBy: getInvalidValue(validatedCreatedBy, undefined),
+      description: getInvalidValue(validatedDescription, undefined),
+      eligibility: getInvalidValue(validatedEligibility, undefined),
+      contact: getInvalidValue(validatedContact, undefined),
+      attachments: getInvalidValue(validatedAttachments, undefined)
+    });
   }
 }
 
@@ -124,7 +137,7 @@ const resource: Resource = {
           log: [{
             createdAt: version.createdAt,
             type: LogItemType.ApplicationSubmitted,
-            note: 'Vendor-Initiated Idea application received.'
+            note: 'The vendor submitted this application.'
           }]
         });
         await vendorIdea.save();
@@ -154,7 +167,7 @@ const resource: Resource = {
               // Only return vendor idea if its a vendor's own idea
               // or if a buyer has accepted the terms and is verified.
               const isVendorsOwnIdea = publicVendorIdea.userType === UserType.Vendor && publicVendorIdea.createdBy._id === request.session.user.id.toString();
-              if (isVendorsOwnIdea || await validateUserId(UserModel, request.session.user.id, UserType.Buyer, true, true)) {
+              if (isVendorsOwnIdea || await validateUserId(UserModel, request.session.user.id, [UserType.Buyer], true, true)) {
                 return basicResponse(200, request.session, makeJsonResponseBody(publicVendorIdea));
               }
               return basicResponse(404, request.session, makeJsonResponseBody(['Not Found']));
@@ -183,7 +196,6 @@ const resource: Resource = {
           const query = await ViModel.find();
           const items: PublicVendorIdeaSlim[] = [];
           for await (const idea of query) {
-            if (!request.session.user) { continue; }
             const isVendorsOwnIdea = request.session.user.type === UserType.Vendor && idea.createdBy.toString() === request.session.user.id.toString();
             const isBuyerEligibleIdea = request.session.user.type === UserType.Buyer && getLatestStatus(idea.log) === LogItemType.Eligible;
             const isProgramStaff = request.session.user.type === UserType.ProgramStaff;
@@ -199,7 +211,7 @@ const resource: Resource = {
           }));
         } catch (error) {
           error = makeErrorResponseBody(error);
-          request.logger.error('unable to find vendor idea', error.value);
+          request.logger.error('Unable to read many vendor ideas.', error.value);
           return basicResponse(500, request.session, error);
         }
       }
@@ -222,7 +234,12 @@ const resource: Resource = {
             permissions: [permissions.ERROR_MESSAGE]
           });
         }
-        const validatedVendorIdea = await validateVendorIdeaId(ViModel, request.params.id);
+        const validatedVendorIdea = await validateVendorIdeaId(
+          ViModel,
+          request.params.id,
+          // Vendors can only edit their own ideas that have the "EditsRequired" status.
+          request.session.user.type === UserType.Vendor ? [LogItemType.EditsRequired] : undefined
+        );
         if (validatedVendorIdea.tag === 'invalid') {
           return respond(404, {
             vendorIdeaId: validatedVendorIdea.value
@@ -235,6 +252,13 @@ const resource: Resource = {
         }
         const version = validatedVersion.value;
         vendorIdea.versions.push(version);
+        if (request.session.user.type === UserType.Vendor) {
+          vendorIdea.log.push({
+            createdAt: version.createdAt,
+            type: LogItemType.EditsSubmitted,
+            note: 'The vendor has submitted changes to their application.'
+          });
+        }
         await vendorIdea.save();
         return respond(200, await ViSchema.makePublicVendorIdea(UserModel, FileModel, vendorIdea, request.session.user.type));
       }

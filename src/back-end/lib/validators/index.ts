@@ -69,7 +69,7 @@ export function validateFileIdArray(FileModel: FileSchema.Model, raw: string[]):
  * and/or whether or not they have accepted the T&Cs.
  */
 
-export async function validateUserId(UserModel: UserSchema.Model, id: string | mongoose.Types.ObjectId, userType?: UserType, acceptedTerms?: boolean, mustBeVerified?: boolean): Promise<Validation<InstanceType<UserSchema.Model>>> {
+export async function validateUserId(UserModel: UserSchema.Model, id: string | mongoose.Types.ObjectId, userType?: UserType[], acceptedTerms?: boolean, mustBeVerified?: boolean): Promise<Validation<InstanceType<UserSchema.Model>>> {
   const validatedObjectId = typeof id === 'string' ? validateObjectIdString(id) : valid(id);
   if (validatedObjectId.tag === 'invalid') {
     return invalid([`User ID "${id}" is not valid.`]);
@@ -77,8 +77,8 @@ export async function validateUserId(UserModel: UserSchema.Model, id: string | m
   const user = await UserModel.findById(validatedObjectId.value);
   if (!user || !user.active) {
     return invalid(['User does not exist or is inactive.']);
-  } else if (userType && user.profile.type !== userType) {
-    return invalid([`User is not a ${userType}.`]);
+  } else if (userType && !includes(userType, user.profile.type)) {
+    return invalid([`User is not one of: ${userType.join(', ')}.`]);
   } else if (acceptedTerms !== undefined && !!user.acceptedTermsAt !== acceptedTerms) {
     if (acceptedTerms) {
       return invalid(['User has not yet accepted terms.']);

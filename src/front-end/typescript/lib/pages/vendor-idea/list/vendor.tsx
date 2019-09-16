@@ -5,7 +5,7 @@ import * as TableComponent from 'front-end/lib/components/table';
 import { ComponentView, Dispatch, GlobalComponentMsg, Immutable, immutable, Init, mapComponentDispatch, newRoute, PageGetModal, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import { hasUserAcceptedTerms, readManyVisForVendors } from 'front-end/lib/http/api';
 import { getLogItemTypeStatusDropdownItems } from 'front-end/lib/pages/vendor-idea/lib';
-import LogItemTypeBadge from 'front-end/lib/pages/vendor-idea/views/log-item-type-badge';
+import { LogItemTypeBadge } from 'front-end/lib/pages/vendor-idea/views/log-item-type-badge';
 import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Link from 'front-end/lib/views/link';
@@ -302,10 +302,10 @@ export const view: ComponentView<State, Msg> = props => {
         <Col xs='12' md='9' lg='8'>
           <h1>My Vendor-Initiated Ideas</h1>
           <p>
-            To submit a Vendor-Initiated Idea (VII), <b>please download and fill out the detailed information portion of the application</b> using the "Download Application" button below. Once the application has been completed, you may submit your idea for the Procurement Concierge Program's staff to review by clicking the "Create Vendor-Initiated Idea" button and filling out the form provided.
+            To submit a Vendor-Initiated Idea (VII), <b>please download and fill out the detailed information portion of the application</b> using the "Download Application Document" button below. Once the application has been completed, you may submit your idea for the Procurement Concierge Program's staff to review by clicking the "Create Vendor-Initiated Idea" button and filling out the form provided.
           </p>
-          <div className='d-flex flex-column flex-md-row'>
-            <Link button download color='primary' href={VI_APPLICATION_DOWNLOAD_URL} className='mr-0 mr-md-2 mb-2 mb-md-0'>1. Download Application</Link>
+          <div className='d-flex flex-column flex-md-row align-items-start'>
+            <Link button download color='primary' href={VI_APPLICATION_DOWNLOAD_URL} className='mr-0 mr-md-2 mb-2 mb-md-0'>1. Download Application Document</Link>
             <Link button color='info-alt' route={{ tag: 'viCreate', value: null }}>2. Create Vendor-Initiated Idea</Link>
           </div>
         </Col>

@@ -9,13 +9,13 @@ export interface Option<Value = string> {
   label: string;
 }
 
-export type Value = Option | undefined;
+export type Value = Option | undefined | null;
 
 export interface Props {
   name: string;
   id: string;
   placeholder: string;
-  value?: Value;
+  value: Value;
   disabled?: boolean;
   autoFocus?: boolean;
   options: Option[];

@@ -42,7 +42,8 @@ function AnchorLink(props: AnchorProps) {
     route,
     onClick,
     newTab = false,
-    download = false
+    download = false,
+    style
   } = props;
   // Give precedence to the `route` prop over the `href` prop.
   const finalHref: string
@@ -60,7 +61,7 @@ function AnchorLink(props: AnchorProps) {
     if (!disabled) { onClick(); }
   });
   return (
-    <a href={finalHref} onClick={finalOnClick} className={finalClassName} target={newTab ? '_blank' : undefined} download={download}>
+    <a href={finalHref} onClick={finalOnClick} className={finalClassName} target={newTab ? '_blank' : undefined} download={download} style={style}>
       {children}
     </a>
   );

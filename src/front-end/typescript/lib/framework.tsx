@@ -225,6 +225,13 @@ export function emptyPageBreadcrumbs<Msg>(): PageBreadcrumbs<Msg> {
   return [];
 }
 
+export function mapPageBreadcrumbsMsg<MsgA, MsgB, Route>(breadcrumbs: PageBreadcrumbs<GlobalComponentMsg<MsgA, Route>>, mapMsg: (msgA: GlobalComponentMsg<MsgA, Route>) => GlobalComponentMsg<MsgB, Route>): PageBreadcrumbs<GlobalComponentMsg<MsgB, Route>> {
+  return breadcrumbs.map(b => ({
+    text: b.text,
+    onClickMsg: b.onClickMsg && mapGlobalComponentMsg(b.onClickMsg, mapMsg)
+  }));
+}
+
 export interface ModalButton<Msg> {
   text: string;
   color: 'primary' | 'info' | 'secondary' | 'danger';
