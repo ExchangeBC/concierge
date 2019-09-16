@@ -140,6 +140,15 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
                   state = state
                     .setIn(['value', 'intakeForm'], await resetIntakeForm(result.value))
                     .setIn(['value', 'vi'], result.value);
+                  dispatch(newRoute({
+                    tag: 'notice',
+                    value: {
+                      noticeId: {
+                        tag: 'viEditedByVendor',
+                        value: undefined
+                      }
+                    }
+                  }));
                   break;
                 case 'invalid':
                   state = fail(state, result.value);

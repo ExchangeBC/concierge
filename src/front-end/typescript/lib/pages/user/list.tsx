@@ -24,8 +24,7 @@ import { ADT, parseUserType, profileToName, UserType, userTypeToTitleCase, Verif
 type TableCellData
   = ADT<'verificationStatus', VerificationStatus | null>
   | ADT<'userType', UserType>
-  | ADT<'name', { userId: string, text: string, dispatch: Dispatch<Msg> }>
-  | ADT<'publicSectorEntity', string>
+  | ADT<'name', { userId: string, text: string, dispatch: Dispatch<Msg>, entity?: string }>
   | ADT<'email', string>
   | ADT<'acceptedTerms', boolean>;
 
@@ -45,9 +44,8 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
     return (
       <td className='align-top text-wrap'>
         <Link onClick={() => data.value.dispatch({ tag: 'viewUser', value: data.value.userId })}>{data.value.text}</Link>
+        {data.value.entity ? (<div className='small text-uppercase text-secondary'>{data.value.entity}</div>) : null}
       </td>);
-    case 'publicSectorEntity':
-      return wrap(data.value);
     case 'email':
       return wrap(data.value);
     case 'acceptedTerms':
@@ -309,38 +307,33 @@ const tableHeadCells: TableComponent.THSpec[] = [
   {
     children: 'Status',
     style: {
-      width: '80px'
+      width: '10%'
     }
   },
   {
     children: 'Type',
     style: {
-      width: '180px'
+      width: '15%'
     }
   },
   {
     children: 'Name',
     style: {
-      minWidth: '200px'
-    }
-  },
-  {
-    children: 'Public Sector Entity',
-    style: {
-      minWidth: '200px'
+      minWidth: '200px',
+      width: '40%'
     }
   },
   {
     children: 'Email Address',
     style: {
-      minWidth: '200px'
+      width: '25%'
     }
   },
   {
     children: 'T&C',
     className: 'text-center',
     style: {
-      width: '65px'
+      width: '10%'
     }
   }
 ];
@@ -355,12 +348,9 @@ function tableBodyRows(users: PublicUser[], dispatch: Dispatch<Msg>): Array<Arra
         value: {
           userId: user._id,
           text: profileToName(user.profile) || FALLBACK_USER_NAME,
-          dispatch
+          dispatch,
+          entity: user.profile.type === UserType.Buyer ? user.profile.publicSectorEntity : undefined
         }
-      }),
-      TableComponent.makeTDSpec({
-        tag: 'publicSectorEntity' as const,
-        value: (user.profile.type === UserType.Buyer && user.profile.publicSectorEntity) || ''
       }),
       TableComponent.makeTDSpec({ tag: 'email' as const, value: user.email }),
       TableComponent.makeTDSpec({ tag: 'acceptedTerms' as const, value: !!user.acceptedTermsAt })

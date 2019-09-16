@@ -238,14 +238,14 @@ const tableHeadCells: TableComponent.THSpec[] = [
   {
     children: 'Status',
     style: {
-      width: '15%'
+      width: '25%'
     }
   },
   {
     children: 'Title',
     style: {
       minWidth: '340px',
-      width: '65%'
+      width: '55%'
     }
   },
   {
