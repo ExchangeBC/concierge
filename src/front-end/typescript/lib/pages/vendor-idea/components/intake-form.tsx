@@ -523,10 +523,10 @@ const Eligibility: ComponentView<State, Msg> = ({ state, dispatch }) => {
               <Checkbox id='vi-search-declaration' disabled={isDisabled} checked={state.searchDeclaration} onChange={value => dispatch({ tag: 'onChangeSearchDeclaration', value })} className='font-weight-bold mb-2' label='You have searched, and a similar product and/or service cannot be found in any of the following websites: *' />
                 <ul className='mb-0'>
                   <li><Link newTab href='http://www.bcbid.gov.bc.ca/open.dll/welcome?language=En'>BC Bid</Link></li>
-                  <li><Link newTab href='http://www2.gov.bc.ca/gov/content/governments/services-for-government/bc-bid-resources/bc-bid/contract-opportunities'>Contract Opportunities – Advance Notice</Link></li>
-                  <li><Link newTab href='http://www2.gov.bc.ca/gov/content/governments/services-for-government/bc-bid-resources/bc-bid/vendor-user-of-bc-bid/view-contract-awards'>Contract Award Summaries</Link></li>
+                  <li><Link newTab href='https://www2.gov.bc.ca/gov/content/employment-business/business/business-government/respond-to-opportunities/contract-opportunities'>Contract Opportunities – Advance Notice</Link></li>
+                  <li><Link newTab href='https://www2.gov.bc.ca/gov/content/employment-business/business/business-government/vendor-user-of-bc-bid/view-contract-awards'>Contract Award Summaries</Link></li>
                   <li><Link newTab href='http://www2.gov.bc.ca/gov/content/governments/services-for-government/bc-bid-resources/goods-and-services-catalogue'>Goods and Services Catalogue</Link></li>
-                  <li><Link newTab href='https://www2.gov.bc.ca/gov/content/governments/about-the-bc-government/open-government/open-information/browse-search-catalogue/directly-awarded-contracts'>Directly-Awarded Contracts</Link></li>
+                  <li><Link newTab href='https://www2.gov.bc.ca/gov/content/governments/about-the-bc-government/open-government/open-information/directly-awarded-contracts'>Directly-Awarded Contracts</Link></li>
                 </ul>
               </div>)}
         </Col>
@@ -547,10 +547,10 @@ const Eligibility: ComponentView<State, Msg> = ({ state, dispatch }) => {
           <FieldLabel required text='Indicate which of the definition(s) of innovation apply to your product or service. Please select at least one and all that apply:' />
           <div>
             <InnovationDefinitionCheckbox def={{ tag: 'newTechnology', value: undefined }} label='An invention, new technology or new process that is not currently available in the marketplace.' />
-            <InnovationDefinitionCheckbox def={{ tag: 'existingTechnologyNotPurchased', value: undefined }} label='Goods or services that are available in the marketplace that the Province of BC has not yet purchased.' />
+            <InnovationDefinitionCheckbox def={{ tag: 'existingTechnologyNotPurchased', value: undefined }} label='Goods or services that are available in the marketplace that the government has not yet purchased.' />
             <InnovationDefinitionCheckbox def={{ tag: 'newApplicationOfExistingTechnology', value: undefined }} label='New application of an existing product, service or process.' />
             <InnovationDefinitionCheckbox def={{ tag: 'improvementToExistingTechnology', value: undefined }} label='A significant improvement in functionality, cost or performance over an existing product, service or process that could be considered state-of-the-art or the current industry best practice.' />
-            <InnovationDefinitionCheckbox def={{ tag: 'newGovernmentNeeds', value: undefined }} label={`Government's needs have changed an there is now interest.`} />
+            <InnovationDefinitionCheckbox def={{ tag: 'newGovernmentNeeds', value: undefined }} label={`Government's needs have changed and there is now interest.`} />
             <InnovationDefinitionCheckbox def={{ tag: 'other', value: state.innovationDefinitionOtherText.value }} label='Other' />
             <div className='pl-4'>
               <LongText.view

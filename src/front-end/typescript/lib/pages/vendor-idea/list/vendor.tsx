@@ -303,7 +303,7 @@ export const view: ComponentView<State, Msg> = props => {
       <Row className='mb-5'>
         <Col xs='12' md='9' lg='8'>
           <h1>My Vendor-Initiated Ideas</h1>
-          <p>
+          <p style={{ marginBottom: '2rem' }}>
             To submit a Vendor-Initiated Idea (VII), <b>please download and fill out the detailed information portion of the application</b> using the "Download Application – Detailed Information" button below. Once the application has been completed, you may submit your idea for the Procurement Concierge Program's staff to review by clicking the "Create Vendor-Initiated Idea" button and filling out the form provided.
           </p>
           <div className='d-flex flex-column flex-md-row align-items-start'>
