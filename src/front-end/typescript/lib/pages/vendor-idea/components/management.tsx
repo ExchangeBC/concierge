@@ -4,6 +4,7 @@ import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComp
 import * as api from 'front-end/lib/http/api';
 import { getLogItemTypeDropdownItems, getLogItemTypeNonSystemDropdownItems } from 'front-end/lib/pages/vendor-idea/lib';
 import { LogItemTypeFull } from 'front-end/lib/pages/vendor-idea/views/log-item-type-badge';
+import LogItemTypeSelectGroupLabel from 'front-end/lib/pages/vendor-idea/views/log-item-type-select-group-label';
 import * as LongText from 'front-end/lib/views/form-field/long-text';
 import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
@@ -31,7 +32,7 @@ const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
   };
   switch (data.tag) {
     case 'logItemType':
-      return wrap((<LogItemTypeFull logItemType={data.value} />));
+      return wrap((<LogItemTypeFull logItemType={data.value} />), true);
     case 'logItemNote':
       return wrap(data.value, true);
     case 'published':
@@ -141,7 +142,7 @@ export const init: Init<Params, State> = async ({ viId, logItems }) => {
       required: true,
       label: 'Select Entry Type',
       placeholder: 'Select Entry Type',
-      options: getLogItemTypeNonSystemDropdownItems(),
+      options: { tag: 'optionGroups', value: getLogItemTypeNonSystemDropdownItems() },
       value: null
     }),
     newLogItemNote: LongText.init({
@@ -156,7 +157,7 @@ export const init: Init<Params, State> = async ({ viId, logItems }) => {
       required: false,
       label: 'Entry Type',
       placeholder: 'All',
-      options: getLogItemTypeDropdownItems()
+      options: { tag: 'optionGroups', value: getLogItemTypeDropdownItems() }
     }),
     searchFilter: ShortText.init({
       id: 'vi-management-search-filter',
@@ -295,6 +296,7 @@ const CreateEntry: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Col xs='12' md='5' lg='4'>
           <Select.view
             state={state.newLogItemType}
+            formatGroupLabel={LogItemTypeSelectGroupLabel}
             onChange={onChangeSelect('onChangeNewLogItemType')} />
         </Col>
         {state.newLogItemType.value
@@ -329,6 +331,7 @@ const History: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Col xs='12' md='5' lg='4'>
           <Select.view
             state={state.logItemTypeFilter}
+            formatGroupLabel={LogItemTypeSelectGroupLabel}
             onChange={onChangeSelect('onChangeLogItemTypeFilter')} />
         </Col>
         <Col xs='12' md='4' className='ml-md-auto'>

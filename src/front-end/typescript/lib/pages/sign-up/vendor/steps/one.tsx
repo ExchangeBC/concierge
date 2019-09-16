@@ -76,21 +76,30 @@ const init: Init<Params, State> = async () => {
       required: true,
       label: 'Number of Employees',
       placeholder: 'Select Number of Employees',
-      options: AVAILABLE_NUMBER_OF_EMPLOYEES.toJS().map(value => ({ label: value, value }))
+      options: {
+        tag: 'options',
+        value: AVAILABLE_NUMBER_OF_EMPLOYEES.toJS().map(value => ({ label: value, value }))
+      }
     }),
     indigenousOwnership: Select.init({
       id: 'vendor-profile-indigenous-ownership',
       required: true,
       label: 'Indigenous Ownership',
       placeholder: 'Select Indigenous Ownership',
-      options: AVAILABLE_INDIGENOUS_OWNERSHIP.toJS().map(value => ({ label: value, value }))
+      options: {
+        tag: 'options',
+        value: AVAILABLE_INDIGENOUS_OWNERSHIP.toJS().map(value => ({ label: value, value }))
+      }
     }),
     headOfficeLocation: Select.init({
       id: 'vendor-profile-head-office-location',
       required: true,
       label: 'Head Office Location',
       placeholder: 'Select Head Office Location',
-      options: AVAILABLE_HEAD_OFFICE_LOCATIONS.toJS().map(value => ({ label: value, value }))
+      options: {
+        tag: 'options',
+        value: AVAILABLE_HEAD_OFFICE_LOCATIONS.toJS().map(value => ({ label: value, value }))
+      }
     })
   };
 };

@@ -97,18 +97,24 @@ async function makeInitState(): Promise<State> {
       required: false,
       label: 'User Type',
       placeholder: 'All',
-      options: [
-        { value: UserType.Buyer, label: userTypeToTitleCase(UserType.Buyer) },
-        { value: UserType.Vendor, label: userTypeToTitleCase(UserType.Vendor) },
-        { value: UserType.ProgramStaff, label: userTypeToTitleCase(UserType.ProgramStaff) }
-      ]
+      options: {
+        tag: 'options',
+        value: [
+          { value: UserType.Buyer, label: userTypeToTitleCase(UserType.Buyer) },
+          { value: UserType.Vendor, label: userTypeToTitleCase(UserType.Vendor) },
+          { value: UserType.ProgramStaff, label: userTypeToTitleCase(UserType.ProgramStaff) }
+        ]
+      }
     }),
     categoryFilter: Select.init({
       id: 'user-list-filter-category',
       required: false,
       label: 'Commodity Code',
       placeholder: 'All',
-      options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value }))
+      options: {
+        tag: 'options',
+        value: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value }))
+      }
     }),
     searchFilter: ShortText.init({
       id: 'user-list-filter-search',
@@ -306,6 +312,7 @@ const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
 const tableHeadCells: TableComponent.THSpec[] = [
   {
     children: 'Status',
+    className: 'text-center',
     style: {
       width: '10%'
     }

@@ -193,12 +193,15 @@ export const init: Init<Params, State> = async ({ profile }) => {
       required: false,
       label: 'Business Type',
       placeholder: 'Select Type',
-      options: [
-        { value: BusinessType.Corporation, label: 'Corporation' },
-        { value: BusinessType.LimitedLiabilityCompany, label: 'Limited Liability Company' },
-        { value: BusinessType.Partnership, label: 'Partnership' },
-        { value: BusinessType.SoleProprietor, label: 'Sole Proprietor' }
-      ]
+      options: {
+        tag: 'options',
+        value: [
+          { value: BusinessType.Corporation, label: 'Corporation' },
+          { value: BusinessType.LimitedLiabilityCompany, label: 'Limited Liability Company' },
+          { value: BusinessType.Partnership, label: 'Partnership' },
+          { value: BusinessType.SoleProprietor, label: 'Sole Proprietor' }
+        ]
+      }
     }),
     businessNumber: ShortText.init({
       id: 'vendor-profile-business-number',
@@ -282,10 +285,13 @@ export const init: Init<Params, State> = async ({ profile }) => {
       required: false,
       label: 'Phone Type',
       placeholder: 'Select Type',
-      options: [
-        { value: PhoneType.Office, label: 'Office' },
-        { value: PhoneType.CellPhone, label: 'Cell Phone' }
-      ]
+      options: {
+        tag: 'options',
+        value: [
+          { value: PhoneType.Office, label: 'Office' },
+          { value: PhoneType.CellPhone, label: 'Cell Phone' }
+        ]
+      }
     }),
     industrySectors: immutable(await SelectMulti.init({
       options: AVAILABLE_INDUSTRY_SECTORS.toJS().map(value => ({ label: value, value })),
@@ -316,21 +322,30 @@ export const init: Init<Params, State> = async ({ profile }) => {
       required: true,
       label: 'Number of Employees',
       placeholder: 'Select Number of Employees',
-      options: AVAILABLE_NUMBER_OF_EMPLOYEES.toJS().map(value => ({ label: value, value }))
+      options: {
+        tag: 'options',
+        value: AVAILABLE_NUMBER_OF_EMPLOYEES.toJS().map(value => ({ label: value, value }))
+      }
     }),
     indigenousOwnership: Select.init({
       id: 'vendor-profile-indigenous-ownership',
       required: true,
       label: 'Indigenous Ownership',
       placeholder: 'Select Indigenous Ownership',
-      options: AVAILABLE_INDIGENOUS_OWNERSHIP.toJS().map(value => ({ label: value, value }))
+      options: {
+        tag: 'options',
+        value: AVAILABLE_INDIGENOUS_OWNERSHIP.toJS().map(value => ({ label: value, value }))
+      }
     }),
     headOfficeLocation: Select.init({
       id: 'vendor-profile-head-office-location',
       required: true,
       label: 'Head Office Location',
       placeholder: 'Select Head Office Location',
-      options: AVAILABLE_HEAD_OFFICE_LOCATIONS.toJS().map(value => ({ label: value, value }))
+      options: {
+        tag: 'options',
+        value: AVAILABLE_HEAD_OFFICE_LOCATIONS.toJS().map(value => ({ label: value, value }))
+      }
     }),
     signUpReason: Select.init({
       id: 'vendor-profile-sign-up-reason',
@@ -338,7 +353,10 @@ export const init: Init<Params, State> = async ({ profile }) => {
       isCreatable: true,
       label: 'How did you hear about the Procurement Concierge Program?',
       placeholder: 'Select',
-      options: AVAILABLE_SIGN_UP_REASONS.toJS().map(value => ({ label: value, value }))
+      options: {
+        tag: 'options',
+        value: AVAILABLE_SIGN_UP_REASONS.toJS().map(value => ({ label: value, value }))
+      }
     })
   };
   if (!profile) {

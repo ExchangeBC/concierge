@@ -6,6 +6,7 @@ import { ComponentView, Dispatch, GlobalComponentMsg, Immutable, immutable, Init
 import { hasUserAcceptedTerms, readManyVisForProgramStaff } from 'front-end/lib/http/api';
 import { getLogItemTypeStatusDropdownItems } from 'front-end/lib/pages/vendor-idea/lib';
 import { LogItemTypeBadge } from 'front-end/lib/pages/vendor-idea/views/log-item-type-badge';
+import LogItemTypeSelectGroupLabel from 'front-end/lib/pages/vendor-idea/views/log-item-type-select-group-label';
 import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Icon from 'front-end/lib/views/icon';
@@ -107,7 +108,7 @@ export const init: Init<Params, State> = async ({ sessionUser }) => {
       required: false,
       label: 'Status',
       placeholder: 'All',
-      options: getLogItemTypeStatusDropdownItems()
+      options: { tag: 'optionGroups', value: getLogItemTypeStatusDropdownItems() }
     }),
     searchFilter: ShortText.init({
       id: 'rfi-list-filter-search',
@@ -203,6 +204,7 @@ const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Col xs='12' md='5' lg='4'>
           <Select.view
             state={state.statusFilter}
+            formatGroupLabel={LogItemTypeSelectGroupLabel}
             onChange={onChangeSelect('statusFilter')} />
         </Col>
         <Col xs='12' md='4' className='ml-md-auto'>

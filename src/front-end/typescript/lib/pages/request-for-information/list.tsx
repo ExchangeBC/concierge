@@ -145,17 +145,23 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) 
       required: false,
       label: 'Status',
       placeholder: 'All',
-      options: [
-        { value: RfiStatus.Open, label: rfiStatusToTitleCase(RfiStatus.Open) },
-        { value: RfiStatus.Closed, label: rfiStatusToTitleCase(RfiStatus.Closed) }
-      ]
+      options: {
+        tag: 'options',
+        value: [
+          { value: RfiStatus.Open, label: rfiStatusToTitleCase(RfiStatus.Open) },
+          { value: RfiStatus.Closed, label: rfiStatusToTitleCase(RfiStatus.Closed) }
+        ]
+      }
     }),
     categoryFilter: Select.init({
       id: 'rfi-list-filter-category',
       required: false,
       label: 'Commodity Code',
       placeholder: 'All',
-      options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value }))
+      options: {
+        tag: 'options',
+        value: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value }))
+      }
     }),
     searchFilter: ShortText.init({
       id: 'rfi-list-filter-search',

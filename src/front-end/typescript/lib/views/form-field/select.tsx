@@ -1,14 +1,23 @@
 import { Dispatch, View } from 'front-end/lib/framework';
 import * as FormField from 'front-end/lib/views/form-field/lib';
-import { default as Select, Option, Props as SelectProps, Value } from 'front-end/lib/views/form-field/lib/select';
+import { default as Select, Option, Options, Props as SelectProps, Value } from 'front-end/lib/views/form-field/lib/select';
 import { default as SelectCreatable } from 'front-end/lib/views/form-field/lib/select-creatable';
 import { find } from 'lodash';
 import React from 'react';
 
-export { Option, Value } from 'front-end/lib/views/form-field/lib/select';
+export { Options, OptionGroup, Option, Value } from 'front-end/lib/views/form-field/lib/select';
 
 export function setValue(state: State, value?: string): State {
-  const found = find(state.options, { value }) || undefined;
+  let options: Option[] = [];
+  switch (state.options.tag) {
+    case 'options':
+      options = state.options.value;
+      break;
+    case 'optionGroups':
+      options = state.options.value.reduce<Option[]>((acc, { options }) => [...acc, ...options], []);
+      break;
+  }
+  const found = find(options, { value }) || null;
   if (state.isCreatable && !found && value) {
     return {
       ...state,
@@ -26,15 +35,18 @@ export function setValue(state: State, value?: string): State {
 }
 
 export interface State extends FormField.State<Value> {
-  options: Option[];
+  options: Options;
   placeholder: string;
   isCreatable?: boolean;
 }
 
-type ExtraProps = Pick<State, 'isCreatable'>;
+interface ExtraProps extends Pick<State, 'isCreatable'> {
+  formatGroupLabel?: SelectProps['formatGroupLabel'];
+}
 
 export interface Props extends Pick<FormField.Props<State, ExtraProps, Value>, 'toggleHelp' | 'disabled' | 'onChange'> {
   state: State;
+  formatGroupLabel?: SelectProps['formatGroupLabel'];
 }
 
 type ChildProps = FormField.ChildProps<State, ExtraProps, Value>;
@@ -67,19 +79,20 @@ const Child: View<ChildProps> = props => {
     disabled,
     options: state.options,
     className,
-    onChange
+    onChange,
+    formatGroupLabel: extraProps.formatGroupLabel
   };
   return extraProps.isCreatable ? (<SelectCreatable {...selectProps} />) : (<Select {...selectProps} />);
 };
 
-export const view: View<Props> = ({ state, onChange, toggleHelp, disabled }) => {
+export const view: View<Props> = ({ state, onChange, toggleHelp, disabled, formatGroupLabel }) => {
   return (
     <FormField.view
       Child={Child}
       state={state}
       onChange={onChange}
       toggleHelp={toggleHelp}
-      extraProps={{ isCreatable: state.isCreatable }}
+      extraProps={{ isCreatable: state.isCreatable, formatGroupLabel }}
       disabled={disabled} />
   );
 };

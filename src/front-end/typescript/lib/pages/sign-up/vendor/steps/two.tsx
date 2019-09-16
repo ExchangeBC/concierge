@@ -67,7 +67,10 @@ const init: Init<Params, State> = async () => {
       isCreatable: true,
       label: 'How did you hear about the Procurement Concierge Program?',
       placeholder: 'Select',
-      options: AVAILABLE_SIGN_UP_REASONS.toJS().map(value => ({ label: value, value }))
+      options: {
+        tag: 'options',
+        value: AVAILABLE_SIGN_UP_REASONS.toJS().map(value => ({ label: value, value }))
+      }
     })
   };
 };

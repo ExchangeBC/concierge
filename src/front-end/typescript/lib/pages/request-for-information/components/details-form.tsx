@@ -234,7 +234,10 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       required: true,
       label: `${userTypeToTitleCase(UserType.Buyer)} Contact`,
       placeholder: `Select ${userTypeToTitleCase(UserType.Buyer)}`,
-      options: buyers.map(userToOption)
+      options: {
+        tag: 'options',
+        value: buyers.map(userToOption)
+      }
     }),
     programStaffContact: Select.init({
       id: 'rfi-program-staff-contact',
@@ -242,7 +245,10 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       required: true,
       label: `${userTypeToTitleCase(UserType.ProgramStaff)} Contact`,
       placeholder: `Select ${userTypeToTitleCase(UserType.ProgramStaff)}`,
-      options: programStaff.map(userToOption)
+      options: {
+        tag: 'options',
+        value: programStaff.map(userToOption)
+      }
     }),
     categories: immutable(await SelectMulti.init({
       options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value })),

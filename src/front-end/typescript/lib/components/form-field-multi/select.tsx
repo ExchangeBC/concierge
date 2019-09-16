@@ -7,6 +7,7 @@ import { cloneDeep, find } from 'lodash';
 import React from 'react';
 import { ADT, Omit } from 'shared/lib/types';
 
+// TODO support option groups if required.
 export { Option, Value } from 'front-end/lib/views/form-field/lib/select';
 
 export const DEFAULT_SELECT_MULTI_FIELDS = [{
@@ -108,7 +109,7 @@ const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => 
     value: field.value,
     disabled,
     autoFocus: extraProps.autoFocus,
-    options: extraProps.options,
+    options: { tag: 'options', value: extraProps.options },
     className,
     onChange
   };

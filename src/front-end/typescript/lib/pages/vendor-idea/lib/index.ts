@@ -1,9 +1,9 @@
 import * as api from 'front-end/lib/http/api';
 import * as IntakeForm from 'front-end/lib/pages/vendor-idea/components/intake-form';
 import { BootstrapColor } from 'front-end/lib/types';
-import { Option } from 'front-end/lib/views/form-field/lib/select';
+import { OptionGroup } from 'front-end/lib/views/form-field/lib/select';
 import { CreateRequestBody, CreateValidationErrors } from 'shared/lib/resources/vendor-idea';
-import { LogItemType, logItemTypeIsStatus, logItemTypeIsSystem } from 'shared/lib/resources/vendor-idea/log-item';
+import { LogItemType, logItemTypeIsSystem } from 'shared/lib/resources/vendor-idea/log-item';
 import { ADT } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
@@ -53,7 +53,7 @@ export function logItemTypeToCopy(itemType: LogItemType): LogItemTypeCopy {
   }
 }
 
-export function getLogItemTypeDropdownItems(): Array<Option<LogItemType>> {
+export function getLogItemTypeDropdownItems(): Array<OptionGroup<LogItemType>> {
   const makeItem = (value: LogItemType) => {
     const copy = logItemTypeToCopy(value);
     switch (copy.tag) {
@@ -66,37 +66,56 @@ export function getLogItemTypeDropdownItems(): Array<Option<LogItemType>> {
     }
   };
   return [
-    LogItemType.ApplicationSubmitted,
-    LogItemType.UnderReview,
-    LogItemType.EditsRequired,
-    LogItemType.EditsSubmitted,
-    LogItemType.Eligible,
-    LogItemType.Ineligible,
-    LogItemType.UnderProcurement,
-    LogItemType.ClosedPurchasedFromVendor,
-    LogItemType.ClosedPurchasedFromAnotherVendor,
-    LogItemType.ClosedOther,
-    LogItemType.BuyerInitiatedInterest,
-    LogItemType.MatchInitiated,
-    LogItemType.MatchMeetingHeld,
-    LogItemType.PurchaseDirectAwardWithNoi,
-    LogItemType.PurchaseDirectAwardWithoutNoi,
-    LogItemType.PurchaseSolicitationBcBid,
-    LogItemType.PurchaseSolicitationSelectedVendors,
-    LogItemType.GeneralNote
-  ].reduce((acc: Array<Option<LogItemType>>, s) => {
-    const item = makeItem(s);
-    if (!item) { return acc; }
-    return acc.concat([item]);
-  }, []);
+    {
+      label: 'Statuses',
+      options: [
+        LogItemType.ApplicationSubmitted,
+        LogItemType.UnderReview,
+        LogItemType.EditsRequired,
+        LogItemType.EditsSubmitted,
+        LogItemType.Eligible,
+        LogItemType.Ineligible,
+        LogItemType.UnderProcurement,
+        LogItemType.ClosedPurchasedFromVendor,
+        LogItemType.ClosedPurchasedFromAnotherVendor,
+        LogItemType.ClosedOther
+      ]
+    },
+    {
+      label: 'Events',
+      options: [
+        LogItemType.BuyerInitiatedInterest,
+        LogItemType.MatchInitiated,
+        LogItemType.MatchMeetingHeld,
+        LogItemType.PurchaseDirectAwardWithNoi,
+        LogItemType.PurchaseDirectAwardWithoutNoi,
+        LogItemType.PurchaseSolicitationBcBid,
+        LogItemType.PurchaseSolicitationSelectedVendors
+      ]
+    },
+    {
+      label: 'Other',
+      options: [
+        LogItemType.GeneralNote
+      ]
+    }
+  ].map(({ label, options }) => {
+    return {
+      label,
+      options: options.map(o => makeItem(o))
+    };
+  });
 }
 
-export function getLogItemTypeStatusDropdownItems(): Array<Option<LogItemType>> {
-  return getLogItemTypeDropdownItems().filter(({ value }) => logItemTypeIsStatus(value));
+export function getLogItemTypeStatusDropdownItems(): Array<OptionGroup<LogItemType>> {
+  return getLogItemTypeDropdownItems().filter(({ label }) => label === 'Statuses');
 }
 
-export function getLogItemTypeNonSystemDropdownItems(): Array<Option<LogItemType>> {
-  return getLogItemTypeDropdownItems().filter(({ value }) => !logItemTypeIsSystem(value));
+export function getLogItemTypeNonSystemDropdownItems(): Array<OptionGroup<LogItemType>> {
+  return getLogItemTypeDropdownItems().map(({ label, options }) => ({
+    label,
+    options: options.filter(({ value }) => !logItemTypeIsSystem(value))
+  }));
 }
 
 export async function makeRequestBody(state: IntakeForm.State): Promise<ValidOrInvalid<CreateRequestBody, CreateValidationErrors>> {

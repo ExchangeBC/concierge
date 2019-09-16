@@ -7,9 +7,13 @@ import { Props as SelectProps } from 'react-select/creatable';
 export { Option, Props, Value } from 'front-end/lib/views/form-field/lib/select';
 
 export const view: View<Props> = props => {
-  const { disabled = false, className = '', onChange } = props;
+  const { options, formatGroupLabel, disabled = false, className = '', onChange } = props;
   const selectProps: SelectProps<Value> = {
     ...props,
+    options: options.value,
+    // Cast this type here because react-select's type definitions for this prop
+    // use record syntax, causing the type-system to not recognize the "label" property in OptionGroup.
+    formatGroupLabel: formatGroupLabel as SelectProps<Value>['formatGroupLabel'],
     isSearchable: true,
     isClearable: true,
     isDisabled: disabled,
