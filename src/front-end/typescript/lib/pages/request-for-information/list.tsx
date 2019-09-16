@@ -443,8 +443,8 @@ function nonProgramStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.T
 }
 
 const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (!state.rfis.length) { return (<div>There are no RFIs currently available.</div>); }
-  if (!state.visibleRfis.length) { return (<div>There are no RFIs that match the search criteria.</div>); }
+  if (!state.rfis.length) { return (<div>There are currently no Requests for Information available.</div>); }
+  if (!state.visibleRfis.length) { return (<div>There are currently no Requests for Information that match the search criteria.</div>); }
   const isProgramStaff = get(state.sessionUser, 'type') === UserType.ProgramStaff;
   const headCells = isProgramStaff ? programStaffTableHeadCells : nonProgramStaffTableHeadCells;
   const bodyRows = isProgramStaff ? programStaffTableBodyRows(state.visibleRfis, dispatch) : nonProgramStaffTableBodyRows(state.visibleRfis);
