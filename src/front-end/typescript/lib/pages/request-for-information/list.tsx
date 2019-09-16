@@ -1,9 +1,11 @@
 import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
+import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import * as TableComponent from 'front-end/lib/components/table';
 import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import { hasUserAcceptedTerms, readManyRfis } from 'front-end/lib/http/api';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
+import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
 import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Icon from 'front-end/lib/views/icon';
@@ -522,7 +524,22 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
             text: 'Review Terms & Conditions',
             color: 'primary',
             button: true,
-            msg: { tag: 'editRfi', value: state.promptEditConfirmation }
+            msg: newRoute({
+              tag: 'termsAndConditions',
+              value: {
+                warningId: WarningId.EditRfi,
+                redirectOnAccept: router.routeToUrl({
+                  tag: 'requestForInformationEdit',
+                  value: {
+                    rfiId: state.promptEditConfirmation
+                  }
+                }),
+                redirectOnSkip: router.routeToUrl({
+                  tag: 'requestForInformationList',
+                  value: null
+                })
+              }
+            })
           },
           {
             text: 'Go Back',
