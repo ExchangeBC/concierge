@@ -168,7 +168,7 @@ const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => 
   const value = field.value.tag === 'new' ? field.value.value.name : field.value.value.originalName;
   const placeholder = field.value.tag === 'new' ? field.value.value.file.name : field.value.value.originalName;
   return (
-    <FormFieldMulti.DefaultChild childProps={props}>
+    <div className='d-flex align-items-center'>
       <Input.View
         id={id}
         type='text'
@@ -185,7 +185,7 @@ const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => 
         })}
         onChangeDebounced={() => extraProps && extraProps.onChangeDebounced(index)} />
       {field.value.tag === 'existing'
-        ? (<Link newTab href={makeFileBlobPath('field.value.value._id')}>
+        ? (<Link download href={makeFileBlobPath(field.value.value._id)}>
             <Icon
               name='download'
               width={1}
@@ -193,7 +193,9 @@ const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => 
               className='ml-3 flex-shrink-0' />
           </Link>)
         : null}
-    </FormFieldMulti.DefaultChild>
+        <FormFieldMulti.ConditionalRemoveButton {...props} />
+        {field.value.tag !== 'existing' ? (<div className='ml-3 flex-shrink-0' style={{ width: '1rem', height: '1rem' }}></div>) : null}
+    </div>
   );
 };
 
