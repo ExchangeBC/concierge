@@ -23,7 +23,9 @@ export enum WarningId {
   SignUpProgramStaff = 'SIGN_UP_PROGRAM_STAFF',
   UserViewAsProgramStaff = 'USER_VIEW_AS_PROGRAM_STAFF',
   CreateVi = 'CREATE_VI',
-  ViewVisAsBuyer = 'VIEW_VIS_AS_BUYER'
+  EditVi = 'EDIT_VI',
+  ViewVisAsBuyer = 'VIEW_VIS_AS_BUYER',
+  UploadViApplicationTemplate = 'UPLOAD_VI_APPLICATION_TEMPLATE'
 }
 
 function warningIdToString(warningId: WarningId): string {
@@ -41,9 +43,13 @@ function warningIdToString(warningId: WarningId): string {
     case WarningId.UserViewAsProgramStaff:
       return 'You must accept the terms and conditions in order to view user profiles.';
     case WarningId.CreateVi:
-      return 'You must accept the terms and conditions in order to submit a Vendor-Initiated Idea application.';
+      return 'You must accept the terms and conditions in order to submit a Vendor-Initiated Idea Application.';
+    case WarningId.EditVi:
+      return 'You must accept the terms and conditions in order to edit a Vendor-Initiated Idea Application.';
     case WarningId.ViewVisAsBuyer:
       return 'You must accept the terms and conditions in order to view Vendor-Initiated Ideas.';
+    case WarningId.UploadViApplicationTemplate:
+      return 'You must accept the terms and conditions in order to upload a Vendor-Initiated Idea Application template.';
   }
 }
 
@@ -63,8 +69,12 @@ export function parseWarningId(raw: string): WarningId | null {
       return WarningId.UserViewAsProgramStaff;
     case WarningId.CreateVi:
       return WarningId.CreateVi;
+    case WarningId.EditVi:
+      return WarningId.EditVi;
     case WarningId.ViewVisAsBuyer:
       return WarningId.ViewVisAsBuyer;
+    case WarningId.UploadViApplicationTemplate:
+      return WarningId.UploadViApplicationTemplate;
     default:
       return null
   }

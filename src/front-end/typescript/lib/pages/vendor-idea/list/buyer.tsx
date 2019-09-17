@@ -1,3 +1,4 @@
+import router from 'front-end/lib/app/router';
 import { Route } from 'front-end/lib/app/types';
 import { ComponentView, Dispatch, GlobalComponentMsg, Immutable, immutable, Init, replaceRoute, Update } from 'front-end/lib/framework';
 import { readManyVisForBuyers, readOneUser } from 'front-end/lib/http/api';
@@ -67,7 +68,15 @@ export const init: Init<Params, State> = async ({ sessionUser, dispatch }) => {
     dispatch(replaceRoute({
       tag: 'termsAndConditions',
       value: {
-        warningId: WarningId.ViewVisAsBuyer
+        warningId: WarningId.ViewVisAsBuyer,
+        redirectOnAccept: router.routeToUrl({
+          tag: 'viList',
+          value: null
+        }),
+        redirectOnSkip: router.routeToUrl({
+          tag: 'landing',
+          value: null
+        })
       }
     }));
     return invalid(undefined);

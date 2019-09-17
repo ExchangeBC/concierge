@@ -17,7 +17,7 @@ type CreateResponseBody = JsonResponseBody<PublicFile | string[]>;
 
 type ReadOneResponseBody = JsonResponseBody<PublicFile | string[]>;
 
-type RequiredModels = 'File';
+type RequiredModels = 'File' | 'User';
 
 export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, SupportedRequestBodies, null, Session>;
 
@@ -27,13 +27,14 @@ export const resource: Resource = {
 
   create(Models) {
     const FileModel = Models.File;
+    const UserModel = Models.User;
     return {
       async transformRequest({ body }) {
         return body;
       },
       async respond(request): Promise<Response<CreateResponseBody, Session>> {
         const respond = (code: number, body: PublicFile | string[]) => basicResponse(code, request.session, makeJsonResponseBody(body));
-        if (!permissions.createFile(request.session)) {
+        if (!(await permissions.createFile(UserModel, request.session))) {
           return respond(401, [permissions.ERROR_MESSAGE]);
         } else if (request.body.tag !== 'file') {
           return respond(400, ['File must be uploaded in a multipart request.']);

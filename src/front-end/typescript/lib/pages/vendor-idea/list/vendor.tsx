@@ -298,6 +298,8 @@ const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
 }
 
 export const view: ComponentView<State, Msg> = props => {
+  const { dispatch, state } = props;
+  const createVi = () => dispatch({ tag: 'createVi', value: undefined });
   return (
     <div>
       <Row className='mb-5'>
@@ -308,11 +310,11 @@ export const view: ComponentView<State, Msg> = props => {
           </p>
           <div className='d-flex flex-column flex-md-row align-items-start'>
             <Link button download color='info' href={VI_APPLICATION_DOWNLOAD_URL} className='mr-0 mr-md-2 mb-2 mb-md-0'>1. Download Application – Detailed Information</Link>
-            <Link button color='primary' route={{ tag: 'viCreate', value: null }}>2. Create Vendor-Initiated Idea</Link>
+            <Link button color='primary' onClick={createVi}>2. Create Vendor-Initiated Idea</Link>
           </div>
         </Col>
       </Row>
-      <Filters {...props} />
+      {state.vis.length ? (<Filters {...props} />) : null}
       <ConditionalTable {...props} />
     </div>
   );

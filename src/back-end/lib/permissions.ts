@@ -122,8 +122,9 @@ export function createForgotPasswordToken(session: Session): boolean {
 
 // Files.
 
-export function createFile(session: Session): boolean {
-  return isSignedIn(session);
+export async function createFile(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
+  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session))
+      || (await isVendorAndHasAcceptedTerms(UserModel, session));
 }
 
 export function readOneFile(session: Session, fileAuthLevel: AuthLevel<UserType>): boolean {

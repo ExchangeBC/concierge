@@ -1,10 +1,12 @@
 import { VI_APPLICATION_DOWNLOAD_URL, VI_APPLICATION_FILE_ALIAS } from 'front-end/config';
 import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
+import router from 'front-end/lib/app/router';
 import { Route } from 'front-end/lib/app/types';
 import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
 import * as TableComponent from 'front-end/lib/components/table';
 import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, Init, mapComponentDispatch, newRoute, PageAlerts, PageGetAlerts, PageGetModal, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import { createFile, hasUserAcceptedTerms, readManyVisForProgramStaff, readOneFile } from 'front-end/lib/http/api';
+import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
 import { getLogItemTypeStatusDropdownItems } from 'front-end/lib/pages/vendor-idea/lib';
 import { LogItemTypeBadge } from 'front-end/lib/pages/vendor-idea/views/log-item-type-badge';
 import LogItemTypeSelectGroupLabel from 'front-end/lib/pages/vendor-idea/views/log-item-type-select-group-label';
@@ -65,6 +67,7 @@ interface VendorIdea extends PublicVendorIdeaSlimForProgramStaff {
 export interface State {
   uploadTemplateLoading: number;
   promptEditConfirmation?: string;
+  promptUploadTemplateTermsConfirmation: boolean;
   promptUploadTemplateConfirmation?: File;
   templateFile?: PublicFile;
   vis: VendorIdea[];
@@ -91,6 +94,7 @@ type InnerMsg
   | ADT<'uploadTemplate', File>
   | ADT<'editVi', string>
   | ADT<'hideEditConfirmationPrompt'>
+  | ADT<'hideUploadTemplateTermsConfirmationPrompt'>
   | ADT<'hideUploadTemplateConfirmationPrompt'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
@@ -110,6 +114,7 @@ export const init: Init<Params, State> = async ({ sessionUser }) => {
   return {
     uploadTemplateLoading: 0,
     promptEditConfirmation: undefined,
+    promptUploadTemplateTermsConfirmation: false,
     promptUploadTemplateConfirmation: undefined,
     sessionUser,
     templateFile: getValidValue(templateFileResult, undefined),
@@ -180,14 +185,16 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
         childMsg: msg.value
       });
     case 'uploadTemplate':
-      if (!state.promptUploadTemplateConfirmation) {
-        return [state.set('promptUploadTemplateConfirmation', msg.value)];
-      } else {
-        state = state.set('promptUploadTemplateConfirmation', undefined);
-      }
       return [
         startUploadTemplateLoading(state),
         async state => {
+          if (!state.promptUploadTemplateTermsConfirmation && !(await hasUserAcceptedTerms(state.sessionUser.id))) {
+            return stopUploadTemplateLoading(state).set('promptUploadTemplateTermsConfirmation', true);
+          } else if (!state.promptUploadTemplateConfirmation) {
+            return stopUploadTemplateLoading(state).set('promptUploadTemplateConfirmation', msg.value);
+          } else {
+            state = state.set('promptUploadTemplateConfirmation', undefined);
+          }
           state = stopUploadTemplateLoading(state);
           const result = await createFile({
             name: msg.value.name,
@@ -232,6 +239,8 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       ];
     case 'hideEditConfirmationPrompt':
       return [state.set('promptEditConfirmation', undefined)];
+    case 'hideUploadTemplateTermsConfirmationPrompt':
+      return [state.set('promptUploadTemplateTermsConfirmation', false)];
     case 'hideUploadTemplateConfirmationPrompt':
       return [state.set('promptUploadTemplateConfirmation', undefined)];
     default:
@@ -361,7 +370,7 @@ export const view: ComponentView<State, Msg> = props => {
             : (<div>An application template has not yet been uploaded.</div>)}
         </Col>
       </Row>
-      <Filters {...props} />
+      {state.vis.length ? (<Filters {...props} />) : null}
       <ConditionalTable {...props} />
     </div>
   );
@@ -388,6 +397,38 @@ export const getModal: PageGetModal<State, Msg> = state => {
           text: 'Go Back',
           color: 'secondary',
           msg: { tag: 'hideEditConfirmationPrompt', value: undefined }
+        }
+      ]
+    };
+  } else if (state.promptUploadTemplateTermsConfirmation) {
+    return {
+      title: 'Review Terms and Conditions',
+      body: 'You must accept the Procurement Concierge Terms and Conditions in order to upload a Vendor-Initiated Idea Application template.',
+      onCloseMsg: { tag: 'hideUploadTemplateTermsConfirmationPrompt', value: undefined },
+      actions: [
+        {
+          text: 'Review Terms & Conditions',
+          color: 'primary',
+          button: true,
+          msg: newRoute({
+            tag: 'termsAndConditions',
+            value: {
+              warningId: WarningId.UploadViApplicationTemplate,
+              redirectOnAccept: router.routeToUrl({
+                tag: 'viList',
+                value: null
+              }),
+              redirectOnSkip: router.routeToUrl({
+                tag: 'viList',
+                value: null
+              })
+            }
+          })
+        },
+        {
+          text: 'Go Back',
+          color: 'secondary',
+          msg: { tag: 'hideUploadTemplateTermsConfirmationPrompt', value: undefined }
         }
       ]
     };

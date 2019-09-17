@@ -1,6 +1,6 @@
 import { makePageMetadata, makeStartLoadingIn, makeStopLoadingIn, UpdateState } from 'front-end/lib';
 import { Route } from 'front-end/lib/app/types';
-import { ComponentView, Dispatch, GlobalComponentMsg, immutable, Immutable, Init, mapComponentDispatch, newRoute, PageGetBreadcrumbs, PageGetMetadata, PageGetModal, Update, updateComponentChild } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, GlobalComponentMsg, immutable, Immutable, Init, mapComponentDispatch, newRoute, PageGetBreadcrumbs, PageGetMetadata, PageGetModal, replaceRoute, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as IntakeForm from 'front-end/lib/pages/vendor-idea/components/intake-form';
 import { makeRequestBody } from 'front-end/lib/pages/vendor-idea/lib';
@@ -19,6 +19,7 @@ import { invalid, valid } from 'shared/lib/validators';
 
 export interface Params {
   viId: string;
+  dispatch: Dispatch<Msg>;
 };
 
 type InnerMsg
@@ -51,9 +52,20 @@ async function resetIntakeForm(existingVi: PublicVendorIdeaForVendors): Promise<
   }));
 }
 
-export const init: Init<Params, State> = async ({ viId }) => {
+export const init: Init<Params, State> = async ({ viId, dispatch }) => {
   const existingVi = await api.readOneViForVendors(viId);
-  if (existingVi.tag === 'invalid') { return invalid(undefined); }
+  if (existingVi.tag === 'invalid') {
+    dispatch(replaceRoute({
+      tag: 'notice',
+      value: {
+        noticeId: {
+          tag: 'notFound',
+          value: undefined
+        }
+      }
+    }));
+    return invalid(undefined);
+  }
   return valid({
     startEditingLoading: 0,
     submitLoading: 0,

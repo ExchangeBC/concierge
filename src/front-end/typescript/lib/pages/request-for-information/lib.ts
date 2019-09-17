@@ -18,7 +18,10 @@ export function updatedDateToString(date: Date): string {
 
 export async function makeRequestBody(state: RfiForm.State): Promise<ValidOrInvalid<RfiResource.CreateRequestBody, RfiResource.CreateValidationErrors>> {
   const values = RfiForm.getValues(state);
-  const uploadedFiles = await api.uploadFiles(values.attachments);
+  const uploadedFiles = await api.uploadFiles(values.attachments, {
+    tag: 'any',
+    value: undefined
+  });
   switch (uploadedFiles.tag) {
     case 'valid':
       return valid({

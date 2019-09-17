@@ -61,7 +61,15 @@ export const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
         dispatch(replaceRoute({
           tag: 'termsAndConditions',
           value: {
-            warningId: WarningId.ViewVisAsBuyer
+            warningId: WarningId.ViewVisAsBuyer,
+            redirectOnAccept: router.routeToUrl({
+              tag: 'viList',
+              value: null
+            }),
+            redirectOnSkip: router.routeToUrl({
+              tag: 'landing',
+              value: null
+            })
           }
         }));
         return invalid(undefined);
@@ -114,7 +122,7 @@ export const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
           viId: routeParams.viId
         }
       }));
-    } else {
+    } else { // Vendor
       dispatch(replaceRoute({
         tag: 'viList',
         value: null

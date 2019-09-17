@@ -1,8 +1,9 @@
 import { makePageMetadata, makeStartLoadingIn, makeStopLoadingIn, UpdateState } from 'front-end/lib';
-import { replaceState } from 'front-end/lib/app/router';
+import router, { replaceState } from 'front-end/lib/app/router';
 import { Route } from 'front-end/lib/app/types';
-import { ComponentView, ComponentViewProps, Dispatch, GlobalComponentMsg, immutable, Immutable, Init, mapComponentDispatch, newRoute, PageGetBreadcrumbs, PageGetMetadata, PageGetModal, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import { ComponentView, ComponentViewProps, Dispatch, GlobalComponentMsg, immutable, Immutable, Init, mapComponentDispatch, newRoute, PageGetBreadcrumbs, PageGetMetadata, PageGetModal, replaceRoute, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
+import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
 import * as IntakeForm from 'front-end/lib/pages/vendor-idea/components/intake-form';
 import * as Management from 'front-end/lib/pages/vendor-idea/components/management';
 import { makeRequestBody } from 'front-end/lib/pages/vendor-idea/lib';
@@ -13,6 +14,7 @@ import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import React from 'react';
 import { Col, Nav, NavItem, NavLink, Row, TabContent, TabPane } from 'reactstrap';
+import { PublicSessionUser } from 'shared/lib/resources/session';
 import { PublicVendorIdeaForProgramStaff, UpdateValidationErrors } from 'shared/lib/resources/vendor-idea';
 import { PublicLogItem } from 'shared/lib/resources/vendor-idea/log-item';
 import { ADT } from 'shared/lib/types';
@@ -34,6 +36,8 @@ export function tabIdToName(id: TabId): string {
 export interface Params {
   viId: string;
   activeTab?: TabId;
+  dispatch: Dispatch<Msg>;
+  sessionUser: PublicSessionUser;
 };
 
 type InnerMsg
@@ -78,9 +82,40 @@ async function resetManagement(viId: string, logItems: PublicLogItem[]): Promise
   return immutable(await Management.init({ viId, logItems }));
 }
 
-export const init: Init<Params, State> = async ({ viId, activeTab = 'management' }) => {
+export const init: Init<Params, State> = async ({ sessionUser, viId, dispatch, activeTab = 'management' }) => {
+  if (!(await api.hasUserAcceptedTerms(sessionUser.id))) {
+    dispatch(replaceRoute({
+      tag: 'termsAndConditions',
+      value: {
+        warningId: WarningId.EditVi,
+        redirectOnAccept: router.routeToUrl({
+          tag: 'viEdit',
+          value: {
+            viId,
+            activeTab
+          }
+        }),
+        redirectOnSkip: router.routeToUrl({
+          tag: 'viList',
+          value: null
+        })
+      }
+    }));
+    return invalid(undefined);
+  }
   const existingVi = await api.readOneViForProgramStaff(viId);
-  if (existingVi.tag === 'invalid') { return invalid(undefined); }
+  if (existingVi.tag === 'invalid') {
+    dispatch(replaceRoute({
+      tag: 'notice',
+      value: {
+        noticeId: {
+          tag: 'notFound',
+          value: undefined
+        }
+      }
+    }));
+    return invalid(undefined);
+  }
   return valid({
     activeTab,
     startEditingLoading: 0,
