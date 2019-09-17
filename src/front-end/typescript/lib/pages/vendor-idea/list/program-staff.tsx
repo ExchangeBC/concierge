@@ -19,7 +19,7 @@ import { PublicFile } from 'shared/lib/resources/file';
 import { PublicSessionUser } from 'shared/lib/resources/session';
 import { PublicVendorIdeaSlimForProgramStaff } from 'shared/lib/resources/vendor-idea';
 import { LogItemType, parseLogItemType } from 'shared/lib/resources/vendor-idea/log-item';
-import { ADT, profileToName } from 'shared/lib/types';
+import { ADT, profileToName, UserType } from 'shared/lib/types';
 import { getValidValue } from 'shared/lib/validators';
 
 function formatTableDate(date: Date): string {
@@ -191,7 +191,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
             name: msg.value.name,
             file: msg.value,
             alias: VI_APPLICATION_FILE_ALIAS,
-            authLevel: { tag: 'any', value: undefined }
+            authLevel: { tag: 'userType', value: [UserType.ProgramStaff, UserType.Vendor] }
           });
           switch (result.tag) {
             case 'valid':
