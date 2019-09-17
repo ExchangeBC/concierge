@@ -8,4 +8,5 @@ export interface PublicFile {
   originalName: string;
   hash: string;
   authLevel: undefined;
+  alias?: string;
 }

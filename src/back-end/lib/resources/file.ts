@@ -39,26 +39,42 @@ export const resource: Resource = {
           return respond(400, ['File must be uploaded in a multipart request.']);
         } else {
           const rawFile = request.body.value;
-          const parsedAuthLevel: AuthLevel<UserType> | null  = rawFile.metadata || null;
-          if (!parsedAuthLevel && rawFile.metadata) {
-            return respond(400, ['Invalid metadata field.']);
+          let authLevel: AuthLevel<UserType> = DEFAULT_AUTH_LEVEL;
+          let alias: string | undefined;
+          if (rawFile.metadata) {
+            const validatedAuthLevel = rawFile.metadata.authLevel;
+            if (validatedAuthLevel.tag === 'invalid') {
+              return respond(400, ['Invalid metadata.authLevel field.']);
+            }
+            authLevel = validatedAuthLevel.value || authLevel;
+            alias = rawFile.metadata.alias;
           }
-          const authLevel: AuthLevel<UserType> = parsedAuthLevel || DEFAULT_AUTH_LEVEL;
           const validatedOriginalName = validateFileName(rawFile.name);
           if (validatedOriginalName.tag === 'invalid') {
             return respond(400, validatedOriginalName.value);
           }
           const originalName = validatedOriginalName.value;
-          const hash = await FileSchema.hashFile(originalName, rawFile.path, authLevel);
-          const existingFile = await FileModel.findOne({ hash });
-          if (existingFile) {
-            return respond(200, FileSchema.makePublicFile(existingFile));
+          let hash = await FileSchema.hashFile(originalName, rawFile.path, authLevel);
+          // We only avoid storing a new file if no alias was specified.
+          // The alias system runs into problems with hash-based file deduplication.
+          if (!alias) {
+            const existingFile = await FileModel.findOne({ hash });
+            if (existingFile) {
+              return respond(200, FileSchema.makePublicFile(existingFile));
+            }
+          }
+          // Include the current time in the hash if an alias is provided
+          // to support the database's unique hash index.
+          const now = new Date();
+          if (alias) {
+            hash = await FileSchema.hashFile(originalName, rawFile.path, authLevel, now);
           }
           const file = new FileModel({
-            createdAt: new Date(),
+            createdAt: now,
             originalName,
             hash,
-            authLevel
+            authLevel,
+            alias
           });
           await file.save();
           const storageName = FileSchema.getStorageName(file);
@@ -76,7 +92,7 @@ export const resource: Resource = {
         return body;
       },
       async respond(request): Promise<Response<ReadOneResponseBody, Session>> {
-        const file = await FileModel.findById(request.params.id);
+        const file = await FileSchema.findFileByIdOrAlias(FileModel, request.params.id);
         if (!file) {
           return basicResponse(404, request.session, makeJsonResponseBody(['File not found']));
         } else if (!permissions.readOneFile(request.session, file.authLevel)) {

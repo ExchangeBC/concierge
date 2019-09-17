@@ -22,7 +22,7 @@ export const resource: Resource = {
       },
       async respond(request): Promise<Response<ReadOneResponseBody, Session>> {
         const notFound = () => basicResponse(404, request.session, makeJsonResponseBody(['File not found']));
-        const file = await FileModel.findById(request.params.id);
+        const file = await FileSchema.findFileByIdOrAlias(FileModel, request.params.id);
         if (!file) {
           return notFound();
         } else if (!permissions.readOneFileBlob(request.session, file.authLevel)) {

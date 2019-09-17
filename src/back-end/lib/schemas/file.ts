@@ -1,5 +1,6 @@
 import { FILE_STORAGE_DIR } from 'back-end/config';
 import { dateSchema } from 'back-end/lib/schemas';
+import { validateObjectIdString } from 'back-end/lib/validators';
 import { createReadStream, existsSync } from 'fs';
 import * as mongoose from 'mongoose';
 import { extname, join } from 'path';
@@ -13,6 +14,7 @@ export interface Data {
   originalName: string;
   hash: string;
   authLevel: AuthLevel<UserType>;
+  alias?: string;
 }
 
 export function makePublicFile(file: Data): PublicFile {
@@ -21,7 +23,8 @@ export function makePublicFile(file: Data): PublicFile {
     createdAt: file.createdAt,
     originalName: file.originalName,
     hash: file.hash,
-    authLevel: undefined
+    authLevel: undefined,
+    alias: file.alias
   };
 }
 
@@ -36,22 +39,28 @@ export const schema: mongoose.Schema = new mongoose.Schema({
   createdAt: dateSchema(true),
   originalName: requiredStringSchema,
   hash: {
-    type: String,
-    unique: true,
-    required: true
+    ...requiredStringSchema,
+    unique: true
   },
   authLevel: {
     type: mongoose.Schema.Types.Mixed,
     required: true
+  },
+  alias: {
+    type: String,
+    required: false
   }
 });
 
-export function hashFile(originalName: string, filePath: string, authLevel: AuthLevel<UserType>): Promise<string> {
+export function hashFile(originalName: string, filePath: string, authLevel: AuthLevel<UserType>, now?: Date): Promise<string> {
   return new Promise((resolve, reject) => {
     if (!existsSync(filePath)) { return reject(new Error('file does not exist')); }
     const hash = shajs('sha1');
     hash.update(originalName);
     hash.update(JSON.stringify(authLevel));
+    if (now) {
+      hash.update(now.valueOf().toString());
+    }
     const stream = createReadStream(filePath);
     stream.on('data', data => hash.update(data));
     stream.on('end', () => resolve(hash.digest('base64')));
@@ -61,6 +70,24 @@ export function hashFile(originalName: string, filePath: string, authLevel: Auth
 
 export function getStorageName(file: Data) {
   return join(FILE_STORAGE_DIR, `${file._id}${extname(file.originalName)}`);
+}
+
+export async function findFileByIdOrAlias(FileModel: Model, idOrAlias: string): Promise<InstanceType<Model> | null> {
+  const validatedId = validateObjectIdString(idOrAlias);
+  let file = null;
+  if (validatedId.tag === 'valid') {
+    file = await FileModel.findById(validatedId.value);
+  } else {
+    const result = await FileModel
+      .find({ alias: idOrAlias })
+      .sort({ createdAt: 'descending' })
+      .limit(1)
+      .exec();
+    if (result.length) {
+      file = result[0];
+    }
+  }
+  return file;
 }
 
 /**

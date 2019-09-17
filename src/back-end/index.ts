@@ -6,8 +6,10 @@ import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import { makeErrorResponseBody } from 'back-end/lib/server';
 import { express, ExpressAdapter } from 'back-end/lib/server/adapters';
+import { get } from 'lodash';
+import { getString } from 'shared/lib';
 import { MAX_MULTIPART_FILES_SIZE } from 'shared/lib/resources/file';
-import { parseAuthLevel, parseUserType } from 'shared/lib/types';
+import { optional, validateAuthLevel } from 'shared/lib/validators';
 
 const logger = makeDomainLogger(consoleAdapter, 'back-end');
 
@@ -40,7 +42,10 @@ async function start() {
     port: SERVER_PORT,
     maxMultipartFilesSize: MAX_MULTIPART_FILES_SIZE,
     parseFileUploadMetadata(raw) {
-      return parseAuthLevel(raw, parseUserType);
+      return {
+        authLevel: optional(validateAuthLevel, get(raw, 'authLevel')),
+        alias: getString(raw, 'alias') || undefined
+      };
     }
   });
   logger.info('server started', { host: SERVER_HOST, port: String(SERVER_PORT) });

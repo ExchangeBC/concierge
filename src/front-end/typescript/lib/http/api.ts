@@ -211,6 +211,7 @@ function rawFileToPublicFile(raw: RawFile): FileResource.PublicFile {
 export interface CreateFileRequestBody {
   name: string;
   authLevel?: AuthLevel<UserType>;
+  alias?: string;
   file: File;
 }
 
@@ -218,17 +219,32 @@ export async function createFile(file: CreateFileRequestBody): Promise<ValidOrIn
   const requestBody = new FormData();
   requestBody.append('file', file.file);
   requestBody.append('name', file.name);
-  if (file.authLevel) {
-    requestBody.append('metadata', JSON.stringify(file.authLevel));
-  }
+  requestBody.append('metadata', JSON.stringify({
+    authLevel: file.authLevel,
+    alias: file.alias
+  }));
   const response = await request(HttpMethod.Post, 'files', requestBody);
   switch (response.status) {
     case 200:
     case 201:
       const rawFile = response.data as RawFile;
       return valid(rawFileToPublicFile(rawFile));
-    case 401:
     case 400:
+    case 401:
+      return invalid(response.data as string[]);
+    default:
+      return invalid([]);
+  }
+}
+
+export async function readOneFile(id: string): Promise<ValidOrInvalid<FileResource.PublicFile, string[]>> {
+  const response = await request(HttpMethod.Get, `files/${id}`);
+  switch (response.status) {
+    case 200:
+      const rawFile = response.data as RawFile;
+      return valid(rawFileToPublicFile(rawFile));
+    case 401:
+    case 404:
       return invalid(response.data as string[]);
     default:
       return invalid([]);

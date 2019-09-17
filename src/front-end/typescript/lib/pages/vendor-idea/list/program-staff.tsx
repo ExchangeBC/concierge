@@ -1,9 +1,10 @@
-import { VI_APPLICATION_DOWNLOAD_URL } from 'front-end/config';
+import { VI_APPLICATION_DOWNLOAD_URL, VI_APPLICATION_FILE_ALIAS } from 'front-end/config';
+import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { Route } from 'front-end/lib/app/types';
 import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
 import * as TableComponent from 'front-end/lib/components/table';
 import { ComponentView, Dispatch, GlobalComponentMsg, Immutable, immutable, Init, mapComponentDispatch, newRoute, PageGetModal, Update, updateComponentChild, View } from 'front-end/lib/framework';
-import { hasUserAcceptedTerms, readManyVisForProgramStaff } from 'front-end/lib/http/api';
+import { createFile, hasUserAcceptedTerms, readManyVisForProgramStaff, readOneFile } from 'front-end/lib/http/api';
 import { getLogItemTypeStatusDropdownItems } from 'front-end/lib/pages/vendor-idea/lib';
 import { LogItemTypeBadge } from 'front-end/lib/pages/vendor-idea/views/log-item-type-badge';
 import LogItemTypeSelectGroupLabel from 'front-end/lib/pages/vendor-idea/views/log-item-type-select-group-label';
@@ -12,12 +13,14 @@ import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
 import { default as React, ReactElement } from 'react';
-import { Col, Row } from 'reactstrap';
-import { compareDates, rawFormatDate } from 'shared/lib';
+import { Col, Row, Spinner } from 'reactstrap';
+import { compareDates, formatDateAndTime, rawFormatDate } from 'shared/lib';
+import { PublicFile } from 'shared/lib/resources/file';
 import { PublicSessionUser } from 'shared/lib/resources/session';
 import { PublicVendorIdeaSlimForProgramStaff } from 'shared/lib/resources/vendor-idea';
 import { LogItemType, parseLogItemType } from 'shared/lib/resources/vendor-idea/log-item';
 import { ADT, profileToName } from 'shared/lib/types';
+import { getValidValue } from 'shared/lib/validators';
 
 function formatTableDate(date: Date): string {
   return rawFormatDate(date, 'YYYY-MM-DD', false);
@@ -60,7 +63,10 @@ interface VendorIdea extends PublicVendorIdeaSlimForProgramStaff {
 }
 
 export interface State {
+  uploadTemplateLoading: number;
   promptEditConfirmation?: string;
+  promptUploadTemplateConfirmation?: File;
+  templateFile?: PublicFile;
   vis: VendorIdea[];
   visibleVis: VendorIdea[];
   sessionUser: PublicSessionUser;
@@ -83,24 +89,29 @@ type InnerMsg
   | ADT<'table', TableComponent.Msg>
   | ADT<'uploadTemplate', File>
   | ADT<'editVi', string>
-  | ADT<'hideEditConfirmationPrompt'>;
+  | ADT<'hideEditConfirmationPrompt'>
+  | ADT<'hideUploadTemplateConfirmationPrompt'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export const init: Init<Params, State> = async ({ sessionUser }) => {
-  const result = await readManyVisForProgramStaff();
+  const visResult = await readManyVisForProgramStaff();
   let vis: VendorIdea[] = [];
-  if (result.tag === 'valid') {
-    vis = result.value.items
+  if (visResult.tag === 'valid') {
+    vis = visResult.value.items
       .map(vi => ({ ...vi, createdByName: profileToName(vi.createdBy.profile) }))
       // Sort vendor ideas by date submitted.
       .sort((a, b) => {
         return compareDates(a.createdAt, b.createdAt) * -1;
       });
   }
+  const templateFileResult = await readOneFile(VI_APPLICATION_FILE_ALIAS);
   return {
+    uploadTemplateLoading: 0,
     promptEditConfirmation: undefined,
+    promptUploadTemplateConfirmation: undefined,
     sessionUser,
+    templateFile: getValidValue(templateFileResult, undefined),
     vis,
     visibleVis: vis,
     statusFilter: Select.init({
@@ -149,6 +160,9 @@ function updateAndQuery<K extends FormFieldKeys>(state: Immutable<State>, key: K
   return state.set('visibleVis', vis); ;
 }
 
+const startUploadTemplateLoading: UpdateState<State> = makeStartLoading('uploadTemplateLoading');
+const stopUploadTemplateLoading: UpdateState<State>  = makeStopLoading('uploadTemplateLoading');
+
 export const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'statusFilter':
@@ -164,8 +178,29 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
         childMsg: msg.value
       });
     case 'uploadTemplate':
-      //TODO
-      return [state];
+      if (!state.promptUploadTemplateConfirmation) {
+        return [state.set('promptUploadTemplateConfirmation', msg.value)];
+      } else {
+        state = state.set('promptUploadTemplateConfirmation', undefined);
+      }
+      return [
+        startUploadTemplateLoading(state),
+        async state => {
+          state = stopUploadTemplateLoading(state);
+          const result = await createFile({
+            name: msg.value.name,
+            file: msg.value,
+            alias: VI_APPLICATION_FILE_ALIAS,
+            authLevel: { tag: 'any', value: undefined }
+          });
+          switch (result.tag) {
+            case 'valid':
+              return state.set('templateFile', result.value);
+            case 'invalid':
+              return state;
+          }
+        }
+      ];
     case 'editVi':
       return [
         state,
@@ -183,6 +218,8 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       ];
     case 'hideEditConfirmationPrompt':
       return [state.set('promptEditConfirmation', undefined)];
+    case 'hideUploadTemplateConfirmationPrompt':
+      return [state.set('promptUploadTemplateConfirmation', undefined)];
     default:
       return [state];
   }
@@ -280,8 +317,9 @@ const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
 }
 
 export const view: ComponentView<State, Msg> = props => {
-  const { dispatch } = props;
+  const { state, dispatch } = props;
   const uploadTemplate = (value: File) => dispatch({ tag: 'uploadTemplate', value });
+  const isUploadTemplateLoading = state.uploadTemplateLoading > 0;
   return (
     <div>
       <Row className='mb-5'>
@@ -289,17 +327,24 @@ export const view: ComponentView<State, Msg> = props => {
           <h1>Vendor-Initiated Ideas</h1>
         </Col>
       </Row>
-      <Row className='mb-4'>
+      <Row className='mb-5'>
         <Col xs='12' md='9' lg='8'>
           <div className='mb-3 d-flex flex-column flex-md-row align-items-start align-items-md-center'>
             <h3 className='mb-0 mr-md-3 mb-3 mb-md-0'>Application Template</h3>
-            <FileMulti.AddButton onAdd={uploadTemplate} text='Upload New Template' />
+            <div className='d-flex align-items-center flex-nowrap'>
+              <FileMulti.AddButton onAdd={uploadTemplate} text='Upload New Template' />
+              {isUploadTemplateLoading ? (<Spinner size='sm' color='muted' className='ml-3' />) : null}
+            </div>
           </div>
-          <div className='d-flex align-items-start mb-3'>
-            <Icon name='paperclip' color='secondary' className='mr-2 mt-1 flex-shrink-0' width={1.1} height={1.1} />
-            <Link download href={VI_APPLICATION_DOWNLOAD_URL}>APPLICATION FORM FILE NAME TODO</Link>
-          </div>
-          <div className='mb-3 text-secondary small'>Uploaded: [Date]</div>
+          {state.templateFile
+            ? (<div>
+                <div className='d-flex align-items-start mb-3'>
+                  <Icon name='paperclip' color='secondary' className='mr-2 mt-1 flex-shrink-0' width={1.1} height={1.1} />
+                  <Link download href={VI_APPLICATION_DOWNLOAD_URL}>{state.templateFile.originalName}</Link>
+                </div>
+                <div className='mb-3 text-secondary small'>Uploaded: {formatDateAndTime(state.templateFile.createdAt, true)}</div>
+              </div>)
+            : (<div>An application template has not yet been uploaded.</div>)}
         </Col>
       </Row>
       <Filters {...props} />
@@ -325,6 +370,25 @@ export const getModal: PageGetModal<State, Msg> = state => {
           text: 'Go Back',
           color: 'secondary',
           msg: { tag: 'hideEditConfirmationPrompt', value: undefined }
+        }
+      ]
+    };
+  } else if (state.promptUploadTemplateConfirmation) {
+    return {
+      title: 'Upload New Template?',
+      body: 'The current version of the Vendor-Initiated Idea Application template will be removed, and cannot be recovered once it has been replaced.',
+      onCloseMsg: { tag: 'hideUploadTemplateConfirmationPrompt', value: undefined },
+      actions: [
+        {
+          text: 'Continue',
+          color: 'primary',
+          button: true,
+          msg: { tag: 'uploadTemplate', value: state.promptUploadTemplateConfirmation }
+        },
+        {
+          text: 'Go Back',
+          color: 'secondary',
+          msg: { tag: 'hideUploadTemplateConfirmationPrompt', value: undefined }
         }
       ]
     };

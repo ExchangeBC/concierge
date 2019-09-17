@@ -8,6 +8,7 @@ import * as UserSchema from 'back-end/lib/schemas/user';
 import * as ViSchema from 'back-end/lib/schemas/vendor-idea';
 import { ErrorResponseBody, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, TextResponseBody } from 'back-end/lib/server';
 import { AuthLevel, UserType } from 'shared/lib/types';
+import { Validation } from 'shared/lib/validators';
 
 export type Session = SessionSchema.Data;
 
@@ -23,7 +24,10 @@ export interface AvailableModels {
   VendorIdea: ViSchema.Model;
 }
 
-export type FileUploadMetadata = AuthLevel<UserType> | null;
+export interface FileUploadMetadata {
+  authLevel: Validation<AuthLevel<UserType> | undefined>;
+  alias?: string;
+}
 
 export type SupportedRequestBodies = JsonRequestBody | FileRequestBody<FileUploadMetadata>;
 

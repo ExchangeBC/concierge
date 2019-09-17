@@ -5,7 +5,7 @@ import AVAILABLE_HEAD_OFFICE_LOCATIONS from 'shared/data/head-office-locations';
 import AVAILABLE_INDIGENOUS_OWNERSHIP from 'shared/data/indigenous-ownership';
 import AVAILABLE_NUMBER_OF_EMPLOYEES from 'shared/data/number-of-employees';
 import { compareDates, formatDate, formatDateAndTime, formatTime } from 'shared/lib';
-import { ADT, parsePhoneType, parseUserType, PhoneType, UserType } from 'shared/lib/types';
+import { ADT, AuthLevel, parseAuthLevel, parsePhoneType, parseUserType, PhoneType, UserType } from 'shared/lib/types';
 
 export type ValidOrInvalid<Valid, Invalid> = ADT<'valid', Valid> | ADT<'invalid', Invalid>;
 
@@ -306,4 +306,13 @@ export function validateHeadOfficeLocation(raw: string): Validation<string> {
 
 export function validateSignUpReason(raw: string): Validation<string | undefined> {
   return optional(v => validateGenericString(v, 'Sign-Up Reason'), raw);
+}
+
+export function validateAuthLevel(raw: any): Validation<AuthLevel<UserType>> {
+  const result = parseAuthLevel(raw, parseUserType);
+  if (result) {
+    return valid(result);
+  } else {
+    return invalid([`Invalid auth level: ${JSON.stringify(raw)}`]);
+  }
 }
