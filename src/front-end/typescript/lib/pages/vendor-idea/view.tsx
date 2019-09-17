@@ -97,12 +97,7 @@ export const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
   },
 
   async fail({ routeParams, shared, dispatch }) {
-    if (shared.session && shared.session.user) {
-      dispatch(replaceRoute({
-        tag: 'viList',
-        value: null
-      }));
-    } else {
+    if (!shared.session || !shared.session.user) {
       dispatch(replaceRoute({
         tag: 'signIn' as const,
         value: {
@@ -111,6 +106,18 @@ export const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
             value: routeParams
           })
         }
+      }));
+    } else if (shared.session.user.type === UserType.ProgramStaff) {
+      dispatch(replaceRoute({
+        tag: 'viEdit',
+        value: {
+          viId: routeParams.viId
+        }
+      }));
+    } else {
+      dispatch(replaceRoute({
+        tag: 'viList',
+        value: null
       }));
     }
     return invalid(undefined);
