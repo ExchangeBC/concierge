@@ -1,3 +1,4 @@
+import { CONTACT_EMAIL } from 'front-end/config';
 import { makePageMetadata } from 'front-end/lib';
 import { Route, SharedState } from 'front-end/lib/app/types';
 import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, noPageModal, PageComponent, PageInit, Update } from 'front-end/lib/framework';
@@ -19,7 +20,8 @@ export type NoticeId
   | ADT<'rfiExpiredResponse', RfiId>
   | ADT<'ddrSubmitted', RfiId>
   | ADT<'viCreated'>
-  | ADT<'viEditedByVendor'>;
+  | ADT<'viEditedByVendor'>
+  | ADT<'viUnverifiedBuyer'>;
 
 function noticeIdToState(noticeId: NoticeId): State {
   switch (noticeId.tag) {
@@ -167,6 +169,24 @@ function noticeIdToState(noticeId: NoticeId): State {
       return {
         title: 'Thank You',
         body: 'Your changes to your Vendor-Initiated Idea application have been received. A staff member from the Procurement Concierge Program will be in touch with you shortly.',
+        button: {
+          text: 'View My Vendor-Initiated Ideas',
+          route: {
+            tag: 'viList' as const,
+            value: null
+          }
+        }
+      };
+
+    case 'viUnverifiedBuyer':
+      return {
+        title: 'Permission denied.',
+        body: (
+          <div>
+            <p>You do not yet have permission to view Vendor-Initiated Ideas as your account has not been verified by a staff member from the Procurement Concierge Program.</p>
+            <p>Please send an email to <Link href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Link> if you have any questions.</p>
+          </div>
+        ),
         button: {
           text: 'View My Vendor-Initiated Ideas',
           route: {

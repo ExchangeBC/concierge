@@ -518,6 +518,20 @@ const router: Router<Route> = {
       }
     },
     {
+      path: '/notice/vendor-ideas/unverified-buyer',
+      makeRoute() {
+        return {
+          tag: 'notice',
+          value: {
+            noticeId: {
+              tag: 'viUnverifiedBuyer',
+              value: undefined
+            }
+          }
+        }
+      }
+    },
+    {
       path: '*',
       makeRoute() {
         return {
@@ -639,6 +653,8 @@ const router: Router<Route> = {
               return '/notice/vendor-ideas/created';
             case 'viEditedByVendor':
               return '/notice/vendor-ideas/edited-by-vendor';
+            case 'viUnverifiedBuyer':
+              return '/notice/vendor-ideas/unverified-buyer';
           }
         })();
     }

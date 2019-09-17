@@ -417,6 +417,16 @@ nav.navbar .nav-link:hover {
 
 }
 
+.vi-card {
+  margin-bottom: 2rem;
+
+  @include media-breakpoint-up(md) {
+    .card {
+      min-height: 440px;
+    }
+  }
+}
+
 // Custom page overrides.
 
 .route-termsAndConditions {
