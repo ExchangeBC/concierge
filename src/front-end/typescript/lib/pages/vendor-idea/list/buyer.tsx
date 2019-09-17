@@ -229,7 +229,7 @@ const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
               <Col xs='12' md='6' lg='4' key={`vi-list-result-buyer-${i}`} className='vi-card'>
                 <Card body className='p-3 h-100'>
                   <CardTitle className='h5'>
-                    <Link route={{ tag: 'viView', value: { viId: vi._id }}} color='body' className='text-hover-info-alt text-decoration-none'>
+                    <Link route={{ tag: 'viView', value: { viId: vi._id }}} color='body' className='text-hover-primary text-decoration-none'>
                       {vi.latestVersion.description.title}
                     </Link>
                   </CardTitle>

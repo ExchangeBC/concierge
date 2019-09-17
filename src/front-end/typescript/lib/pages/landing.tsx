@@ -44,7 +44,7 @@ const CallToActionButton: View<{ signedIn: boolean, userType?: UserType }> = ({ 
     text = 'View RFIs';
   }
   return (
-    <Link button route={route} size='lg' color='info-alt'>{text}</Link>
+    <Link button route={route} size='lg' color='primary'>{text}</Link>
   );
 };
 
@@ -55,7 +55,7 @@ const Hero: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Row>
           <Col xs='12' md={{ size: 8, offset: 1 }} lg='7' >
             <h1 className='text-uppercase font-weight-bolder mb-4'>
-              <span className='text-info'>Transforming</span> how government interacts with <span className='text-info'>the marketplace</span>.
+              <span className='text-info-alt'>Transforming</span> how government interacts with <span className='text-info-alt'>the marketplace</span>.
             </h1>
           </Col>
         </Row>
@@ -122,14 +122,14 @@ const UserPersonas: ComponentView<State, Msg> = ({ state, dispatch }) => {
               </li>
             </ul>
           </Col>
-          <Col xs='12' md='4' className='rounded bg-primary py-6 px-4 text-light mt-md-n3 mb-md-3 d-flex flex-column align-items-start shadow'>
+          <Col xs='12' md='4' className='rounded bg-info py-6 px-4 text-light mt-md-n3 mb-md-3 d-flex flex-column align-items-start shadow'>
             <h4 className='mb-3'>
               Want to learn more?
             </h4>
             <p>
               Learn how to use the Procurement Concierge Program's Web Application.
             </p>
-            <Link button route={{ tag: 'markdown', value: { documentId: 'guide' } }} color='info-alt' className='mt-4 d-block mt-auto'>Read the Guide</Link>
+            <Link button route={{ tag: 'markdown', value: { documentId: 'guide' } }} color='primary' className='mt-4 d-block mt-auto'>Read the Guide</Link>
           </Col>
         </Row>
       </Container>

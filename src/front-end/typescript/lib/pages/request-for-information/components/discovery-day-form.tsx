@@ -506,9 +506,9 @@ const ConditionalAttendees: ComponentView<State, Msg> = ({ state, dispatch }) =>
       <Row className='mb-5'>
         <Col xs='12'>
           <Stats>
-            <BigStat color='info' count={numAttendees} label={(<span>{numAttendees === 1 ? 'Person' : 'People'}<br />Attending</span>)} />
-            <SmallStats a={{ color: 'info', count: numInPerson, label: 'In-Person' }} b={{ color: 'primary', count: numRemote, label: 'Remote' }} />
-            <BigStat color='primary' count={numVendors} label={(<span>Vendor{numVendors === 1 ? '' : 's'}<br />Attending</span>)} />
+            <BigStat color='primary-alt' count={numAttendees} label={(<span>{numAttendees === 1 ? 'Person' : 'People'}<br />Attending</span>)} />
+            <SmallStats a={{ color: 'primary-alt', count: numInPerson, label: 'In-Person' }} b={{ color: 'info', count: numRemote, label: 'Remote' }} />
+            <BigStat color='info' count={numVendors} label={(<span>Vendor{numVendors === 1 ? '' : 's'}<br />Attending</span>)} />
           </Stats>
         </Col>
       </Row>

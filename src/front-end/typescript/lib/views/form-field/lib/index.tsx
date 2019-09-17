@@ -63,7 +63,7 @@ const ConditionalLabel: View<Props<any, any, any>> = (props) => {
       <Label for={id} className={className}>
         <span>
           {label}
-          {required ? (<span className='text-primary ml-1'>*</span>) : null }
+          {required ? (<span className='text-info ml-1'>*</span>) : null }
           <ConditionalHelpToggle {...props} />
         </span>
       </Label>

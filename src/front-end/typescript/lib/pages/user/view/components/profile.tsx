@@ -315,7 +315,7 @@ function conditionalVerificationStatusDropdown<PS, PM>(): ComponentView<State<PS
     if (viewerUserIsProgramStaff(state) && buyerStatus) {
       return (
         <UncontrolledButtonDropdown className='mt-3'>
-          <DropdownToggle caret color='info-alt' disabled={isLoading}>
+          <DropdownToggle caret color='primary' disabled={isLoading}>
             {isLoading ? (<Spinner color='light' size='sm' className='mr-2' />) : 'Set Account Status'}
           </DropdownToggle>
           <DropdownMenu>

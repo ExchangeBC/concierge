@@ -446,7 +446,7 @@ const FieldLabel: View<{ text: string, className?: string, required?: boolean }>
     <Label className={`${required ? 'font-weight-bold' : ''} ${className || ''}`}>
       <span>
         {text}
-        {required ? (<span className='text-primary ml-1'>*</span>) : null }
+        {required ? (<span className='text-info ml-1'>*</span>) : null }
       </span>
     </Label>
   );

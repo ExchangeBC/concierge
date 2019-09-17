@@ -52,7 +52,7 @@ const FeedbackButton: View<{}> = () => {
 
 const Footer: View<{}> = () => {
   return (
-    <footer className='w-100 bg-primary text-light border-top-gov'>
+    <footer className='w-100 bg-info text-light border-top-gov'>
       <Container className='py-4'>
         <Row>
           <Col xs='12' className='d-flex flex-column flex-md-row flex-md-wrap align-items-center'>

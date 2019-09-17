@@ -192,7 +192,7 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Col xs='12' md='9' lg='8'>
           <h1>Vendor-Initiated Idea (VII) Application</h1>
           <p className='mb-3'>Complete the form below to submit your VII for review by the Procurement Concierge Program's staff. If you have not done so already, <b>please download and fill out the detailed information portion of the application</b> using the "Download Application – Detailed Information" button below, as you will not be able to save this application as a draft.</p>
-          <Link button download color='primary' href={VI_APPLICATION_DOWNLOAD_URL}>Download Application – Detailed Information</Link>
+          <Link button download color='info' href={VI_APPLICATION_DOWNLOAD_URL}>Download Application – Detailed Information</Link>
         </Col>
       </Row>
       <IntakeForm.view state={state.value.intakeForm} dispatch={dispatchIntakeForm} />

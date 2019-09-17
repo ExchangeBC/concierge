@@ -221,9 +221,9 @@ export const view: ComponentView<State, Msg> = props => {
       <Row className='mb-5'>
         <Col xs='12'>
           <Stats>
-            <BigStat color='info' count={numResponses} label={(<span>Response{numResponses === 1 ? '' : 's'}<br />Received</span>)} />
-            <SmallStats a={{ color: 'info', count: numByClosingTime, label: 'Received by closing time' }} b={{ color: 'primary', count: numDuringGracePeriod, label: 'Received during grace period' }} />
-            <BigStat color='primary' count={numAddenda} label={(<span>Addend{numAddenda === 1 ? 'um' : 'a'}<br />Issued</span>)} />
+            <BigStat color='primary-alt' count={numResponses} label={(<span>Response{numResponses === 1 ? '' : 's'}<br />Received</span>)} />
+            <SmallStats a={{ color: 'primary-alt', count: numByClosingTime, label: 'Received by closing time' }} b={{ color: 'info', count: numDuringGracePeriod, label: 'Received during grace period' }} />
+            <BigStat color='info' count={numAddenda} label={(<span>Addend{numAddenda === 1 ? 'um' : 'a'}<br />Issued</span>)} />
           </Stats>
         </Col>
       </Row>

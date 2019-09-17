@@ -16,13 +16,13 @@ type LogItemTypeCopy
 export function logItemTypeToCopy(itemType: LogItemType): LogItemTypeCopy {
   switch (itemType) {
     case LogItemType.ApplicationSubmitted:
-      return { tag: 'badge', value: ['info', 'Application Submitted'] };
+      return { tag: 'badge', value: ['primary-alt', 'Application Submitted'] };
     case LogItemType.UnderReview:
       return { tag: 'badge', value: ['warning', 'Under Review'] };
     case LogItemType.EditsRequired:
       return { tag: 'badge', value: ['warning', 'Edits Required'] };
     case LogItemType.EditsSubmitted:
-      return { tag: 'badge', value: ['info', 'Edits Submitted'] };
+      return { tag: 'badge', value: ['primary-alt', 'Edits Submitted'] };
     case LogItemType.Eligible:
       return { tag: 'badge', value: ['success', 'Eligible'] };
     case LogItemType.Ineligible:

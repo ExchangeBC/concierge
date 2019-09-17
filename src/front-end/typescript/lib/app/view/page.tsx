@@ -6,7 +6,7 @@ import { Alert, Breadcrumb, BreadcrumbItem, Col, Container, Row } from 'reactstr
 
 interface ViewAlertProps {
   messages: Array<string | ReactElement>;
-  color: 'primary' | 'warning' | 'danger';
+  color: 'info' | 'warning' | 'danger';
   className?: string;
 }
 
@@ -28,7 +28,7 @@ const ViewAlerts: View<ViewAlertsProps> = ({ alerts }) => {
   return (
     <Row>
       <Col xs='12'>
-        <ViewAlert messages={info} color='primary' />
+        <ViewAlert messages={info} color='info' />
         <ViewAlert messages={warnings} color='warning' />
         <ViewAlert messages={errors} color='danger' className='mb-0' />
       </Col>

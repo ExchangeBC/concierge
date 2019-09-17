@@ -314,7 +314,7 @@ const TabLink: View<TabLinkProps> = ({ id, state, dispatch }) => {
   }
   return (
     <NavItem>
-      <NavLink className={`${isActive ? 'active' : isValid ? 'text-info-alt' : ''} ${isValid ? '' : 'text-danger'} text-nowrap`} onClick={() => !isActive && dispatch({ tag: 'setActiveTab', value: id })}>
+      <NavLink className={`${isActive ? 'active' : isValid ? 'text-primary' : ''} ${isValid ? '' : 'text-danger'} text-nowrap`} onClick={() => !isActive && dispatch({ tag: 'setActiveTab', value: id })}>
         {tabIdToName(id)}
       </NavLink>
     </NavItem>

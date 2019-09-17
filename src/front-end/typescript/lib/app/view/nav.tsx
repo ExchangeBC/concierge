@@ -128,7 +128,7 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
           <Link nav route={signInRoute} color='white' onClick={onClick} className='px-0 px-md-3'>Sign In</Link>
         </NavItem>
         <NavItem>
-          <Link button route={signUpRoute} color='info-alt' onClick={onClick} className='mt-2 mt-md-0'>Sign Up</Link>
+          <Link button route={signUpRoute} color='primary' onClick={onClick} className='mt-2 mt-md-0'>Sign Up</Link>
         </NavItem>
       </Nav>
     );
@@ -142,12 +142,12 @@ const MAIN_NAVBAR_HEIGHT = '64px';
 const Navigation: View<Props> = props => {
   return (
     <div className='position-sticky' style={{ top: `-${MAIN_NAVBAR_HEIGHT}`, zIndex: 1000 }}>
-      <Navbar expand='md' dark color='primary' className='navbar border-bottom-gov'>
+      <Navbar expand='md' dark color='info' className='navbar border-bottom-gov'>
         <Container className='px-sm-3'>
           <NavbarBrand href='/'>
             <img src='/images/logo.svg' style={{ height: '2rem' }} alt='Procurement Concierge Program' />
           </NavbarBrand>
-          <Spinner size='sm' color='info' className='transition-indicator d-md-none' />
+          <Spinner size='sm' color='info-alt' className='transition-indicator d-md-none' />
           <NavbarToggler className='ml-auto' onClick={() => props.toggleIsOpen()} />
           <Collapse isOpen={props.isOpen} className='py-3 py-md-0' navbar>
             <ContextualLinks {...props} className='d-md-none' />
@@ -155,10 +155,10 @@ const Navigation: View<Props> = props => {
           </Collapse>
         </Container>
       </Navbar>
-      <Navbar expand='sm' className='bg-info d-none d-md-block shadow border-bottom'>
+      <Navbar expand='sm' className='bg-info-alt d-none d-md-block shadow border-bottom'>
         <Container className='pl-0 d-flex justify-content-between'>
           <ContextualLinks {...props} />
-          <Spinner size='sm' color='primary' className='transition-indicator' />
+          <Spinner size='sm' color='info' className='transition-indicator' />
         </Container>
       </Navbar>
     </div>

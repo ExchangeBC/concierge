@@ -307,8 +307,8 @@ export const view: ComponentView<State, Msg> = props => {
             To submit a Vendor-Initiated Idea (VII), <b>please download and fill out the detailed information portion of the application</b> using the "Download Application – Detailed Information" button below. Once the application has been completed, you may submit your idea for the Procurement Concierge Program's staff to review by clicking the "Create Vendor-Initiated Idea" button and filling out the form provided.
           </p>
           <div className='d-flex flex-column flex-md-row align-items-start'>
-            <Link button download color='primary' href={VI_APPLICATION_DOWNLOAD_URL} className='mr-0 mr-md-2 mb-2 mb-md-0'>1. Download Application – Detailed Information</Link>
-            <Link button color='info-alt' route={{ tag: 'viCreate', value: null }}>2. Create Vendor-Initiated Idea</Link>
+            <Link button download color='info' href={VI_APPLICATION_DOWNLOAD_URL} className='mr-0 mr-md-2 mb-2 mb-md-0'>1. Download Application – Detailed Information</Link>
+            <Link button color='primary' route={{ tag: 'viCreate', value: null }}>2. Create Vendor-Initiated Idea</Link>
           </div>
         </Col>
       </Row>
