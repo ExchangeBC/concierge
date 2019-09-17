@@ -342,7 +342,7 @@ export const view: ComponentView<State, Msg> = props => {
                   <Icon name='paperclip' color='secondary' className='mr-2 mt-1 flex-shrink-0' width={1.1} height={1.1} />
                   <Link download href={VI_APPLICATION_DOWNLOAD_URL}>{state.templateFile.originalName}</Link>
                 </div>
-                <div className='mb-3 text-secondary small'>Uploaded: {formatDateAndTime(state.templateFile.createdAt, true)}</div>
+                <div className='text-secondary small'>Uploaded: {formatDateAndTime(state.templateFile.createdAt, true)}</div>
               </div>)
             : (<div>An application template has not yet been uploaded.</div>)}
         </Col>
