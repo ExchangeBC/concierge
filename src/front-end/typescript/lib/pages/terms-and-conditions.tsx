@@ -33,7 +33,7 @@ function warningIdToString(warningId: WarningId): string {
     case WarningId.RfiResponse:
       return 'You must accept the terms and conditions in order to respond to a Request for Information.';
     case WarningId.DiscoveryDayResponse:
-      return 'You must accept the terms and conditions in order to register for a Discovery Session.';
+      return 'You must accept the terms and conditions in order to register for a Discovery Day Session.';
     case WarningId.CreateRfi:
       return 'You must accept the terms and conditions in order to create a Request for Information.';
     case WarningId.EditRfi:
@@ -43,7 +43,7 @@ function warningIdToString(warningId: WarningId): string {
     case WarningId.UserViewAsProgramStaff:
       return 'You must accept the terms and conditions in order to view user profiles.';
     case WarningId.CreateVi:
-      return 'You must accept the terms and conditions in order to submit a Vendor-Initiated Idea Application.';
+      return 'You must accept the terms and conditions in order to create a Vendor-Initiated Idea.';
     case WarningId.EditVi:
       return 'You must accept the terms and conditions in order to edit a Vendor-Initiated Idea Application.';
     case WarningId.ViewVisAsBuyer:
