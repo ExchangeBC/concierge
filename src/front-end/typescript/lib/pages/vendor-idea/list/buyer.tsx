@@ -242,7 +242,7 @@ const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
                       {vi.latestVersion.description.title}
                     </Link>
                   </CardTitle>
-                  <CardSubtitle className='text-secondary font-weight-bold'>
+                  <CardSubtitle className='text-secondary font-weight-bold font-size-small'>
                     {makeCategoryString(vi.latestVersion.description.categories)}
                   </CardSubtitle>
                   <CardText className='mt-3'>

@@ -140,14 +140,15 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
 interface DetailProps {
   title: string;
   values: Array<string | ReactElement<any>>;
+  titleColWidthMd: number;
 }
 
-const Detail: View<DetailProps> = ({ title, values }) => {
+const Detail: View<DetailProps> = ({ title, values, titleColWidthMd }) => {
   values = values.map((v, i) => (<div key={`${title}-${i}`}>{v}</div>));
   return (
     <Row className='align-items-start mb-3'>
-      <Col xs='12' md='5' className='font-weight-bold text-secondary text-center text-md-right'>{title}</Col>
-      <Col xs='12' md='7' className='text-center text-md-left'>{values}</Col>
+      <Col xs='12' md={titleColWidthMd} className='font-weight-bold text-secondary text-center text-md-right'>{title}</Col>
+      <Col xs='12' md={12 - titleColWidthMd} className='text-center text-md-left'>{values}</Col>
     </Row>
   );
 };
@@ -160,12 +161,12 @@ const Details: View<{ vi: VendorIdea }> = ({ vi }) => {
   return (
     <Row>
       <Col xs='12' md='7'>
-        <Detail title='Industry Sector(s)' values={description.industrySectors} />
-        <Detail title='Commodity Code(s)' values={description.categories} />
+        <Detail title='Industry Sector(s)' values={description.industrySectors} titleColWidthMd={4} />
+        <Detail title='Commodity Code(s)' values={description.categories} titleColWidthMd={4} />
       </Col>
       <Col xs='12' md='5'>
-        <Detail title='Submitted by' values={[vi.createdByName]} />
-        <Detail title='Attachments' values={attachmentsValues} />
+        <Detail title='Submitted by' values={[vi.createdByName]} titleColWidthMd={5} />
+        <Detail title='Attachments' values={attachmentsValues} titleColWidthMd={5} />
       </Col>
     </Row>
   );
@@ -218,6 +219,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <Link href={expressInterestHref(state.value.vi.latestVersion.description.title)} button color='primary' className='text-nowrap'>
         Express Interest
       </Link>
+      <div className='text-secondary font-weight-bold d-none d-md-block mr-auto'>I want to...</div>
     </FixedBar>
   );
 };
