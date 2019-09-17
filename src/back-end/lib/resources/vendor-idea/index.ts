@@ -1,5 +1,6 @@
 import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
+import * as mailer from 'back-end/lib/mailer';
 import * as permissions from 'back-end/lib/permissions';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import { SessionUser } from 'back-end/lib/schemas/session';
@@ -11,7 +12,7 @@ import { get, isObject } from 'lodash';
 import { getString, getStringArray } from 'shared/lib';
 import { CreateRequestBody, CreateValidationErrors, PublicVendorIdea, PublicVendorIdeaSlim, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/vendor-idea';
 import { getLatestStatus, LogItemType } from 'shared/lib/resources/vendor-idea/log-item';
-import { PaginatedList, UserType } from 'shared/lib/types';
+import { PaginatedList, profileToName, UserType } from 'shared/lib/types';
 import { allValid, getInvalidValue, invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 import { validateContact, validateDescription, validateEligibility } from 'shared/lib/validators/vendor-idea';
 
@@ -141,6 +142,15 @@ const resource: Resource = {
           }]
         });
         await vendorIdea.save();
+        const user = await UserModel.findById(version.createdBy);
+        if (user) {
+          mailer.createViToProgramStaff({
+            title: version.description.title,
+            createdAt: version.createdAt,
+            id: vendorIdea._id,
+            vendorName: profileToName(user.profile)
+          });
+        }
         return respond(201, await ViSchema.makePublicVendorIdea(UserModel, FileModel, vendorIdea, request.session.user.type));
       }
     };
@@ -260,6 +270,17 @@ const resource: Resource = {
           });
         }
         await vendorIdea.save();
+        if (request.session.user.type === UserType.Vendor) {
+          const user = await UserModel.findById(version.createdBy);
+          if (user) {
+            mailer.updateViToProgramStaffByVendor({
+              title: version.description.title,
+              editsReceivedAt: version.createdAt,
+              id: vendorIdea._id,
+              vendorName: profileToName(user.profile)
+            });
+          }
+        }
         return respond(200, await ViSchema.makePublicVendorIdea(UserModel, FileModel, vendorIdea, request.session.user.type));
       }
     };

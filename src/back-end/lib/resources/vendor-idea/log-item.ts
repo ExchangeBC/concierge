@@ -1,12 +1,13 @@
 import { AvailableModels, Session, SupportedRequestBodies } from 'back-end/lib/app/types';
 import * as crud from 'back-end/lib/crud';
+import * as mailer from 'back-end/lib/mailer';
 import * as permissions from 'back-end/lib/permissions';
 import * as ViSchema from 'back-end/lib/schemas/vendor-idea';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
 import { validateVendorIdeaId } from 'back-end/lib/validators';
 import { get, isObject } from 'lodash';
 import { getString } from 'shared/lib';
-import { CreateRequestBody, CreateValidationErrors, PublicLogItem } from 'shared/lib/resources/vendor-idea/log-item';
+import { CreateRequestBody, CreateValidationErrors, LogItemType, PublicLogItem } from 'shared/lib/resources/vendor-idea/log-item';
 import { validateLogItemNote, validateLogItemType } from 'shared/lib/validators/vendor-idea/log-item';
 
 type RequiredModels = 'VendorIdea' | 'User';
@@ -65,6 +66,16 @@ const resource: Resource = {
         };
         vendorIdea.log.push(logItem);
         await vendorIdea.save();
+        if (validatedType.value === LogItemType.Eligible) {
+          const latestVersion = ViSchema.getLatestVersion(vendorIdea);
+          if (latestVersion) {
+            mailer.createViLogItemEligibleToVendor({
+              id: vendorIdea._id,
+              title: latestVersion.description.title,
+              to: latestVersion.contact.email
+            });
+          }
+        }
         return respond(201, await ViSchema.makePublicLogItem(UserModel, logItem));
       }
     };
