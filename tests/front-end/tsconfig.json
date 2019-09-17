@@ -15,9 +15,12 @@
     "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "front-end/*": ["./*"],
-      "shared/*": ["../shared/*"]
+      "front-end/*": ["../../src/front-end/typescript/*"],
+      "shared/*": ["../../src/shared/*"]
     },
     "types": ["node", "mocha"]
-  }
+  },
+  "include": [
+    "**/*.ts"
+  ]
 }

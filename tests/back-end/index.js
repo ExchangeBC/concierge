@@ -1,7 +1,15 @@
 const path = require('path');
+const compilerOptions = require('./tsconfig.json').compilerOptions;
+
+process.chdir(__dirname);
+
+require('tsconfig-paths').register({
+  baseUrl: compilerOptions.baseUrl,
+  paths: compilerOptions.paths
+});
 
 require('ts-node').register({
-  project: path.join(__dirname, './tsconfig.json')
+  project: './tsconfig.json'
 });
 
 const Mocha = require('mocha');

@@ -17,5 +17,8 @@
       "shared/*": ["../../src/shared/*"]
     },
     "types": ["node", "mocha"]
-  }
+  },
+  "include": [
+    "**/*.ts"
+  ]
 }
