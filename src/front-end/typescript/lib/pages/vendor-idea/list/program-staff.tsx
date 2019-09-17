@@ -3,7 +3,7 @@ import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { Route } from 'front-end/lib/app/types';
 import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
 import * as TableComponent from 'front-end/lib/components/table';
-import { ComponentView, Dispatch, GlobalComponentMsg, Immutable, immutable, Init, mapComponentDispatch, newRoute, PageGetModal, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, Init, mapComponentDispatch, newRoute, PageAlerts, PageGetAlerts, PageGetModal, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import { createFile, hasUserAcceptedTerms, readManyVisForProgramStaff, readOneFile } from 'front-end/lib/http/api';
 import { getLogItemTypeStatusDropdownItems } from 'front-end/lib/pages/vendor-idea/lib';
 import { LogItemTypeBadge } from 'front-end/lib/pages/vendor-idea/views/log-item-type-badge';
@@ -73,6 +73,7 @@ export interface State {
   statusFilter: Select.State;
   searchFilter: ShortText.State;
   table: Immutable<TableComponent.State<TableCellData>>;
+  alerts: PageAlerts;
 };
 
 type FormFieldKeys
@@ -131,7 +132,8 @@ export const init: Init<Params, State> = async ({ sessionUser }) => {
       idNamespace: 'rfi-list',
       THView: TableComponent.DefaultTHView,
       TDView
-    }))
+    })),
+    alerts: emptyPageAlerts()
   };
 };
 
@@ -195,9 +197,21 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
           });
           switch (result.tag) {
             case 'valid':
-              return state.set('templateFile', result.value);
+              return state
+                .set('templateFile', result.value)
+                .set('alerts', {
+                  ...emptyPageAlerts(),
+                  info: [`"${result.value.originalName}" was successfully uploaded.`]
+                });
             case 'invalid':
-              return state;
+              return state
+                .set('alerts', {
+                  ...emptyPageAlerts(),
+                  errors: [
+                    'The application template could not be uploaded:',
+                    ...result.value
+                  ]
+                });
           }
         }
       ];
@@ -351,6 +365,10 @@ export const view: ComponentView<State, Msg> = props => {
       <ConditionalTable {...props} />
     </div>
   );
+};
+
+export const getAlerts: PageGetAlerts<State> = state => {
+  return state.alerts;
 };
 
 export const getModal: PageGetModal<State, Msg> = state => {

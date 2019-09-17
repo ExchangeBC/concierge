@@ -108,7 +108,13 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   init,
   update,
   view,
-  getAlerts: emptyPageAlerts,
+  getAlerts(state) {
+    if (state.programStaff) {
+      return ProgramStaffList.getAlerts(state.programStaff);
+    } else {
+      return emptyPageAlerts();
+    }
+  },
   getMetadata(state) {
     return makePageMetadata('Vendor-Initiated Ideas');
   },
