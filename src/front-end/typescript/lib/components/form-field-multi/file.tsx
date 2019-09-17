@@ -2,11 +2,14 @@ import { Route } from 'front-end/lib/app/types';
 import * as FormFieldMulti from 'front-end/lib/components/form-field-multi/lib';
 import { Component, ComponentViewProps, GlobalComponentMsg, immutable, Immutable, Init, Update, View } from 'front-end/lib/framework';
 import * as Input from 'front-end/lib/views/form-field/lib/input';
+import Icon from 'front-end/lib/views/icon';
+import Link from 'front-end/lib/views/link';
 import { ChangeEvent, default as React } from 'react';
 import { Button } from 'reactstrap';
 import { bytesToMegabytes } from 'shared/lib';
 import { MAX_MULTIPART_FILES_SIZE } from 'shared/lib/resources/file';
 import { PublicFile } from 'shared/lib/resources/file';
+import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
 import { ADT, Omit } from 'shared/lib/types';
 import { invalid, valid, Validation } from 'shared/lib/validators';
 import { validateFileName } from 'shared/lib/validators/file';
@@ -164,7 +167,6 @@ const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => 
   const { id, index, className, field, onChange, extraProps, disabled = false } = props;
   const value = field.value.tag === 'new' ? field.value.value.name : field.value.value.originalName;
   const placeholder = field.value.tag === 'new' ? field.value.value.file.name : field.value.value.originalName;
-  const isExistingFile = field.value.tag === 'existing';
   return (
     <FormFieldMulti.DefaultChild childProps={props}>
       <Input.View
@@ -173,7 +175,7 @@ const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => 
         className={`${className} form-control`}
         value={value}
         placeholder={placeholder}
-        disabled={isExistingFile || disabled}
+        disabled={field.value.tag === 'existing' || disabled}
         onChange={event => field.value.tag === 'new' && onChange({
           tag: 'new',
           value: {
@@ -182,6 +184,15 @@ const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => 
           }
         })}
         onChangeDebounced={() => extraProps && extraProps.onChangeDebounced(index)} />
+      {field.value.tag === 'existing'
+        ? (<Link newTab href={makeFileBlobPath('field.value.value._id')}>
+            <Icon
+              name='download'
+              width={1}
+              height={1}
+              className='ml-3 flex-shrink-0' />
+          </Link>)
+        : null}
     </FormFieldMulti.DefaultChild>
   );
 };

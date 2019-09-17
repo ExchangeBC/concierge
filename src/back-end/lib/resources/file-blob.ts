@@ -25,7 +25,7 @@ export const resource: Resource = {
         const file = await FileSchema.findFileByIdOrAlias(FileModel, request.params.id);
         if (!file) {
           return notFound();
-        } else if (!permissions.readOneFileBlob(request.session, file.authLevel)) {
+        } else if (!permissions.readOneFileBlob(request.session, file.authLevel, file.createdBy && file.createdBy.toString())) {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         } else {
           const filePath = FileSchema.getStorageName(file);

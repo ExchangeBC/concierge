@@ -192,7 +192,7 @@ export function ConditionalRemoveButton<Value>(props: ChildProps<any, Value>) {
 
 export interface DefaultChildProps<ExtraProps, Value> {
   childProps: ChildProps<ExtraProps, Value>;
-  children: ReactElement<any> | Array<ReactElement<any>> | string;
+  children: ReactElement<any> | Array<ReactElement<any> | null> | string;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { FILE_STORAGE_DIR } from 'back-end/config';
-import { dateSchema } from 'back-end/lib/schemas';
+import { dateSchema, userIdSchema } from 'back-end/lib/schemas';
 import { validateObjectIdString } from 'back-end/lib/validators';
 import { createReadStream, existsSync } from 'fs';
 import * as mongoose from 'mongoose';
@@ -10,6 +10,10 @@ import { AuthLevel, UserType } from 'shared/lib/types';
 
 export interface Data {
   _id: mongoose.Types.ObjectId;
+  // createdBy didn't exist on the original file schema,
+  // so only some file documents have this property.
+  // All new files should have this property.
+  createdBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   originalName: string;
   hash: string;
@@ -37,6 +41,7 @@ const requiredStringSchema = {
 
 export const schema: mongoose.Schema = new mongoose.Schema({
   createdAt: dateSchema(true),
+  createdBy: userIdSchema(false),
   originalName: requiredStringSchema,
   hash: {
     ...requiredStringSchema,
@@ -52,12 +57,13 @@ export const schema: mongoose.Schema = new mongoose.Schema({
   }
 });
 
-export function hashFile(originalName: string, filePath: string, authLevel: AuthLevel<UserType>, now?: Date): Promise<string> {
+export function hashFile(originalName: string, filePath: string, authLevel: AuthLevel<UserType>, createdBy: mongoose.Types.ObjectId, now?: Date): Promise<string> {
   return new Promise((resolve, reject) => {
     if (!existsSync(filePath)) { return reject(new Error('file does not exist')); }
     const hash = shajs('sha1');
     hash.update(originalName);
     hash.update(JSON.stringify(authLevel));
+    hash.update(createdBy.toString());
     if (now) {
       hash.update(now.valueOf().toString());
     }

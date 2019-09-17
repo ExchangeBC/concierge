@@ -34,7 +34,7 @@ export const resource: Resource = {
       },
       async respond(request): Promise<Response<CreateResponseBody, Session>> {
         const respond = (code: number, body: PublicFile | string[]) => basicResponse(code, request.session, makeJsonResponseBody(body));
-        if (!(await permissions.createFile(UserModel, request.session))) {
+        if (!(await permissions.createFile(UserModel, request.session)) || !request.session.user) {
           return respond(401, [permissions.ERROR_MESSAGE]);
         } else if (request.body.tag !== 'file') {
           return respond(400, ['File must be uploaded in a multipart request.']);
@@ -55,7 +55,8 @@ export const resource: Resource = {
             return respond(400, validatedOriginalName.value);
           }
           const originalName = validatedOriginalName.value;
-          let hash = await FileSchema.hashFile(originalName, rawFile.path, authLevel);
+          const createdBy = request.session.user.id;
+          let hash = await FileSchema.hashFile(originalName, rawFile.path, authLevel, createdBy);
           // We only avoid storing a new file if no alias was specified.
           // The alias system runs into problems with hash-based file deduplication.
           if (!alias) {
@@ -68,10 +69,11 @@ export const resource: Resource = {
           // to support the database's unique hash index.
           const now = new Date();
           if (alias) {
-            hash = await FileSchema.hashFile(originalName, rawFile.path, authLevel, now);
+            hash = await FileSchema.hashFile(originalName, rawFile.path, authLevel, createdBy, now);
           }
           const file = new FileModel({
             createdAt: now,
+            createdBy: request.session.user.id,
             originalName,
             hash,
             authLevel,
@@ -96,7 +98,7 @@ export const resource: Resource = {
         const file = await FileSchema.findFileByIdOrAlias(FileModel, request.params.id);
         if (!file) {
           return basicResponse(404, request.session, makeJsonResponseBody(['File not found']));
-        } else if (!permissions.readOneFile(request.session, file.authLevel)) {
+        } else if (!permissions.readOneFile(request.session, file.authLevel, file.createdBy && file.createdBy.toString())) {
           return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         } else {
           const publicFile = FileSchema.makePublicFile(file);

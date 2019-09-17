@@ -1,7 +1,7 @@
 import { Session } from 'back-end/lib/app/types';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import { validateUserId } from 'back-end/lib/validators';
-import { get } from 'lodash';
+import { get, includes } from 'lodash';
 import { AuthLevel, UserType } from 'shared/lib/types';
 
 export const CURRENT_SESSION_ID = 'current';
@@ -63,7 +63,7 @@ export function isAuthorizedSession(session: Session, authLevel: AuthLevel<UserT
       return !isSignedIn(session);
     case 'userType':
       if (session.user) {
-        return authLevel.value.indexOf(session.user.type) !== -1;
+        return includes(authLevel.value, session.user.type);
       } else {
         return false;
       }
@@ -127,14 +127,14 @@ export async function createFile(UserModel: UserSchema.Model, session: Session):
       || (await isVendorAndHasAcceptedTerms(UserModel, session));
 }
 
-export function readOneFile(session: Session, fileAuthLevel: AuthLevel<UserType>): boolean {
-  return isAuthorizedSession(session, fileAuthLevel);
+export function readOneFile(session: Session, fileAuthLevel: AuthLevel<UserType>, createdBy?: string): boolean {
+  return isAuthorizedSession(session, fileAuthLevel) || !!(createdBy && isOwnAccount(session, createdBy));
 }
 
 // File blobs.
 
-export function readOneFileBlob(session: Session, fileAuthLevel: AuthLevel<UserType>): boolean {
-  return isAuthorizedSession(session, fileAuthLevel);
+export function readOneFileBlob(session: Session, fileAuthLevel: AuthLevel<UserType>, createdBy?: string): boolean {
+  return isAuthorizedSession(session, fileAuthLevel) || !!(createdBy && isOwnAccount(session, createdBy));
 }
 
 // RFIs.
