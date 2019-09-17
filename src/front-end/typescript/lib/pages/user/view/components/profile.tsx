@@ -467,7 +467,7 @@ function conditionalChangePassword<PS, PM, P extends ProfileType>(Profile: Profi
         </Row>
         <Row>
           <Col xs='12'>
-            <Link route={{ tag: 'changePassword', value: null }} button color='primary'>Change Password</Link>
+            <Link route={{ tag: 'changePassword', value: null }} button color='info'>Change Password</Link>
           </Col>
         </Row>
       </div>
@@ -531,7 +531,7 @@ function conditionalDeactivateAccount<PS, PM, P extends ProfileType>(Profile: Pr
         </Row>
         <Row>
           <Col xs='12'>
-            <LoadingButton onClick={deactivateAccount} color='primary' loading={isLoading} disabled={isLoading}>
+            <LoadingButton onClick={deactivateAccount} color='danger' loading={isLoading} disabled={isLoading}>
               Deactivate Account
             </LoadingButton>
           </Col>
@@ -603,7 +603,7 @@ export function component<PS, PM, P extends ProfileType>(Profile: ProfileCompone
         actions: [
           {
             text: `Yes, deactivate ${my} account`,
-            color: 'primary',
+            color: 'danger',
             button: true,
             msg: { tag: 'deactivateAccount', value: undefined }
           },
