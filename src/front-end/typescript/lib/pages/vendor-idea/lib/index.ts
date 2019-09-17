@@ -1,3 +1,4 @@
+import { CONTACT_EMAIL } from 'front-end/config';
 import * as api from 'front-end/lib/http/api';
 import * as IntakeForm from 'front-end/lib/pages/vendor-idea/components/intake-form';
 import { BootstrapColor } from 'front-end/lib/types';
@@ -132,4 +133,8 @@ export async function makeRequestBody(state: IntakeForm.State): Promise<ValidOrI
         attachments: uploadedFiles.value
       });
   }
+}
+
+export function expressInterestHref(title: string): string {
+  return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`VII: ${title}`)}`;
 }

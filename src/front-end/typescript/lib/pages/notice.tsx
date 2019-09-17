@@ -86,7 +86,7 @@ function noticeIdToState(noticeId: NoticeId): State {
 
     case 'rfiResponseSubmitted':
       return {
-        title: 'Thank you',
+        title: 'Thank You',
         body: (
           <p>Your response to this Request for Information has been successfully submitted. You may return to the RFI's <Link route={{ tag: 'requestForInformationRespond', value: { rfiId: noticeId.value }}}>Respond</Link> page to upload additional attachments as needed before the RFI closes.</p>
         ),
@@ -101,7 +101,7 @@ function noticeIdToState(noticeId: NoticeId): State {
 
     case 'ddrSubmitted':
       return {
-        title: 'Thank you',
+        title: 'Thank You',
         body: (
           <div>
             <p>Your registration for this Request for Information's Discovery Day has been successfully submitted. In-person and/or remote attendance information will be emailed to all attendees individually based on the information you have provided.</p>
@@ -180,20 +180,13 @@ function noticeIdToState(noticeId: NoticeId): State {
 
     case 'viUnverifiedBuyer':
       return {
-        title: 'Permission denied.',
+        title: 'Unverified Account',
         body: (
           <div>
-            <p>You do not yet have permission to view Vendor-Initiated Ideas as your account has not been verified by a staff member from the Procurement Concierge Program.</p>
+            <p>You do not have permission to view Vendor-Initiated Ideas because your account has not yet been verified by the Procurement Concierge Program's staff.</p>
             <p>Please send an email to <Link href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Link> if you have any questions.</p>
           </div>
-        ),
-        button: {
-          text: 'View My Vendor-Initiated Ideas',
-          route: {
-            tag: 'viList' as const,
-            value: null
-          }
-        }
+        )
       };
 
   }
@@ -241,12 +234,12 @@ const view: ComponentView<State, Msg> = props => {
   return (
     <div>
       <Row className='mb-3'>
-        <Col xs='12'>
+        <Col xs='12' md='8'>
           <h1>{state.title}</h1>
         </Col>
       </Row>
       <Row className='mb-3 pb-3'>
-        <Col xs='12'>
+        <Col xs='12' md='8'>
           {typeof state.body === 'string'
             ? (<p>{state.body}</p>)
             : state.body}

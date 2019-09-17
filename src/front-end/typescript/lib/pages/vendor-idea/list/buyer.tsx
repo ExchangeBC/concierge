@@ -1,8 +1,8 @@
-import { CONTACT_EMAIL } from 'front-end/config';
 import { Route } from 'front-end/lib/app/types';
 import { ComponentView, Dispatch, GlobalComponentMsg, Immutable, immutable, Init, replaceRoute, Update } from 'front-end/lib/framework';
 import { readManyVisForBuyers, readOneUser } from 'front-end/lib/http/api';
 import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
+import { expressInterestHref } from 'front-end/lib/pages/vendor-idea/lib';
 import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Link from 'front-end/lib/views/link';
@@ -14,7 +14,7 @@ import AVAILABLE_INDUSTRY_SECTORS from 'shared/data/industry-sectors';
 import { compareDates, formatRelativeTime } from 'shared/lib';
 import { PublicSessionUser } from 'shared/lib/resources/session';
 import { PublicVendorIdeaSlimForBuyers } from 'shared/lib/resources/vendor-idea';
-import { ADT } from 'shared/lib/types';
+import { ADT, UserType, VerificationStatus } from 'shared/lib/types';
 import { invalid, valid } from 'shared/lib/validators';
 
 type VendorIdea = PublicVendorIdeaSlimForBuyers;
@@ -72,7 +72,7 @@ export const init: Init<Params, State> = async ({ sessionUser, dispatch }) => {
     }));
     return invalid(undefined);
   }
-  if (!user.acceptedTermsAt) {
+  if (user.profile.type !== UserType.Buyer || user.profile.verificationStatus !== VerificationStatus.Verified) {
     dispatch(replaceRoute({
       tag: 'notice',
       value: {
@@ -218,6 +218,8 @@ const makeCategoryString = (categories: string[]): string => {
 
 const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (state.tag === 'invalid') { return null; }
+  if (!state.value.vis.length) { return (<div>There are currently no Vendor-Initiated Ideas available.</div>); }
+  if (!state.value.visibleVis.length) { return (<div>There are no Vendor-Initiated Ideas that match the search criteria.</div>); }
   return (
     <div>
       <Row className='justify-content-md-center'>
@@ -242,7 +244,7 @@ const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
                   </CardText>
                   <div className='mt-md-auto w-100 d-flex flex-nowrap'>
                     <Link button outline route={{ tag: 'viView', value: { viId: vi._id }}} color='info' className='mr-2 text-nowrap' size='sm'>Learn More</Link>
-                    <Link button href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`VII: ${vi.latestVersion.description.title}`)}`} color='primary' size='sm' className='text-nowrap'>Express Interest</Link>
+                    <Link button href={expressInterestHref(vi.latestVersion.description.title)} color='primary' size='sm' className='text-nowrap'>Express Interest</Link>
                   </div>
                 </Card>
               </Col>
@@ -261,7 +263,7 @@ export const view: ComponentView<State, Msg> = props => {
         <Col xs='12' md='9' lg='8'>
           <h1>Vendor-Initiated Ideas</h1>
           <p>
-            The following list of Vendor-Initiated Ideas (VIIs) are eligible to purchase by government.
+            The following list contains Vendor-Initiated Ideas (VIIs) that are eligible to be purchased by government.
           </p>
         </Col>
       </Row>

@@ -40,7 +40,7 @@ export const VerificationStatusIcon: View<Pick<Props, 'verificationStatus' | 'cl
 export const Badge: View<Props> = props => {
   const { verificationStatus, className = '', style = {} } = props;
   return (
-    <BootstrapBadge color={verificationStatusToColor(verificationStatus)} className={`text-uppercase font-size-regular align-items-center ${className}`} style={{ ...style, padding: '0.4rem' }}>
+    <BootstrapBadge color={verificationStatusToColor(verificationStatus)} className={`text-uppercase font-size-regular align-items-center ${className}`} style={{ ...style }}>
       <VerificationStatusIcon verificationStatus={verificationStatus} className='mr-1' />
       {verificationStatusToTitleCase(verificationStatus)}
     </BootstrapBadge>
