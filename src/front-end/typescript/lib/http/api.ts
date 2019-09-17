@@ -11,7 +11,7 @@ import * as SessionResource from 'shared/lib/resources/session';
 import * as UserResource from 'shared/lib/resources/user';
 import * as ViResource from 'shared/lib/resources/vendor-idea';
 import * as LogItemResource from 'shared/lib/resources/vendor-idea/log-item';
-import { HttpMethod, Omit, PaginatedList } from 'shared/lib/types';
+import { AuthLevel, HttpMethod, Omit, PaginatedList, UserType } from 'shared/lib/types';
 import { ArrayValidation, invalid, valid, validateArrayAsync, ValidOrInvalid } from 'shared/lib/validators';
 
 const request = prefixRequest('api');
@@ -210,6 +210,7 @@ function rawFileToPublicFile(raw: RawFile): FileResource.PublicFile {
 
 export interface CreateFileRequestBody {
   name: string;
+  authLevel?: AuthLevel<UserType>;
   file: File;
 }
 
@@ -217,6 +218,9 @@ export async function createFile(file: CreateFileRequestBody): Promise<ValidOrIn
   const requestBody = new FormData();
   requestBody.append('file', file.file);
   requestBody.append('name', file.name);
+  if (file.authLevel) {
+    requestBody.append('metadata', JSON.stringify(file.authLevel));
+  }
   const response = await request(HttpMethod.Post, 'files', requestBody);
   switch (response.status) {
     case 200:
@@ -236,13 +240,13 @@ export async function createFile(file: CreateFileRequestBody): Promise<ValidOrIn
  * a promise of their `_id`s.
  */
 
-export async function uploadFiles(files: FileMulti.Value[]): Promise<ArrayValidation<string>> {
+export async function uploadFiles(files: FileMulti.Value[], authLevel?: AuthLevel<UserType>): Promise<ArrayValidation<string>> {
   return validateArrayAsync(files, async file => {
     switch (file.tag) {
       case 'existing':
         return valid(file.value._id);
       case 'new':
-        const result = await createFile(file.value);
+        const result = await createFile({ ...file.value, authLevel });
         return result.tag === 'valid' ? valid(result.value._id) : result;
     }
   });

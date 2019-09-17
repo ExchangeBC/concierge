@@ -39,27 +39,11 @@ export const resource: Resource = {
           return respond(400, ['File must be uploaded in a multipart request.']);
         } else {
           const rawFile = request.body.value;
-          let authLevel: AuthLevel<UserType> = DEFAULT_AUTH_LEVEL;
-          if (request.session.user && request.session.user.type !== UserType.ProgramStaff) {
-            // Override the authLevel if the user is a Vendor or Buyer.
-            // Only Program Staff should be able to view the files they upload.
-            //
-            // TODO we will eventually need to let the uploader access the
-            // files they have uploaded. Under this scheme, they cannot
-            // access the files they upload. This will require a database migration
-            // when the time comes.
-            authLevel = {
-              tag: 'userType',
-              value: [UserType.ProgramStaff]
-            };
-          } else {
-            // Otherwise, if the user is a Program Staff, allow them to set the AuthLevel via the request body.
-            const parsedAuthLevel: AuthLevel<UserType> | null  = rawFile.metadata || null;
-            if (!parsedAuthLevel && rawFile.metadata) {
-              return respond(400, ['Invalid metadata field.']);
-            }
-            authLevel = parsedAuthLevel || authLevel;
+          const parsedAuthLevel: AuthLevel<UserType> | null  = rawFile.metadata || null;
+          if (!parsedAuthLevel && rawFile.metadata) {
+            return respond(400, ['Invalid metadata field.']);
           }
+          const authLevel: AuthLevel<UserType> = parsedAuthLevel || DEFAULT_AUTH_LEVEL;
           const validatedOriginalName = validateFileName(rawFile.name);
           if (validatedOriginalName.tag === 'invalid') {
             return respond(400, validatedOriginalName.value);

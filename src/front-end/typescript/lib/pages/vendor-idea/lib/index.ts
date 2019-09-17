@@ -5,7 +5,7 @@ import { BootstrapColor } from 'front-end/lib/types';
 import { OptionGroup } from 'front-end/lib/views/form-field/lib/select';
 import { CreateRequestBody, CreateValidationErrors } from 'shared/lib/resources/vendor-idea';
 import { LogItemType, logItemTypeIsSystem } from 'shared/lib/resources/vendor-idea/log-item';
-import { ADT } from 'shared/lib/types';
+import { ADT, UserType } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
 type LogItemTypeCopy
@@ -121,7 +121,10 @@ export function getLogItemTypeNonSystemDropdownItems(): Array<OptionGroup<LogIte
 
 export async function makeRequestBody(state: IntakeForm.State): Promise<ValidOrInvalid<CreateRequestBody, CreateValidationErrors>> {
   const values = IntakeForm.getValues(state);
-  const uploadedFiles = await api.uploadFiles(values.attachments);
+  const uploadedFiles = await api.uploadFiles(values.attachments, {
+    tag: 'userType',
+    value: [UserType.Buyer, UserType.ProgramStaff]
+  });
   switch (uploadedFiles.tag) {
     case 'valid':
       return valid({
