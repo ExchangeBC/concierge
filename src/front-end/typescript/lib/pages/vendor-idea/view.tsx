@@ -3,7 +3,7 @@ import { makePageMetadata } from 'front-end/lib';
 import { isUserType } from 'front-end/lib/access-control';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, noPageModal, PageComponent, PageInit, replaceRoute, Update, View } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, GlobalComponentMsg, newRoute, noPageModal, PageComponent, PageInit, replaceRoute, Update, View } from 'front-end/lib/framework';
 import { readOneUser, readOneViForBuyers } from 'front-end/lib/http/api';
 import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
 import { expressInterestHref } from 'front-end/lib/pages/vendor-idea/lib';
@@ -250,6 +250,20 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
       return makePageMetadata('Vendor-Initiated Idea');
     }
   },
-  getBreadcrumbs: emptyPageBreadcrumbs,
+  getBreadcrumbs(state) {
+    if (state.tag !== 'valid') { return []; }
+    return [
+      {
+        text: 'Vendor-Initiated Ideas',
+        onClickMsg: newRoute({
+          tag: 'viList',
+          value: null
+        })
+      },
+      {
+        text: state.tag === 'valid' ? state.value.vi.latestVersion.description.title : 'Vendor-Initiated Idea'
+      }
+    ];
+  },
   getModal: noPageModal
 };

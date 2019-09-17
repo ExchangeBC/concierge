@@ -242,7 +242,10 @@ const update: Update<State, Msg> = ({ state, msg }) => {
             return stopLoading(state)
               .setIn(['init', 'value', 'attachments'], FileMulti.setErrors(attachments, errors));
           };
-          const uploadedFiles = await api.uploadFiles(FileMulti.getValues(attachments));
+          const uploadedFiles = await api.uploadFiles(FileMulti.getValues(attachments), {
+            tag: 'userType',
+            value: [UserType.ProgramStaff]
+          });
           if (uploadedFiles.tag === 'invalid') { return fail(state, uploadedFiles.value); }
           const result = await api.createRfiResponse({
             rfiId: rfi._id,
