@@ -299,6 +299,10 @@ nav.navbar .nav-link:hover {
   height: $fixed-bar-height;
 }
 
+.border-bottom-info-alt {
+  border-bottom: 1px solid darken($info-alt, 6%);
+}
+
 .border-bottom-gov {
   border-bottom: 2px solid $warn;
 }

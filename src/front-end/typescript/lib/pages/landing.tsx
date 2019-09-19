@@ -54,7 +54,7 @@ const Intro: ComponentView<State, Msg> = ({ state, dispatch }) => {
     <Container className='position-relative'>
       <div className='d-none d-md-block position-absolute bg-info-alt-2' style={{ width: '100vw', top: 0, bottom: 0, left: '75%' }}></div>
       <Row>
-        <Col xs='12' md='8' className='py-6'>
+        <Col xs='12' md='8' className='py-6 pr-md-5'>
           <h4 className='mb-3'>
             Vendors and Public Sector Buyers create meaningful connections with the assistance of BC's Procurement Concierge Program.
           </h4>
@@ -78,7 +78,7 @@ const Intro: ComponentView<State, Msg> = ({ state, dispatch }) => {
                 </li>
               </ul>
             </Col>
-            <Col xs='12' md='6' className='pr-4'>
+            <Col xs='12' md='6'>
               <h5 className='mb-3 font-weight-bold text-info-alt-2'>
                 {userTypeToTitleCase(UserType.Vendor)}s
               </h5>

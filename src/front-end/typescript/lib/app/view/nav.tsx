@@ -155,7 +155,7 @@ const Navigation: View<Props> = props => {
           </Collapse>
         </Container>
       </Navbar>
-      <Navbar expand='sm' className='bg-info-alt d-none d-md-block shadow border-bottom'>
+      <Navbar expand='sm' className='bg-info-alt d-none d-md-block shadow border-bottom-info-alt'>
         <Container className='pl-0 d-flex justify-content-between'>
           <ContextualLinks {...props} />
           <Spinner size='sm' color='info' className='transition-indicator' />
