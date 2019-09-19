@@ -140,7 +140,7 @@ const Features: ComponentView<State, Msg> = ({ state, dispatch }) => {
           </Col>
           <Col xs='12' md='4' className='px-4 d-flex flex-column justify-content-start align-items-center'>
             <Icon name='matchmaking' color='secondary' width={4.5} height={4} />
-            <small className='text-uppercase text-center font-weight-bold text-primary-alt mt-3 mb-2 w-100'>Coming Soon</small>
+            <small className='text-uppercase text-center font-weight-bold text-success mt-3 mb-2 w-100'>Available Now</small>
             <h4 className='text-center mb-3 font-weight-bold w-100'>
               Vendor-Initiated Ideas
             </h4>
