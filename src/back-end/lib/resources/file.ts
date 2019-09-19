@@ -50,6 +50,10 @@ export const resource: Resource = {
             authLevel = validatedAuthLevel.value || authLevel;
             alias = rawFile.metadata.alias;
           }
+          // Only program staff can upload files with aliases.
+          if (alias && request.session.user.type !== UserType.ProgramStaff) {
+            return respond(401, [permissions.ERROR_MESSAGE, 'Only Program Staff can create files with aliases.']);
+          }
           const validatedOriginalName = validateFileName(rawFile.name);
           if (validatedOriginalName.tag === 'invalid') {
             return respond(400, validatedOriginalName.value);
