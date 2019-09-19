@@ -103,7 +103,7 @@ const Intro: ComponentView<State, Msg> = ({ state, dispatch }) => {
               Do you need help?
             </h3>
             <p className='text-white mb-5'>
-              An instructional guide has been created to help you through the account setup process, and teach you how to use the mainy features that the Procurement Concierge Web App has to offer.
+              An instructional guide has been created to help you through the account setup process, and teach you how to use the many features that the Procurement Concierge Web App has to offer.
             </p>
             <Link button route={{ tag: 'markdown', value: { documentId: 'guide' } }} color='primary' className='d-inline-block'>Read the Guide</Link>
           </div>
@@ -125,7 +125,7 @@ const Features: ComponentView<State, Msg> = ({ state, dispatch }) => {
               Requests for Information
             </h4>
             <p className='text-center mb-0'>
-              Requests for Information ("RFIs") will be posted directly to this website. Public Sector Buyers will work with the Program's staff to develop RFIs, and Vendors will respond using an easy-to-use online form.
+              Requests for Information ("RFIs") are posted directly to this website. Public Sector Buyers work with the Program's staff to develop RFIs, and Vendors respond to them by using an easy-to-use online form.
             </p>
           </Col>
           <Col xs='12' md='4' className='my-5 my-md-0 px-4 d-flex flex-column justify-content-start align-items-center'>
@@ -135,7 +135,7 @@ const Features: ComponentView<State, Msg> = ({ state, dispatch }) => {
               Discovery Day Sessions
             </h4>
             <p className='text-center mb-0'>
-              The Program's staff will organise Discovery Day sessions related to posted Requests for Information ("RFIs") to allow Vendors and Public Sector Buyers to meet and discuss them.
+              The Program's staff organises Discovery Day sessions related to posted Requests for Information ("RFIs") to enable Vendors and Public Sector Buyers to meet and discuss them.
             </p>
           </Col>
           <Col xs='12' md='4' className='px-4 d-flex flex-column justify-content-start align-items-center'>
