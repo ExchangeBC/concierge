@@ -185,7 +185,7 @@ const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => 
         })}
         onChangeDebounced={() => extraProps && extraProps.onChangeDebounced(index)} />
       {field.value.tag === 'existing'
-        ? (<Link download href={makeFileBlobPath(field.value.value._id)}>
+        ? (<Link download href={makeFileBlobPath(field.value.value._id)} className='d-flex align-items-center'>
             <Icon
               name='download'
               width={1}
