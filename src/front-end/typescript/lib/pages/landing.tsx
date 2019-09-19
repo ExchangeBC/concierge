@@ -28,18 +28,18 @@ const Hero: ComponentView<State, Msg> = ({ state, dispatch }) => {
     <div className='bg-info py-6'>
       <Container style={{ minHeight: '40vh' }} className='d-flex flex-column justify-content-center'>
         <Row className='mb-4'>
-          <Col xs='12' md={{ size: 10, offset: 1 }} className='text-white'>
+          <Col className='text-white'>
             <div className='font-weight-bold'>The Province of British Columbia's</div>
-            <h1 className='font-weight-bolder mb-3'>
+            <h1 className='font-weight-bolder mb-3 display-4'>
               Procurement Concierge&nbsp;
-              <br className='d-md-none' />
+              <br className='d-lg-none' />
               Web App
             </h1>
             <h2 className='h4 font-weight-normal'>Transforming how government interacts with the marketplace.</h2>
           </Col>
         </Row>
         <Row>
-          <Col md={{ size: 'auto', offset: 1 }} className='d-flex flex-nowrap'>
+          <Col className='d-flex flex-nowrap'>
             <Link button outline={!state.signedIn} route={{ tag: 'requestForInformationList', value: null }} size='lg' color={state.signedIn ? 'primary' : 'light'} className='mr-3'>View RFIs</Link>
             {state.signedIn ? null : (<Link button route={{ tag: 'signUp', value: null }} size='lg' color='primary'>Get Started</Link>)}
           </Col>
@@ -58,7 +58,7 @@ const Intro: ComponentView<State, Msg> = ({ state, dispatch }) => {
             Vendors and Public Sector Buyers create meaningful connections with the assistance of BC's Procurement Concierge Program.
           </h4>
           <p className='mb-5'>
-            This web app is the tool used for the pre-market engagement process in the Province of British Columbia under the Procurement Concierge Program ("The Program").
+            The Procurement Concierge Web App is the tool used for the pre-market engagement process in the Province of British Columbia under the Procurement Concierge Program ("The Program").
           </p>
           <Row>
             <Col xs='12' md='6' className='mb-5 mb-md-0'>

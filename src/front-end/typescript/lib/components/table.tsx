@@ -50,20 +50,17 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     }
 };
 
-interface ConditionalTooltipProps {
-  data?: {
-    text: string;
-    isOpen: boolean;
-    target: string;
-    toggle(): any;
-  };
+interface TableTooltipProps {
+  text: string;
+  isOpen: boolean;
+  target: string;
+  toggle(): any;
 }
 
-const ConditionalTooltip: View<ConditionalTooltipProps> = props => {
-  if (!props.data) { return null; }
+const TableTooltip: View<TableTooltipProps> = props => {
   return (
-    <Tooltip autohide={false} placement='top' boundariesElement='window' {...props.data}>
-      {props.data.text}
+    <Tooltip autohide={false} placement='top' boundariesElement='window' {...props}>
+      {props.text}
     </Tooltip>
   );
 };
@@ -83,7 +80,7 @@ export interface THProps extends THSpec {
 }
 
 export const DefaultTHView: View<THProps> = ({ id, style, className, children, index, tooltipText, dispatch, tooltipIsOpen }) => {
-  const tooltipData = !tooltipText
+  const tooltipProps = !tooltipText
     ? undefined
     : {
         text: tooltipText,
@@ -93,10 +90,12 @@ export const DefaultTHView: View<THProps> = ({ id, style, className, children, i
       };
   return (
     <th key={id} style={style} className={className}>
-      <div className='d-inline-block' id={id}>
-        {children}
-        <ConditionalTooltip data={tooltipData} />
-      </div>
+      {tooltipProps
+        ? (<div className='d-inline-block' id={id}>
+            {children}
+            <TableTooltip {...tooltipProps} />
+          </div>)
+        : children}
     </th>
   );
 };
@@ -134,7 +133,7 @@ export interface TDProps extends TDSpec {
 
 export function DefaultTDView(props: TDProps): ReactElement {
   const { colSpan, id, style, className, children, index, tooltipText, dispatch, tooltipIsOpen } = props;
-  const tooltipData = !tooltipText
+  const tooltipProps = !tooltipText
     ? undefined
     : {
         text: tooltipText,
@@ -144,10 +143,12 @@ export function DefaultTDView(props: TDProps): ReactElement {
       };
   return (
     <td key={id} style={style} className={className} colSpan={colSpan}>
-      <div className='d-inline-block' id={id}>
-        {children}
-        <ConditionalTooltip data={tooltipData} />
-      </div>
+      {tooltipProps
+        ? (<div className='d-inline-block' id={id}>
+            {children}
+            <TableTooltip {...tooltipProps} />
+          </div>)
+        : children}
     </td>
   );
 };
