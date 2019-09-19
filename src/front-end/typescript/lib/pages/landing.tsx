@@ -98,7 +98,7 @@ const Intro: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Col xs='12' md='4' className='bg-info-alt-2 position-relative'>
           <div className='d-none d-md-block position-absolute bg-info-alt-2' style={{ width: '100vw', top: 0, bottom: 0, left: '90%', zIndex: -1 }}></div>
           <div className='d-none d-sm-block d-md-none position-absolute bg-info-alt-2' style={{ width: '100vw', top: 0, bottom: 0, left: '50%', transform: 'translateX(-50%)', zIndex: -1 }}></div>
-          <div className='py-6' style={{ paddingLeft: '2rem', paddingRight: '2rem' }}>
+          <div className='py-6 pl-md-5'>
             <h3 className='mb-3 text-white'>
               Do you need help?
             </h3>
