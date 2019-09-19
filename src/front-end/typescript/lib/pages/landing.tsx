@@ -51,8 +51,7 @@ const Hero: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 const Intro: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
-    <Container className='position-relative'>
-      <div className='d-none d-md-block position-absolute bg-info-alt-2' style={{ width: '100vw', top: 0, bottom: 0, left: '75%' }}></div>
+    <Container>
       <Row>
         <Col xs='12' md='8' className='py-6 pr-md-5'>
           <h4 className='mb-3'>
@@ -62,7 +61,7 @@ const Intro: ComponentView<State, Msg> = ({ state, dispatch }) => {
             This web app is the tool used for the pre-market engagement process in the Province of British Columbia under the Procurement Concierge Program ("The Program").
           </p>
           <Row>
-            <Col xs='12' md='6'>
+            <Col xs='12' md='6' className='mb-5 mb-md-0'>
               <h5 className='mb-3 font-weight-bold text-info-alt-2'>
                 {userTypeToTitleCase(UserType.Buyer)}s
               </h5>
@@ -96,14 +95,18 @@ const Intro: ComponentView<State, Msg> = ({ state, dispatch }) => {
             </Col>
           </Row>
         </Col>
-        <Col xs='12' md='4' className='bg-info-alt-2 py-6' style={{ paddingLeft: '2rem', paddingRight: '2rem' }}>
-          <h3 className='mb-3 text-white'>
-            Do you need help?
-          </h3>
-          <p className='text-white mb-5'>
-            An instructional guide has been created to help you through the account setup process, and teach you how to use the mainy features that the Procurement Concierge Web App has to offer.
-          </p>
-          <Link button route={{ tag: 'markdown', value: { documentId: 'guide' } }} color='primary' className='d-inline-block'>Read the Guide</Link>
+        <Col xs='12' md='4' className='bg-info-alt-2 position-relative'>
+          <div className='d-none d-md-block position-absolute bg-info-alt-2' style={{ width: '100vw', top: 0, bottom: 0, left: '90%', zIndex: -1 }}></div>
+          <div className='d-none d-sm-block d-md-none position-absolute bg-info-alt-2' style={{ width: '100vw', top: 0, bottom: 0, left: '50%', transform: 'translateX(-50%)', zIndex: -1 }}></div>
+          <div className='py-6' style={{ paddingLeft: '2rem', paddingRight: '2rem' }}>
+            <h3 className='mb-3 text-white'>
+              Do you need help?
+            </h3>
+            <p className='text-white mb-5'>
+              An instructional guide has been created to help you through the account setup process, and teach you how to use the mainy features that the Procurement Concierge Web App has to offer.
+            </p>
+            <Link button route={{ tag: 'markdown', value: { documentId: 'guide' } }} color='primary' className='d-inline-block'>Read the Guide</Link>
+          </div>
         </Col>
       </Row>
     </Container>
