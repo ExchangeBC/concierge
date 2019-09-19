@@ -40,7 +40,7 @@ const Hero: ComponentView<State, Msg> = ({ state, dispatch }) => {
         </Row>
         <Row>
           <Col md={{ size: 'auto', offset: 1 }} className='d-flex flex-nowrap'>
-            <Link button outline route={{ tag: 'requestForInformationList', value: null }} size='lg' color={state.signedIn ? 'primary' : 'light'} className='mr-3'>View RFIs</Link>
+            <Link button outline={!state.signedIn} route={{ tag: 'requestForInformationList', value: null }} size='lg' color={state.signedIn ? 'primary' : 'light'} className='mr-3'>View RFIs</Link>
             {state.signedIn ? null : (<Link button route={{ tag: 'signUp', value: null }} size='lg' color='primary'>Get Started</Link>)}
           </Col>
         </Row>
