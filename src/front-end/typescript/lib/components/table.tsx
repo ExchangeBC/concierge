@@ -1,43 +1,53 @@
-import { Component, ComponentViewProps, Dispatch, Init, Update, View } from 'front-end/lib/framework';
+import { Component, ComponentViewProps, Dispatch, Init, Update, View, ViewElementChildren } from 'front-end/lib/framework';
 import { CSSProperties, default as React, ReactElement } from 'react';
 import { Table, Tooltip } from 'reactstrap';
-import { ADT, Omit } from 'shared/lib/types';
+import { ADT } from 'shared/lib/types';
 
-type Children = string | null | ReactElement<any> | Array<ReactElement<any>>;
-
-export interface State<Data> {
-  THView: View<THProps>;
-  TDView: View<TDProps<Data>>;
-  activeTooltipThIndex: number;
+export interface State {
   idNamespace: string;
+  THView: View<THProps>;
+  TDView: View<TDProps>;
+  activeTooltipThIndex: number | null;
+  activeTooltipTdIndex: [number, number] | null; // [row, cell]
 };
 
-export type Params<Data> = Omit<State<Data>, 'activeTooltipThIndex'>;
+export interface Params {
+  idNamespace: string;
+  THView?: View<THProps>;
+  TDView?: View<TDProps>;
+}
 
 export type Msg
-  = ADT<'toggleTooltip', number>;
+  = ADT<'toggleTooltipTh', number>
+  | ADT<'toggleTooltipTd', [number, number]>; // [row, cell]
 
-export function init<Data>(): Init<Params<Data>, State<Data>> {
-  return async params => ({
-    ...params,
-    activeTooltipThIndex: -1
-  });
-};
+export const init: Init<Params, State> = async ({ idNamespace, THView = DefaultTHView, TDView = DefaultTDView }) => ({
+  idNamespace,
+  THView,
+  TDView,
+  activeTooltipThIndex: null,
+  activeTooltipTdIndex: null
+});
 
-export function update<Data>(): Update<State<Data>, Msg> {
-  return ({ state, msg }) => {
+export const update: Update<State, Msg> = ({ state, msg }) => {
     switch (msg.tag) {
-      case 'toggleTooltip':
-        const currentIndex = state.activeTooltipThIndex;
-        if (currentIndex === -1) {
+      case 'toggleTooltipTh':
+        const currentThIndex = state.activeTooltipThIndex;
+        if (!currentThIndex) {
           return [state.set('activeTooltipThIndex', msg.value)];
         } else {
-          return [state.set('activeTooltipThIndex', -1)];
+          return [state.set('activeTooltipThIndex', null)];
+        }
+      case 'toggleTooltipTd':
+        const currentTdIndex = state.activeTooltipTdIndex;
+        if (!currentTdIndex) {
+          return [state.set('activeTooltipTdIndex', msg.value)];
+        } else {
+          return [state.set('activeTooltipTdIndex', null)];
         }
       default:
         return [state];
     }
-  };
 };
 
 interface ConditionalTooltipProps {
@@ -50,19 +60,16 @@ interface ConditionalTooltipProps {
 }
 
 const ConditionalTooltip: View<ConditionalTooltipProps> = props => {
-  if (props.data) {
-    return (
-      <Tooltip placement='top' autohide={false} boundariesElement='window' {...props.data}>
-        {props.data.text}
-      </Tooltip>
-    );
-  } else {
-    return null;
-  }
+  if (!props.data) { return null; }
+  return (
+    <Tooltip autohide={false} placement='top' boundariesElement='window' {...props.data}>
+      {props.data.text}
+    </Tooltip>
+  );
 };
 
 export interface THSpec {
-  children: Children;
+  children: ViewElementChildren;
   style?: CSSProperties;
   className?: string;
   tooltipText?: string;
@@ -82,12 +89,14 @@ export const DefaultTHView: View<THProps> = ({ id, style, className, children, i
         text: tooltipText,
         isOpen: tooltipIsOpen,
         target: id,
-        toggle: () => dispatch({ tag: 'toggleTooltip', value: index })
+        toggle: () => dispatch({ tag: 'toggleTooltipTh', value: index })
       };
   return (
-    <th key={id} id={id} style={style} className={className}>
-      {children}
-      <ConditionalTooltip data={tooltipData} />
+    <th key={id} style={style} className={className}>
+      <div className='d-inline-block' id={id}>
+        {children}
+        <ConditionalTooltip data={tooltipData} />
+      </div>
     </th>
   );
 };
@@ -108,94 +117,122 @@ export const THead: View<THeadProps> = ({ cells, THView }) => {
   );
 };
 
-export interface TDSpec<Data> {
-  data: Data;
+export interface TDSpec {
+  children: ViewElementChildren;
+  style?: CSSProperties;
+  className?: string;
+  tooltipText?: string;
+  colSpan?: number;
 }
 
-export function makeTDSpec<Data>(data: Data): TDSpec<Data> {
-  return { data };
-}
-
-export type TDProps<Data> = TDSpec<Data>;
-
-export type RowSpec<Data> = Array<TDSpec<Data>>;
-
-export type RowsSpec<Data> = Array<RowSpec<Data>>;
-
-export type RowProps<Data> = Array<TDProps<Data>>;
-
-export type RowsProps<Data> = Array<RowProps<Data>>;
-
-interface TBodyProps<Data> {
+export interface TDProps extends TDSpec {
+  dispatch: Dispatch<Msg>;
+  index: [number, number]; // [row, cell]
+  tooltipIsOpen: boolean;
   id: string;
-  rows: RowsProps<Data>;
-  TDView: View<TDProps<Data>>;
+}
+
+export function DefaultTDView(props: TDProps): ReactElement {
+  const { colSpan, id, style, className, children, index, tooltipText, dispatch, tooltipIsOpen } = props;
+  const tooltipData = !tooltipText
+    ? undefined
+    : {
+        text: tooltipText,
+        isOpen: tooltipIsOpen,
+        target: id,
+        toggle: () => dispatch({ tag: 'toggleTooltipTd', value: index })
+      };
+  return (
+    <td key={id} style={style} className={className} colSpan={colSpan}>
+      <div className='d-inline-block' id={id}>
+        {children}
+        <ConditionalTooltip data={tooltipData} />
+      </div>
+    </td>
+  );
+};
+
+export type RowSpec = TDSpec[];
+
+export type RowsSpec = RowSpec[];
+
+export type RowProps = TDProps[];
+
+export type RowsProps = RowProps[];
+
+interface TBodyProps {
+  id: string;
+  rows: RowsProps;
+  TDView: View<TDProps>;
   borderless?: boolean;
 }
 
-export function makeTBody<Data>(): View<TBodyProps<Data>> {
-  return ({ id, rows, TDView, borderless }) => {
-    const children = rows.map((row, i) => {
-      const cellChildren = row.map((cell, j) => (<TDView key={`${id}-${i}-${j}`} {...cell} />));
-      return (
-        <tr key={`${id}-${i}`}>
-          {cellChildren}
-        </tr>
-      );
-    });
+const TBody: View<TBodyProps> = ({ id, rows, TDView, borderless }) => {
+  const children = rows.map((row, rowIndex) => {
+    const cellChildren = row.map(cell => (<TDView key={`${cell.id}-wrapper`} {...cell} />));
     return (
-      <tbody style={{ fontSize: '0.875rem' }} className={borderless ? 'table-borderless' : ''}>
-        {children}
-      </tbody>
+      <tr key={`${id}-row-${rowIndex}`}>
+        {cellChildren}
+      </tr>
     );
-  };
+  });
+  return (
+    <tbody style={{ fontSize: '0.875rem' }} className={borderless ? 'table-borderless' : ''}>
+      {children}
+    </tbody>
+  );
 };
 
-interface ViewProps<Data> extends ComponentViewProps<State<Data>, Msg> {
+interface ViewProps extends ComponentViewProps<State, Msg> {
   headCells: THSpec[];
-  bodyRows: RowsSpec<Data>;
+  bodyRows: RowsSpec;
   className?: string;
   style?: CSSProperties;
   borderless?: boolean;
 }
 
-export function view<Data>(): View<ViewProps<Data>> {
-  const TBody: View<TBodyProps<Data>> = makeTBody();
-  return props => {
-    const { state, dispatch, className, style, headCells, bodyRows, borderless } = props;
-    const headProps: THeadProps = {
-      THView: state.THView,
-      cells: headCells.map((spec, index) => {
-        return {
-          ...spec,
-          index,
-          dispatch,
-          id: `table-${state.idNamespace}-th-${index}`,
-          tooltipIsOpen: index === state.activeTooltipThIndex
-        };
-      })
-    };
-    const bodyProps: TBodyProps<Data> = {
-      id: `table-${state.idNamespace}-tbody`,
-      TDView: state.TDView,
-      rows: bodyRows,
-      borderless
-    };
-    return (
-      <Table className={className} style={style} responsive>
-        <THead {...headProps} />
-        <TBody {...bodyProps} />
-      </Table>
-    );
+export const view: View<ViewProps> = props => {
+  const { state, dispatch, className, style, headCells, bodyRows, borderless } = props;
+  const headProps: THeadProps = {
+    THView: state.THView,
+    cells: headCells.map((spec, index) => {
+      return {
+        ...spec,
+        index,
+        dispatch,
+        id: `table-${state.idNamespace}-th-${index}`,
+        tooltipIsOpen: index === state.activeTooltipThIndex
+      };
+    })
   };
+  const bodyProps: TBodyProps = {
+    id: `table-${state.idNamespace}-tbody`,
+    TDView: state.TDView,
+    rows: bodyRows.map((row, rowIndex) => {
+      return row.map((cell, cellIndex) => {
+        return {
+          ...cell,
+          dispatch,
+          index: [rowIndex, cellIndex],
+          id: `table-${state.idNamespace}-td-${rowIndex}-${cellIndex}`,
+          tooltipIsOpen: !!state.activeTooltipTdIndex && rowIndex === state.activeTooltipTdIndex[0] && cellIndex === state.activeTooltipTdIndex[1]
+        };
+      });
+    }),
+    borderless
+  };
+  return (
+    <Table className={className} style={style} responsive>
+      <THead {...headProps} />
+      <TBody {...bodyProps} />
+    </Table>
+  );
 };
 
-export type TableComponent<Data> = Component<Params<Data>, State<Data>, Msg, ViewProps<Data>>;
+export type TableComponent = Component<Params, State, Msg, ViewProps>;
 
-export function component<Data>(): TableComponent<Data> {
-  return {
-    init: init(),
-    update: update(),
-    view: view()
-  };
+export const component: TableComponent = {
+  init,
+  update,
+  view
 };

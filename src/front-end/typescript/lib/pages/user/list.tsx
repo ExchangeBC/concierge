@@ -3,8 +3,8 @@ import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from
 import { isUserType } from 'front-end/lib/access-control';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import * as TableComponent from 'front-end/lib/components/table';
-import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, immutable, Immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, replaceRoute, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import * as Table from 'front-end/lib/components/table';
+import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, immutable, Immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, replaceRoute, Update, updateComponentChild } from 'front-end/lib/framework';
 import { hasUserAcceptedTerms, readManyUsers } from 'front-end/lib/http/api';
 import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
@@ -12,46 +12,12 @@ import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
 import { VerificationStatusIcon } from 'front-end/lib/views/verification-status-badge';
 import { get } from 'lodash';
-import { default as React, ReactElement } from 'react';
+import React from 'react';
 import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import { PublicSessionUser } from 'shared/lib/resources/session';
 import { PublicUser } from 'shared/lib/resources/user';
-import { ADT, parseUserType, profileToName, UserType, userTypeToTitleCase, VerificationStatus } from 'shared/lib/types';
-
-// Define Table component.
-
-type TableCellData
-  = ADT<'verificationStatus', VerificationStatus | null>
-  | ADT<'userType', UserType>
-  | ADT<'name', { userId: string, text: string, dispatch: Dispatch<Msg>, entity?: string }>
-  | ADT<'email', string>
-  | ADT<'acceptedTerms', boolean>;
-
-const Table: TableComponent.TableComponent<TableCellData> = TableComponent.component();
-
-const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
-  const wrap = (child: string | null | ReactElement<any>, center = false) => {
-    return (<td className={`align-top ${center ? 'text-center' : ''}`}>{child}</td>);
-  };
-  switch (data.tag) {
-    case 'verificationStatus':
-      if (!data.value) { return wrap(null); }
-      return wrap((<VerificationStatusIcon verificationStatus={data.value} colored large />), true);
-    case 'userType':
-      return wrap(userTypeToTitleCase(data.value));
-    case 'name':
-    return (
-      <td className='align-top text-wrap'>
-        <Link onClick={() => data.value.dispatch({ tag: 'viewUser', value: data.value.userId })}>{data.value.text}</Link>
-        {data.value.entity ? (<div className='small text-uppercase text-secondary'>{data.value.entity}</div>) : null}
-      </td>);
-    case 'email':
-      return wrap(data.value);
-    case 'acceptedTerms':
-      return wrap(data.value ? (<Icon name='check' color='body' width={1.25} height={1.25} />) : null, true);
-  }
-}
+import { ADT, parseUserType, profileToName, UserType, userTypeToTitleCase, VerificationStatus, verificationStatusToTitleCase } from 'shared/lib/types';
 
 export interface State {
   createLoading: number;
@@ -60,7 +26,7 @@ export interface State {
   userTypeFilter: Select.State;
   categoryFilter: Select.State;
   searchFilter: ShortText.State;
-  table: Immutable<TableComponent.State<TableCellData>>;
+  table: Immutable<Table.State>;
   promptCreateConfirmation: boolean;
   promptViewConfirmation?: string;
   sessionUser?: PublicSessionUser;
@@ -77,7 +43,7 @@ type InnerMsg
   = ADT<'userTypeFilter', Select.Value>
   | ADT<'categoryFilter', Select.Value>
   | ADT<'searchFilter', string>
-  | ADT<'table', TableComponent.Msg>
+  | ADT<'table', Table.Msg>
   | ADT<'createAccount'>
   | ADT<'hideCreateConfirmationPrompt'>
   | ADT<'viewUser', string>
@@ -123,9 +89,7 @@ async function makeInitState(): Promise<State> {
       placeholder: 'Search'
     }),
     table: immutable(await Table.init({
-      idNamespace: 'user-list',
-      THView: TableComponent.DefaultTHView,
-      TDView
+      idNamespace: 'user-list'
     }))
   };
 }
@@ -309,7 +273,7 @@ const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
   );
 };
 
-const tableHeadCells: TableComponent.THSpec[] = [
+const tableHeadCells: Table.THSpec[] = [
   {
     children: 'Status',
     className: 'text-center',
@@ -338,6 +302,7 @@ const tableHeadCells: TableComponent.THSpec[] = [
   },
   {
     children: 'T&C',
+    tooltipText: 'Accepted Terms and Conditions?',
     className: 'text-center',
     style: {
       width: '10%'
@@ -345,35 +310,54 @@ const tableHeadCells: TableComponent.THSpec[] = [
   }
 ];
 
-function tableBodyRows(users: PublicUser[], dispatch: Dispatch<Msg>): Array<Array<TableComponent.TDSpec<TableCellData>>> {
+function tableBodyRows(users: PublicUser[], dispatch: Dispatch<Msg>): Table.RowsSpec {
+  const className = (center?: boolean, wrap?: boolean) => `align-top ${center ? 'text-center' : ''} ${wrap ? 'text-wrap' : ''}`;
   return users.map(user => {
+    const entity = user.profile.type === UserType.Buyer ? user.profile.publicSectorEntity : undefined;
+    const verificationStatus: VerificationStatus | undefined = get(user.profile, 'verificationStatus');
+    const name = profileToName(user.profile) || FALLBACK_USER_NAME;
     return [
-      TableComponent.makeTDSpec({ tag: 'verificationStatus' as const, value: get(user.profile, 'verificationStatus', null) }),
-      TableComponent.makeTDSpec({ tag: 'userType' as const, value: user.profile.type }),
-      TableComponent.makeTDSpec({
-        tag: 'name' as const,
-        value: {
-          userId: user._id,
-          text: profileToName(user.profile) || FALLBACK_USER_NAME,
-          dispatch,
-          entity: user.profile.type === UserType.Buyer ? user.profile.publicSectorEntity : undefined
-        }
-      }),
-      TableComponent.makeTDSpec({ tag: 'email' as const, value: user.email }),
-      TableComponent.makeTDSpec({ tag: 'acceptedTerms' as const, value: !!user.acceptedTermsAt })
+      {
+        children: verificationStatus
+          ? (<VerificationStatusIcon verificationStatus={verificationStatus} colored large />)
+          : null,
+        className: className(true),
+        tooltipText: verificationStatus && verificationStatusToTitleCase(verificationStatus)
+      },
+      {
+        children: userTypeToTitleCase(user.profile.type),
+        className: className()
+      },
+      {
+        children: (
+          <div>
+            <Link onClick={() => dispatch({ tag: 'viewUser', value: user._id })}>{name}</Link>
+            {entity ? (<div className='small text-uppercase text-secondary'>{entity}</div>) : null}
+          </div>
+        ),
+        className: className(false, true)
+      },
+      {
+        children: user.email,
+        className: className()
+      },
+      {
+        children: user.acceptedTermsAt ? (<Icon name='check' color='body' width={1.25} height={1.25} />) : null,
+        className: className(true),
+        tooltipText: user.acceptedTermsAt && `${name} has accepted the Terms and Conditions.`
+      }
     ];
   });
 }
 
 const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (!state.visibleUsers.length) { return (<div>There are no users that match the search criteria.</div>); }
-  const bodyRows = tableBodyRows(state.visibleUsers, dispatch);
-  const dispatchTable: Dispatch<TableComponent.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
+  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
   return (
     <Table.view
       className='text-nowrap'
       headCells={tableHeadCells}
-      bodyRows={bodyRows}
+      bodyRows={tableBodyRows(state.visibleUsers, dispatch)}
       state={state.table}
       dispatch={dispatchTable} />
   );

@@ -89,7 +89,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
         const mightViewResponseButtons = sessionUser && sessionUser.type === UserType.Vendor || !sessionUser;
         const rfiStatus = rfiToRfiStatus(rfi);
         if (mightViewResponseButtons && rfiStatus === RfiStatus.Closed) {
-          infoAlerts.push(`This RFI is still accepting responses up to ${rfi.latestVersion.gracePeriodDays} calendar days after the closing date and time.`);
+          infoAlerts.push(`This RFI is still accepting responses up to ${rfi.latestVersion.gracePeriodDays} calendar day${rfi.latestVersion.gracePeriodDays === 1 ? 's' : ''} after the closing date and time.`);
         }
         if (mightViewResponseButtons && rfiStatus === RfiStatus.Expired) {
           infoAlerts.push('This RFI is no longer accepting responses.');

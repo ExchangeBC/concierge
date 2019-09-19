@@ -1,5 +1,5 @@
 import * as Table from 'front-end/lib/components/table';
-import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import { BigStat, SmallStats, Stats } from 'front-end/lib/pages/request-for-information/views/stats';
 import FormSectionHeading from 'front-end/lib/views/form-section-heading';
 import Icon from 'front-end/lib/views/icon';
@@ -12,7 +12,6 @@ import { PublicFile } from 'shared/lib/resources/file';
 import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
 import { PublicRfi } from 'shared/lib/resources/request-for-information';
 import { PublicRfiResponse } from 'shared/lib/resources/request-for-information/response';
-import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, profileToName } from 'shared/lib/types';
 
 export const TAB_NAME = 'Responses';
@@ -34,46 +33,7 @@ interface RfiResponse {
 export interface State {
   rfi: PublicRfi;
   responses: RfiResponse[];
-  table: Immutable<Table.State<TableCellData>>;
-};
-
-type TableCellData
-  = ADT<'vendor', PublicUser>
-  | ADT<'attachment', PublicFile>
-  | ADT<'dateSubmitted', Date>;
-
-const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
-  const NUM_COLUMNS = 2;
-  switch (data.tag) {
-    case 'vendor':
-      return (
-        <td className='bg-light font-size-base text-wrap' colSpan={NUM_COLUMNS}>
-          <Link route={{ tag: 'userView', value: { profileUserId: data.value._id }}} className='mr-2' newTab>
-            {profileToName(data.value.profile)}
-          </Link>
-          {'('}
-          <Link href={`mailto:${data.value.email}`}>{data.value.email}</Link>
-          {')'}
-        </td>
-      )
-    case 'attachment':
-      return (
-        <td className='align-top'>
-          <div className='d-flex flex-nowrap'>
-            <Icon name='paperclip' color='secondary' className='mr-2 mt-1 flex-shrink-0' width={1} height={1} />
-            <Link href={makeFileBlobPath(data.value._id)} className='d-block' download>
-              {data.value.originalName}
-            </Link>
-          </div>
-        </td>
-      );
-    case 'dateSubmitted':
-      return (
-        <td className='align-top text-right'>
-          {formatDateAndTime(data.value, true)}
-        </td>
-      );
-  }
+  table: Immutable<Table.State>;
 };
 
 const tableHeadCells: Table.THSpec[] = [
@@ -95,8 +55,6 @@ const tableHeadCells: Table.THSpec[] = [
     }
   }
 ];
-
-const TableComponent: Table.TableComponent<TableCellData> = Table.component();
 
 export const init: Init<Params, State> = async ({ rfi, responses }) => {
   const responsesByVendor: Record<string, PublicRfiResponse[]> = responses.reduce((acc: Record<string, PublicRfiResponse[]>, response) => {
@@ -124,9 +82,7 @@ export const init: Init<Params, State> = async ({ rfi, responses }) => {
   return {
     rfi,
     responses: transformedResponses,
-    table: immutable(await TableComponent.init({
-      TDView,
-      THView: Table.DefaultTHView,
+    table: immutable(await Table.init({
       idNamespace: 'rfi-responses'
     }))
   };
@@ -139,7 +95,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
         state,
         mapChildMsg: value => ({ tag: 'table' as const, value }),
         childStatePath: ['table'],
-        childUpdate: TableComponent.update,
+        childUpdate: Table.update,
         childMsg: msg.value
       });
     default:
@@ -147,25 +103,49 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
   }
 };
 
-function tableBodyRows(responses: RfiResponse[]): Table.RowsSpec<TableCellData> {
-  const rows: TableCellData[][] = responses.reduce((tableRows: TableCellData[][], response) => {
+const NUM_COLUMNS = 2;
+
+function tableBodyRows(responses: RfiResponse[]): Table.RowsSpec {
+  return responses.reduce((tableRows: Table.RowsSpec, response) => {
     // Add vendor title row.
     tableRows.push([
-      { tag: 'vendor', value: response.createdBy }
+      {
+        children: (
+          <div>
+            <Link route={{ tag: 'userView', value: { profileUserId: response.createdBy._id }}} className='mr-2' newTab>
+              {profileToName(response.createdBy.profile)}
+            </Link>
+            {'('}
+            <Link href={`mailto:${response.createdBy.email}`}>{response.createdBy.email}</Link>
+            {')'}
+          </div>
+          ),
+        className: 'bg-light font-size-base text-wrap',
+        colSpan: NUM_COLUMNS
+      }
     ]);
     // Add attachment rows.
-    return tableRows.concat(response.attachments.reduce((responseRows: TableCellData[][], attachment) => {
+    return tableRows.concat(response.attachments.reduce((responseRows: Table.RowsSpec, attachment) => {
       responseRows.push([
-        { tag:  'attachment', value: attachment },
-        { tag:  'dateSubmitted', value: attachment.createdAt }
+        {
+          children: (
+            <div className='d-flex flex-nowrap'>
+              <Icon name='paperclip' color='secondary' className='mr-2 mt-1 flex-shrink-0' width={1} height={1} />
+              <Link href={makeFileBlobPath(attachment._id)} className='d-block' download>
+                {attachment.originalName}
+              </Link>
+            </div>
+          ),
+          className: 'align-top'
+        },
+        {
+          children: formatDateAndTime(attachment.createdAt, true),
+          className: 'align-top text-right'
+        }
       ]);
       return responseRows;
     }, []));
   }, []);
-  // Create TD specs from each row's content.
-  return rows.map(row => {
-    return row.map(data => Table.makeTDSpec(data));
-  });
 }
 
 const ResponsesReceived: ComponentView<State, Msg> = ({ state, dispatch }) => {
@@ -180,7 +160,7 @@ const ResponsesReceived: ComponentView<State, Msg> = ({ state, dispatch }) => {
       </Row>
       <Row>
         <Col xs='12'>
-          <TableComponent.view
+          <Table.view
             className='text-nowrap'
             headCells={tableHeadCells}
             bodyRows={tableBodyRows(state.responses)}

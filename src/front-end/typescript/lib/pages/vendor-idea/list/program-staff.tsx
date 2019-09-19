@@ -3,18 +3,18 @@ import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import router from 'front-end/lib/app/router';
 import { Route } from 'front-end/lib/app/types';
 import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
-import * as TableComponent from 'front-end/lib/components/table';
-import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, Init, mapComponentDispatch, newRoute, PageAlerts, PageGetAlerts, PageGetModal, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import * as Table from 'front-end/lib/components/table';
+import { ComponentView, Dispatch, emptyPageAlerts, GlobalComponentMsg, Immutable, immutable, Init, mapComponentDispatch, newRoute, PageAlerts, PageGetAlerts, PageGetModal, Update, updateComponentChild } from 'front-end/lib/framework';
 import { createFile, hasUserAcceptedTerms, readManyVisForProgramStaff, readOneFile } from 'front-end/lib/http/api';
 import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
-import { getLogItemTypeStatusDropdownItems } from 'front-end/lib/pages/vendor-idea/lib';
+import { getLogItemTypeStatusDropdownItems, logItemTypeToCopy } from 'front-end/lib/pages/vendor-idea/lib';
 import { LogItemTypeBadge } from 'front-end/lib/pages/vendor-idea/views/log-item-type-badge';
 import LogItemTypeSelectGroupLabel from 'front-end/lib/pages/vendor-idea/views/log-item-type-select-group-label';
 import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
-import { default as React, ReactElement } from 'react';
+import React from 'react';
 import { Col, Row, Spinner } from 'reactstrap';
 import { compareDates, formatDateAndTime, rawFormatDate } from 'shared/lib';
 import { PublicFile } from 'shared/lib/resources/file';
@@ -26,38 +26,6 @@ import { getValidValue } from 'shared/lib/validators';
 
 function formatTableDate(date: Date): string {
   return rawFormatDate(date, 'YYYY-MM-DD', false);
-}
-
-// Define Table component.
-
-type TableCellData
-  = ADT<'status', LogItemType>
-  | ADT<'title', { title: string, vendorName: string, viId: string, dispatch: Dispatch<Msg> }>
-  | ADT<'dateSubmitted', Date>
-  | ADT<'lastUpdated', Date>;
-
-const Table: TableComponent.TableComponent<TableCellData> = TableComponent.component();
-
-const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
-  const wrap = (child: string | null | ReactElement<any>, wrapText = false, center = false) => {
-    return (<td className={`${wrapText ? 'text-wrap' : ''} ${center ? 'text-center' : ''} align-top`}>{child}</td>);
-  };
-  switch (data.tag) {
-    case 'status':
-      return wrap((<LogItemTypeBadge logItemType={data.value} />));
-    case 'title':
-      return wrap((
-        <div>
-          <Link onClick={() => data.value.dispatch({ tag: 'editVi', value: data.value.viId })} className='mb-1'>
-            {data.value.title}
-          </Link>
-          <div className='small text-uppercase text-secondary pt-1' style={{ lineHeight: '1.25rem' }}>{data.value.vendorName}</div>
-        </div>
-      ), true);
-    case 'dateSubmitted':
-    case 'lastUpdated':
-      return wrap(formatTableDate(data.value));
-  }
 }
 
 interface VendorIdea extends PublicVendorIdeaSlimForProgramStaff {
@@ -75,7 +43,7 @@ export interface State {
   sessionUser: PublicSessionUser;
   statusFilter: Select.State;
   searchFilter: ShortText.State;
-  table: Immutable<TableComponent.State<TableCellData>>;
+  table: Immutable<Table.State>;
   alerts: PageAlerts;
 };
 
@@ -90,7 +58,7 @@ export interface Params {
 type InnerMsg
   = ADT<'statusFilter', Select.Value>
   | ADT<'searchFilter', string>
-  | ADT<'table', TableComponent.Msg>
+  | ADT<'table', Table.Msg>
   | ADT<'uploadTemplate', File>
   | ADT<'editVi', string>
   | ADT<'hideEditConfirmationPrompt'>
@@ -134,9 +102,7 @@ export const init: Init<Params, State> = async ({ sessionUser }) => {
       placeholder: 'Search'
     }),
     table: immutable(await Table.init({
-      idNamespace: 'rfi-list',
-      THView: TableComponent.DefaultTHView,
-      TDView
+      idNamespace: 'rfi-list'
     })),
     alerts: emptyPageAlerts()
   };
@@ -277,7 +243,7 @@ const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
   );
 };
 
-const tableHeadCells: TableComponent.THSpec[] = [
+const tableHeadCells: Table.THSpec[] = [
   {
     children: 'Status',
     style: {
@@ -305,21 +271,35 @@ const tableHeadCells: TableComponent.THSpec[] = [
   }
 ];
 
-function tableBodyRows(vis: VendorIdea[], dispatch: Dispatch<Msg>): Array<Array<TableComponent.TDSpec<TableCellData>>> {
+function tableBodyRows(vis: VendorIdea[], dispatch: Dispatch<Msg>): Table.RowsSpec {
+  const className = (center?: boolean, wrap?: boolean) => `align-top ${center ? 'text-center' : ''} ${wrap ? 'text-wrap' : ''}`;
   return vis.map(vi => {
+    const latestStatusCopy = logItemTypeToCopy(vi.latestStatus);
     return [
-      TableComponent.makeTDSpec({ tag: 'status' as const, value: vi.latestStatus }),
-      TableComponent.makeTDSpec({
-        tag: 'title' as const,
-        value: {
-          viId: vi._id,
-          title: vi.latestVersion.description.title,
-          vendorName: vi.createdByName,
-          dispatch
-        }
-      }),
-      TableComponent.makeTDSpec({ tag: 'dateSubmitted' as const, value: vi.createdAt }),
-      TableComponent.makeTDSpec({ tag: 'lastUpdated' as const, value: vi.latestVersion.createdAt })
+      {
+        children: (<LogItemTypeBadge logItemType={vi.latestStatus} />),
+        className: className(),
+        tooltipText: latestStatusCopy.tag === 'badgeAndLabel' ? latestStatusCopy.value[2] : undefined
+      },
+      {
+        children: (
+          <div>
+            <Link onClick={() => dispatch({ tag: 'editVi', value: vi._id })} className='mb-1'>
+              {vi.latestVersion.description.title}
+            </Link>
+            <div className='small text-uppercase text-secondary pt-1' style={{ lineHeight: '1.25rem' }}>{vi.createdByName}</div>
+          </div>
+        ),
+        className: className(false, true)
+      },
+      {
+        children: formatTableDate(vi.createdAt),
+        className: className()
+      },
+      {
+        children: formatTableDate(vi.latestVersion.createdAt),
+        className: className()
+      }
     ];
   });
 }
@@ -327,7 +307,7 @@ function tableBodyRows(vis: VendorIdea[], dispatch: Dispatch<Msg>): Array<Array<
 const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (!state.vis.length) { return (<div>There are currently no Vendor Initiated-Ideas available.</div>); }
   if (!state.visibleVis.length) { return (<div>There are no Vendor-Initiated Ideas that match the search criteria.</div>); }
-  const dispatchTable: Dispatch<TableComponent.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
+  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
   return (
     <Table.view
       className='text-nowrap'

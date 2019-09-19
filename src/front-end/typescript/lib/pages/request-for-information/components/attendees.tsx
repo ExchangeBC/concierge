@@ -5,13 +5,18 @@ import * as Input from 'front-end/lib/views/form-field/lib/input';
 import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
 import { get } from 'lodash';
-import React, { ReactElement } from 'react';
+import React from 'react';
 import { CustomInput } from 'reactstrap';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import { PublicUser } from 'shared/lib/resources/user';
 import { ADT, Omit, profileToName } from 'shared/lib/types';
 import { getInvalidValue } from 'shared/lib/validators';
 import { countInPerson, validateAttendee } from 'shared/lib/validators/discovery-day-response';
+
+export interface AttendeeGroup {
+  vendor?: PublicUser;
+  attendees: Attendee[];
+}
 
 interface AttendeeErrors {
   name: string[];
@@ -22,204 +27,6 @@ interface AttendeeErrors {
 export interface Attendee extends DdrResource.Attendee {
   errors?: AttendeeErrors;
 }
-
-export interface AttendeeGroup {
-  vendor?: PublicUser;
-  attendees: Attendee[];
-}
-
-interface TableCellContentValue<Value> {
-  groupIndex: number;
-  attendeeIndex: number;
-  disabled?: boolean;
-  value: Value;
-}
-
-type TableCellContent
-  = ADT<'groupTitle', PublicUser>
-  | ADT<'groupDelete', { groupIndex: number, disabled?: boolean }>
-  | ADT<'attendeeName', TableCellContentValue<[string, boolean]>>
-  | ADT<'attendeeEmail', TableCellContentValue<[string, boolean]>>
-  | ADT<'attendeeInPerson', TableCellContentValue<boolean>>
-  | ADT<'attendeeRemote', TableCellContentValue<boolean>>
-  | ADT<'attendeeDelete', Omit<TableCellContentValue<null>, 'value'>>
-  | ADT<'attendeeAdd', { groupIndex: number }>
-  | ADT<'attendeeErrorsName', string[]>
-  | ADT<'attendeeErrorsEmail', string[]>
-  | ADT<'attendeeErrorsRemote', string[]>;
-
-interface TableCellData {
-  content: TableCellContent;
-  dispatch: Dispatch<Msg>;
-}
-
-const TDView: View<Table.TDProps<TableCellData>> = ({ data }) => {
-  const NUM_COLUMNS = 5;
-  const { content, dispatch } = data;
-  const makeId = (groupIndex: number, attendeeIndex: number) => `attendee-table-cell-${content.tag}-${groupIndex}-${attendeeIndex}`;
-  const wrap = (child: string | null | ReactElement<any>, middle = false, center = false, colSpan?: number) => {
-    return (<td className={`align-${middle ? 'middle' : 'top'} ${center ? 'text-center' : ''}`} colSpan={colSpan}>{child}</td>);
-  };
-  switch (content.tag) {
-
-    case 'groupTitle':
-      return (
-        <td className='bg-light font-size-base align-middle text-wrap' colSpan={NUM_COLUMNS - 1}>
-          <Link route={{ tag: 'userView', value: { profileUserId: content.value._id }}} className='mr-2' newTab>
-            {profileToName(content.value.profile)}
-          </Link>
-          {'('}
-          <Link href={`mailto:${content.value.email}`}>{content.value.email}</Link>
-          {')'}
-        </td>
-      )
-
-    case 'groupDelete':
-      return (
-        <td className='align-middle bg-light text-center'>
-          <Icon
-            name='trash'
-            color='secondary'
-            width={1.25}
-            height={1.25}
-            className={`btn btn-sm btn-link text-hover-danger ${content.value.disabled ? 'disabled invisible' : ''}`}
-            style={{ boxSizing: 'content-box', cursor: 'pointer' }}
-            onClick={() => dispatch({
-              tag: 'deleteGroup',
-              value: {
-                groupIndex: content.value.groupIndex
-              }
-            })} />
-        </td>
-      );
-
-    case 'attendeeName':
-      return wrap((
-        <Input.View
-          type='text'
-          className={`form-control ${content.value.value[1] ? 'is-invalid' : ''}`}
-          value={content.value.value[0]}
-          placeholder='Full Name'
-          disabled={content.value.disabled}
-          onChange={event => dispatch({
-            tag: 'onChangeAttendeeName',
-            value: {
-              groupIndex: content.value.groupIndex,
-              attendeeIndex: content.value.attendeeIndex,
-              value: event.currentTarget.value
-            }
-          })}
-          id={makeId(content.value.groupIndex, content.value.attendeeIndex)} />
-      ));
-
-    case 'attendeeEmail':
-      return wrap((
-        <Input.View
-          type='text'
-          className={`form-control ${content.value.value[1] ? 'is-invalid' : ''}`}
-          value={content.value.value[0]}
-          placeholder='Email Address'
-          disabled={content.value.disabled}
-          onChange={event => dispatch({
-            tag: 'onChangeAttendeeEmail',
-            value: {
-              groupIndex: content.value.groupIndex,
-              attendeeIndex: content.value.attendeeIndex,
-              value: event.currentTarget.value
-            }
-          })}
-          id={makeId(content.value.groupIndex, content.value.attendeeIndex)} />
-      ));
-
-    case 'attendeeInPerson':
-      return wrap((
-        <CustomInput
-          type='radio'
-          checked={content.value.value}
-          disabled={content.value.disabled}
-          onChange={event => dispatch({
-            tag: 'onChangeAttendeeInPerson',
-            value: {
-              groupIndex: content.value.groupIndex,
-              attendeeIndex: content.value.attendeeIndex,
-              value: event.currentTarget.checked
-            }
-          })}
-          id={makeId(content.value.groupIndex, content.value.attendeeIndex)} />
-      ), true, true);
-
-    case 'attendeeRemote':
-      return wrap((
-        <CustomInput
-          type='radio'
-          checked={content.value.value}
-          disabled={content.value.disabled}
-          onChange={event => dispatch({
-            tag: 'onChangeAttendeeRemote',
-            value: {
-              groupIndex: content.value.groupIndex,
-              attendeeIndex: content.value.attendeeIndex,
-              value: event.currentTarget.checked
-            }
-          })}
-          id={makeId(content.value.groupIndex, content.value.attendeeIndex)} />
-      ), true, true);
-
-    case 'attendeeDelete':
-      return wrap((
-        <Icon
-          name='trash'
-          color='secondary'
-          width={1.25}
-          height={1.25}
-          className={`btn btn-sm btn-link text-hover-danger ${content.value.disabled ? 'disabled invisible' : ''}`}
-          style={{ boxSizing: 'content-box', cursor: 'pointer' }}
-          onClick={() => dispatch({
-            tag: 'deleteAttendee',
-            value: {
-              groupIndex: content.value.groupIndex,
-              attendeeIndex: content.value.attendeeIndex
-            }
-          })} />
-      ), true, true);
-
-    case 'attendeeAdd':
-      return wrap((
-        <Link
-          className='d-inline-flex flex-nowrap align-items-center font-size-base'
-          onClick={() => dispatch({
-            tag: 'addAttendee',
-            value: {
-              groupIndex: content.value.groupIndex
-            }
-          })}>
-          <Icon name='plus' width={1} height={1} className='mr-1' />
-          Add Attendee
-        </Link>
-      ), true, false, NUM_COLUMNS);
-
-    case 'attendeeErrorsName':
-      return (
-        <td className='align-top pt-0 text-danger border-0 text-wrap'>
-          {content.value.map((s, i) => (<div key={i}>{s}</div>))}
-        </td>
-      );
-
-    case 'attendeeErrorsEmail':
-      return (
-        <td className='align-top pt-0 text-danger border-0 text-wrap'>
-          {content.value.map((s, i) => (<div key={i}>{s}</div>))}
-        </td>
-      );
-
-    case 'attendeeErrorsRemote':
-      return (
-        <td colSpan={3} className='align-top pt-0 text-danger border-0 text-wrap'>
-          {content.value.map((s, i) => (<div key={i}>{s}</div>))}
-        </td>
-      );
-  }
-};
 
 const tableHeadCells: Table.THSpec[] = [
   {
@@ -266,13 +73,11 @@ const tableHeadCells: Table.THSpec[] = [
   }
 ];
 
-const TableComponent: Table.TableComponent<TableCellData> = Table.component();
-
 export interface State {
   groups: AttendeeGroup[];
   originalGroups: AttendeeGroup[];
   occurringAt: Date;
-  table: Immutable<Table.State<TableCellData>>;
+  table: Immutable<Table.State>;
 }
 
 function attendeeHasErrors(attendee: Attendee): boolean {
@@ -307,7 +112,11 @@ export function setErrors(state: Immutable<State>, errors: DdrResource.AttendeeV
 
 export type Params = Omit<State, 'originalGroups' | 'table'>;
 
-type OnChangeAttendeeField<Value> = Omit<TableCellContentValue<Value>, 'disabled'>;
+interface OnChangeAttendeeField<Value> {
+  groupIndex: number;
+  attendeeIndex: number;
+  value: Value;
+}
 
 type InnerMsg
   = ADT<'table', Table.Msg>
@@ -325,9 +134,7 @@ export const init: Init<Params,  State> = async params => {
   return {
     ...params,
     originalGroups: params.groups,
-    table: immutable(await TableComponent.init({
-      TDView,
-      THView: Table.DefaultTHView,
+    table: immutable(await Table.init({
       idNamespace: 'discovery-day-attendees'
     }))
   };
@@ -340,7 +147,7 @@ export const update: Update<State,  Msg> = ({ state,  msg }) => {
         state,
         mapChildMsg: value => ({ tag: 'table' as const, value }),
         childStatePath: ['table'],
-        childUpdate: TableComponent.update,
+        childUpdate: Table.update,
         childMsg: msg.value
       });
 
@@ -404,39 +211,150 @@ export interface ViewProps extends ComponentViewProps<State,  Msg> {
   disabled ?: boolean;
 }
 
-function tableBodyRows(groups: AttendeeGroup[], dispatch: Dispatch<Msg>, disabled?: boolean): Table.RowsSpec<TableCellData> {
-  const rows: TableCellContent[][] = groups.reduce((tableRows: TableCellContent[][], group, groupIndex) => {
+const NUM_COLUMNS = 5;
+
+function makeErrorCell(errors: string[], colSpan?: number): Table.TDSpec {
+  return {
+    children: errors.map((s, i) => (<div key={i}>{s}</div>)),
+    className: 'align-top pt-0 text-danger border-0 text-wrap',
+    colSpan
+  };
+};
+
+function tableBodyRows(groups: AttendeeGroup[], dispatch: Dispatch<Msg>, disabled?: boolean): Table.RowsSpec {
+  return groups.reduce((tableRows: Table.RowsSpec, group, groupIndex) => {
     // Add group title row.
     if (group.vendor) {
-      const titleRow: TableCellContent[] = [{
-        tag: 'groupTitle',
-        value: group.vendor
+      const titleRow: Table.RowSpec = [{
+        children: (
+          <div>
+            <Link route={{ tag: 'userView', value: { profileUserId: group.vendor._id }}} className='mr-2' newTab>
+              {profileToName(group.vendor.profile)}
+            </Link>
+            {'('}
+            <Link href={`mailto:${group.vendor.email}`}>{group.vendor.email}</Link>
+            {')'}
+          </div>
+        ),
+        className: 'bg-light font-size-base align-middle text-wrap',
+        colSpan: NUM_COLUMNS - 1
       }];
-      titleRow.push({ tag: 'groupDelete', value: { groupIndex, disabled }})
+      titleRow.push({
+        children: (
+          <Icon
+            name='trash'
+            color='secondary'
+            width={1.25}
+            height={1.25}
+            className={`btn btn-sm btn-link text-hover-danger ${disabled ? 'disabled invisible' : ''}`}
+            style={{ boxSizing: 'content-box', cursor: 'pointer' }}
+            onClick={() => dispatch({
+              tag: 'deleteGroup',
+              value: { groupIndex }
+            })} />
+        ),
+        className: 'bg-light align-middle text-center'
+      })
       tableRows.push(titleRow);
     }
     // Add attendee rows.
-    tableRows = tableRows.concat(group.attendees.reduce((groupRows: TableCellContent[][], attendee, attendeeIndex) => {
-      const defaults = { groupIndex,  attendeeIndex, disabled };
-      const row: TableCellContent[] = [
-        { tag:  'attendeeName', value: { ...defaults,  value: [attendee.name, !!(attendee.errors && attendee.errors.name.length)] }},
-        { tag:  'attendeeEmail', value: { ...defaults,  value: [attendee.email, !!(attendee.errors && attendee.errors.email.length)] }},
-        { tag:  'attendeeInPerson', value: { ...defaults,  value: !attendee.remote }},
-        { tag:  'attendeeRemote', value: { ...defaults,  value: attendee.remote }}
-      ];
-      row.push({
-        tag: 'attendeeDelete',
-        value: {
-          ...defaults,
-          disabled: defaults.disabled || group.attendees.length === 1
+    const makeId = (k: string, groupIndex: number, attendeeIndex: number) => `attendee-table-cell-${k}-${groupIndex}-${attendeeIndex}`;
+    tableRows = tableRows.concat(group.attendees.reduce((groupRows: Table.RowsSpec, attendee, attendeeIndex) => {
+      const hasNameErrors = !!(attendee.errors && attendee.errors.name.length);
+      const hasEmailErrors = !!(attendee.errors && attendee.errors.email.length);
+      const row: Table.RowSpec = [
+        {
+          children: (<Input.View
+            type='text'
+            className={`form-control ${hasNameErrors ? 'is-invalid' : ''}`}
+            value={attendee.name}
+            placeholder='Full Name'
+            disabled={disabled}
+            onChange={event => dispatch({
+              tag: 'onChangeAttendeeName',
+              value: {
+                groupIndex,
+                attendeeIndex,
+                value: event.currentTarget.value
+              }
+            })}
+            id={makeId('name', groupIndex, attendeeIndex)} />),
+          className: 'align-top'
+        },
+        {
+          children: (<Input.View
+            type='text'
+            className={`form-control ${hasEmailErrors ? 'is-invalid' : ''}`}
+            value={attendee.email}
+            placeholder='Email Address'
+            disabled={disabled}
+            onChange={event => dispatch({
+              tag: 'onChangeAttendeeEmail',
+              value: {
+                groupIndex,
+                attendeeIndex,
+                value: event.currentTarget.value
+              }
+            })}
+            id={makeId('email', groupIndex, attendeeIndex)} />),
+          className: 'align-top'
+        },
+        {
+          children: (<CustomInput
+            type='radio'
+            checked={!attendee.remote}
+            disabled={disabled}
+            onChange={event => dispatch({
+              tag: 'onChangeAttendeeInPerson',
+              value: {
+                groupIndex,
+                attendeeIndex,
+                value: event.currentTarget.checked
+              }
+            })}
+            id={makeId('in-person', groupIndex, attendeeIndex)} />),
+          className: 'align-middle text-center'
+        },
+        {
+          children: (<CustomInput
+            type='radio'
+            checked={attendee.remote}
+            disabled={disabled}
+            onChange={event => dispatch({
+              tag: 'onChangeAttendeeRemote',
+              value: {
+                groupIndex,
+                attendeeIndex,
+                value: event.currentTarget.checked
+              }
+            })}
+            id={makeId('remote', groupIndex, attendeeIndex)} />),
+          className: 'align-middle text-center'
+        },
+        {
+          children: (<Icon
+            name='trash'
+            color='secondary'
+            width={1.25}
+            height={1.25}
+            className={`btn btn-sm btn-link text-hover-danger ${disabled || group.attendees.length === 1 ? 'disabled invisible' : ''}`}
+            style={{ boxSizing: 'content-box', cursor: 'pointer' }}
+            onClick={() => dispatch({
+              tag: 'deleteAttendee',
+              value: {
+                groupIndex,
+                attendeeIndex
+              }
+            })} />),
+          className: 'align-middle text-center'
         }
-      });
+      ];
       groupRows.push(row);
       if (attendeeHasErrors(attendee) && attendee.errors) {
         groupRows.push([
-          { tag: 'attendeeErrorsName', value: attendee.errors.name },
-          { tag: 'attendeeErrorsEmail', value: attendee.errors.email },
-          { tag: 'attendeeErrorsRemote', value: attendee.errors.remote }
+          makeErrorCell(attendee.errors.name),
+          makeErrorCell(attendee.errors.email),
+          makeErrorCell(attendee.errors.remote, 3)
         ]);
       }
       return groupRows;
@@ -444,15 +362,25 @@ function tableBodyRows(groups: AttendeeGroup[], dispatch: Dispatch<Msg>, disable
     // Add row to add attendee.
     if (!disabled) {
       tableRows.push([
-        { tag: 'attendeeAdd', value: { groupIndex }}
+        {
+          children: (
+            <Link
+              className='d-inline-flex flex-nowrap align-items-center font-size-base'
+              onClick={() => dispatch({
+                tag: 'addAttendee',
+                value: { groupIndex }
+              })}>
+              <Icon name='plus' width={1} height={1} className='mr-1' />
+              Add Attendee
+            </Link>
+          ),
+          className: 'align-middle',
+          colSpan: NUM_COLUMNS
+        }
       ]);
     }
     return tableRows;
   }, []);
-  // Create TD specs from each row's content.
-  return rows.map(row => {
-    return row.map(content => Table.makeTDSpec({ content,  dispatch }));
-  });
 }
 
 export const view: View<ViewProps> = ({ state,  dispatch, disabled }) => {
@@ -460,7 +388,7 @@ export const view: View<ViewProps> = ({ state,  dispatch, disabled }) => {
   const bodyRows = tableBodyRows(state.groups, dispatch, disabled);
   const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, value => ({ tag:  'table' as const, value }));
   return (
-    <TableComponent.view
+    <Table.view
       className='text-nowrap'
       headCells={tableHeadCells}
       bodyRows={bodyRows}

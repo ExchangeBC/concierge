@@ -1,8 +1,8 @@
 import { makePageMetadata, makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import router from 'front-end/lib/app/router';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import * as TableComponent from 'front-end/lib/components/table';
-import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import * as Table from 'front-end/lib/components/table';
+import { ComponentView, Dispatch, emptyPageAlerts, emptyPageBreadcrumbs, GlobalComponentMsg, Immutable, immutable, mapComponentDispatch, newRoute, PageComponent, PageInit, Update, updateComponentChild } from 'front-end/lib/framework';
 import { hasUserAcceptedTerms, readManyRfis } from 'front-end/lib/http/api';
 import StatusBadge from 'front-end/lib/pages/request-for-information/views/status-badge';
 import { WarningId } from 'front-end/lib/pages/terms-and-conditions';
@@ -11,65 +11,13 @@ import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
 import { get } from 'lodash';
-import { default as React, ReactElement } from 'react';
+import React from 'react';
 import { Col, Row } from 'reactstrap';
 import AVAILABLE_CATEGORIES from 'shared/data/categories';
 import { compareDates, rawFormatDate } from 'shared/lib';
 import { PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
 import { PublicSessionUser } from 'shared/lib/resources/session';
 import { ADT, parseRfiStatus, RfiStatus, rfiStatusToTitleCase, UserType } from 'shared/lib/types';
-
-function formatTableDate(date: Date): string {
-  return rawFormatDate(date, 'YYYY-MM-DD', false);
-}
-
-// Define Table component.
-
-type TableCellData
-  = ADT<'rfiNumber', string>
-  | ADT<'publishDate', Date>
-  | ADT<'status', RfiStatus>
-  | ADT<'programStaffTitle', { rfiId: string, text: string, dispatch: Dispatch<Msg> }>
-  | ADT<'nonProgramStaffTitle', { rfiId: string, text: string, entity: string }>
-  | ADT<'publicSectorEntity', string>
-  | ADT<'lastUpdated', Date>
-  | ADT<'closingDate', Date>
-  | ADT<'discoveryDay', [boolean, PublicRfi]>;
-
-const Table: TableComponent.TableComponent<TableCellData> = TableComponent.component();
-
-const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
-  const wrap = (child: string | null | ReactElement<any>, wrapText = false, center = false) => {
-    return (<td className={`${wrapText ? 'text-wrap' : ''} ${center ? 'text-center' : ''} align-top`}>{child}</td>);
-  };
-  switch (data.tag) {
-    case 'rfiNumber':
-      return wrap(data.value);
-    case 'programStaffTitle':
-      return wrap((
-        <Link onClick={() => data.value.dispatch({ tag: 'editRfi', value: data.value.rfiId })} className='mb-1'>
-          {data.value.text}
-        </Link>
-      ), true);
-    case 'nonProgramStaffTitle':
-      return wrap((
-        <div>
-          <Link route={{ tag: 'requestForInformationView', value: { rfiId: data.value.rfiId }}}>{data.value.text}</Link>
-          <div className='small text-uppercase text-secondary pt-1' style={{ lineHeight: '1.25rem' }}>{data.value.entity}</div>
-        </div>
-      ), true);
-    case 'publicSectorEntity':
-      return wrap(data.value, true);
-    case 'status':
-      return wrap((<StatusBadge status={data.value} />));
-    case 'publishDate':
-    case 'lastUpdated':
-    case 'closingDate':
-      return wrap(formatTableDate(data.value));
-    case 'discoveryDay':
-      return wrap(data.value[0] ? (<Icon name='check' color='body' width={1.25} height={1.25} />) : null, false, true);
-  }
-}
 
 // Add status property to each RFI
 // as we want to cache the RFI status on each one up front.
@@ -86,7 +34,7 @@ export interface State {
   statusFilter: Select.State;
   categoryFilter: Select.State;
   searchFilter: ShortText.State;
-  table: Immutable<TableComponent.State<TableCellData>>;
+  table: Immutable<Table.State>;
   promptEditConfirmation?: string;
 };
 
@@ -101,7 +49,7 @@ type InnerMsg
   = ADT<'statusFilter', Select.Value>
   | ADT<'categoryFilter', Select.Value>
   | ADT<'searchFilter', string>
-  | ADT<'table', TableComponent.Msg>
+  | ADT<'table', Table.Msg>
   | ADT<'createRfi'>
   | ADT<'hideCreateConfirmationPrompt'>
   | ADT<'editRfi', string>
@@ -170,9 +118,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) 
       placeholder: 'Search'
     }),
     table: immutable(await Table.init({
-      idNamespace: 'rfi-list',
-      THView: TableComponent.DefaultTHView,
-      TDView
+      idNamespace: 'rfi-list'
     }))
   };
 };
@@ -314,7 +260,7 @@ const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
   );
 };
 
-const programStaffTableHeadCells: TableComponent.THSpec[] = [
+const programStaffTableHeadCells: Table.THSpec[] = [
   { children: 'RFI Number' },
   {
     children: 'Status',
@@ -356,7 +302,7 @@ const programStaffTableHeadCells: TableComponent.THSpec[] = [
   }
 ];
 
-const nonProgramStaffTableHeadCells: TableComponent.THSpec[] = [
+const nonProgramStaffTableHeadCells: Table.THSpec[] = [
   { children: 'RFI Number' },
   {
     children: 'Published Date',
@@ -384,7 +330,7 @@ const nonProgramStaffTableHeadCells: TableComponent.THSpec[] = [
   },
   {
     children: (<Icon name='calendar' color='secondary' />),
-    tooltipText: 'Discovery Day Available',
+    tooltipText: 'Discovery Day Session Available',
     className: 'text-center',
     style: {
       width: '50px'
@@ -398,46 +344,87 @@ const nonProgramStaffTableHeadCells: TableComponent.THSpec[] = [
   }
 ];
 
-function programStaffTableBodyRows(rfis: Rfi[], dispatch: Dispatch<Msg>): Array<Array<TableComponent.TDSpec<TableCellData>>> {
+function formatTableDate(date: Date): string {
+  return rawFormatDate(date, 'YYYY-MM-DD', false);
+}
+
+function programStaffTableBodyRows(rfis: Rfi[], dispatch: Dispatch<Msg>): Table.RowsSpec {
+  const className = (center?: boolean, wrap?: boolean) => `align-top ${center ? 'text-center' : ''} ${wrap ? 'text-wrap' : ''}`;
   return rfis.map(rfi => {
     const version = rfi.latestVersion;
     return [
-      TableComponent.makeTDSpec({ tag: 'rfiNumber' as const, value: version.rfiNumber }),
-      TableComponent.makeTDSpec({ tag: 'status' as const, value: rfi.status }),
-      TableComponent.makeTDSpec({
-        tag: 'programStaffTitle' as const,
-        value: {
-          rfiId: rfi._id,
-          text: version.title,
-          dispatch
-        }
-      }),
-      TableComponent.makeTDSpec({ tag: 'publicSectorEntity' as const, value: version.publicSectorEntity }),
-      TableComponent.makeTDSpec({ tag: 'lastUpdated' as const, value: version.createdAt }),
-      TableComponent.makeTDSpec({ tag: 'closingDate' as const, value: version.closingAt }),
-      TableComponent.makeTDSpec({ tag: 'discoveryDay' as const, value: [!!version.discoveryDay, rfi] as [boolean, PublicRfi] })
+      {
+        children: version.rfiNumber,
+        className: className()
+      },
+      {
+        children: (<StatusBadge status={rfi.status} />),
+        className: className()
+      },
+      {
+        children: (<Link onClick={() => dispatch({ tag: 'editRfi', value: rfi._id })} className='mb-1'>{version.title}</Link>),
+        className: className(false, true)
+      },
+      {
+        children: version.publicSectorEntity,
+        className: className(false, true)
+      },
+      {
+        children: formatTableDate(version.createdAt),
+        className: className()
+      },
+      {
+        children: formatTableDate(version.closingAt),
+        className: className()
+      },
+      {
+        children: version.discoveryDay ? (<Icon name='check' color='body' width={1.25} height={1.25} />) : null,
+        className: className(true, false),
+        tooltipText: version.discoveryDay && 'Discovery Day Session Available'
+      }
     ];
   });
 }
 
-function nonProgramStaffTableBodyRows(rfis: Rfi[]): Array<Array<TableComponent.TDSpec<TableCellData>>> {
+function nonProgramStaffTableBodyRows(rfis: Rfi[]): Table.RowsSpec {
+  const className = (center?: boolean, wrap?: boolean) => `align-top ${center ? 'text-center' : ''} ${wrap ? 'text-wrap' : ''}`;
   return rfis.map(rfi => {
     const version = rfi.latestVersion;
     return [
-      TableComponent.makeTDSpec({ tag: 'rfiNumber' as const, value: version.rfiNumber }),
-      TableComponent.makeTDSpec({ tag: 'publishDate' as const, value: rfi.publishedAt }),
-      TableComponent.makeTDSpec({ tag: 'status' as const, value: rfi.status }),
-      TableComponent.makeTDSpec({
-        tag: 'nonProgramStaffTitle' as const,
-        value: {
-          rfiId: rfi._id,
-          text: version.title,
-          entity: version.publicSectorEntity
-        }
-      }),
-      TableComponent.makeTDSpec({ tag: 'closingDate' as const, value: version.closingAt }),
-      TableComponent.makeTDSpec({ tag: 'discoveryDay' as const, value: [!!version.discoveryDay, rfi] as [boolean, PublicRfi] }),
-      TableComponent.makeTDSpec({ tag: 'lastUpdated' as const, value: version.createdAt })
+      {
+        children: version.rfiNumber,
+        className: className()
+      },
+      {
+        children: formatTableDate(rfi.publishedAt),
+        className: className()
+      },
+      {
+        children: (<StatusBadge status={rfi.status} />),
+        className: className()
+      },
+      {
+        children: (
+          <div>
+            <Link route={{ tag: 'requestForInformationView', value: { rfiId: rfi._id }}}>{version.title}</Link>
+            <div className='small text-uppercase text-secondary pt-1' style={{ lineHeight: '1.25rem' }}>{version.publicSectorEntity}</div>
+          </div>
+        ),
+        className: className(false, true)
+      },
+      {
+        children: formatTableDate(version.closingAt),
+        className: className()
+      },
+      {
+        children: version.discoveryDay ? (<Icon name='check' color='body' width={1.25} height={1.25} />) : null,
+        className: className(true, false),
+        tooltipText: version.discoveryDay && 'Discovery Day Session Available'
+      },
+      {
+        children: formatTableDate(version.createdAt),
+        className: className()
+      }
     ];
   });
 }
@@ -448,7 +435,7 @@ const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isProgramStaff = get(state.sessionUser, 'type') === UserType.ProgramStaff;
   const headCells = isProgramStaff ? programStaffTableHeadCells : nonProgramStaffTableHeadCells;
   const bodyRows = isProgramStaff ? programStaffTableBodyRows(state.visibleRfis, dispatch) : nonProgramStaffTableBodyRows(state.visibleRfis);
-  const dispatchTable: Dispatch<TableComponent.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
+  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
   return (
     <Table.view
       className='text-nowrap'

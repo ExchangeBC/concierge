@@ -1,8 +1,8 @@
 import { VI_APPLICATION_DOWNLOAD_URL } from 'front-end/config';
 import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { Route } from 'front-end/lib/app/types';
-import * as TableComponent from 'front-end/lib/components/table';
-import { ComponentView, Dispatch, GlobalComponentMsg, Immutable, immutable, Init, mapComponentDispatch, newRoute, PageGetModal, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import * as Table from 'front-end/lib/components/table';
+import { ComponentView, Dispatch, GlobalComponentMsg, Immutable, immutable, Init, mapComponentDispatch, newRoute, PageGetModal, Update, updateComponentChild } from 'front-end/lib/framework';
 import { hasUserAcceptedTerms, readManyVisForVendors } from 'front-end/lib/http/api';
 import { getLogItemTypeStatusDropdownItems } from 'front-end/lib/pages/vendor-idea/lib';
 import { LogItemTypeBadge } from 'front-end/lib/pages/vendor-idea/views/log-item-type-badge';
@@ -10,46 +10,13 @@ import LogItemTypeSelectGroupLabel from 'front-end/lib/pages/vendor-idea/views/l
 import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Link from 'front-end/lib/views/link';
-import { default as React, ReactElement } from 'react';
+import React from 'react';
 import { Col, Row } from 'reactstrap';
 import { compareDates, rawFormatDate } from 'shared/lib';
 import { PublicSessionUser } from 'shared/lib/resources/session';
 import { PublicVendorIdeaSlimForVendors } from 'shared/lib/resources/vendor-idea';
 import { LogItemType, parseLogItemType } from 'shared/lib/resources/vendor-idea/log-item';
 import { ADT, profileToName } from 'shared/lib/types';
-
-function formatTableDate(date: Date): string {
-  return rawFormatDate(date, 'YYYY-MM-DD', false);
-}
-
-// Define Table component.
-
-type TableCellData
-  = ADT<'status', LogItemType>
-  | ADT<'title', { title: string, viId: string, dispatch: Dispatch<Msg> }>
-  | ADT<'dateSubmitted', Date>
-  | ADT<'lastUpdated', Date>;
-
-const Table: TableComponent.TableComponent<TableCellData> = TableComponent.component();
-
-const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
-  const wrap = (child: string | null | ReactElement<any>, wrapText = false, center = false) => {
-    return (<td className={`${wrapText ? 'text-wrap' : ''} ${center ? 'text-center' : ''} align-top`}>{child}</td>);
-  };
-  switch (data.tag) {
-    case 'status':
-      return wrap((<LogItemTypeBadge logItemType={data.value} />));
-    case 'title':
-      return wrap((
-        <Link onClick={() => data.value.dispatch({ tag: 'editVi', value: data.value.viId })} className='mb-1'>
-          {data.value.title}
-        </Link>
-      ), true);
-    case 'dateSubmitted':
-    case 'lastUpdated':
-      return wrap(formatTableDate(data.value));
-  }
-}
 
 interface VendorIdea extends PublicVendorIdeaSlimForVendors {
   createdByName: string;
@@ -64,7 +31,7 @@ export interface State {
   sessionUser: PublicSessionUser;
   statusFilter: Select.State;
   searchFilter: ShortText.State;
-  table: Immutable<TableComponent.State<TableCellData>>;
+  table: Immutable<Table.State>;
 };
 
 type FormFieldKeys
@@ -78,7 +45,7 @@ export interface Params {
 type InnerMsg
   = ADT<'statusFilter', Select.Value>
   | ADT<'searchFilter', string>
-  | ADT<'table', TableComponent.Msg>
+  | ADT<'table', Table.Msg>
   | ADT<'createVi'>
   | ADT<'editVi', string>
   | ADT<'hideCreateConfirmationPrompt'>
@@ -118,9 +85,7 @@ export const init: Init<Params, State> = async ({ sessionUser }) => {
       placeholder: 'Search'
     }),
     table: immutable(await Table.init({
-      idNamespace: 'rfi-list',
-      THView: TableComponent.DefaultTHView,
-      TDView
+      idNamespace: 'rfi-list'
     }))
   };
 };
@@ -236,7 +201,7 @@ const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
   );
 };
 
-const tableHeadCells: TableComponent.THSpec[] = [
+const tableHeadCells: Table.THSpec[] = [
   {
     children: 'Status',
     style: {
@@ -264,20 +229,30 @@ const tableHeadCells: TableComponent.THSpec[] = [
   }
 ];
 
-function tableBodyRows(vis: VendorIdea[], dispatch: Dispatch<Msg>): Array<Array<TableComponent.TDSpec<TableCellData>>> {
+function formatTableDate(date: Date): string {
+  return rawFormatDate(date, 'YYYY-MM-DD', false);
+}
+
+function tableBodyRows(vis: VendorIdea[], dispatch: Dispatch<Msg>): Table.RowsSpec {
+  const className = (center?: boolean, wrap?: boolean) => `align-top ${center ? 'text-center' : ''} ${wrap ? 'text-wrap' : ''}`;
   return vis.map(vi => {
     return [
-      TableComponent.makeTDSpec({ tag: 'status' as const, value: vi.latestStatus }),
-      TableComponent.makeTDSpec({
-        tag: 'title' as const,
-        value: {
-          viId: vi._id,
-          title: vi.latestVersion.description.title,
-          dispatch
-        }
-      }),
-      TableComponent.makeTDSpec({ tag: 'dateSubmitted' as const, value: vi.createdAt }),
-      TableComponent.makeTDSpec({ tag: 'lastUpdated' as const, value: vi.latestVersion.createdAt })
+      {
+        children: (<LogItemTypeBadge logItemType={vi.latestStatus} />),
+        className: className()
+      },
+      {
+        children: (<Link onClick={() => dispatch({ tag: 'editVi', value: vi._id })} className='mb-1'>{vi.latestVersion.description.title}</Link>),
+        className: className(false, true)
+      },
+      {
+        children: formatTableDate(vi.createdAt),
+        className: className()
+      },
+      {
+        children: formatTableDate(vi.latestVersion.createdAt),
+        className: className()
+      }
     ];
   });
 }
@@ -285,7 +260,7 @@ function tableBodyRows(vis: VendorIdea[], dispatch: Dispatch<Msg>): Array<Array<
 const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (!state.vis.length) { return (<div>There are currently no Vendor Initiated-Ideas available.</div>); }
   if (!state.visibleVis.length) { return (<div>There are no Vendor-Initiated Ideas that match the search criteria.</div>); }
-  const dispatchTable: Dispatch<TableComponent.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
+  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
   return (
     <Table.view
       className='text-nowrap'
@@ -303,12 +278,12 @@ export const view: ComponentView<State, Msg> = props => {
   return (
     <div>
       <Row className='mb-5'>
-        <Col xs='12' md='9' lg='8'>
+        <Col xs='12' md='10' lg='9'>
           <h1>My Vendor-Initiated Ideas</h1>
           <p style={{ marginBottom: '2rem' }}>
             To submit a Vendor-Initiated Idea (VII), <b>please download and fill out the detailed information portion of the application</b> using the "Download Application – Detailed Information" button below. Once the application has been completed, you may submit your idea for the Procurement Concierge Program's staff to review by clicking the "Create Vendor-Initiated Idea" button and filling out the form provided.
           </p>
-          <div className='d-flex flex-column flex-md-row align-items-start'>
+          <div className='d-flex flex-column flex-md-row align-items-start text-nowrap'>
             <Link button download color='info' href={VI_APPLICATION_DOWNLOAD_URL} className='mr-0 mr-md-2 mb-2 mb-md-0'>1. Download Application – Detailed Information</Link>
             <Link button color='primary' onClick={createVi}>2. Create Vendor-Initiated Idea</Link>
           </div>

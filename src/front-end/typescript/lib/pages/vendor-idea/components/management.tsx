@@ -1,6 +1,6 @@
 import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
-import * as TableComponent from 'front-end/lib/components/table';
-import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild, View } from 'front-end/lib/framework';
+import * as Table from 'front-end/lib/components/table';
+import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { getLogItemTypeDropdownItems, getLogItemTypeNonSystemDropdownItems } from 'front-end/lib/pages/vendor-idea/lib';
 import { LogItemTypeFull } from 'front-end/lib/pages/vendor-idea/views/log-item-type-badge';
@@ -11,42 +11,15 @@ import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { get } from 'lodash';
-import React, { ReactElement } from 'react';
+import React from 'react';
 import { Col, Row } from 'reactstrap';
 import { compareDates, formatTime, rawFormatDate } from 'shared/lib';
-import { CreateValidationErrors, LogItemType, PublicLogItem } from 'shared/lib/resources/vendor-idea/log-item';
+import { CreateValidationErrors, PublicLogItem } from 'shared/lib/resources/vendor-idea/log-item';
 import { ADT, profileToName } from 'shared/lib/types';
 import { getInvalidValue, mapValid, Validation } from 'shared/lib/validators';
 import { validateLogItemNote } from 'shared/lib/validators/vendor-idea/log-item';
 
-type TableCellData
-  = ADT<'logItemType', LogItemType>
-  | ADT<'logItemNote', string>
-  | ADT<'published', { date: Date, createdByName: string }>;
-
-const Table: TableComponent.TableComponent<TableCellData> = TableComponent.component();
-
-const TDView: View<TableComponent.TDProps<TableCellData>> = ({ data }) => {
-  const wrap = (child: string | null | ReactElement<any>, wrapText = false, center = false) => {
-    return (<td className={`${wrapText ? 'text-wrap' : ''} ${center ? 'text-center' : ''} align-top`}>{child}</td>);
-  };
-  switch (data.tag) {
-    case 'logItemType':
-      return wrap((<LogItemTypeFull logItemType={data.value} />), true);
-    case 'logItemNote':
-      return wrap(data.value, true);
-    case 'published':
-      return wrap((
-        <div>
-          <div>{rawFormatDate(data.value.date, 'YYYY-MM-DD', false)}</div>
-          <div>{formatTime(data.value.date, true)}</div>
-          <div className='small text-uppercase text-secondary'>{data.value.createdByName}</div>
-        </div>
-      ));
-  }
-}
-
-const tableHeadCells: TableComponent.THSpec[] = [
+const tableHeadCells: Table.THSpec[] = [
   {
     children: 'Entry Type',
     style: {
@@ -68,18 +41,28 @@ const tableHeadCells: TableComponent.THSpec[] = [
   }
 ];
 
-function tableBodyRows(logItems: LogItem[], dispatch: Dispatch<Msg>): Array<Array<TableComponent.TDSpec<TableCellData>>> {
+function tableBodyRows(logItems: LogItem[], dispatch: Dispatch<Msg>): Table.RowsSpec {
+  const className = (center?: boolean, wrap?: boolean) => `align-top ${center ? 'text-center' : ''} ${wrap ? 'text-wrap' : ''}`;
   return logItems.map(li => {
     return [
-      TableComponent.makeTDSpec({ tag: 'logItemType' as const, value: li.type }),
-      TableComponent.makeTDSpec({ tag: 'logItemNote' as const, value: li.note || '-' }),
-      TableComponent.makeTDSpec({
-        tag: 'published' as const,
-        value: {
-          date: li.createdAt,
-          createdByName: li.createdByName
-        }
-      })
+      {
+        children: (<LogItemTypeFull logItemType={li.type} />),
+        className: className(false, true)
+      },
+      {
+        children: li.note || '-',
+        className: className(false, true)
+      },
+      {
+        children: (
+          <div>
+            <div>{rawFormatDate(li.createdAt, 'YYYY-MM-DD', false)}</div>
+            <div>{formatTime(li.createdAt, true)}</div>
+            <div className='small text-uppercase text-secondary'>{li.createdByName}</div>
+          </div>
+        ),
+        className: className()
+      }
     ];
   });
 }
@@ -94,7 +77,7 @@ export type Msg
   | ADT<'onChangeNewLogItemNote', string>
   | ADT<'onChangeLogItemTypeFilter', Select.Value>
   | ADT<'onChangeSearchFilter', string>
-  | ADT<'table', TableComponent.Msg>
+  | ADT<'table', Table.Msg>
   | ADT<'cancel'>
   | ADT<'submit'>;
 
@@ -111,7 +94,7 @@ export interface State {
   newLogItemNote: LongText.State;
   logItemTypeFilter: Select.State;
   searchFilter: ShortText.State;
-  table: Immutable<TableComponent.State<TableCellData>>;
+  table: Immutable<Table.State>;
 }
 
 type FormFieldKeys
@@ -167,9 +150,7 @@ export const init: Init<Params, State> = async ({ viId, logItems }) => {
       value: ''
     }),
     table: immutable(await Table.init({
-      idNamespace: 'vi-management-history-table',
-      THView: TableComponent.DefaultTHView,
-      TDView
+      idNamespace: 'vi-management-history-table'
     }))
   };
 };
@@ -319,7 +300,7 @@ const CreateEntry: ComponentView<State, Msg> = ({ state, dispatch }) => {
 const History: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
-  const dispatchTable: Dispatch<TableComponent.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
+  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
   return (
     <div>
       <Row className='mb-4'>

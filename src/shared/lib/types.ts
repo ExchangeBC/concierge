@@ -208,6 +208,7 @@ export interface BuyerProfile {
   contactCity: string;
   industrySectors: string[];
   categories: string[];
+  verificationStatus: VerificationStatus;
   // Following Buyer contact fields have been deprecated.
   contactStreetAddress?: string;
   contactProvince?: string;
@@ -216,7 +217,6 @@ export interface BuyerProfile {
   contactPhoneNumber?: string;
   contactPhoneCountryCode?: string;
   contactPhoneType?: PhoneType;
-  verificationStatus: VerificationStatus;
 }
 
 export interface ProgramStaffProfile {
