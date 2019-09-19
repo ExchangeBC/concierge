@@ -118,33 +118,33 @@ const Features: ComponentView<State, Msg> = ({ state, dispatch }) => {
     <div className='py-6 bg-light'>
       <Container>
         <Row className='justify-content-center'>
-          <Col xs='12' md='4' className='pb-5 pb-md-0 px-4 d-flex flex-column justify-content-start align-items-center'>
+          <Col xs='12' md='4' className='px-4 d-flex flex-column justify-content-start align-items-center'>
             <Icon name='rfi' color='secondary' width={4} height={4} />
             <small className='text-uppercase text-center font-weight-bold text-success mt-3 mb-2 w-100'>Available Now</small>
             <h4 className='text-center mb-3 font-weight-bold w-100'>
               Requests for Information
             </h4>
-            <p className='text-center'>
+            <p className='text-center mb-0'>
               Requests for Information ("RFIs") will be posted directly to this website. Public Sector Buyers will work with the Program's staff to develop RFIs, and Vendors will respond using an easy-to-use online form.
             </p>
           </Col>
-          <Col xs='12' md='4' className='px-4 d-flex flex-column justify-content-start align-items-center'>
+          <Col xs='12' md='4' className='my-5 my-md-0 px-4 d-flex flex-column justify-content-start align-items-center'>
             <Icon name='discovery-day' color='secondary' width={3} height={4} />
             <small className='text-uppercase text-center font-weight-bold text-success mt-3 mb-2 w-100'>Available Now</small>
             <h4 className='text-center mb-3 font-weight-bold w-100'>
               Discovery Day Sessions
             </h4>
-            <p className='text-center'>
+            <p className='text-center mb-0'>
               The Program's staff will organise Discovery Day sessions related to posted Requests for Information ("RFIs") to allow Vendors and Public Sector Buyers to meet and discuss them.
             </p>
           </Col>
-          <Col xs='12' md='4' className='pb-5 pb-md-0 px-4 d-flex flex-column justify-content-start align-items-center'>
+          <Col xs='12' md='4' className='px-4 d-flex flex-column justify-content-start align-items-center'>
             <Icon name='matchmaking' color='secondary' width={4.5} height={4} />
             <small className='text-uppercase text-center font-weight-bold text-primary-alt mt-3 mb-2 w-100'>Coming Soon</small>
             <h4 className='text-center mb-3 font-weight-bold w-100'>
               Vendor-Initiated Ideas
             </h4>
-            <p className='text-center'>
+            <p className='text-center mb-0'>
               Some copy text is required here. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque tempus, lectus in porttitor accumsan, diam est blandit eros, sit amet maximus sapien odio in enim.
             </p>
           </Col>
