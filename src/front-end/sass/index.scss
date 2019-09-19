@@ -32,14 +32,16 @@ $grid-gutter-width: $spacer * 2;
 $primary: #0C99D6;
 $primary-alt: #17A2B8;
 $info: #003366;
+$info-alt: #38598A;
+$info-alt-2: #0F4C8B;
 $warn: #FCBA19;
 $danger: #DC3545;
 $success: #28A745;
-$info-alt: #38598A;
 
 $theme-colors: (
   'primary-alt': $primary-alt,
-  'info-alt': $info-alt
+  'info-alt': $info-alt,
+  'info-alt-2': $info-alt-2
 );
 
 $component-active-bg: $primary;
