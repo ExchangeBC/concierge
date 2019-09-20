@@ -770,41 +770,41 @@ And the Program Staff is viewing the landing page
 When the Program Staff clicks "View RFIs"  
 Then the Program Staff is directed to the RFI listing page.
 
-###### Scenario: Program Staff wants to view the details of an RFI and has accepted the terms and conditions  
+###### Scenario: Program Staff wants to view the RFI management page and has accepted the terms and conditions  
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
 And is viewing the RFI listing page  
 When the Program Staff clicks the RFI’s title  
 Then the Program Staff is directed to the RFI’s management page.
 
-###### Scenario: Program Staff wants to view the details of an RFI and has not accepted the terms and conditions  
+###### Scenario: Program Staff wants to view the RFI management page and has not accepted the terms and conditions  
 Given the Program Staff is signed in  
 And has not accepted the terms and conditions  
 And is viewing the RFI listing page  
 When the Program Staff clicks the RFI’s title  
 Then the Program Staff is presented with an alert to review the terms and conditions.
 
-###### Scenario: Program Staff wants to view the RFI description page
+###### Scenario: Program Staff wants to view the public-facing version of a published RFI (i.e. the RFI description page)
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
-And is viewing the RFI management page  
+And is viewing the "Details" tab of the RFI management page  
 When the Program Staff clicks "View RFI"  
 Then the Program Staff is directed to the RFI's description page.
 
-###### Scenario: Program Staff wants to view an attachment located on the RFI description page  
+###### Scenario: Program Staff wants to view an attachment from the public-facing version of a published RFI (i.e. the RFI description page)
 Given the Program Staff is viewing the RFI description page  
 And there is at least one attachment associated with the RFI  
 When the Program Staff clicks the attachment link  
 Then the attachment is downloaded by the Program Staff’s browser.
 
-##### RFI Management
+##### Creating RFIs
 
 ###### Scenario: Program Staff wants to create an RFI and has accepted the terms and conditions
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
 And is viewing the RFI listing page  
 When the Program Staff clicks “Create an RFI”  
-Then the Program Staff is directed to “Create a Request for Information (RFI)” page.
+Then the Program Staff is directed to the "Details" tab on the “Create a Request for Information (RFI)” page.
 
 ###### Scenario: Program Staff wants to create an RFI and has not accepted the terms and conditions
 Given the Program Staff is signed in  
@@ -818,73 +818,32 @@ Given the Program Staff is signed in
 And has accepted the terms and conditions  
 And is viewing the "Details" tab on the “Create a Request for Information (RFI)” page  
 When the Program Staff clicks “Cancel”  
-Then the Program Staff is presented with an alert to confirm that the Program Staff wants to cancel creating an RFI.
+Then the Program Staff is presented with an alert to confirm that the Program Staff wants to cancel the creation of an RFI.
 
-###### Scenario: Program Staff wants to confirm the cancellation of creating an RFI
+###### Scenario: Program Staff wants to confirm the Program Staff's request to cancel the creation of an RFI
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
-And is viewing the alert to confirm that the Program Staff wants to cancel creating an RFI  
-When the Program Staff clicks, “Yes, I want to cancel”  
+And is viewing the alert to confirm that the Program Staff wants to cancel the creation of an RFI  
+When the Program Staff clicks “Yes, I want to cancel”  
 Then the alert closes  
-And the information that the Program Staff entered on the "Create a Request for Information (RFI)" page is not saved  
+And the information entered by the Program Staff is not saved  
 And the Program Staff is directed to the RFI listing page.
 
-###### Scenario: Program Staff wants to cancel the cancellation of creating an RFI
+###### Scenario: Program Staff wants to cancel the Program Staff's request to cancel the creation of an RFI
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
-And is viewing the alert to confirm that the Program Staff wants to cancel creating an RFI  
+And is viewing the alert to confirm that the Program Staff wants to cancel the creation of an RFI  
 When the Program Staff clicks “Go Back”  
 Then the alert closes  
 And the Program Staff is directed back to the "Details" tab on the “Create a Request for Information (RFI)” page.
 
-###### Scenario: Program Staff has supplied all required information for creating an RFI
+###### Scenario: Program Staff has not supplied all information required to create an RFI
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
 And is viewing the "Details" tab on the “Create a Request for Information (RFI)” page  
-When the Program Staff has supplied all required information for the RFI  
-Then the “Publish RFI” button becomes active  
-And the “Preview RFI” button becomes active.
-
-###### Scenario: Program Staff has not supplied all required information for creating an RFI
-Given the Program Staff is signed in  
-And has accepted the terms and conditions  
-And is viewing the "Details" tab on the “Create a Request for Information (RFI)” page  
-When the Program Staff has not supplied all required information for the RFI  
+When the Program Staff has not supplied all information required to create an RFI  
 Then the “Publish RFI” button remains inactive  
 And the “Preview RFI” button remains inactive.
-
-###### Scenario: Program Staff wants to see a preview of the RFI before it is published
-Given the Program Staff is signed in  
-And has accepted the terms and conditions  
-And is viewing the "Details" tab on the “Create a Request for Information (RFI)” page  
-And has supplied all required information for the RFI  
-When the Program Staff clicks “Preview RFI”  
-Then the Program Staff is directed to the RFI description page.
-
-###### Scenario: Program Staff has supplied all required information and attempts to publish an RFI
-Given the Program Staff is signed in  
-And has accepted the terms and conditions  
-And is viewing the "Details" tab on the “Create a Request for Information (RFI)” page  
-And has supplied all required information for the RFI  
-When the Program Staff clicks “Publish RFI”  
-Then the Program Staff is presented with an alert to confirm that the Program Staff wants to publish the RFI.
-
-###### Scenario: Program Staff wants to confirm the publishing of an RFI
-Given the Program Staff is signed in  
-And has accepted the terms and conditions  
-And is viewing the alert to confirm that the Program Staff wants to publish the RFI  
-When the Program Staff clicks, “Yes, publish RFI”  
-Then the alert closes  
-And the RFI is published to the RFI listing page  
-And the Program Staff is directed to RFI management page.
-
-###### Scenario: Program Staff wants to cancel the publishing of an RFI
-Given the Program Staff is signed in  
-And has accepted the terms and conditions  
-And is viewing the alert to confirm that the Program Staff wants to publish the RFI  
-When the Program Staff clicks “Cancel”  
-Then the alert closes  
-And the Program Staff is directed back to the "Details" tab on the “Create a Request for Information (RFI)” page.
 
 ###### Scenario: Program Staff wants to add commodity code when creating an RFI
 Given the Program Staff is signed in  
@@ -946,6 +905,24 @@ And has added at least one addendum
 When the Program Staff clicks the trash can icon next to the “Addendum” textarea box  
 Then the addendum is removed.
 
+###### Scenario: Program Staff has supplied all information required to create an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the "Details" tab on the “Create a Request for Information (RFI)” page  
+When the Program Staff has supplied all information required to create an RFI  
+Then the “Publish RFI” button becomes active  
+And the “Preview RFI” button becomes active.
+
+###### Scenario: Program Staff wants to see a preview of the RFI before it is published
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the "Details" tab on the “Create a Request for Information (RFI)” page  
+And has supplied all information required to create an RFI  
+When the Program Staff clicks “Preview RFI”  
+Then the Program Staff is directed to the RFI description page.
+
+##### Editing RFIs
+
 ###### Scenario: Program Staff wants to edit a published RFI
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
@@ -953,89 +930,45 @@ And is viewing the “Details” tab of the RFI management page
 When the Program Staff clicks “Edit Details”  
 Then the RFI becomes open for editing by the Program Staff.
 
-###### Scenario: Program Staff wants to cancel editing a published RFI
+###### Scenario: Program Staff has begun editing an RFI and wants to cancel
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
 And is viewing the "Details" tab on the RFI management page  
-And the RFI management page is open for editing by the Program Staff   
+And the RFI is open for editing by the Program Staff   
 When the Program Staff clicks “Cancel”  
-Then the Program Staff is presented with an alert to confirm that the Program Staff wants to cancel the editing of the RFI.
+Then the Program Staff is presented with an alert to confirm that the Program Staff wants to cancel the changes made to the RFI.
 
-###### Scenario: Program Staff wants to confirm the cancellation of editing an RFI
+###### Scenario: Program Staff wants to confirm the Program Staff's request to cancel changes made to an RFI
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
-And is viewing the alert to confirm that the Program Staff wants to cancel the editing of the RFI  
+And is viewing the alert to confirm that the Program Staff wants to cancel the changes made to the RFI  
 When the Program Staff clicks, “Yes, I want to cancel”  
 Then the alert closes  
-And the Program Staff's changes to the RFI are not saved  
+And the changes made by the Program Staff are not saved  
 And the Program Staff is directed back to the "Details" tab on the RFI management page.
 
 ###### Scenario: Program Staff wants to cancel the cancellation of editing an RFI
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
-And is viewing the alert to confirm the cancellation of editing an RFI  
+And is viewing the alert to confirm that the Program Staff wants to cancel the changes made to the RFI  
 When the Program Staff clicks “Go Back”  
 Then the alert closes  
 And the Program Staff is directed back to the "Details" tab on the RFI management page.
 
-###### Scenario: Program Staff has supplied all required information when editing a published RFI
+###### Scenario: Program Staff has not supplied all information required to publish changes to a published RFI
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
 And is viewing the "Details" tab on the RFI management page  
-And the RFI management page is open for editing by the Program Staff  
-When the Program Staff has supplied all required information for the RFI  
-Then the “Publish Changes” button remains active  
-And the “Preview Changes” button remains active.
-
-###### Scenario: Program Staff has not supplied all required information when editing a published RFI
-Given the Program Staff is signed in  
-And has accepted the terms and conditions  
-And is viewing the "Details" tab on the RFI management page  
-And the RFI management page is open for editing by the Program Staff   
-When the Program Staff has not supplied all required information for the RFI  
+And the RFI is open for editing by the Program Staff   
+When the Program Staff has not supplied all information required to publish changes to a published RFI  
 Then the “Publish Changes” button becomes inactive  
 And the “Preview Changes” button becomes inactive.
-
-###### Scenario: Program Staff wants to see a preview of the RFI before the Program Staff’s changes are published
-Given the Program Staff is signed in  
-And has accepted the terms and conditions  
-And is viewing the "Details" tab on the RFI management page  
-And the RFI management page is open for editing by the Program Staff  
-And has supplied all required information for the RFI  
-When the Program Staff clicks “Preview Changes”  
-Then the Program Staff is directed to the RFI description page.
-
-###### Scenario: Program Staff attempts to publish changes to a published RFI
-Given the Program Staff is signed in  
-And has accepted the terms and conditions  
-And is viewing the "Details" tab on the RFI management page  
-And the RFI management page is open for editing by the Program Staff  
-When the Program Staff clicks “Publish Changes”  
-Then the Program Staff is presented with an alert to confirm that the Program Staff wants to publish changes to the RFI.
-
-###### Scenario: Program Staff wants to confirm publishing changes to a published RFI
-Given the Program Staff is signed in  
-And has accepted the terms and conditions  
-And is viewing the alert to confirm that the Program Staff wants to publish changes to the RFI  
-When the Program Staff clicks “Yes, publish changes”  
-Then the alert closes  
-And the RFI is updated with the new information supplied by the Program Staff
-And the Program Staff is directed back to the "Details" tab on the RFI management page.
-
-###### Scenario: Program Staff wants to cancel publishing changes to a published RFI
-Given the Program Staff is signed in  
-And has accepted the terms and conditions  
-And is viewing the alert to confirm that the Program Staff wants to publish changes to the RFI  
-When the Program Staff clicks “Cancel”  
-Then the alert closes  
-And the Program Staff’s changes made to the RFI (if any) are not saved  
-And the Program Staff is directed back to the "Details" tab on the RFI management page.
 
 ###### Scenario: Program Staff wants to add commodity code when editing a published RFI
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
 And is viewing the "Details" tab on the RFI management page  
-And the RFI management page is open for editing by the Program Staff   
+And the RFI is open for editing by the Program Staff   
 When the Program Staff clicks “Add” to add a Commodity Code  
 Then an additional Commodity Code dropdown field will appear.
 
@@ -1043,7 +976,7 @@ Then an additional Commodity Code dropdown field will appear.
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
 And is viewing the "Details" tab on the RFI management page  
-And the RFI management page is open for editing by the Program Staff  
+And the RFI is open for editing by the Program Staff  
 When the Program Staff clicks the trash can icon next to a Commodity Code dropdown field  
 Then the Commodity Code dropdown field is removed.
 
@@ -1051,7 +984,7 @@ Then the Commodity Code dropdown field is removed.
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
 And is viewing the "Details" tab on the RFI management page  
-And the RFI management page is open for editing by the Program Staff   
+And the RFI is open for editing by the Program Staff   
 When the Program Staff clicks “Add Attachment”  
 Then the Program Staff is presented with a window to select the file to be attached to the RFI.
 
@@ -1059,7 +992,7 @@ Then the Program Staff is presented with a window to select the file to be attac
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
 And is viewing the "Details" tab on the RFI management page  
-And the RFI management page is open for editing by the Program Staff   
+And the RFI is open for editing by the Program Staff   
 And has added at least one attachment while editing the published RFI  
 When the Program Staff clicks the input field for the attachment’s file name  
 Then the Program Staff may enter a new title for the attachment.
@@ -1068,7 +1001,7 @@ Then the Program Staff may enter a new title for the attachment.
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
 And is viewing the "Details" tab on the RFI management page  
-And the RFI management page is open for editing by the Program Staff   
+And the RFI is open for editing by the Program Staff   
 And at least one attachment was attached when the RFI was created  
 When the Program Staff clicks the input field for the attachment’s file name  
 Then the Program Staff is not able to enter a new title for the attachment.
@@ -1077,7 +1010,7 @@ Then the Program Staff is not able to enter a new title for the attachment.
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
 And is viewing the "Details" tab on the RFI management page  
-And the RFI management page is open for editing by the Program Staff  
+And the RFI is open for editing by the Program Staff  
 And at least one attachment has been added to the RFI  
 When the Program Staff clicks the trash can icon next to the input field for the attachment’s title   
 Then the attachment is removed.
@@ -1086,7 +1019,7 @@ Then the attachment is removed.
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
 And is viewing the "Details" tab on the RFI management page  
-And the RFI management page is open for editing by the Program Staff  
+And the RFI is open for editing by the Program Staff  
 When the Program Staff clicks “Add Addendum”  
 Then an “Addendum” textarea box will appear at the top of the “Addenda” section.
 
@@ -1094,7 +1027,7 @@ Then an “Addendum” textarea box will appear at the top of the “Addenda” 
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
 And is viewing the "Details" tab on the RFI management page  
-And the RFI management page is open for editing by the Program Staff  
+And the RFI is open for editing by the Program Staff  
 And at least one addendum has been added to the RFI  
 When the Program Staff clicks the “Addendum” textarea box  
 Then the Program Staff may enter new text or replace existing text within the “Addendum” textarea box.
@@ -1103,10 +1036,90 @@ Then the Program Staff may enter new text or replace existing text within the �
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
 And is viewing the "Details" tab on the RFI management page  
-And the RFI management page is open for editing by the Program Staff  
+And the RFI is open for editing by the Program Staff  
 And at least one addendum has been added to the RFI  
 When the Program Staff clicks the trash can icon next to the “Addendum” textarea box  
 Then the addendum is removed.
+
+
+###### Scenario: Program Staff has supplied all information required to publish changes to a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the "Details" tab on the RFI management page  
+And the RFI is open for editing by the Program Staff  
+When the Program Staff has supplied all information required to publish changes to the published RFI  
+Then the “Publish Changes” button remains active  
+And the “Preview Changes” button remains active.
+
+###### Scenario: Program Staff wants to see a preview of the RFI before the Program Staff’s changes are published
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the "Details" tab on the RFI management page  
+And the RFI is open for editing by the Program Staff  
+And has supplied all information required to publish changes to the published RFI  
+When the Program Staff clicks “Preview Changes”  
+Then the Program Staff is directed to the RFI description page.
+
+
+
+
+
+
+
+
+
+
+##### Publishing RFIs
+
+###### Scenario: Program Staff has supplied all required information and attempts to publish an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the "Details" tab on the “Create a Request for Information (RFI)” page  
+And has supplied all information required to create an RFI  
+When the Program Staff clicks “Publish RFI”  
+Then the Program Staff is presented with an alert to confirm that the Program Staff wants to publish the RFI.
+
+###### Scenario: Program Staff wants to confirm the Program Staff's request to publish an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to publish the RFI  
+When the Program Staff clicks, “Yes, publish RFI”  
+Then the alert closes  
+And the RFI is published to the RFI listing page  
+And the Program Staff is directed to RFI management page.
+
+###### Scenario: Program Staff wants to cancel the Program Staff's request to publish an RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to publish the RFI  
+When the Program Staff clicks “Cancel”  
+Then the alert closes  
+And the Program Staff is directed back to the "Details" tab on the “Create a Request for Information (RFI)” page.
+
+###### Scenario: Program Staff has supplied all required information and attempts to publish changes to a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the "Details" tab on the RFI management page  
+And the RFI is open for editing by the Program Staff  
+When the Program Staff clicks “Publish Changes”  
+Then the Program Staff is presented with an alert to confirm that the Program Staff wants to publish changes to the RFI.
+
+###### Scenario: Program Staff wants to confirm the Program Staff's request to publish changes to a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to publish changes to the RFI  
+When the Program Staff clicks “Yes, publish changes”  
+Then the alert closes  
+And the RFI is updated with the changes made by the Program Staff  
+And the Program Staff is directed back to the "Details" tab on the RFI management page.
+
+###### Scenario: Program Staff wants to cancel the Program Staff's request to publish changes to a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to publish changes to the RFI  
+When the Program Staff clicks “Cancel”  
+Then the alert closes  
+And the Program Staff is directed back to the "Details" tab on the RFI management page.
 
 #### Buyers
 
@@ -1156,6 +1169,12 @@ And there is at least one attachment associated with the RFI
 When the Vendor clicks the attachment link  
 Then the attachment is downloaded by the Vendor’s browser.
 
+###### Scenario: Vendor wants to email the contact associated with an RFI  
+Given the Vendor is viewing the RFI description page  
+When the Vendor clicks the RFI contact’s email link  
+Then the Vendor’s email client is opened  
+And an email draft is created and addressed to the RFI contact’s email address.
+
 #### Anonymous Users
 
 ##### Viewing RFIs
@@ -1170,6 +1189,12 @@ Given the User is viewing the RFI description page
 And there is at least one attachment associated with the RFI  
 When the User clicks the attachment link  
 Then the attachment is downloaded by the User’s browser.
+
+###### Scenario: User wants to email the contact associated with an RFI  
+Given the User is viewing the RFI description page  
+When the User clicks the RFI contact’s email link  
+Then the User’s email client is opened  
+And an email draft is created and addressed to the RFI contact’s email address.
 
 #### All Users
 
@@ -1442,7 +1467,7 @@ And has selected the available checkbox
 When the Program Staff has not supplied all required information for the Discovery Day Session  
 Then the "Publish Discovery Day Session" button remains inactive.
 
-###### Scenario: Program Staff wants to see a preview of the Discovery Day Session section of the RFI before it is publish
+###### Scenario: Program Staff wants to see a preview of the Discovery Day Session section of the RFI before it is published
 Given the Program Staff is signed in  
 And has accepted the terms and conditions  
 And is viewing the "Discovery Day" tab on the RFI management page  
@@ -1458,31 +1483,143 @@ And has supplied all required information for the Discovery Day Session
 When the Program Staff clicks "Publish Discovery Day Session"  
 Then the Program Staff is presented with an alert to confirm that the Program Staff wants to publish the Discovery Day Session to the RFI description page.
 
-###### Scenario: Opening Discovery Day form for existing RFI that is open
+###### Scenario: Program Staff wants to confirm the publishing of a Discovery Day Session to a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to publish the Discovery Day Session to the published RFI  
+When the Program Staff clicks "Yes, publish Discovery Day Session"  
+Then the alert closes  
+And the RFI is updated with the Discovery Day Session information  
+And the Program Staff is directed back to the "Details" tab on the RFI management page.
 
-###### Scenario: Opening Discovery Day form for existing RFI that is closed
+###### Scenario: Program Staff wants to cancel the publishing of a Discovery Day Session to a published RFI
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to publish the Discovery Day Session to the published RFI  
+When the Program Staff clicks "Cancel"  
+Then the alert closes  
+And the Program Staff is directed back to the "Discovery Day" tab on the RFI management page.
 
-###### Scenario: Supplies all required information
-Buttons become active
+###### Scenario: Program Staff has begun creating a Discovery Day Session on a published RFI and wants to cancel
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the "Discovery Day" tab on the RFI management page  
+And has supplied all required information for the Discovery Day Session  
+When the Program Staff clicks "Cancel"  
+Then the Program Staff is presented with an alert to confirm that the Program Staff wants to cancel the creation of the Discovery Day Session.
 
-###### Scenario: Does not supply all required information
-Buttons remain inactive
+###### Scenario: Program Staff wants to confirm the cancellation of creating a Discovery Day Session
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to cancel the creation of the Discovery Day Session  
+When the Program Staff clicks "Yes, I want to cancel"  
+Then the alert closes  
+And the information that the Program Staff entered in the "Details" tab on the RFI management page is not saved  
+And the Program Staff is directed back to the "Discovery Day" tab on the RFI management page.
 
-###### Scenario: Preview RFI
+###### Scenario: Program Staff wants to cancel the cancellation of creating a Discovery Day Session
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to cancel the creation of the Discovery Day Session  
+When the Program Staff clicks "Go Back"  
+Then the alert closes  
+And the Program Staff is directed back to the "Discovery Day" tab on the RFI management page.
 
-###### Scenario: Publish Discovery Day Session
+###### Scenario: Program Staff wants to edit a published Discovery Day Session
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the "Discovery Day" tab on the RFI management page  
+When the Program Staff clicks "Edit Discovery Day Session"  
+Then the Discovery Day Session becomes open for editing by the Program Staff.
 
-###### Scenario: Confirm publish DDS
+###### Scenario: Program Staff attempts to publish changes to a published Discovery Day Session
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the "Discovery Day" tab on the RFI management page  
+And the Discovery Day Session is open for editing by the Program Staff  
+When the Program Staff clicks "Publish Changes"  
+Then the Program Staff is presented with an alert to confirm that the Program Staff wants to publish changes to the Discovery Day Session.
 
-###### Scenario: Cancel publish DDS
+###### Scenario: Program Staff wants to confirm publishing changes to a published Discovery Day Session
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to publish changes to the Discovery Day Session  
+When the Program Staff clicks "Yes, publish changes"  
+Then the alert closes  
+And the RFI is updated with the Discovery Day Session information  
+And the Program Staff is directed back to the "Discovery Day" tab on the RFI management page.
 
-###### Scenario: Cancel Discovery Day Session creation
+###### Scenario: Program Staff wants to cancel publishing changes to a published Discovery Day Session
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to publish changes to the Discovery Day Session  
+When the Program Staff clicks "Cancel"  
+Then the alert closes    
+And the Program Staff is directed back to the "Discovery Day" tab on the RFI management page.
 
-###### Scenario: Confirm Cancel DDS creation
+###### Scenario: Program Staff wants to cancel changes made to published Discovery Day Session
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the "Discovery Day" tab on the RFI management page  
+And the Discovery Day Session is open for editing by the Program Staff  
+When the Program Staff clicks "Cancel"  
+The the Program Staff is presented with an alert to confirm that the Program Staff wants to cancel the editing of the Discovery Day Session.
 
-###### Scenario: Cancel cancel DDS creation
+###### Scenario: Program Staff wants to confirm the cancellation of changes made to Discovery Day Session
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to cancel the editing of the Discovery Day Session  
+When the Program Staff clicks "Yes, I want to cancel"  
+Then the alert closes  
+And the Program Staff's changes to the Discovery Day Session are not saved  
+And the Program Staff is directed back to the "Discovery Day" tab on the RFI management page.
 
-###### Scenario: Editing published DDS
+###### Scenario: Program Staff wants to cancel the cancellation of changes made to Discovery Day Session
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to cancel the editing of the Discovery Day Session  
+When the Program Staff clicks "Go Back"  
+Then the alert closes  
+And the Program Staff is directed back to the "Discovery Day" tab on the RFI management page.
+
+###### Scenario: Program Staff wants to see a preview of the Discovery Day Session before the Program Staff's changes are published
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the "Discovery Day" tab on the RFI management page  
+And the Discovery Day Session is open for editing by the Program Staff  
+When the Program Staff clicks "Preview Changes"  
+Then the Program Staff is directed to the RFI description page.
+
+###### Scenario: Program Staff wants to cancel a published Discovery Day Session that has registered attendees
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the "Discovery Day" tab on the RFI management page  
+When the Program Staff clicks "Cancel Discovery Day Session"  
+Then the Program Staff is presented with an alert to confirm that the Program Staff wants to cancel the Discovery Day Session.
+
+###### Scenario: Program Staff wants to confirm the cancellation of a published Discovery Day Session
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to cancel the Discovery Day Session  
+When the Program Staff clicks "Yes, I want to cancel"  
+Then the alert closes  
+And the Discovery Day Session information is removed from the associated RFI  
+And the Program Staff is directed back to the "Discovery Day" tab on the RFI management page.
+
+###### Scenario: Program Staff wants to cancel the Program Staff's request to cancel the published Discovery Day Session
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the alert to confirm that the Program Staff wants to cancel the Discovery Day Session  
+When the Program Staff clicks "Go Back"  
+Then the alert closes  
+And the Program Staff is directed back to the "Discovery Day" tab on the RFI management page.
+
+###### Scenario: Program Staff wants to view the RFI associated with a published Discovery Day Session from the "Discovery Day" tab
+Given the Program Staff is signed in  
+And has accepted the terms and conditions  
+And is viewing the "Discovery Day" tab on the RFI management page  
+When the Program Staff clicks "View RFI"  
+Then the Program Staff is directed to the RFI description page.
 
 #### Buyers
 
@@ -1813,12 +1950,35 @@ TODO
 
 #### All Users
 
-##### Landing Page
-
 ###### Scenario: User wants to view the landing page  
 Given the User is viewing any page within the web app  
-When the User clicks “Home” on the main navigation bar  
+When the User clicks the “Home” link on the main navigation bar  
 Then the User is directed to the landing page.
+
+###### Scenario: User wants to view the "About" page
+Given the User is viewing any page within the web app  
+When the User clicks the "About" link on the footer  
+Then the User is directed to the "About" page.
+
+###### Scenario: User wants to view the "Disclaimer" page
+Given the User is viewing any page within the web app  
+When the User clicks the "Disclaimer" link on the footer  
+Then the User is directed to the "Disclaimer" page.
+
+###### Scenario: User wants to view the "Privacy" page
+Given the User is viewing any page within the web app  
+When the User clicks the "Privacy" link on the footer  
+Then the User is directed to the "Privacy" page.
+
+###### Scenario: User wants to view the "Accessibility" page
+Given the User is viewing any page within the web app  
+When the User clicks the "Accessibility" link on the footer  
+Then the User is directed to the "Accessibility" page.
+
+###### Scenario: User wants to view the "Copyright" page
+Given the User is viewing any page within the web app  
+When the User clicks the "Copyright" link on the footer  
+Then the User is directed to the "Copyright" page.
 
 ### Feedback
 
