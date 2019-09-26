@@ -21,7 +21,7 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
   const isLandingRoute = activeRoute.tag === 'landing';
   const activeClass = (active: boolean) => active ? 'font-weight-bold o-100' : '';
   const onClick = () => toggleIsOpen(false);
-  const linkClassName = (isActive: boolean) => `o-75 ${activeClass(isActive)} text-white px-0 px-md-3`;
+  const linkClassName = (isActive: boolean) => `${activeClass(isActive)} o-75 text-white px-0 px-md-3`;
   const landingRoute: Route = { tag: 'landing', value: null };
   const rfiListRoute: Route = { tag: 'requestForInformationList', value: null };
   const viListRoute: Route = { tag: 'viList', value: null };
@@ -112,10 +112,10 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
     return (
       <Nav navbar className='ml-md-auto'>
         <NavItem className='d-none d-md-block'>
-          <Link nav color='white' className='px-0 px-md-3' style={{ opacity: 0.4 }} disabled>{session.user.email}</Link>
+          <Link nav color='white' className='px-0 px-md-3' style={{ opacity: 0.35 }} disabled>{session.user.email}</Link>
         </NavItem>
         <NavItem>
-          <Link nav route={signOutRoute} color='white' onClick={onClick} className='px-0 pl-md-3'>Sign Out</Link>
+          <Link nav route={signOutRoute} color='white' onClick={onClick} className='px-0 pl-md-3 o-75'>Sign Out</Link>
         </NavItem>
       </Nav>
     );
@@ -125,7 +125,7 @@ const AuthLinks: View<Props> = ({ session, toggleIsOpen }) => {
     return (
       <Nav navbar className='ml-md-auto'>
         <NavItem>
-          <Link nav route={signInRoute} color='white' onClick={onClick} className='px-0 px-md-3'>Sign In</Link>
+          <Link nav route={signInRoute} color='white' onClick={onClick} className='px-0 px-md-3 o-75'>Sign In</Link>
         </NavItem>
         <NavItem>
           <Link button route={signUpRoute} color='primary' onClick={onClick} className='mt-2 mt-md-0'>Sign Up</Link>

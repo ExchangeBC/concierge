@@ -154,6 +154,7 @@ function noticeIdToState(noticeId: NoticeId): State {
           <div>
             <p>Your Vendor-Initiated Idea application has been received.</p>
             <p>Please note that it may take up to four weeks to review and process your application. A staff member from the Procurement Concierge Program will be in touch with you shortly.</p>
+            <p>Please send an email to <Link href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Link> if you have any questions.</p>
           </div>
         ),
         button: {
