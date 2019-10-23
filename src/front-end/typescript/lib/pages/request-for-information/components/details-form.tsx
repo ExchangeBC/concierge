@@ -3,6 +3,7 @@ import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
 import * as FormFieldMulti from 'front-end/lib/components/form-field-multi/lib/index';
 import * as LongTextMulti from 'front-end/lib/components/form-field-multi/long-text';
 import * as SelectMulti from 'front-end/lib/components/form-field-multi/select';
+import * as RichMarkdownEditor from 'front-end/lib/components/rich-markdown-editor';
 import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as DateTime from 'front-end/lib/views/form-field/datetime';
@@ -58,7 +59,8 @@ export type Msg
   | ADT<'validateClosingDate'>
   | ADT<'validateClosingTime'>
   | ADT<'validateGracePeriodDays'>
-  | ADT<'toggleHelp', HelpFieldName>;
+  | ADT<'toggleHelp', HelpFieldName>
+  | ADT<'richMarkdownEditor', RichMarkdownEditor.Msg>;
 
 type FormFieldKeys
   = 'rfiNumber'
@@ -88,6 +90,7 @@ export interface State {
   categories: Immutable<SelectMulti.State>;
   attachments: Immutable<FileMulti.State>;
   addenda: Immutable<LongTextMulti.State>;
+  richMarkdownEditor: Immutable<RichMarkdownEditor.State>;
 };
 
 export interface Values extends Omit<RfiResource.CreateRequestBody, 'attachments' | 'discoveryDay'> {
@@ -298,6 +301,9 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
           show: false
         }
       }
+    })),
+    richMarkdownEditor: immutable(await RichMarkdownEditor.init({
+      text: 'Hello, World.'
     }))
   };
 };
@@ -388,6 +394,14 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
             return state.setIn(['addenda', 'help', 'show'], !state.getIn(['addenda', 'help', 'show']));
         }
       })()];
+    case 'richMarkdownEditor':
+      state = updateComponentChild({
+        state,
+        mapChildMsg: value => ({ tag: 'richMarkdownEditor', value }),
+        childStatePath: ['richMarkdownEditor'],
+        childUpdate: RichMarkdownEditor.update,
+        childMsg: msg.value
+      })[0];
     default:
       return [state];
   }
@@ -567,6 +581,7 @@ const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeLongText = (tag: any) => LongText.makeOnChange(dispatch, value => ({ tag, value }));
   const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
   const toggleHelp = (value: HelpFieldName) => () => dispatch({ tag: 'toggleHelp', value });
+  const dispatchRichMarkdownEditor: Dispatch<RichMarkdownEditor.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'richMarkdownEditor' as const, value }));
   return (
     <div className='mb-4'>
       <Row>
@@ -585,6 +600,11 @@ const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
             onChange={onChangeLongText('onChangeDescription')}
             toggleHelp={toggleHelp('description')}
             style={{ height: '50vh', minHeight: '400px' }} />
+        </Col>
+      </Row>
+      <Row className='mb-3'>
+        <Col xs='12'>
+          <RichMarkdownEditor.view state={state.richMarkdownEditor} dispatch={dispatchRichMarkdownEditor} />
         </Col>
       </Row>
     </div>
