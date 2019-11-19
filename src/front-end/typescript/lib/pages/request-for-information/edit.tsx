@@ -248,16 +248,19 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           }
         });
       }
-      state = updateComponentChild({
+      const updateChildResult = updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'rfiForm', value }),
+        mapChildMsg: value => ({ tag: 'rfiForm' as const, value }),
         childStatePath: ['valid', 'rfiForm'],
         childUpdate: RfiForm.update,
         childMsg: msg.value
-      })[0];
+      });
+      state = updateChildResult[0];
       return [
         state,
-        async state => {
+        async (state, dispatch) => {
+          const asyncStateResult = updateChildResult[1] && await updateChildResult[1](state, dispatch);
+          state = asyncStateResult || state;
           if (state.valid && shouldResetRfiForm) {
             state = state.setIn(['valid', 'rfiForm'], await resetRfiForm(state.valid.rfi, state.valid.rfiResponses, state.valid.rfiForm.activeTab));
           }

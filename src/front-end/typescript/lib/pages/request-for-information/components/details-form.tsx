@@ -3,6 +3,7 @@ import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
 import * as FormFieldMulti from 'front-end/lib/components/form-field-multi/lib/index';
 import * as LongTextMulti from 'front-end/lib/components/form-field-multi/long-text';
 import * as SelectMulti from 'front-end/lib/components/form-field-multi/select';
+import * as RichMarkdownEditor from 'front-end/lib/components/rich-markdown-editor';
 import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as DateTime from 'front-end/lib/views/form-field/datetime';
@@ -58,7 +59,8 @@ export type Msg
   | ADT<'validateClosingDate'>
   | ADT<'validateClosingTime'>
   | ADT<'validateGracePeriodDays'>
-  | ADT<'toggleHelp', HelpFieldName>;
+  | ADT<'toggleHelp', HelpFieldName>
+  | ADT<'onChangeRichMarkdownEditor', RichMarkdownEditor.Msg>;
 
 type FormFieldKeys
   = 'rfiNumber'
@@ -88,6 +90,7 @@ export interface State {
   categories: Immutable<SelectMulti.State>;
   attachments: Immutable<FileMulti.State>;
   addenda: Immutable<LongTextMulti.State>;
+  richMarkdownEditor: Immutable<RichMarkdownEditor.State>;
 };
 
 export interface Values extends Omit<RfiResource.CreateRequestBody, 'attachments' | 'discoveryDay'> {
@@ -298,6 +301,10 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
           show: false
         }
       }
+    })),
+    richMarkdownEditor: immutable(await RichMarkdownEditor.init({
+      id: 'rfi-details-rme',
+      value: ''
     }))
   };
 };
@@ -388,6 +395,14 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
             return state.setIn(['addenda', 'help', 'show'], !state.getIn(['addenda', 'help', 'show']));
         }
       })()];
+    case 'onChangeRichMarkdownEditor':
+      return updateComponentChild({
+        state,
+        mapChildMsg: value => ({ tag: 'onChangeRichMarkdownEditor', value }),
+        childStatePath: ['richMarkdownEditor'],
+        childUpdate: RichMarkdownEditor.update,
+        childMsg: msg.value
+      });
     default:
       return [state];
   }
@@ -630,12 +645,15 @@ const Addenda: ComponentView<State, Msg> = ({ state, dispatch }) => {
 };
 
 export const view: ComponentView<State, Msg> = props => {
+  const { state, dispatch } = props;
+  const dispatchRichMarkdownEditor: Dispatch<RichMarkdownEditor.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeRichMarkdownEditor' as const, value }));
   return (
     <div>
       <Details {...props} />
       <Description {...props} />
       <Attachments {...props} />
       <Addenda {...props} />
+      <RichMarkdownEditor.view state={state.richMarkdownEditor} dispatch={dispatchRichMarkdownEditor} />
     </div>
   );
 };
