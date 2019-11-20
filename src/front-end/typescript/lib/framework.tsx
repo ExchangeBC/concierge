@@ -41,7 +41,7 @@ export interface UpdateChildParams<ParentState, ParentMsg, ChildState, ChildMsg>
 
 export type ViewElement<Props = any> = null | ReactElement<Props>;
 
-export type ViewElementChildren<Props = any> = ViewElement<Props> | string | Array<ReactElement<Props> | null | string>;
+export type ViewElementChildren<Props = any> = ViewElement<Props> | string | Array<ViewElement<Props> | string>;
 
 export type View<Props, ReturnValue = ViewElement<Props>> = (props: Props) => ReturnValue;
 
