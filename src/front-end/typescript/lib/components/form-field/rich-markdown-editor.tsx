@@ -9,7 +9,7 @@ import { ADT } from 'shared/lib/types';
 
 export type Value = string;
 
-interface ChildState extends FormField.HasValue<Value> {
+interface ChildState extends FormField.ChildStateBase<Value> {
   loading: number;
   selectionStart: number;
   selectionEnd: number;
@@ -27,8 +27,9 @@ type ChildMsg
 
 export type Msg = FormField.Msg<ChildMsg>;
 
-const childInit: Init<Value, ChildState> = async value => ({
+const childInit: Init<FormField.ChildParams<Value>, ChildState> = async ({ value, id }) => ({
   value,
+  id,
   loading: 0,
   selectionStart: 0,
   selectionEnd: 0
@@ -72,9 +73,8 @@ const childUpdate: Update<ChildState, ChildMsg> = ({ state, msg }) => {
       return [
         state,
         async () => {
-          //TODO need a way to get the ID
-          //const el = document.getElementById(state.id);
-          //if (el) { el.focus(); }
+          const el = document.getElementById(state.id);
+          if (el) { el.focus(); }
           return null;
         }
       ];
@@ -113,7 +113,7 @@ const Controls: FormField.ChildView<Value, ChildState, ChildMsg> = ({ state, dis
 };
 
 const ChildView: FormField.ChildView<Value, ChildState, ChildMsg> = props => {
-  const { state, dispatch, id, className = '', disabled = false } = props;
+  const { state, dispatch, className = '', disabled = false } = props;
   const isLoading = state.loading > 0;
   const isDisabled = disabled || isLoading;
   const onChangeSelection = (target: EventTarget & HTMLTextAreaElement) => {
@@ -128,7 +128,7 @@ const ChildView: FormField.ChildView<Value, ChildState, ChildMsg> = props => {
     <div className={`${className} d-flex flex-column flex-nowrap align-items-stretch`}>
       <Controls {...props} />
       <textarea
-        id={id}
+        id={state.id}
         value={state.value}
         disabled={isDisabled}
         className='form-control flex-grow-1'
