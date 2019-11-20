@@ -6,32 +6,34 @@ import { Alert, FormGroup, FormText, Label } from 'reactstrap';
 import { ADT } from 'shared/lib/types';
 import { getInvalidValue, getValidValue, Validation } from 'shared/lib/validators';
 
-export interface HasValue<Value> {
+export interface ChildStateBase<Value> {
   value: Value;
+  id: string;
 }
 
-interface ChildProps<Value, ChildState extends HasValue<Value>, ChildMsg> {
+export interface ChildParams<Value> {
+  value: Value;
   id: string;
+}
+
+export interface ChildProps<Value, ChildState extends ChildStateBase<Value>, ChildMsg> {
   state: Immutable<ChildState>;
   className?: string;
   disabled?: boolean;
   dispatch: Dispatch<ChildMsg>;
 }
 
-export type ChildView<Value, ChildState extends HasValue<Value>, ChildMsg> = View<ChildProps<Value, ChildState, ChildMsg>>;
+export type ChildView<Value, ChildState extends ChildStateBase<Value>, ChildMsg> = View<ChildProps<Value, ChildState, ChildMsg>>;
 
-type ChildComponent<Value, ChildState extends HasValue<Value>, ChildMsg> = framework.Component<Value, ChildState, ChildMsg, ChildProps<Value, ChildState, ChildMsg>>;
+type ChildComponent<Value, ChildState extends ChildStateBase<Value>, ChildMsg> = framework.Component<ChildParams<Value>, ChildState, ChildMsg, ChildProps<Value, ChildState, ChildMsg>>;
 
-export interface State<Value, ChildState extends HasValue<Value>> {
-  id: string;
+export interface State<Value, ChildState extends ChildStateBase<Value>> {
   errors: string[];
   showHelp: boolean;
   child: Immutable<ChildState>;
 }
 
-export interface Params<Value> {
-  id: string;
-  value: Value;
+export interface Params<Value> extends ChildParams<Value> {
   errors: string[];
 }
 
@@ -39,16 +41,19 @@ export type Msg<ChildMsg>
   = ADT<'toggleHelp'>
   | ADT<'child', ChildMsg>;
 
-function makeInit<Value, ChildState extends HasValue<Value>, ChildMsg>(childInit: ChildComponent<Value, ChildState, ChildMsg>['init']): Init<Params<Value>, State<Value, ChildState>> {
+function makeInit<Value, ChildState extends ChildStateBase<Value>, ChildMsg>(childInit: ChildComponent<Value, ChildState, ChildMsg>['init']): Init<Params<Value>, State<Value, ChildState>> {
   return async params => ({
     id: params.id,
     errors: params.errors,
     showHelp: false,
-    child: immutable(await childInit(params.value))
+    child: immutable(await childInit({
+      value: params.value,
+      id: params.id
+    }))
   });
 };
 
-function makeUpdate<Value, ChildState extends HasValue<Value>, ChildMsg>(childUpdate: ChildComponent<Value, ChildState, ChildMsg>['update']): Update<State<Value, ChildState>, Msg<ChildMsg>> {
+function makeUpdate<Value, ChildState extends ChildStateBase<Value>, ChildMsg>(childUpdate: ChildComponent<Value, ChildState, ChildMsg>['update']): Update<State<Value, ChildState>, Msg<ChildMsg>> {
   return ({ state, msg }) => {
     switch (msg.tag) {
       case 'toggleHelp':
@@ -69,7 +74,7 @@ function makeUpdate<Value, ChildState extends HasValue<Value>, ChildMsg>(childUp
   };
 };
 
-interface ViewProps<Value, ChildState extends HasValue<Value>, ChildMsg> extends ComponentViewProps<State<Value, ChildState>, Msg<ChildMsg>> {
+interface ViewProps<Value, ChildState extends ChildStateBase<Value>, ChildMsg> extends ComponentViewProps<State<Value, ChildState>, Msg<ChildMsg>> {
   className?: string;
   labelClassName?: string;
   style?: CSSProperties;
@@ -79,7 +84,7 @@ interface ViewProps<Value, ChildState extends HasValue<Value>, ChildMsg> extends
   help?: ViewElementChildren;
 }
 
-function ConditionalHelpToggle<Value, ChildState extends HasValue<Value>, ChildMsg>(props: ViewProps<Value, ChildState, ChildMsg>): ViewElement<ViewProps<Value, ChildState, ChildMsg>> {
+function ConditionalHelpToggle<Value, ChildState extends ChildStateBase<Value>, ChildMsg>(props: ViewProps<Value, ChildState, ChildMsg>): ViewElement<ViewProps<Value, ChildState, ChildMsg>> {
   const { dispatch, disabled, help } = props;
   if (help && !disabled) {
     return (
@@ -100,12 +105,12 @@ function ConditionalHelpToggle<Value, ChildState extends HasValue<Value>, ChildM
   }
 };
 
-function ConditionalLabel<Value, ChildState extends HasValue<Value>, ChildMsg>(props: ViewProps<Value, ChildState, ChildMsg>): ViewElement<ViewProps<Value, ChildState, ChildMsg>> {
+function ConditionalLabel<Value, ChildState extends ChildStateBase<Value>, ChildMsg>(props: ViewProps<Value, ChildState, ChildMsg>): ViewElement<ViewProps<Value, ChildState, ChildMsg>> {
   const { state, label, required, labelClassName } = props;
   const className = `${required ? 'font-weight-bold' : ''} ${labelClassName || ''}`;
   if (label) {
     return (
-      <Label for={state.id} className={className}>
+      <Label for={state.child.id} className={className}>
         <span>
           {label}
           {required ? (<span className='text-info ml-1'>*</span>) : null}
@@ -118,7 +123,7 @@ function ConditionalLabel<Value, ChildState extends HasValue<Value>, ChildMsg>(p
   }
 };
 
-function ConditionalHelp<Value, ChildState extends HasValue<Value>, ChildMsg>(props: ViewProps<Value, ChildState, ChildMsg>): ViewElement<ViewProps<Value, ChildState, ChildMsg>> {
+function ConditionalHelp<Value, ChildState extends ChildStateBase<Value>, ChildMsg>(props: ViewProps<Value, ChildState, ChildMsg>): ViewElement<ViewProps<Value, ChildState, ChildMsg>> {
   const { state, help, disabled } = props;
   if (help && state.showHelp && !disabled) {
     return (
@@ -131,7 +136,7 @@ function ConditionalHelp<Value, ChildState extends HasValue<Value>, ChildMsg>(pr
   }
 }
 
-function ConditionalErrors<Value, ChildState extends HasValue<Value>, ChildMsg>(props: ViewProps<Value, ChildState, ChildMsg>): ViewElement<ViewProps<Value, ChildState, ChildMsg>> {
+function ConditionalErrors<Value, ChildState extends ChildStateBase<Value>, ChildMsg>(props: ViewProps<Value, ChildState, ChildMsg>): ViewElement<ViewProps<Value, ChildState, ChildMsg>> {
   const { state } = props;
   if (state.errors.length) {
     const errorElements = state.errors.map((error, i) => {
@@ -147,17 +152,16 @@ function ConditionalErrors<Value, ChildState extends HasValue<Value>, ChildMsg>(
   }
 }
 
-function makeView<Value, ChildState extends HasValue<Value>, ChildMsg>(ChildView: ChildComponent<Value, ChildState, ChildMsg>['view']): View<ViewProps<Value, ChildState, ChildMsg>> {
+function makeView<Value, ChildState extends ChildStateBase<Value>, ChildMsg>(ChildView: ChildComponent<Value, ChildState, ChildMsg>['view']): View<ViewProps<Value, ChildState, ChildMsg>> {
   return props => {
     const { state, dispatch } = props;
     const invalid = !!state.errors.length;
     const childClassName = invalid ? 'is-invalid' : '';
     return (
-      <FormGroup className={`form-field-${state.id} ${props.className || ''}`}>
+      <FormGroup className={`form-field-${state.child.id} ${props.className || ''}`}>
         <ConditionalLabel {...props} />
         <ConditionalHelp {...props} />
         <ChildView
-          id={state.id}
           state={state.child}
           className={childClassName}
           disabled={props.disabled}
@@ -168,9 +172,9 @@ function makeView<Value, ChildState extends HasValue<Value>, ChildMsg>(ChildView
   };
 };
 
-export type Component<Value, ChildState extends HasValue<Value>, ChildMsg> = framework.Component<Params<Value>, State<Value, ChildState>, Msg<ChildMsg>, ViewProps<Value, ChildState, ChildMsg>>;
+export type Component<Value, ChildState extends ChildStateBase<Value>, ChildMsg> = framework.Component<Params<Value>, State<Value, ChildState>, Msg<ChildMsg>, ViewProps<Value, ChildState, ChildMsg>>;
 
-export function makeComponent<Value, ChildState extends HasValue<Value>, ChildMsg>(params: ChildComponent<Value, ChildState, ChildMsg>): Component<Value, ChildState, ChildMsg> {
+export function makeComponent<Value, ChildState extends ChildStateBase<Value>, ChildMsg>(params: ChildComponent<Value, ChildState, ChildMsg>): Component<Value, ChildState, ChildMsg> {
   return {
     init: makeInit(params.init),
     update: makeUpdate(params.update),
@@ -178,11 +182,11 @@ export function makeComponent<Value, ChildState extends HasValue<Value>, ChildMs
   };
 }
 
-export function getValue<Value, ChildState extends HasValue<Value>>(state: State<Value, ChildState>): Value {
+export function getValue<Value, ChildState extends ChildStateBase<Value>>(state: State<Value, ChildState>): Value {
   return state.child.value;
 }
 
-export function setValue<Value, ChildState extends HasValue<Value>>(state: Immutable<State<Value, ChildState>>, value: Value): Immutable<State<Value, ChildState>> {
+export function setValue<Value, ChildState extends ChildStateBase<Value>>(state: Immutable<State<Value, ChildState>>, value: Value): Immutable<State<Value, ChildState>> {
   return state.setIn(['child', 'value'], value);
 }
 
