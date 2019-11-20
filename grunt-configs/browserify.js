@@ -3,6 +3,7 @@ const path = require("path");
 const root = path.resolve(__dirname, "..", gruntConfig.src.ts);
 const compilerOptions = require(path.join(root, "tsconfig.json")).compilerOptions;
 const pathmodify = require("pathmodify");
+//const commonShake = require("common-shakeify");
 const isDev = process.env.NODE_ENV === "development";
 
 module.exports = {
@@ -26,6 +27,9 @@ module.exports = {
               pathmodify.mod.dir("shared", `${gruntConfig.tmp.shared}`)
             ]
           }
+        ],
+        [
+          "common-shakeify"
         ]
       ],
       browserifyOptions: {

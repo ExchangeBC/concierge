@@ -3,7 +3,7 @@ import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
 import * as FormFieldMulti from 'front-end/lib/components/form-field-multi/lib/index';
 import * as LongTextMulti from 'front-end/lib/components/form-field-multi/long-text';
 import * as SelectMulti from 'front-end/lib/components/form-field-multi/select';
-import * as RichMarkdownEditor from 'front-end/lib/components/rich-markdown-editor';
+import * as RichMarkdownEditor from 'front-end/lib/components/form-field/rich-markdown-editor';
 import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as DateTime from 'front-end/lib/views/form-field/datetime';
@@ -304,7 +304,8 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
     })),
     richMarkdownEditor: immutable(await RichMarkdownEditor.init({
       id: 'rfi-details-rme',
-      value: ''
+      value: '',
+      errors: []
     }))
   };
 };
