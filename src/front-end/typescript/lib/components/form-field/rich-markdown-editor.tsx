@@ -1,7 +1,7 @@
 import { MARKDOWN_HELP_URL } from 'front-end/config';
 import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import * as FormField from 'front-end/lib/components/form-field';
-import { Immutable, Init, Update, View, ViewElement } from 'front-end/lib/framework';
+import { Immutable, Init, Update, UpdateReturnValue, View, ViewElement } from 'front-end/lib/framework';
 import { createFile } from 'front-end/lib/http/api';
 import Icon, { AvailableIcons } from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
@@ -21,7 +21,7 @@ export type State = FormField.State<Value, ChildState>;
 
 export type Params = FormField.Params<Value>;
 
-type ChildMsg
+type InnerChildMsg
   = ADT<'onChangeTextArea', [string, number, number]> // [value, selectionStart, selectionEnd]
   | ADT<'onChangeSelection', [number, number]> // [selectionStart, selectionEnd]
   | ADT<'controlH1'>
@@ -34,7 +34,7 @@ type ChildMsg
   | ADT<'controlImage', File>
   | ADT<'focus'>;
 
-export type Msg = FormField.Msg<ChildMsg>;
+export type Msg = FormField.Msg<InnerChildMsg>;
 
 const childInit: Init<FormField.ChildParams<Value>, ChildState> = async ({ value, id }) => ({
   value,
@@ -47,12 +47,38 @@ const childInit: Init<FormField.ChildParams<Value>, ChildState> = async ({ value
 const startLoading: UpdateState<ChildState> = makeStartLoading('loading');
 const stopLoading: UpdateState<ChildState>  = makeStopLoading('loading');
 
-function insert(state: Immutable<ChildState>, text: string): Immutable<ChildState> {
-  return state.set('value', `${state.value.substring(0, state.selectionStart)}${text}${state.value.substring(state.selectionEnd)}`);
+interface InsertParams {
+  separateLine?: boolean;
+  text(selectedText: string): string;
 }
 
-const childUpdate: Update<ChildState, ChildMsg> = ({ state, msg }) => {
-  const hasSelectedMultipleCharacters = state.selectionStart !== state.selectionEnd;
+function insert(state: Immutable<ChildState>, params: InsertParams): UpdateReturnValue<ChildState, FormField.ChildMsg<InnerChildMsg>> {
+  const { text, separateLine = false } = params;
+  const selectedText = state.value.substring(state.selectionStart, state.selectionEnd);
+  const body = text(selectedText);
+  let prefix = state.value.substring(0, state.selectionStart);
+  if (prefix !== '' && separateLine) {
+    prefix = prefix.replace(/\n?\n?$/, '\n\n');
+  }
+  let suffix = state.value.substring(state.selectionEnd);
+  if (suffix !== '' && separateLine) {
+    suffix = suffix.replace(/^\n?\n?/, '\n\n');
+  }
+  state = state
+    .set('value', `${prefix}${body}${suffix}`)
+    .set('selectionStart', prefix.length)
+    .set('selectionEnd', prefix.length + body.length);
+  return [
+    state,
+    async (state, dispatch) => {
+      dispatch({ tag: '@validate', value: undefined });
+      dispatch({ tag: 'focus', value: undefined });
+      return null;
+    }
+  ];
+}
+
+const childUpdate: Update<ChildState, FormField.ChildMsg<InnerChildMsg>> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'onChangeTextArea':
       return [state
@@ -66,24 +92,38 @@ const childUpdate: Update<ChildState, ChildMsg> = ({ state, msg }) => {
         .set('selectionEnd', msg.value[1])
       ];
     case 'controlH1':
-      // TODO better new line insertion depending on context of selection/cursor
-      const h1Text = `${state.selectionStart === 0 ? '' : '\n\n'}# ${hasSelectedMultipleCharacters ? state.value.substring(state.selectionStart, state.selectionEnd) : ''}\n\n`;
-      return [
-        insert(state, h1Text)
-          .set('selectionStart', state.selectionStart + (state.selectionStart === 0 ? 2 : 4))
-          .set('selectionEnd', state.selectionEnd + (state.selectionStart === 0 ? 2 : 4)),
-        async (state, dispatch) => {
-          dispatch({ tag: 'focus', value: undefined });
-          return null;
-        }
-      ];
+      return insert(state, {
+        text: selectedText => `# ${selectedText}`,
+        separateLine: true
+      });
     case 'controlH2':
+      return insert(state, {
+        text: selectedText => `## ${selectedText}`,
+        separateLine: true
+      });
     case 'controlH3':
+      return insert(state, {
+        text: selectedText => `### ${selectedText}`,
+        separateLine: true
+      });
     case 'controlBold':
+      return insert(state, {
+        text: selectedText => `**${selectedText}**`
+      });
     case 'controlItalics':
+      return insert(state, {
+        text: selectedText => `*${selectedText}*`
+      });
     case 'controlOrderedList':
+      return insert(state, {
+        text: selectedText => `1. ${selectedText}`,
+        separateLine: true
+      });
     case 'controlUnorderedList':
-      return [state];
+      return insert(state, {
+        text: selectedText => `- ${selectedText}`,
+        separateLine: true
+      });
     case 'controlImage':
       return [
         startLoading(state),
@@ -94,10 +134,13 @@ const childUpdate: Update<ChildState, ChildMsg> = ({ state, msg }) => {
             file: msg.value
           });
           if (file.tag === 'invalid') { return state; }
-          const imagePath = `![${msg.value.name}](/api/fileBlobs/${file.value._id})`;
-          state = insert(state, imagePath)
-            .set('selectionEnd', state.selectionStart + imagePath.length);
-          dispatch({ tag: 'focus', value: undefined });
+          const result = insert(state, {
+            text: () => `![${msg.value.name}](/api/fileBlobs/${file.value._id})`
+          });
+          state = result[0];
+          if (result[1]) {
+            await result[1](state, dispatch);
+          }
           return state;
         }
       ];
@@ -121,12 +164,13 @@ interface ControlIconProps {
   children?: ViewElement;
   width?: number;
   height?: number;
+  className?: string;
   onClick?(): void;
 }
 
-const ControlIcon: View<ControlIconProps> = ({ name, disabled, onClick, children, width = 1.25, height = 1.25 }) => {
+const ControlIcon: View<ControlIconProps> = ({ name, disabled, onClick, children, width = 1.25, height = 1.25, className = '' }) => {
   return (
-    <Link color={disabled ? 'secondary' : 'primary'} className='position-relative mr-2' disabled={disabled} onClick={onClick} style={{ lineHeight: 0, pointerEvents: disabled ? 'none' : undefined }}>
+    <Link color='secondary' className={`${className} d-flex justify-content-center align-items-center position-relative`} disabled={disabled} onClick={onClick} style={{ cursor: 'default', lineHeight: 0, pointerEvents: disabled ? 'none' : undefined }}>
       <Icon name={name} width={width} height={height} />
       {children ? children : ''}
     </Link>
@@ -134,10 +178,10 @@ const ControlIcon: View<ControlIconProps> = ({ name, disabled, onClick, children
 };
 
 const ControlSeparator: View<{}> = () => {
-  return (<div className='mr-2'></div>);
+  return (<div className='mr-3 border-left h-100'></div>);
 };
 
-const Controls: FormField.ChildView<Value, ChildState, ChildMsg> = ({ state, dispatch, disabled = false }) => {
+const Controls: FormField.ChildView<Value, ChildState, InnerChildMsg> = ({ state, dispatch, disabled = false }) => {
   const isLoading = state.loading > 0;
   const isDisabled = disabled || isLoading;
   const onSelectFile = (event: ChangeEvent<HTMLInputElement>) => {
@@ -152,40 +196,47 @@ const Controls: FormField.ChildView<Value, ChildState, ChildMsg> = ({ state, dis
       <ControlIcon
         name='h1'
         disabled={isDisabled}
+        className='mr-2'
         onClick={() => dispatch({ tag: 'controlH1', value: undefined })} />
       <ControlIcon
         name='h2'
         disabled={isDisabled}
+        className='mr-2'
         onClick={() => dispatch({ tag: 'controlH2', value: undefined })} />
       <ControlIcon
         name='h3'
         disabled={isDisabled}
+        className='mr-3'
         onClick={() => dispatch({ tag: 'controlH3', value: undefined })} />
       <ControlSeparator />
       <ControlIcon
         name='bold'
         disabled={isDisabled}
-        width={0.85}
-        height={0.85}
+        width={0.9}
+        height={0.9}
+        className='mr-2'
         onClick={() => dispatch({ tag: 'controlBold', value: undefined })} />
       <ControlIcon
         name='italics'
-        width={0.85}
-        height={0.85}
+        width={0.9}
+        height={0.9}
         disabled={isDisabled}
+        className='mr-3'
         onClick={() => dispatch({ tag: 'controlItalics', value: undefined })} />
       <ControlSeparator />
       <ControlIcon
         name='unordered-list'
-        width={0.9}
-        height={0.9}
+        width={1}
+        height={1}
         disabled={isDisabled}
+        className='mr-2'
         onClick={() => dispatch({ tag: 'controlUnorderedList', value: undefined })} />
       <ControlIcon
         name='ordered-list'
-        width={0.9}
-        height={0.9}
+        width={1}
+        height={1}
         disabled={isDisabled}
+        className='mr-3'
         onClick={() => dispatch({ tag: 'controlOrderedList', value: undefined })} />
       <ControlSeparator />
       <ControlIcon name='image' disabled={isDisabled} width={1.1} height={1.1}>
@@ -201,7 +252,7 @@ const Controls: FormField.ChildView<Value, ChildState, ChildMsg> = ({ state, dis
           size='xs'
           color='secondary'
           className={`o-50 ${isLoading ? '' : 'd-none'}`} />
-        <Link newTab href={MARKDOWN_HELP_URL} color='secondary' className='ml-2' >
+        <Link newTab href={MARKDOWN_HELP_URL} color='primary' className='d-flex justify-content-center align-items-center ml-2' style={{ lineHeight: 0 }}>
           <Icon name='markdown' />
         </Link>
       </div>
@@ -209,7 +260,7 @@ const Controls: FormField.ChildView<Value, ChildState, ChildMsg> = ({ state, dis
   );
 };
 
-const ChildView: FormField.ChildView<Value, ChildState, ChildMsg> = props => {
+const ChildView: FormField.ChildView<Value, ChildState, InnerChildMsg> = props => {
   const { state, dispatch, className = '', validityClassName, disabled = false } = props;
   const isLoading = state.loading > 0;
   const isDisabled = disabled || isLoading;
