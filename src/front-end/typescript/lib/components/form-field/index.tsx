@@ -75,18 +75,28 @@ function makeUpdate<Value, ChildState extends ChildStateBase<Value>, InnerChildM
           state.update('showHelp', v => !v)
         ];
       case 'validate':
-        return [validate(state)];
+        return [state, async state => validate(state)];
       case 'child':
-        if (msg.value && (msg.value as ADT<'@validate'>).tag === '@validate') {
-          state = validate(state);
-        }
-        return updateComponentChild({
+        const result = updateComponentChild({
           state,
-          mapChildMsg: value => ({ tag: 'child', value }),
+          mapChildMsg: value => ({ tag: 'child', value } as const),
           childStatePath: ['child'],
           childUpdate,
           childMsg: msg.value
         });
+        return [
+          result[0],
+          async (state, dispatch) => {
+            if (msg.value && (msg.value as ADT<'@validate'>).tag === '@validate') {
+              dispatch({ tag: 'validate', value: undefined });
+            }
+            if (result[1]) {
+              return await result[1](state, dispatch);
+            } else {
+              return null;
+            }
+          }
+        ];
       default:
         return [state];
     }
