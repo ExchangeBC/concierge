@@ -576,7 +576,7 @@ const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
             disabled={isDisabled}
             required
             label='RFI Description'
-            help={`Suggested sections for this RFI\'s description: \n(1) Business Requirement(s) or Issue(s); \n(2) Brief Ministry Overview; \n(3) Objectives of this RFI; \n(4) Ministry Obligations; and \n(5) Response Instructions.`}
+            help={'Suggested sections for this RFI\'s description: \n(1) Business Requirement(s) or Issue(s); \n(2) Brief Ministry Overview; \n(3) Objectives of this RFI; \n(4) Ministry Obligations; and \n(5) Response Instructions.'}
             style={{ height: '50vh', minHeight: '400px' }} />
         </Col>
       </Row>

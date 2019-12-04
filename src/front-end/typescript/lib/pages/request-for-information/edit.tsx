@@ -263,6 +263,8 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           state = asyncStateResult || state;
           if (state.valid && shouldResetRfiForm) {
             state = state.setIn(['valid', 'rfiForm'], await resetRfiForm(state.valid.rfi, state.valid.rfiResponses, state.valid.rfiForm.activeTab));
+          } else if (!asyncStateResult) {
+            return null;
           }
           return state;
         }
