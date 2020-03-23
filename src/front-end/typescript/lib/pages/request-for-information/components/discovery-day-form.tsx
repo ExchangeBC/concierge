@@ -1,4 +1,6 @@
 import { MARKDOWN_HELP_URL } from 'front-end/config';
+import * as FormField from 'front-end/lib/components/form-field';
+import * as RichMarkdownEditor from 'front-end/lib/components/form-field/rich-markdown-editor';
 import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as Attendees from 'front-end/lib/pages/request-for-information/components/attendees';
 import { BigStat, SmallStats, Stats } from 'front-end/lib/pages/request-for-information/views/stats';
@@ -16,7 +18,7 @@ import { getString, rawFormatDate } from 'shared/lib';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { ADT, Omit, profileToName } from 'shared/lib/types';
-import { getInvalidValue, valid, Validation } from 'shared/lib/validators';
+import { getInvalidValue, mapValid, Validation } from 'shared/lib/validators';
 import { validateDiscoveryDayDate, validateDiscoveryDayDescription, validateDiscoveryDayLocation, validateDiscoveryDayRemoteAccess, validateDiscoveryDayTime, validateDiscoveryDayVenue } from 'shared/lib/validators/request-for-information';
 
 export const TAB_NAME = 'Discovery Day';
@@ -40,20 +42,18 @@ export interface Params {
 }
 
 type HelpFieldName
-  = 'description'
-  | 'location'
+  = 'location'
   | 'venue'
   | 'remoteAccess';
 
 export type Msg
   = ADT<'onChangeToggle', boolean>
-  | ADT<'onChangeDescription', string>
+  | ADT<'onChangeDescription', RichMarkdownEditor.Msg>
   | ADT<'onChangeDate', string>
   | ADT<'onChangeTime', string>
   | ADT<'onChangeLocation', string>
   | ADT<'onChangeVenue', string>
   | ADT<'onChangeRemoteAccess', string>
-  | ADT<'validateDescription'>
   | ADT<'validateDate'>
   | ADT<'validateTime'>
   | ADT<'validateLocation'>
@@ -64,7 +64,6 @@ export type Msg
 
 type FormFieldKeys
   = 'toggle'
-  | 'description'
   | 'date'
   | 'time'
   | 'location'
@@ -78,7 +77,7 @@ export interface State {
   discoveryDayResponses?: DdrResource.PublicDiscoveryDayResponse[];
   isEditing: boolean;
   toggle: Switch.State;
-  description: LongText.State;
+  description: Immutable<RichMarkdownEditor.State>;
   date: DateTime.State;
   time: DateTime.State;
   location: ShortText.State;
@@ -92,7 +91,7 @@ export type Values = RfiResource.CreateDiscoveryDayBody | undefined;
 export function getValues(state: State): Values {
   if (state.showToggle && !state.toggle.value) { return undefined; }
   return {
-    description: state.description.value,
+    description: FormField.getValue(state.description),
     date: state.date.value,
     time: state.time.value,
     location: state.location.value,
@@ -181,17 +180,12 @@ export const init: Init<Params, State> = async ({ showToggle, existingDiscoveryD
       value: showToggle && !!existingDiscoveryDay,
       inlineLabel: 'This RFI is associated with a Discovery Day session.'
     }),
-    description: LongText.init({
+    description: immutable(await RichMarkdownEditor.init({
       id: 'discovery-day-description',
-      required: false,
-      label: 'Description (Optional)',
-      placeholder: 'Provide a brief description of the session.',
       value: existingDiscoveryDay ? getDdString('description') : DESCRIPTION_DEFAULT_TEXT,
-      help: {
-        text: (<span>You can use <Link href={MARKDOWN_HELP_URL} newTab>Markdown</Link> to describe this session.</span>),
-        show: false
-      }
-    }),
+      errors: [],
+      validate: v => mapValid(validateDiscoveryDayDescription(v), w => w || '')
+    })),
     date: DateTime.init({
       id: 'discovery-day-date',
       type: 'date',
@@ -266,7 +260,13 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       }
       return [updateValue(state, 'toggle', msg.value)];
     case 'onChangeDescription':
-      return [updateValue(state, 'description', msg.value)];
+      return updateComponentChild({
+        state,
+        mapChildMsg: value => ({ tag: 'onChangeDescription', value }),
+        childStatePath: ['description'],
+        childUpdate: RichMarkdownEditor.update,
+        childMsg: msg.value
+      });
     case 'onChangeDate':
       return [updateValue(state, 'date', msg.value)];
     case 'onChangeTime':
@@ -277,16 +277,6 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       return [updateValue(state, 'venue', msg.value)];
     case 'onChangeRemoteAccess':
       return [updateValue(state, 'remoteAccess', msg.value)];
-    case 'validateDescription':
-      return [validateValue(state, 'description', v => {
-        const validation = validateDiscoveryDayDescription(v);
-        switch (validation.tag) {
-          case 'valid':
-            return valid(validation.value || '');
-          case 'invalid':
-            return validation;
-        }
-      })];
     case 'validateDate':
       return [validateDateAndTime(state)];
     case 'validateTime':
@@ -300,8 +290,6 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'toggleHelp':
       return [(() => {
         switch (msg.value) {
-          case 'description':
-            return state.setIn(['description', 'help', 'show'], !state.getIn(['description', 'help', 'show']));
           case 'location':
             return state.setIn(['location', 'help', 'show'], !state.getIn(['location', 'help', 'show']));
           case 'venue':
@@ -409,7 +397,6 @@ const Toggle: ComponentView<State, Msg> = ({ state, dispatch }) => {
 const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (!state.toggle.value && !state.existingDiscoveryDay) { return null; }
   const isDisabled = !state.isEditing;
-  const onChangeLongText = (tag: any) => LongText.makeOnChange(dispatch, value => ({ tag, value }));
   const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
   const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
   const toggleHelp = (value: HelpFieldName) => () => dispatch({ tag: 'toggleHelp', value });
@@ -422,14 +409,14 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
       </Row>
       <Row>
         <Col xs='12'>
-          <LongText.view
+          <RichMarkdownEditor.view
             state={state.description}
+            dispatch={mapComponentDispatch(dispatch, value => ({ tag: 'onChangeDescription', value } as const))}
             disabled={isDisabled}
-            onChangeDebounced={onChangeDebounced('validateDescription')}
-            onChange={onChangeLongText('onChangeDescription')}
-            toggleHelp={toggleHelp('description')}
-            style={{ height: '10rem' }}
-            autoFocus />
+            placeholder='Provide a brief description of the session.'
+            label='Description (Optional)'
+            help={(<span>You can use <Link href={MARKDOWN_HELP_URL} newTab>Markdown</Link> to describe this session.</span>)}
+            style={{ minHeight: '210px', maxHeight: '400px', height: '35vh' }} />
         </Col>
       </Row>
       <Row>

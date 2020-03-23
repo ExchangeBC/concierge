@@ -38,7 +38,7 @@ function AnchorLink(props: AnchorProps) {
     className = '',
     disabled = false,
     children,
-    href = '#',
+    href,
     route,
     onClick,
     newTab = false,
@@ -46,9 +46,9 @@ function AnchorLink(props: AnchorProps) {
     style
   } = props;
   // Give precedence to the `route` prop over the `href` prop.
-  const finalHref: string
+  const finalHref: string | undefined
     = disabled
-    ? ''
+    ? undefined
     : route
     ? router.routeToUrl(route)
     : href;

@@ -1,15 +1,19 @@
 import { MARKDOWN_HELP_URL } from 'front-end/config';
-import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
+import { makeStartLoading, makeStopLoading } from 'front-end/lib';
 import * as FormField from 'front-end/lib/components/form-field';
-import { Immutable, Init, Update, UpdateReturnValue, View, ViewElement } from 'front-end/lib/framework';
-import { createFile } from 'front-end/lib/http/api';
+import { Immutable, UpdateReturnValue, View, ViewElement } from 'front-end/lib/framework';
+import FileLink from 'front-end/lib/views/file-link';
 import Icon, { AvailableIcons } from 'front-end/lib/views/icon';
-import Link from 'front-end/lib/views/link';
-import React, { ChangeEvent } from 'react';
+import Link, { externalDest } from 'front-end/lib/views/link';
+import React from 'react';
 import { Spinner } from 'reactstrap';
-import { ADT } from 'shared/lib/types';
+import { SUPPORTED_IMAGE_EXTENSIONS } from 'shared/lib/resources/file';
+import { adt, ADT } from 'shared/lib/types';
+import { Validation } from 'shared/lib/validation';
 
 export type Value = string;
+
+export type UploadImage = (file: File) => Promise<Validation<{ name: string; url: string }>>;
 
 type Snapshot = [string, number, number]; // [value, selectionStart, selectionEnd]
 
@@ -32,11 +36,12 @@ interface ChildState extends FormField.ChildStateBase<Value> {
   loading: number;
   selectionStart: number;
   selectionEnd: number;
+  uploadImage: UploadImage;
 }
 
-export type State = FormField.State<Value, ChildState>;
-
-export type Params = FormField.Params<Value>;
+export interface ChildParams extends FormField.ChildParamsBase<Value> {
+  uploadImage: UploadImage;
+}
 
 type InnerChildMsg
   = ADT<'onChangeTextArea', Snapshot>
@@ -53,9 +58,17 @@ type InnerChildMsg
   | ADT<'controlImage', File>
   | ADT<'focus'>;
 
+type ExtraChildProps = {};
+
+type ChildComponent = FormField.ChildComponent<Value, ChildParams, ChildState, InnerChildMsg, ExtraChildProps>;
+
+export type State = FormField.State<Value, ChildState>;
+
+export type Params = FormField.Params<Value, ChildParams>;
+
 export type Msg = FormField.Msg<InnerChildMsg>;
 
-const childInit: Init<FormField.ChildParams<Value>, ChildState> = async params => ({
+const childInit: ChildComponent['init'] = async params => ({
   ...params,
   currentStackEntry: null,
   undo: emptyStack(),
@@ -65,8 +78,8 @@ const childInit: Init<FormField.ChildParams<Value>, ChildState> = async params =
   selectionEnd: 0
 });
 
-const startLoading: UpdateState<ChildState> = makeStartLoading('loading');
-const stopLoading: UpdateState<ChildState>  = makeStopLoading('loading');
+const startLoading = makeStartLoading<ChildState>('loading');
+const stopLoading = makeStopLoading<ChildState>('loading');
 
 interface InsertParams {
   separateLine?: boolean;
@@ -95,8 +108,8 @@ function insert(state: Immutable<ChildState>, params: InsertParams): UpdateRetur
   return [
     state,
     async (state, dispatch) => {
-      dispatch({ tag: '@validate', value: undefined });
-      dispatch({ tag: 'focus', value: undefined });
+      dispatch(adt('@validate'));
+      dispatch(adt('focus'));
       return null;
     }
   ];
@@ -118,7 +131,7 @@ function setSnapshot(state: Immutable<ChildState>, snapshot: Snapshot): Immutabl
 }
 
 function getStackEntry(state: Immutable<ChildState>): StackEntry {
-  return state.currentStackEntry || { tag: 'single', value: getSnapshot(state) };
+  return state.currentStackEntry || adt('single', getSnapshot(state));
 }
 
 function setStackEntry(state: Immutable<ChildState>, entry: StackEntry): Immutable<ChildState> {
@@ -151,7 +164,7 @@ function pushStack(state: Immutable<ChildState>, k: 'undo' | 'redo', entry: Stac
     // Otherwise, the newest (single) entries need to be batched.
     return [
       entry,
-      { tag: 'batch', value: stack[STACK_BATCH_SIZE - 1].value }, // convert single entry to batch
+      adt('batch', stack[STACK_BATCH_SIZE - 1].value), // convert single entry to batch
       ...stack.slice(STACK_BATCH_SIZE, MAX_STACK_ENTRIES - 2)
     ];
   });
@@ -167,7 +180,7 @@ function popStack(state: Immutable<ChildState>, k: 'undo' | 'redo'): [StackEntry
   ];
 }
 
-const childUpdate: Update<ChildState, FormField.ChildMsg<InnerChildMsg>> = ({ state, msg }) => {
+const childUpdate: ChildComponent['update'] = ({ state, msg }) => {
   switch (msg.tag) {
     case 'onChangeTextArea':
       state = pushStack(state, 'undo', getStackEntry(state));
@@ -232,13 +245,10 @@ const childUpdate: Update<ChildState, FormField.ChildMsg<InnerChildMsg>> = ({ st
         startLoading(state),
         async (state, dispatch) => {
           state = stopLoading(state);
-          const file = await createFile({
-            name: msg.value.name,
-            file: msg.value
-          });
-          if (file.tag === 'invalid') { return state; }
+          const uploadResult = await state.uploadImage(msg.value);
+          if (uploadResult.tag === 'invalid') { return state; }
           const result = insert(state, {
-            text: () => `![${msg.value.name}](/api/fileBlobs/${file.value._id})`
+            text: () => `![${uploadResult.value.name}](${uploadResult.value.url})`
           });
           state = result[0];
           if (result[1]) {
@@ -273,7 +283,7 @@ interface ControlIconProps {
 
 const ControlIcon: View<ControlIconProps> = ({ name, disabled, onClick, children, width = 1.25, height = 1.25, className = '' }) => {
   return (
-    <Link color='secondary' className={`${className} d-flex justify-content-center align-items-center position-relative`} disabled={disabled} onClick={onClick} style={{ cursor: 'default', lineHeight: 0, pointerEvents: disabled ? 'none' : undefined }}>
+    <Link color={disabled ? 'secondary' : 'dark'} className={`${className} d-flex justify-content-center align-items-center position-relative`} disabled={disabled} onClick={onClick} style={{ lineHeight: 0, pointerEvents: disabled ? 'none' : undefined }}>
       <Icon name={name} width={width} height={height} />
       {children ? children : ''}
     </Link>
@@ -284,15 +294,12 @@ const ControlSeparator: View<{}> = () => {
   return (<div className='mr-3 border-left h-100'></div>);
 };
 
-const Controls: FormField.ChildView<Value, ChildState, InnerChildMsg> = ({ state, dispatch, disabled = false }) => {
+const Controls: ChildComponent['view'] = ({ state, dispatch, disabled = false }) => {
   const isLoading = state.loading > 0;
   const isDisabled = disabled || isLoading;
-  const onSelectFile = (event: ChangeEvent<HTMLInputElement>) => {
+  const onSelectFile = (file: File) => {
     if (isDisabled) { return; }
-    const file = event.currentTarget.files && event.currentTarget.files[0];
-    if (file) {
-      dispatch({ tag: 'controlImage', value: file });
-    }
+    dispatch(adt('controlImage', file));
   };
   return (
     <div className='bg-light flex-grow-0 flex-shrink-0 d-flex flex-nowrap align-items-center px-3 py-2 form-control border-0'>
@@ -302,30 +309,30 @@ const Controls: FormField.ChildView<Value, ChildState, InnerChildMsg> = ({ state
         height={0.9}
         disabled={isDisabled || isStackEmpty(state.undo)}
         className='mr-2'
-        onClick={() => dispatch({ tag: 'controlUndo', value: undefined })} />
+        onClick={() => dispatch(adt('controlUndo'))} />
       <ControlIcon
         name='redo'
         width={0.9}
         height={0.9}
         disabled={isDisabled || isStackEmpty(state.redo)}
         className='mr-3'
-        onClick={() => dispatch({ tag: 'controlRedo', value: undefined })} />
+        onClick={() => dispatch(adt('controlRedo'))} />
       <ControlSeparator />
       <ControlIcon
         name='h1'
         disabled={isDisabled}
         className='mr-2'
-        onClick={() => dispatch({ tag: 'controlH1', value: undefined })} />
+        onClick={() => dispatch(adt('controlH1'))} />
       <ControlIcon
         name='h2'
         disabled={isDisabled}
         className='mr-2'
-        onClick={() => dispatch({ tag: 'controlH2', value: undefined })} />
+        onClick={() => dispatch(adt('controlH2'))} />
       <ControlIcon
         name='h3'
         disabled={isDisabled}
         className='mr-3'
-        onClick={() => dispatch({ tag: 'controlH3', value: undefined })} />
+        onClick={() => dispatch(adt('controlH3'))} />
       <ControlSeparator />
       <ControlIcon
         name='bold'
@@ -333,14 +340,14 @@ const Controls: FormField.ChildView<Value, ChildState, InnerChildMsg> = ({ state
         width={0.9}
         height={0.9}
         className='mr-2'
-        onClick={() => dispatch({ tag: 'controlBold', value: undefined })} />
+        onClick={() => dispatch(adt('controlBold'))} />
       <ControlIcon
         name='italics'
         width={0.9}
         height={0.9}
         disabled={isDisabled}
         className='mr-3'
-        onClick={() => dispatch({ tag: 'controlItalics', value: undefined })} />
+        onClick={() => dispatch(adt('controlItalics'))} />
       <ControlSeparator />
       <ControlIcon
         name='unordered-list'
@@ -348,37 +355,40 @@ const Controls: FormField.ChildView<Value, ChildState, InnerChildMsg> = ({ state
         height={1}
         disabled={isDisabled}
         className='mr-2'
-        onClick={() => dispatch({ tag: 'controlUnorderedList', value: undefined })} />
+        onClick={() => dispatch(adt('controlUnorderedList'))} />
       <ControlIcon
         name='ordered-list'
         width={1}
         height={1}
         disabled={isDisabled}
         className='mr-3'
-        onClick={() => dispatch({ tag: 'controlOrderedList', value: undefined })} />
+        onClick={() => dispatch(adt('controlOrderedList'))} />
       <ControlSeparator />
-      <ControlIcon name='image' disabled={isDisabled} width={1.1} height={1.1}>
-        <input
-          type='file'
-          className='position-absolute w-100 h-100'
-          style={{ top: '0px', left: '0px', opacity: 0 }}
-          value=''
-          onChange={onSelectFile} />
-      </ControlIcon>
-      <div className='ml-auto d-flex flex-nowrap align-items-center'>
+      <FileLink
+        className='p-0'
+        disabled={isDisabled}
+        style={{
+          pointerEvents: isDisabled ? 'none' : undefined
+        }}
+        onChange={onSelectFile}
+        accept={SUPPORTED_IMAGE_EXTENSIONS}
+        color='secondary'>
+        <Icon name='image' width={1.1} height={1.1} />
+      </FileLink>
+      <div className='ml-auto d-flex align-items-center'>
         <Spinner
-          size='xs'
+          size='sm'
           color='secondary'
           className={`o-50 ${isLoading ? '' : 'd-none'}`} />
-        <Link newTab href={MARKDOWN_HELP_URL} color='primary' className='d-flex justify-content-center align-items-center ml-2' style={{ lineHeight: 0 }}>
-          <Icon name='markdown' />
+        <Link newTab dest={externalDest(MARKDOWN_HELP_URL)} color='primary' className='d-flex justify-content-center align-items-center ml-2' style={{ lineHeight: 0 }}>
+          <Icon name='markdown' width={1.25} height={1.25} />
         </Link>
       </div>
     </div>
   );
 };
 
-const ChildView: FormField.ChildView<Value, ChildState, InnerChildMsg> = props => {
+const ChildView: ChildComponent['view'] = props => {
   const { state, dispatch, placeholder, className = '', validityClassName, disabled = false } = props;
   const isLoading = state.loading > 0;
   const isDisabled = disabled || isLoading;
@@ -387,17 +397,17 @@ const ChildView: FormField.ChildView<Value, ChildState, InnerChildMsg> = props =
     const start = target.selectionStart;
     const end = target.selectionEnd;
     if (start !== state.selectionStart || end !== state.selectionEnd) {
-      dispatch({ tag: 'onChangeSelection', value: [start, end] });
+      dispatch(adt('onChangeSelection', [start, end]));
     }
   };
   return (
-    <div className={`${className} ${validityClassName} form-control p-0 d-flex flex-column flex-nowrap align-items-stretch`}>
+    <div className={`form-control ${className} ${validityClassName} p-0 d-flex flex-column flex-nowrap align-items-stretch`}>
       <Controls {...props} />
       <textarea
         id={state.id}
         value={state.value}
-        disabled={isDisabled}
         placeholder={placeholder}
+        disabled={isDisabled}
         className={`${validityClassName} form-control flex-grow-1 border-left-0 border-right-0 border-bottom-0`}
         style={{
           borderTopLeftRadius: 0,
@@ -413,11 +423,11 @@ const ChildView: FormField.ChildView<Value, ChildState, InnerChildMsg> = props =
         }}
         onChange={e => {
           const value = e.currentTarget.value;
-          dispatch({ tag: 'onChangeTextArea', value: [
+          dispatch(adt('onChangeTextArea', [
             value,
             e.currentTarget.selectionStart,
             e.currentTarget.selectionEnd
-          ]});
+          ]));
           // Let the parent form field component know that the value has been updated.
           props.onChange(value);
         }}
@@ -430,9 +440,9 @@ const ChildView: FormField.ChildView<Value, ChildState, InnerChildMsg> = props =
             dispatch(msg);
           };
           if (isUndo) {
-            run({ tag: 'controlUndo', value: undefined });
+            run(adt('controlUndo'));
           } else if (isRedo) {
-            run({ tag: 'controlRedo', value: undefined });
+            run(adt('controlRedo'));
           }
         }}
         onSelect={e => onChangeSelection(e.currentTarget)}>
@@ -441,7 +451,7 @@ const ChildView: FormField.ChildView<Value, ChildState, InnerChildMsg> = props =
   );
 };
 
-export const component = FormField.makeComponent({
+export const component = FormField.makeComponent<Value, ChildParams, ChildState, InnerChildMsg, ExtraChildProps>({
   init: childInit,
   update: childUpdate,
   view: ChildView

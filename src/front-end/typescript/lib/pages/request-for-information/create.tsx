@@ -96,14 +96,13 @@ const stopPublishLoading: UpdateState<State>  = makeStopLoading('publishLoading'
 const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'rfiForm':
-      state = updateComponentChild({
+      return updateComponentChild({
         state,
         mapChildMsg: value => ({ tag: 'rfiForm', value }),
         childStatePath: ['rfiForm'],
         childUpdate: RfiForm.update,
         childMsg: msg.value
-      })[0];
-      return [state];
+      });
     case 'preview':
       return createAndShowPreview({
         state,

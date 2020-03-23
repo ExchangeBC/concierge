@@ -23,6 +23,7 @@ export interface ChildProps<Value, ChildState extends ChildStateBase<Value>, Inn
   className?: string;
   validityClassName: string;
   disabled?: boolean;
+  placeholder?: string;
   dispatch: Dispatch<ChildMsg<InnerChildMsg>>;
   onChange(value: Value): void;
 }
@@ -110,6 +111,7 @@ interface ViewProps<Value, ChildState extends ChildStateBase<Value>, InnerChildM
   required?: boolean;
   disabled?: boolean;
   label?: string;
+  placeholder?: string;
   help?: ViewElementChildren;
 }
 
@@ -200,6 +202,7 @@ function makeView<Value, ChildState extends ChildStateBase<Value>, InnerChildMsg
           className={childClassName}
           validityClassName={validityClassName}
           disabled={props.disabled}
+          placeholder={props.placeholder}
           dispatch={mapComponentDispatch(dispatch, value => ({ tag: 'child', value }))}
           onChange={() => debouncedValidate(dispatch)} />
         <ConditionalErrors {...props} />
