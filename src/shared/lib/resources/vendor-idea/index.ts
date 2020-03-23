@@ -62,7 +62,6 @@ export interface PublicVendorIdeaBase<UserType> {
 
 export interface PublicVendorIdeaForBuyers extends PublicVendorIdeaBase<UserType.Buyer> {
   latestVersion: PublicVersionForBuyers;
-  createdByName: string;
 }
 
 export interface PublicVendorIdeaForVendors extends PublicVendorIdeaBase<UserType.Vendor> {

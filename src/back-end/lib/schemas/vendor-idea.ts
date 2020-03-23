@@ -4,7 +4,7 @@ import * as UserSchema from 'back-end/lib/schemas/user';
 import * as mongoose from 'mongoose';
 import { PublicVendorIdea, PublicVendorIdeaForBuyers, PublicVendorIdeaForProgramStaff, PublicVendorIdeaForVendors, PublicVendorIdeaSlim, PublicVendorIdeaSlimForBuyers, PublicVendorIdeaSlimForProgramStaff, PublicVendorIdeaSlimForVendors, VersionContact, VersionDescription, VersionEligibility } from 'shared/lib/resources/vendor-idea';
 import { getLatestStatus, LogItemType, PublicLogItem } from 'shared/lib/resources/vendor-idea/log-item';
-import { profileToName, UserType } from 'shared/lib/types';
+import { UserType } from 'shared/lib/types';
 
 export interface Version {
   createdAt: Date;
@@ -54,12 +54,10 @@ async function makePublicVendorIdeaForBuyers(UserModel: UserSchema.Model, FileMo
   if (!latestVersion) { throw new Error('Vendor Idea does not have at least one version'); }
   const latestStatus = getLatestStatus(vi.log);
   if (!latestStatus) { throw new Error('Vendor Idea does not have at least one status'); }
-  const createdBy = await UserSchema.findPublicUserByIdUnsafely(UserModel, vi.createdBy);
   return {
     userType: UserType.Buyer,
     _id: vi._id.toString(),
     createdAt: vi.createdAt,
-    createdByName: profileToName(createdBy.profile),
     latestVersion: {
       createdAt: latestVersion.createdAt,
       attachments: await Promise.all(latestVersion.attachments.map(fileId => FileSchema.findPublicFileByIdUnsafely(FileModel, fileId))),

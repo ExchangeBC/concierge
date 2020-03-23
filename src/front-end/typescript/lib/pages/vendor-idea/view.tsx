@@ -165,7 +165,6 @@ const Details: View<{ vi: VendorIdea }> = ({ vi }) => {
         <Detail title='Commodity Code(s)' values={description.categories} titleColWidthMd={4} />
       </Col>
       <Col xs='12' md='5'>
-        <Detail title='Submitted by' values={[vi.createdByName]} titleColWidthMd={5} />
         <Detail title='Attachments' values={attachmentsValues} titleColWidthMd={5} />
       </Col>
     </Row>
