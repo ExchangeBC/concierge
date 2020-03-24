@@ -20,6 +20,7 @@ export interface LogItem {
   createdBy?: mongoose.Types.ObjectId; // undefined for system-generated log items
   type: LogItemType;
   note?: string;
+  attachments: mongoose.Types.ObjectId[];
 }
 
 export interface Data {
@@ -40,12 +41,13 @@ export function getLatestVersion(vi: Data): Version | undefined {
   }, undefined);
 }
 
-export async function makePublicLogItem(UserModel: UserSchema.Model, logItem: LogItem): Promise<PublicLogItem> {
+export async function makePublicLogItem(UserModel: UserSchema.Model, FileModel: FileSchema.Model, logItem: LogItem): Promise<PublicLogItem> {
   return {
     createdAt: logItem.createdAt,
     createdBy: logItem.createdBy && await UserSchema.findPublicUserByIdUnsafely(UserModel, logItem.createdBy),
     type: logItem.type,
-    note: logItem.note
+    note: logItem.note,
+    attachments: await Promise.all(logItem.attachments.map(fileId => FileSchema.findPublicFileByIdUnsafely(FileModel, fileId)))
   };
 }
 
@@ -86,7 +88,7 @@ async function makePublicVendorIdeaForProgramStaff(UserModel: UserSchema.Model, 
     latestStatus,
     createdBy: await UserSchema.findPublicUserByIdUnsafely(UserModel, vi.createdBy),
     // TODO maybe memoize the user lookup in the DB as this may cause unnecessary load
-    log: await Promise.all(vi.log.map(item => makePublicLogItem(UserModel, item)))
+    log: await Promise.all(vi.log.map(item => makePublicLogItem(UserModel, FileModel, item)))
   };
 }
 

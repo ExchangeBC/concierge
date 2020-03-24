@@ -499,16 +499,18 @@ export async function readManyRfiResponses(rfiId: string): Promise<ValidOrInvali
   }
 }
 
-interface RawLogItem extends Omit<LogItemResource.PublicLogItem, 'createdAt' | 'createdBy'> {
+interface RawLogItem extends Omit<LogItemResource.PublicLogItem, 'createdAt' | 'createdBy' | 'attachments'> {
   createdAt: string;
   createdBy?: RawUser;
+  attachments: RawFile[];
 }
 
 function rawLogItemToPublicLogItem(raw: RawLogItem): LogItemResource.PublicLogItem {
   return {
     ...raw,
     createdAt: new Date(raw.createdAt),
-    createdBy: raw.createdBy && rawUserToPublicUser(raw.createdBy)
+    createdBy: raw.createdBy && rawUserToPublicUser(raw.createdBy),
+    attachments: raw.attachments.map(file => rawFileToPublicFile(file))
   };
 }
 

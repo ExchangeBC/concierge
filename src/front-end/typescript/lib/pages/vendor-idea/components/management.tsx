@@ -1,4 +1,5 @@
 import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
+import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
 import * as Table from 'front-end/lib/components/table';
 import { Component, ComponentView, Dispatch, immutable, Immutable, Init, mapComponentDispatch, Update, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
@@ -8,14 +9,16 @@ import LogItemTypeSelectGroupLabel from 'front-end/lib/pages/vendor-idea/views/l
 import * as LongText from 'front-end/lib/views/form-field/long-text';
 import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
+import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { get } from 'lodash';
 import React from 'react';
 import { Col, Row } from 'reactstrap';
 import { compareDates, formatTime, rawFormatDate } from 'shared/lib';
+import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
 import { CreateValidationErrors, PublicLogItem } from 'shared/lib/resources/vendor-idea/log-item';
-import { ADT, profileToName } from 'shared/lib/types';
+import { ADT, profileToName, UserType } from 'shared/lib/types';
 import { getInvalidValue, mapValid, Validation } from 'shared/lib/validators';
 import { validateLogItemNote } from 'shared/lib/validators/vendor-idea/log-item';
 
@@ -43,14 +46,24 @@ const tableHeadCells: Table.THSpec[] = [
 
 function tableBodyRows(logItems: LogItem[], dispatch: Dispatch<Msg>): Table.RowsSpec {
   const className = (center?: boolean, wrap?: boolean) => `align-top ${center ? 'text-center' : ''} ${wrap ? 'text-wrap' : ''}`;
-  return logItems.map(li => {
+  return logItems.map((li, i) => {
     return [
       {
         children: (<LogItemTypeFull logItemType={li.type} />),
         className: className(false, true)
       },
       {
-        children: li.note || '-',
+        children: (
+          <div>
+            <div>{li.note || '-'}</div>
+            {li.attachments.map((a, j) => (
+              <Link href={makeFileBlobPath(a._id)} download className='d-flex align-items-start mt-2' key={`vi-log-item-attachment-${i}-${j}`}>
+                <Icon name='paperclip' color='primary' className='mr-2 mt-1 flex-shrink-0' width={1} height={1} />
+                {a.originalName}
+              </Link>
+            ))}
+          </div>
+        ),
         className: className(false, true)
       },
       {
@@ -75,6 +88,7 @@ export interface Params {
 export type Msg
   = ADT<'onChangeNewLogItemType', Select.Value>
   | ADT<'onChangeNewLogItemNote', string>
+  | ADT<'onChangeNewLogItemAttachments', FileMulti.Msg>
   | ADT<'onChangeLogItemTypeFilter', Select.Value>
   | ADT<'onChangeSearchFilter', string>
   | ADT<'table', Table.Msg>
@@ -92,6 +106,7 @@ export interface State {
   submitLoading: number;
   newLogItemType: Select.State;
   newLogItemNote: LongText.State;
+  newLogItemAttachments: Immutable<FileMulti.State>;
   logItemTypeFilter: Select.State;
   searchFilter: ShortText.State;
   table: Immutable<Table.State>;
@@ -135,6 +150,14 @@ export const init: Init<Params, State> = async ({ viId, logItems }) => {
       placeholder: 'Comments/Notes',
       value: ''
     }),
+    newLogItemAttachments: immutable(await FileMulti.init({
+      formFieldMulti: {
+        idNamespace: 'vi-management-new-log-item-attachments',
+        label: 'Attachments (Optional)',
+        required: false,
+        fields: []
+      }
+    })),
     logItemTypeFilter: Select.init({
       id: 'vi-management-log-item-type-filter',
       required: false,
@@ -165,6 +188,18 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'onChangeNewLogItemNote':
       state = updateValue(state, 'newLogItemNote', msg.value);
       return [validateValue(state, 'newLogItemNote', v => mapValid(validateLogItemNote(v), w => w || ''))];
+    case 'onChangeNewLogItemAttachments':
+      state = updateComponentChild({
+        state,
+        mapChildMsg: value => ({ tag: 'onChangeNewLogItemAttachments', value }),
+        childStatePath: ['newLogItemAttachments'],
+        childUpdate: FileMulti.update,
+        childMsg: msg.value
+      })[0];
+      // No need to validate attachments as FileMulti
+      // is fairly 'intelligent' about file names,
+      // and handles file size constraint validation as-is.
+      return [state];
     case 'onChangeLogItemTypeFilter':
       return [updateAndQuery(state, 'logItemTypeFilter', msg.value)];
     case 'onChangeSearchFilter':
@@ -189,10 +224,21 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
         async state => {
           state = stopSubmitLoading(state);
           if (!state.newLogItemType.value) { return state; }
+          //TODO
+          const uploadedFiles = await api.uploadFiles(FileMulti.getValues(state.newLogItemAttachments), {
+            tag: 'userType',
+            value: [UserType.ProgramStaff]
+          });
+          if (uploadedFiles.tag === 'invalid') {
+            return setErrors(state, {
+              attachments: uploadedFiles.value
+            });
+          }
           const result = await api.createViLogItem({
             vendorIdeaId: state.viId,
             type: state.newLogItemType.value.value,
-            note: state.newLogItemNote.value || undefined
+            note: state.newLogItemNote.value || undefined,
+            attachments: uploadedFiles.value
           });
           switch (result.tag) {
             case 'valid':
@@ -242,7 +288,8 @@ function validateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K,
 export function setErrors(state: Immutable<State>, errors: CreateValidationErrors): Immutable<State> {
   const getErrors = (k: keyof CreateValidationErrors) => get(errors, k, []);
   return state
-    .setIn(['newLogItemNote', 'errors'], getErrors('note'));
+    .setIn(['newLogItemNote', 'errors'], getErrors('note'))
+    .set('newLogItemAttachments', FileMulti.setErrors(state.newLogItemAttachments, errors.attachments || []));
 }
 
 export function hasProvidedRequiredFields(state: State): boolean {
@@ -252,7 +299,7 @@ export function hasProvidedRequiredFields(state: State): boolean {
 
 export function hasValidationErrors(state: State): boolean {
   const { newLogItemNote } = state;
-  return !!newLogItemNote.errors.length;
+  return !!newLogItemNote.errors.length || !FileMulti.isValid(state.newLogItemAttachments);
 }
 
 export function isValid(state: State): boolean {
@@ -263,7 +310,7 @@ const CreateEntry: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
   const onChangeLongText = (tag: any) => LongText.makeOnChange(dispatch, value => ({ tag, value }));
   const isSubmitLoading = state.submitLoading > 0;
-  const isDisabled = isSubmitLoading || !isValid(state);
+  const isDisabled = isSubmitLoading;
   const submit = () => dispatch({ tag: 'submit', value: undefined });
   const cancel = () => dispatch({ tag: 'cancel', value: undefined });
   return (
@@ -282,12 +329,24 @@ const CreateEntry: ComponentView<State, Msg> = ({ state, dispatch }) => {
         </Col>
         {state.newLogItemType.value
           ? (<Col xs='12' md='7' lg='8'>
-              <LongText.view
-                style={{ minHeight: '120px' }}
-                state={state.newLogItemNote}
-                onChange={onChangeLongText('onChangeNewLogItemNote')} />
-              <div className='d-flex flex-md-row-reverse flex-nowrap align-items-center'>
-                <LoadingButton color='primary' onClick={submit} loading={isSubmitLoading} disabled={isDisabled} className='text-nowrap'>Submit Entry</LoadingButton>
+              <div>
+                <LongText.view
+                  style={{ minHeight: '120px' }}
+                  state={state.newLogItemNote}
+                  disabled={isDisabled}
+                  onChange={onChangeLongText('onChangeNewLogItemNote')} />
+              </div>
+              <Row className='pt-3'>
+                <Col xs='12' md='10' lg='8'>
+                  <FileMulti.view
+                    state={state.newLogItemAttachments}
+                    dispatch={mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeNewLogItemAttachments' as const, value }))}
+                    labelWrapperClassName='mb-3'
+                    disabled={isDisabled} />
+                </Col>
+              </Row>
+              <div className='pt-3 d-flex flex-md-row-reverse flex-nowrap align-items-center'>
+                <LoadingButton color='primary' onClick={submit} loading={isSubmitLoading} disabled={isDisabled || !isValid(state)} className='text-nowrap'>Submit Entry</LoadingButton>
                 <Link onClick={cancel} color='secondary' disabled={isSubmitLoading} className='mx-3'>Cancel</Link>
               </div>
             </Col>)

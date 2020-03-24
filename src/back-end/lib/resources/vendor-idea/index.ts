@@ -266,7 +266,8 @@ const resource: Resource = {
           vendorIdea.log.push({
             createdAt: version.createdAt,
             type: LogItemType.EditsSubmitted,
-            note: 'The vendor has submitted changes to their application.'
+            note: 'The vendor has submitted changes to their application.',
+            attachments: []
           });
         }
         await vendorIdea.save();

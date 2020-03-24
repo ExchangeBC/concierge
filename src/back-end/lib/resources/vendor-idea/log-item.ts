@@ -4,13 +4,13 @@ import * as mailer from 'back-end/lib/mailer';
 import * as permissions from 'back-end/lib/permissions';
 import * as ViSchema from 'back-end/lib/schemas/vendor-idea';
 import { basicResponse, JsonResponseBody, makeJsonResponseBody, Response } from 'back-end/lib/server';
-import { validateVendorIdeaId } from 'back-end/lib/validators';
+import { validateFileIdArray, validateVendorIdeaId } from 'back-end/lib/validators';
 import { get, isObject } from 'lodash';
-import { getString } from 'shared/lib';
+import { getString, getStringArray } from 'shared/lib';
 import { CreateRequestBody, CreateValidationErrors, LogItemType, PublicLogItem } from 'shared/lib/resources/vendor-idea/log-item';
 import { validateLogItemNote, validateLogItemType } from 'shared/lib/validators/vendor-idea/log-item';
 
-type RequiredModels = 'VendorIdea' | 'User';
+type RequiredModels = 'VendorIdea' | 'User' | 'File';
 
 export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, Session>;
 
@@ -23,13 +23,15 @@ const resource: Resource = {
   create(Models) {
     const ViModel = Models.VendorIdea;
     const UserModel = Models.User;
+    const FileModel = Models.File;
     return {
       async transformRequest(request) {
         const body = request.body.tag === 'json' && isObject(request.body.value) ? request.body.value : {};
         return {
           vendorIdeaId: getString(body, 'vendorIdeaId'),
           type: getString(body, 'type'),
-          note: get(body, 'note')
+          note: get(body, 'note'),
+          attachments: getStringArray(body, 'attachments')
         };
       },
       async respond(request): Promise<Response<CreateResponseBody, Session>> {
@@ -55,14 +57,21 @@ const resource: Resource = {
         const validatedNote = validateLogItemNote(request.body.note);
         if (validatedNote.tag === 'invalid') {
           return respond(400, {
-            type: validatedNote.value
+            note: validatedNote.value
+          });
+        }
+        const validatedAttachments = await validateFileIdArray(FileModel, request.body.attachments);
+        if (validatedAttachments.tag === 'invalid') {
+          return respond(400, {
+            attachments: validatedAttachments.value
           });
         }
         const logItem: ViSchema.LogItem = {
           createdAt: new Date(),
           createdBy: request.session.user.id,
           type: validatedType.value,
-          note: validatedNote.value
+          note: validatedNote.value,
+          attachments: validatedAttachments.value.map(file => file._id)
         };
         vendorIdea.log.push(logItem);
         await vendorIdea.save();
@@ -76,7 +85,7 @@ const resource: Resource = {
             });
           }
         }
-        return respond(201, await ViSchema.makePublicLogItem(UserModel, logItem));
+        return respond(201, await ViSchema.makePublicLogItem(UserModel, FileModel, logItem));
       }
     };
   }

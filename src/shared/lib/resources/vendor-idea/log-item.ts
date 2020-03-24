@@ -1,3 +1,4 @@
+import { PublicFile } from 'shared/lib/resources/file';
 import { PublicUser } from 'shared/lib/resources/user';
 
 export enum LogItemType {
@@ -96,6 +97,7 @@ export interface PublicLogItem {
   createdBy?: PublicUser;
   type: LogItemType;
   note?: string;
+  attachments: PublicFile[];
 }
 
 interface BasicLogItem<Type = LogItemType> {
@@ -152,6 +154,7 @@ export interface CreateRequestBody {
   vendorIdeaId: string;
   type: string;
   note?: string;
+  attachments: string[];
 }
 
 export interface CreateValidationErrors {
@@ -159,4 +162,5 @@ export interface CreateValidationErrors {
   vendorIdeaId?: string[];
   type?: string[];
   note?: string[];
+  attachments?: string[][];
 }
