@@ -542,7 +542,7 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
             onChangeDebounced={onChangeDebounced('validateClosingTime')}
             onChange={onChangeShortText('onChangeClosingTime')} />
         </Col>
-        <Col xs='12' md='4' lg='3'>
+        <Col xs='12' md='4'>
           <NumberInput.view
             state={state.gracePeriodDays}
             disabled={isDisabled}
