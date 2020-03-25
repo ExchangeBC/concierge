@@ -14,7 +14,7 @@ import Link from 'front-end/lib/views/link';
 import LoadingButton from 'front-end/lib/views/loading-button';
 import { get } from 'lodash';
 import React from 'react';
-import { Col, Row } from 'reactstrap';
+import { Col, CustomInput, Row } from 'reactstrap';
 import { compareDates, formatTime, rawFormatDate } from 'shared/lib';
 import { makeFileBlobPath } from 'shared/lib/resources/file-blob';
 import { CreateValidationErrors, PublicLogItem } from 'shared/lib/resources/vendor-idea/log-item';
@@ -90,6 +90,7 @@ export type Msg
   | ADT<'onChangeNewLogItemNote', string>
   | ADT<'onChangeNewLogItemAttachments', FileMulti.Msg>
   | ADT<'onChangeLogItemTypeFilter', Select.Value>
+  | ADT<'onChangeLogItemAttachmentFilter', boolean>
   | ADT<'onChangeSearchFilter', string>
   | ADT<'table', Table.Msg>
   | ADT<'cancel'>
@@ -108,6 +109,7 @@ export interface State {
   newLogItemNote: LongText.State;
   newLogItemAttachments: Immutable<FileMulti.State>;
   logItemTypeFilter: Select.State;
+  logItemAttachmentFilter: boolean;
   searchFilter: ShortText.State;
   table: Immutable<Table.State>;
 }
@@ -165,6 +167,7 @@ export const init: Init<Params, State> = async ({ viId, logItems }) => {
       placeholder: 'All',
       options: { tag: 'optionGroups', value: getLogItemTypeDropdownItems() }
     }),
+    logItemAttachmentFilter: false,
     searchFilter: ShortText.init({
       id: 'vi-management-search-filter',
       required: false,
@@ -202,6 +205,9 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       return [state];
     case 'onChangeLogItemTypeFilter':
       return [updateAndQuery(state, 'logItemTypeFilter', msg.value)];
+    case 'onChangeLogItemAttachmentFilter':
+      state = state.set('logItemAttachmentFilter', msg.value);
+      return [query(state)];
     case 'onChangeSearchFilter':
       return [updateAndQuery(state, 'searchFilter', msg.value)];
     case 'table':
@@ -261,23 +267,30 @@ function updateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K, v
 }
 
 function liMatchesSearch(li: LogItem, query: RegExp): boolean {
-  return !!(li.note && li.note.match(query)) || !!li.createdByName.match(query);
+  return !!(li.note && li.note.match(query))
+      || !!li.createdByName.match(query)
+      || li.attachments.reduce((acc, a) => acc || !!a.originalName.match(query), false as boolean);
 }
 
-function updateAndQuery<K extends QueryKeys>(state: Immutable<State>, key: K, value: State[K]['value']): Immutable<State> {
-  // Update state with the filter value.
-  state = updateValue(state, key, value);
+function query(state: Immutable<State>): Immutable<State> {
   // Query the list of available RFIs based on all filters' state.
   const logItemTypeQuery = state.logItemTypeFilter.value && state.logItemTypeFilter.value.value;
   const rawSearchQuery = state.searchFilter.value;
   const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split(/\s+/).join('.*'), 'i') : null;
+  const attachmentsOnly = state.logItemAttachmentFilter;
   const logItems = state.logItems.filter(li => {
     let match = true;
+    match = match && (!attachmentsOnly || !!li.attachments.length);
     match = match && (!logItemTypeQuery || logItemTypeQuery === li.type);
     match = match && (!searchQuery || liMatchesSearch(li, searchQuery));
     return match;
   });
   return state.set('visibleLogItems', logItems); ;
+}
+
+function updateAndQuery<K extends QueryKeys>(state: Immutable<State>, key: K, value: State[K]['value']): Immutable<State> {
+  state = updateValue(state, key, value);
+  return query(state);
 }
 
 function validateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K, validate: (value: State[K]['value']) => Validation<State[K]['value']>): Immutable<State> {
@@ -373,6 +386,14 @@ const History: ComponentView<State, Msg> = ({ state, dispatch }) => {
             state={state.logItemTypeFilter}
             formatGroupLabel={LogItemTypeSelectGroupLabel}
             onChange={onChangeSelect('onChangeLogItemTypeFilter')} />
+        </Col>
+        <Col xs='12' md='3' lg='4' className='py-2 mb-3'>
+          <CustomInput
+            id='vi-management-filter-log-item-has-attachment'
+            type='checkbox'
+            label='Attachments Only'
+            checked={state.logItemAttachmentFilter}
+            onChange={event => dispatch({ tag: 'onChangeLogItemAttachmentFilter', value: event.currentTarget.checked })} />
         </Col>
         <Col xs='12' md='4' className='ml-md-auto'>
           <ShortText.view
