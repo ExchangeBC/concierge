@@ -139,5 +139,5 @@ export async function makeRequestBody(state: IntakeForm.State): Promise<ValidOrI
 }
 
 export function expressInterestHref(title: string): string {
-  return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`VII: ${title}`)}`;
+  return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Unsolicited Proposal: ${title}`)}`;
 }

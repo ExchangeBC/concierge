@@ -179,7 +179,7 @@ const Summary: View<{ title: string, summary: string }> = ({ title, summary }) =
           <FormSectionHeading text='Summary' />
           <p style={{ whiteSpace: 'pre-line' }}>{summary}</p>
           <p className='font-weight-bold'>
-            If you are interested in this Vendor-Initiated Idea, please contact the Procurement Concierge Program's staff at <Link href={expressInterestHref(title)}>{CONTACT_EMAIL}</Link>.
+            If you are interested in this Unsolicited Proposal, please contact the Procurement Concierge Program's staff at <Link href={expressInterestHref(title)}>{CONTACT_EMAIL}</Link>.
           </p>
         </Col>
       </Row>
@@ -232,7 +232,7 @@ const view: ComponentView<State, Msg> = props => {
     <div>
       <Row className='mb-5'>
         <Col xs='12' className='d-flex flex-column text-center align-items-center'>
-          <h1 className='h4'>Vendor-Initiated Idea</h1>
+          <h1 className='h4'>Unsolicited Proposal</h1>
           <h2 className='h1'>{description.title}</h2>
           <div className='text-secondary small'>
             Published on {formatDate(vi.createdAt)}
@@ -254,23 +254,23 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getAlerts: emptyPageAlerts,
   getMetadata(state) {
     if (state.tag === 'valid') {
-      return makePageMetadata(`${state.value.vi.latestVersion.description.title} — Vendor-Initiated Idea`);
+      return makePageMetadata(`${state.value.vi.latestVersion.description.title} — Unsolicited Proposal`);
     } else {
-      return makePageMetadata('Vendor-Initiated Idea');
+      return makePageMetadata('Unsolicited Proposal');
     }
   },
   getBreadcrumbs(state) {
     if (state.tag !== 'valid') { return []; }
     return [
       {
-        text: 'Vendor-Initiated Ideas',
+        text: 'Unsolicited Proposals',
         onClickMsg: newRoute({
           tag: 'viList',
           value: null
         })
       },
       {
-        text: state.tag === 'valid' ? state.value.vi.latestVersion.description.title : 'Vendor-Initiated Idea'
+        text: state.tag === 'valid' ? state.value.vi.latestVersion.description.title : 'Unsolicited Proposal'
       }
     ];
   },

@@ -43,13 +43,13 @@ function warningIdToString(warningId: WarningId): string {
     case WarningId.UserViewAsProgramStaff:
       return 'You must accept the terms and conditions in order to view user profiles.';
     case WarningId.CreateVi:
-      return 'You must accept the terms and conditions in order to create a Vendor-Initiated Idea.';
+      return 'You must accept the terms and conditions in order to create an Unsolicited Proposal.';
     case WarningId.EditVi:
-      return 'You must accept the terms and conditions in order to edit a Vendor-Initiated Idea Application.';
+      return 'You must accept the terms and conditions in order to edit an Unsolicited Proposal Application.';
     case WarningId.ViewVisAsBuyer:
-      return 'You must accept the terms and conditions in order to view Vendor-Initiated Ideas.';
+      return 'You must accept the terms and conditions in order to view Unsolicited Proposals.';
     case WarningId.UploadViApplicationTemplate:
-      return 'You must accept the terms and conditions in order to upload a Vendor-Initiated Idea Application template.';
+      return 'You must accept the terms and conditions in order to upload an Unsolicited Proposal Application template.';
   }
 }
 

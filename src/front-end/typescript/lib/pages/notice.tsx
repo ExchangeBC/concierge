@@ -152,13 +152,13 @@ function noticeIdToState(noticeId: NoticeId): State {
         title: 'Thank You',
         body: (
           <div>
-            <p>Your Vendor-Initiated Idea application has been received.</p>
+            <p>Your Unsolicited Proposal application has been received.</p>
             <p>Please note that it may take up to four weeks to review and process your application. A staff member from the Procurement Concierge Program will be in touch with you shortly.</p>
             <p>Please send an email to <Link href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Link> if you have any questions.</p>
           </div>
         ),
         button: {
-          text: 'View My Vendor-Initiated Ideas',
+          text: 'View My Unsolicited Proposals',
           route: {
             tag: 'viList' as const,
             value: null
@@ -169,9 +169,9 @@ function noticeIdToState(noticeId: NoticeId): State {
     case 'viEditedByVendor':
       return {
         title: 'Thank You',
-        body: 'Your changes to your Vendor-Initiated Idea application have been received. A staff member from the Procurement Concierge Program will be in touch with you shortly.',
+        body: 'Your changes to your Unsolicited Proposal application have been received. A staff member from the Procurement Concierge Program will be in touch with you shortly.',
         button: {
-          text: 'View My Vendor-Initiated Ideas',
+          text: 'View My Unsolicited Proposals',
           route: {
             tag: 'viList' as const,
             value: null
@@ -184,7 +184,7 @@ function noticeIdToState(noticeId: NoticeId): State {
         title: 'Unverified Account',
         body: (
           <div>
-            <p>You do not have permission to view Vendor-Initiated Ideas because your account has not yet been verified by the Procurement Concierge Program's staff.</p>
+            <p>You do not have permission to view Unsolicited Proposals because your account has not yet been verified by the Procurement Concierge Program's staff.</p>
             <p>Please send an email to <Link href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Link> if you have any questions.</p>
           </div>
         )

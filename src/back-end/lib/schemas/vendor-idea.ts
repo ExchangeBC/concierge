@@ -53,9 +53,9 @@ export async function makePublicLogItem(UserModel: UserSchema.Model, FileModel: 
 
 async function makePublicVendorIdeaForBuyers(UserModel: UserSchema.Model, FileModel: FileSchema.Model, vi: Data): Promise<PublicVendorIdeaForBuyers> {
   const latestVersion = getLatestVersion(vi);
-  if (!latestVersion) { throw new Error('Vendor Idea does not have at least one version'); }
+  if (!latestVersion) { throw new Error('Unsolicited Proposal does not have at least one version'); }
   const latestStatus = getLatestStatus(vi.log);
-  if (!latestStatus) { throw new Error('Vendor Idea does not have at least one status'); }
+  if (!latestStatus) { throw new Error('Unsolicited Proposal does not have at least one status'); }
   return {
     userType: UserType.Buyer,
     _id: vi._id.toString(),
@@ -70,9 +70,9 @@ async function makePublicVendorIdeaForBuyers(UserModel: UserSchema.Model, FileMo
 
 async function makePublicVendorIdeaForProgramStaff(UserModel: UserSchema.Model, FileModel: FileSchema.Model, vi: Data): Promise<PublicVendorIdeaForProgramStaff> {
   const latestVersion = getLatestVersion(vi);
-  if (!latestVersion) { throw new Error('Vendor Idea does not have at least one version'); }
+  if (!latestVersion) { throw new Error('Unsolicited Proposal does not have at least one version'); }
   const latestStatus = getLatestStatus(vi.log);
-  if (!latestStatus) { throw new Error('Vendor Idea does not have at least one status'); }
+  if (!latestStatus) { throw new Error('Unsolicited Proposal does not have at least one status'); }
   return {
     userType: UserType.ProgramStaff,
     _id: vi._id.toString(),
@@ -94,9 +94,9 @@ async function makePublicVendorIdeaForProgramStaff(UserModel: UserSchema.Model, 
 
 async function makePublicVendorIdeaForVendors(UserModel: UserSchema.Model, FileModel: FileSchema.Model, vi: Data): Promise<PublicVendorIdeaForVendors> {
   const latestVersion = getLatestVersion(vi);
-  if (!latestVersion) { throw new Error('Vendor Idea does not have at least one version'); }
+  if (!latestVersion) { throw new Error('Unsolicited Proposal does not have at least one version'); }
   const latestStatus = getLatestStatus(vi.log);
-  if (!latestStatus) { throw new Error('Vendor Idea does not have at least one status'); }
+  if (!latestStatus) { throw new Error('Unsolicited Proposal does not have at least one status'); }
   return {
     userType: UserType.Vendor,
     _id: vi._id.toString(),
@@ -126,9 +126,9 @@ export function makePublicVendorIdea(UserModel: UserSchema.Model, FileModel: Fil
 
 async function makePublicVendorIdeaSlimForBuyers(UserModel: UserSchema.Model, vi: Data): Promise<PublicVendorIdeaSlimForBuyers> {
   const latestVersion = getLatestVersion(vi);
-  if (!latestVersion) { throw new Error('Vendor Idea does not have at least one version'); }
+  if (!latestVersion) { throw new Error('Unsolicited Proposal does not have at least one version'); }
   const latestStatus = getLatestStatus(vi.log);
-  if (!latestStatus) { throw new Error('Vendor Idea does not have at least one status'); }
+  if (!latestStatus) { throw new Error('Unsolicited Proposal does not have at least one status'); }
   return {
     userType: UserType.Buyer,
     _id: vi._id.toString(),
@@ -149,9 +149,9 @@ async function makePublicVendorIdeaSlimForProgramStaff(UserModel: UserSchema.Mod
 
 async function makePublicVendorIdeaSlimForVendors(UserModel: UserSchema.Model, vi: Data): Promise<PublicVendorIdeaSlimForVendors> {
   const latestVersion = getLatestVersion(vi);
-  if (!latestVersion) { throw new Error('Vendor Idea does not have at least one version'); }
+  if (!latestVersion) { throw new Error('Unsolicited Proposal does not have at least one version'); }
   const latestStatus = getLatestStatus(vi.log);
-  if (!latestStatus) { throw new Error('Vendor Idea does not have at least one status'); }
+  if (!latestStatus) { throw new Error('Unsolicited Proposal does not have at least one status'); }
   return {
     userType: UserType.Vendor,
     _id: vi._id.toString(),
@@ -179,7 +179,7 @@ export function makePublicVendorIdeaSlim(UserModel: UserSchema.Model, vi: Data, 
 export async function findPublicVendorIdeaByIdUnsafely(ViModel: Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, viId: mongoose.Types.ObjectId | string, targetUserType: UserType): Promise<PublicVendorIdea> {
   const vi = await ViModel.findById(viId);
   if (!vi) {
-    throw new Error('Vendor Idea does not exist');
+    throw new Error('Unsolicited Proposal does not exist');
   } else {
     return await makePublicVendorIdea(UserModel, FileModel, vi, targetUserType);
   }

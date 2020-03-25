@@ -56,7 +56,7 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
             <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>Requests for Information</Link>
           </NavItem>
           <NavItem>
-            <Link nav route={viListRoute} className={linkClassName(isVendorIdeaListRoute)} onClick={onClick}>Vendor-Initiated Ideas</Link>
+            <Link nav route={viListRoute} className={linkClassName(isVendorIdeaListRoute)} onClick={onClick}>Unsolicited Proposals</Link>
           </NavItem>
           <NavItem>
             <Link nav route={myProfileRoute} className={linkClassName(isMyProfileRoute)} onClick={onClick}>My Profile</Link>
@@ -73,7 +73,7 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
             <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>Requests for Information</Link>
           </NavItem>
           <NavItem>
-            <Link nav route={viListRoute} className={linkClassName(isVendorIdeaListRoute)} onClick={onClick}>My Vendor-Initiated Ideas</Link>
+            <Link nav route={viListRoute} className={linkClassName(isVendorIdeaListRoute)} onClick={onClick}>My Unsolicited Proposals</Link>
           </NavItem>
           <NavItem>
             <Link nav route={myProfileRoute} className={linkClassName(isMyProfileRoute)} onClick={onClick}>My Profile</Link>
@@ -90,7 +90,7 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
             <Link nav route={rfiListRoute} className={linkClassName(isRequestForInformationListRoute)} onClick={onClick}>Requests for Information</Link>
           </NavItem>
           <NavItem>
-            <Link nav route={viListRoute} className={linkClassName(isVendorIdeaListRoute)} onClick={onClick}>Vendor-Initiated Ideas</Link>
+            <Link nav route={viListRoute} className={linkClassName(isVendorIdeaListRoute)} onClick={onClick}>Unsolicited Proposals</Link>
           </NavItem>
           <NavItem>
             <Link nav route={userListRoute} className={linkClassName(isUserListRoute)} onClick={onClick}>Users</Link>

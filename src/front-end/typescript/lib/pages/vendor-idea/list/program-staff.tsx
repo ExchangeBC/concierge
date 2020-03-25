@@ -306,7 +306,7 @@ function tableBodyRows(vis: VendorIdea[], dispatch: Dispatch<Msg>): Table.RowsSp
 
 const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (!state.vis.length) { return (<div>There are currently no Vendor Initiated-Ideas available.</div>); }
-  if (!state.visibleVis.length) { return (<div>There are no Vendor-Initiated Ideas that match the search criteria.</div>); }
+  if (!state.visibleVis.length) { return (<div>There are no Unsolicited Proposals that match the search criteria.</div>); }
   const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
   return (
     <Table.view
@@ -327,7 +327,7 @@ export const view: ComponentView<State, Msg> = props => {
     <div>
       <Row className='mb-5'>
         <Col xs='12' md='9' lg='8'>
-          <h1>Vendor-Initiated Ideas</h1>
+          <h1>Unsolicited Proposals</h1>
         </Col>
       </Row>
       <Row className='mb-5'>
@@ -364,7 +364,7 @@ export const getModal: PageGetModal<State, Msg> = state => {
   if (state.promptEditConfirmation) {
     return {
       title: 'Review Terms and Conditions',
-      body: 'You must accept the Procurement Concierge Terms and Conditions in order to view or edit a Vendor-Initiated Idea.',
+      body: 'You must accept the Procurement Concierge Terms and Conditions in order to view or edit an Unsolicited Proposal.',
       onCloseMsg: { tag: 'hideEditConfirmationPrompt', value: undefined },
       actions: [
         {
@@ -383,7 +383,7 @@ export const getModal: PageGetModal<State, Msg> = state => {
   } else if (state.promptUploadTemplateTermsConfirmation) {
     return {
       title: 'Review Terms and Conditions',
-      body: 'You must accept the Procurement Concierge Terms and Conditions in order to upload a Vendor-Initiated Idea Application template.',
+      body: 'You must accept the Procurement Concierge Terms and Conditions in order to upload an Unsolicited Proposal Application template.',
       onCloseMsg: { tag: 'hideUploadTemplateTermsConfirmationPrompt', value: undefined },
       actions: [
         {
@@ -415,7 +415,7 @@ export const getModal: PageGetModal<State, Msg> = state => {
   } else if (state.promptUploadTemplateConfirmation) {
     return {
       title: 'Upload New Template?',
-      body: 'The current version of the Vendor-Initiated Idea Application template will be removed, and cannot be recovered once it has been replaced.',
+      body: 'The current version of the Unsolicited Proposal Application template will be removed, and cannot be recovered once it has been replaced.',
       onCloseMsg: { tag: 'hideUploadTemplateConfirmationPrompt', value: undefined },
       actions: [
         {

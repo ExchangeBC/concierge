@@ -119,15 +119,15 @@ export async function validateRfiId(RfiModel: RfiSchema.Model, id: string | mong
 export async function validateVendorIdeaId(ViModel: ViSchema.Model, id: string | mongoose.Types.ObjectId, latestStatus?: LogItemTypeStatus[]): Promise<Validation<InstanceType<ViSchema.Model>>> {
   const validatedObjectId = typeof id === 'string' ? validateObjectIdString(id) : valid(id);
   if (validatedObjectId.tag === 'invalid') {
-    return invalid([`Vendor Idea's ID "${id}" is not valid.`]);
+    return invalid([`Unsolicited Proposal's ID "${id}" is not valid.`]);
   }
   const vi = await ViModel.findById(validatedObjectId.value);
   if (!vi) {
-    return invalid(['Vendor Idea does not exist.']);
+    return invalid(['Unsolicited Proposal does not exist.']);
   }
   const matchesLatestStatus = !!latestStatus && includes(latestStatus, getLatestStatus(vi.log));
   if (latestStatus && !matchesLatestStatus) {
-    return invalid([`Vendor Idea's latest status is not one of: ${latestStatus.join(', ')}`]);
+    return invalid([`Unsolicited Proposal's latest status is not one of: ${latestStatus.join(', ')}`]);
   }
   return valid(vi);
 }

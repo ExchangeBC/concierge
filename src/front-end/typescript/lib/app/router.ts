@@ -331,7 +331,7 @@ const router: Router<Route> = {
       }
     },
     {
-      path: '/vendor-ideas/create',
+      path: '/unsolicited-proposals/create',
       makeRoute() {
         return {
           tag: 'viCreate',
@@ -340,7 +340,7 @@ const router: Router<Route> = {
       }
     },
     {
-      path: '/vendor-ideas/:viId/edit',
+      path: '/unsolicited-proposals/:viId/edit',
       makeRoute({ params, query }) {
         return {
           tag: 'viEdit',
@@ -358,7 +358,7 @@ const router: Router<Route> = {
       }
     },
     {
-      path: '/vendor-ideas/:viId/view',
+      path: '/unsolicited-proposals/:viId/view',
       makeRoute({ params }) {
         return {
           tag: 'viView',
@@ -369,7 +369,7 @@ const router: Router<Route> = {
       }
     },
     {
-      path: '/vendor-ideas',
+      path: '/unsolicited-proposals',
       makeRoute() {
         return {
           tag: 'viList',
@@ -490,7 +490,7 @@ const router: Router<Route> = {
       }
     },
     {
-      path: '/notice/vendor-ideas/created',
+      path: '/notice/unsolicited-proposals/created',
       makeRoute() {
         return {
           tag: 'notice',
@@ -504,7 +504,7 @@ const router: Router<Route> = {
       }
     },
     {
-      path: '/notice/vendor-ideas/edited-by-vendor',
+      path: '/notice/unsolicited-proposals/edited-by-vendor',
       makeRoute() {
         return {
           tag: 'notice',
@@ -518,7 +518,7 @@ const router: Router<Route> = {
       }
     },
     {
-      path: '/notice/vendor-ideas/unverified-buyer',
+      path: '/notice/unsolicited-proposals/unverified-buyer',
       makeRoute() {
         return {
           tag: 'notice',
@@ -604,13 +604,13 @@ const router: Router<Route> = {
       case 'requestForInformationList':
         return '/requests-for-information';
       case 'viCreate':
-        return '/vendor-ideas/create';
+        return '/unsolicited-proposals/create';
       case 'viEdit':
-        return `/vendor-ideas/${route.value.viId}/edit${route.value.activeTab ? `?activeTab=${encodeURIComponent(route.value.activeTab)}` : ''}`;
+        return `/unsolicited-proposals/${route.value.viId}/edit${route.value.activeTab ? `?activeTab=${encodeURIComponent(route.value.activeTab)}` : ''}`;
       case 'viView':
-        return `/vendor-ideas/${route.value.viId}/view`;
+        return `/unsolicited-proposals/${route.value.viId}/view`;
       case 'viList':
-        return '/vendor-ideas';
+        return '/unsolicited-proposals';
       case 'markdown':
         return (() => {
           switch (route.value.documentId) {
@@ -650,11 +650,11 @@ const router: Router<Route> = {
             case 'feedbackSubmitted':
               return '/notice/feedback-submitted'
             case 'viCreated':
-              return '/notice/vendor-ideas/created';
+              return '/notice/unsolicited-proposals/created';
             case 'viEditedByVendor':
-              return '/notice/vendor-ideas/edited-by-vendor';
+              return '/notice/unsolicited-proposals/edited-by-vendor';
             case 'viUnverifiedBuyer':
-              return '/notice/vendor-ideas/unverified-buyer';
+              return '/notice/unsolicited-proposals/unverified-buyer';
           }
         })();
     }

@@ -227,8 +227,8 @@ const makeCategoryString = (categories: string[]): string => {
 
 const Results: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (state.tag === 'invalid') { return null; }
-  if (!state.value.vis.length) { return (<div>There are currently no Vendor-Initiated Ideas available.</div>); }
-  if (!state.value.visibleVis.length) { return (<div>There are no Vendor-Initiated Ideas that match the search criteria.</div>); }
+  if (!state.value.vis.length) { return (<div>There are currently no Unsolicited Proposals available.</div>); }
+  if (!state.value.visibleVis.length) { return (<div>There are no Unsolicited Proposals that match the search criteria.</div>); }
   return (
     <div>
       <Row className='justify-content-md-center'>
@@ -270,9 +270,9 @@ export const view: ComponentView<State, Msg> = props => {
     <div>
       <Row className='mb-5'>
         <Col xs='12' md='9' lg='8'>
-          <h1>Vendor-Initiated Ideas</h1>
+          <h1>Unsolicited Proposals</h1>
           <p>
-            The following list contains Vendor-Initiated Ideas (VIIs) that are eligible to be purchased by government.
+            The following list contains Unsolicited Proposals that are eligible to be purchased by government.
           </p>
         </Col>
       </Row>

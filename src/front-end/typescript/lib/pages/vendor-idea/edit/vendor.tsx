@@ -219,7 +219,7 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <Row>
         <Col xs='12' md='10'>
           <h3 className='d-flex flex-column-reverse flex-md-row align-items-start align-items-md-center flex-wrap'>
-            Vendor-Initiated Idea Application
+            Unsolicited Proposal Application
             <LogItemTypeBadge
               logItemType={vi.latestStatus}
               className='d-block d-md-inline mb-2 mb-md-0 ml-md-3 font-size-base' />
@@ -255,23 +255,23 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 export const getMetadata: PageGetMetadata<State> = state => {
   if (state.tag === 'valid') {
-    return makePageMetadata(`${state.value.vi.latestVersion.description.title} — Vendor-Initiated Idea Application`);
+    return makePageMetadata(`${state.value.vi.latestVersion.description.title} — Unsolicited Proposal Application`);
   } else {
-    return makePageMetadata('Edit a Vendor-Initiated Idea Application');
+    return makePageMetadata('Edit an Unsolicited Proposal Application');
   }
 };
 
 export const getBreadcrumbs: PageGetBreadcrumbs<State, Msg> = state => {
   return [
     {
-      text: 'My Vendor-Initiated Ideas',
+      text: 'My Unsolicited Proposals',
       onClickMsg: newRoute({
         tag: 'viList',
         value: null
       })
     },
     {
-      text: state.tag === 'valid' ? state.value.vi.latestVersion.description.title : 'Edit a Vendor-Initiated Idea Application'
+      text: state.tag === 'valid' ? state.value.vi.latestVersion.description.title : 'Edit an Unsolicited Proposal Application'
     }
   ];
 };

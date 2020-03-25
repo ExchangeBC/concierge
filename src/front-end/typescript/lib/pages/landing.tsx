@@ -142,7 +142,7 @@ const Features: ComponentView<State, Msg> = ({ state, dispatch }) => {
             <Icon name='matchmaking' color='secondary' width={4.5} height={4} />
             <small className='text-uppercase text-center font-weight-bold text-success mt-3 mb-2 w-100'>Available Now</small>
             <h4 className='text-center mb-3 font-weight-bold w-100'>
-              Vendor-Initiated Ideas
+              Unsolicited Proposals
             </h4>
             <p className='text-center mb-0'>
               Some copy text is required here. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque tempus, lectus in porttitor accumsan, diam est blandit eros, sit amet maximus sapien odio in enim.

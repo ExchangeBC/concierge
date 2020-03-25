@@ -147,7 +147,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
       placeholder: 'Please limit your response to 500 words.',
       value: getVi(['eligibility', 'productOffering'], ''),
       help: {
-        text: 'If the Province has purchased the product or service before, or the product or service is not a vast improvement on what has been purchased before, and/or the public sector need has not been demonstrated, the VII does not meet the requirements of the Program.',
+        text: 'If the Province has purchased the product or service before, or the product or service is not a vast improvement on what has been purchased before, and/or the public sector need has not been demonstrated, the Unsolicited Proposal does not meet the requirements of the Program.',
         show: false
       }
     }),
@@ -226,7 +226,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
       formFieldMulti: {
         idNamespace: 'vi-attachments',
         label: 'Section 1: Attachment(s)',
-        description: 'Please attach the completed "Vendor-Initiated Idea Application - Detailed Information" document. You may also attach any additional documents that you wish to be considered as part of your application.',
+        description: 'Please attach the completed "Unsolicited Proposal Application - Detailed Information" document. You may also attach any additional documents that you wish to be considered as part of your application.',
         required: false,
         fields: getVi(['attachments'], [])
           .map((attachment: FileResource.PublicFile) => {
@@ -580,8 +580,8 @@ const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <Row className='mb-4'>
         <Col xs='12' md='10' lg='8'>
           <h3 className='mb-4'>Section 3: Description</h3>
-          <p>If your VII is accepted into the Procurement Concierge Program, please note that information about the VII will be made available to Public Sector Buyers on the program's web application.</p>
-          <p className='mb-0'>As authentication cannot absolutely guarantee that only public sector staff will have access to the information about the VII, please do not include details related to confidential information or trade secrets.</p>
+          <p>If your Unsolicited Proposal is accepted into the Procurement Concierge Program, please note that information about the Unsolicited Proposal will be made available to Public Sector Buyers on the program's web application.</p>
+          <p className='mb-0'>As authentication cannot absolutely guarantee that only public sector staff will have access to the information about the Unsolicited Proposal, please do not include details related to confidential information or trade secrets.</p>
         </Col>
       </Row>
       <Row>
@@ -635,7 +635,7 @@ const Contact: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <Row className='mb-4'>
         <Col xs='12' md='10' lg='8'>
           <h3 className='mb-4'>Section 4: Contact Information</h3>
-          <p className='mb-0'>Please provide the contact information for the individual that the Procurement Concierge Program should discuss the VII with.</p>
+          <p className='mb-0'>Please provide the contact information for the individual that the Procurement Concierge Program should discuss the Unsolicited Proposal with.</p>
         </Col>
       </Row>
       <Row>

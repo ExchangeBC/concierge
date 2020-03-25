@@ -116,7 +116,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     }
   },
   getMetadata(state) {
-    return makePageMetadata('Vendor-Initiated Ideas');
+    return makePageMetadata('Unsolicited Proposals');
   },
   getBreadcrumbs: emptyPageBreadcrumbs,
   getModal(state) {

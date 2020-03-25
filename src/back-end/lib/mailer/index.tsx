@@ -734,16 +734,16 @@ interface CreateViLogItemEligibleToVendorProps {
 }
 
 export async function createViLogItemEligibleToVendor({ title, id, to }: CreateViLogItemEligibleToVendorProps): Promise<void> {
-  const subject = 'Your Vendor-Initiated Idea Application';
+  const subject = 'Your Unsolicited Proposal Application';
   await send({
     to,
     subject,
     html: templates.simple({
       title: subject,
-      description: `Your Vendor-Initiated Idea (${title}) application has been reviewed, and has been found eligible for the Procurement Concierge Program. A Program staff member will reach out to you to discuss next steps.`,
+      description: `Your Unsolicited Proposal (${title}) application has been reviewed, and has been found eligible for the Procurement Concierge Program. A Program staff member will reach out to you to discuss next steps.`,
       callToAction: {
-        text: 'View My Vendor-Initiated Idea',
-        url: templates.makeUrl(`vendor-ideas/${id}/edit`)
+        text: 'View My Unsolicited Proposal',
+        url: templates.makeUrl(`unsolicited-proposals/${id}/edit`)
       }
     })
   });
@@ -757,24 +757,24 @@ interface CreateViToProgramStaff {
 }
 
 export async function createViToProgramStaff({ title, createdAt, vendorName, id }: CreateViToProgramStaff): Promise<void> {
-  const subject = 'Vendor-Initiated Idea Application Received';
+  const subject = 'Unsolicited Proposal Application Received';
   await send({
     to: CONTACT_EMAIL,
     subject,
     html: templates.simple({
       title: subject,
-      description: 'A Vendor-Initiated Idea Application has been submitted for review by the Procurement Concierge Program.',
+      description: 'An Unsolicited Proposal Application has been submitted for review by the Procurement Concierge Program.',
       descriptionLists: [{
         title: 'Application Details',
         items: [
           { name: 'Vendor Name', value: vendorName },
-          { name: 'VII Title', value: title },
+          { name: 'Unsolicited Proposal Title', value: title },
           { name: 'Date Submitted', value: formatDateAndTime(createdAt) }
         ]
       }],
       callToAction: {
-        text: 'View Vendor-Initiated Idea',
-        url: templates.makeUrl(`vendor-ideas/${id}/edit`)
+        text: 'View Unsolicited Proposal',
+        url: templates.makeUrl(`unsolicited-proposals/${id}/edit`)
       }
     })
   });
@@ -785,23 +785,23 @@ interface UpdateViToProgramStaff extends Omit<CreateViToProgramStaff, 'createdAt
 }
 
 export async function updateViToProgramStaffByVendor({ title, editsReceivedAt, vendorName, id }: UpdateViToProgramStaff): Promise<void> {
-  const subject = 'Vendor-Initiated Idea Application: Edits Received';
+  const subject = 'Unsolicited Proposal Application: Edits Received';
   await send({
     to: CONTACT_EMAIL,
     subject,
     html: templates.simple({ title: subject,
-      description: 'A Vendor has submitted edits to their Vendor-Initiated Idea Application.',
+      description: 'A Vendor has submitted edits to their Unsolicited Proposal Application.',
       descriptionLists: [{
         title: 'Application Details',
         items: [
           { name: 'Vendor Name', value: vendorName },
-          { name: 'VII Title', value: title },
+          { name: 'Unsolicited Proposal Title', value: title },
           { name: 'Date Edits Received', value: formatDateAndTime(editsReceivedAt) }
         ]
       }],
       callToAction: {
-        text: 'View Vendor-Initiated Idea',
-        url: templates.makeUrl(`vendor-ideas/${id}/edit`)
+        text: 'View Unsolicited Proposal',
+        url: templates.makeUrl(`unsolicited-proposals/${id}/edit`)
       }
     })
   });

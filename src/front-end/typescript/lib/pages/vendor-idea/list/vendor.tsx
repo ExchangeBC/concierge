@@ -259,7 +259,7 @@ function tableBodyRows(vis: VendorIdea[], dispatch: Dispatch<Msg>): Table.RowsSp
 
 const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (!state.vis.length) { return (<div>There are currently no Vendor Initiated-Ideas available.</div>); }
-  if (!state.visibleVis.length) { return (<div>There are no Vendor-Initiated Ideas that match the search criteria.</div>); }
+  if (!state.visibleVis.length) { return (<div>There are no Unsolicited Proposals that match the search criteria.</div>); }
   const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
   return (
     <Table.view
@@ -279,13 +279,13 @@ export const view: ComponentView<State, Msg> = props => {
     <div>
       <Row className='mb-5'>
         <Col xs='12' md='10' lg='9'>
-          <h1>My Vendor-Initiated Ideas</h1>
+          <h1>My Unsolicited Proposals</h1>
           <p style={{ marginBottom: '2rem' }}>
-            To submit a Vendor-Initiated Idea (VII), <b>please download and fill out the detailed information portion of the application</b> using the "Download Application – Detailed Information" button below. Once the application has been completed, you may submit your idea for the Procurement Concierge Program's staff to review by clicking the "Create Vendor-Initiated Idea" button and filling out the form provided.
+            To submit an Unsolicited Proposal, <b>please download and fill out the detailed information portion of the application</b> using the "Download Application – Detailed Information" button below. Once the application has been completed, you may submit your idea for the Procurement Concierge Program's staff to review by clicking the "Create Unsolicited Proposal" button and filling out the form provided.
           </p>
           <div className='d-flex flex-column flex-md-row align-items-start text-nowrap'>
             <Link button download color='info' href={VI_APPLICATION_DOWNLOAD_URL} className='mr-0 mr-md-2 mb-2 mb-md-0'>1. Download Application – Detailed Information</Link>
-            <Link button color='primary' onClick={createVi}>2. Create Vendor-Initiated Idea</Link>
+            <Link button color='primary' onClick={createVi}>2. Create Unsolicited Proposal</Link>
           </div>
         </Col>
       </Row>
@@ -299,7 +299,7 @@ export const getModal: PageGetModal<State, Msg> = state => {
   if (state.promptCreateConfirmation) {
     return {
       title: 'Review Terms and Conditions',
-      body: 'You must accept the Procurement Concierge Terms and Conditions in order to create a Vendor-Initiated Idea.',
+      body: 'You must accept the Procurement Concierge Terms and Conditions in order to create an Unsolicited Proposal.',
       onCloseMsg: { tag: 'hideCreateConfirmationPrompt', value: undefined },
       actions: [
         {
@@ -318,7 +318,7 @@ export const getModal: PageGetModal<State, Msg> = state => {
   } else if (state.promptEditConfirmation) {
     return {
       title: 'Review Terms and Conditions',
-      body: 'You must accept the Procurement Concierge Terms and Conditions in order to view or edit a Vendor-Initiated Idea.',
+      body: 'You must accept the Procurement Concierge Terms and Conditions in order to view or edit an Unsolicited Proposal.',
       onCloseMsg: { tag: 'hideEditConfirmationPrompt', value: undefined },
       actions: [
         {
