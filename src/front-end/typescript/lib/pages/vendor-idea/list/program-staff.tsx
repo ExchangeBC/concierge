@@ -383,7 +383,7 @@ export const getModal: PageGetModal<State, Msg> = state => {
   } else if (state.promptUploadTemplateTermsConfirmation) {
     return {
       title: 'Review Terms and Conditions',
-      body: 'You must accept the Procurement Concierge Terms and Conditions in order to upload an Unsolicited Proposal Application template.',
+      body: 'You must accept the Procurement Concierge Terms and Conditions in order to upload an Unsolicited Proposal template.',
       onCloseMsg: { tag: 'hideUploadTemplateTermsConfirmationPrompt', value: undefined },
       actions: [
         {
@@ -415,7 +415,7 @@ export const getModal: PageGetModal<State, Msg> = state => {
   } else if (state.promptUploadTemplateConfirmation) {
     return {
       title: 'Upload New Template?',
-      body: 'The current version of the Unsolicited Proposal Application template will be removed, and cannot be recovered once it has been replaced.',
+      body: 'The current version of the Unsolicited Proposal template will be removed, and cannot be recovered once it has been replaced.',
       onCloseMsg: { tag: 'hideUploadTemplateConfirmationPrompt', value: undefined },
       actions: [
         {

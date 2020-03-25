@@ -108,7 +108,7 @@ export const init: Init<Params, State> = async ({ sessionUser, dispatch }) => {
     categoryFilter: Select.init({
       id: 'vi-list-filter-category',
       required: false,
-      label: 'Commodity Code',
+      label: 'Area of Interest',
       placeholder: 'All',
       options: {
         tag: 'options',
@@ -196,13 +196,13 @@ const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <Row className='d-none d-md-flex align-items-end'>
         <Col xs='12' md='4'>
           <Select.view
-            state={state.value.categoryFilter}
-            onChange={onChangeSelect('categoryFilter')} />
+            state={state.value.industrySectorFilter}
+            onChange={onChangeSelect('industrySectorFilter')} />
         </Col>
         <Col xs='12' md='4'>
           <Select.view
-            state={state.value.industrySectorFilter}
-            onChange={onChangeSelect('industrySectorFilter')} />
+            state={state.value.categoryFilter}
+            onChange={onChangeSelect('categoryFilter')} />
         </Col>
         <Col xs='12' md='4' className='ml-md-auto'>
           <ShortText.view

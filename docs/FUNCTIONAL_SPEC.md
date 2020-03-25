@@ -1924,28 +1924,6 @@ And there is a Discovery Day Session associated with the RFI
 When the User clicks “View Discovery Day Information”  
 Then the User is navigated to the Discovery Day Session section on the RFI description page.
 
-### Vendor-Initiated Ideas
-
-#### Program Staff
-
-TODO
-
-#### Buyers
-
-TODO
-
-#### Vendors
-
-TODO
-
-#### Anonymous Users
-
-TODO
-
-#### All Users
-
-TODO
-
 ### Static Pages
 
 #### All Users

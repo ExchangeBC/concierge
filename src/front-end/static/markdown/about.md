@@ -1,4 +1,4 @@
-The Procurement Concierge Program matches vendors with innovative ideas by enabling the exchange of information and ideas between these vendors and potential public sector buyers.
+The Procurement Concierge Program matches Vendors with innovative ideas and potential Public Sector Buyers by enabling the exchange of information and ideas between them.
 
 More information for vendors can be found at [Vendor Information: Procurement Concierge Program](https://www2.gov.bc.ca/gov/content/employment-business/business/business-government/respond-to-opportunities/contract-opportunities/procurement-concierge-program).
 

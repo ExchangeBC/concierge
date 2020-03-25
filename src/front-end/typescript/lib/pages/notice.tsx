@@ -152,8 +152,8 @@ function noticeIdToState(noticeId: NoticeId): State {
         title: 'Thank You',
         body: (
           <div>
-            <p>Your Unsolicited Proposal application has been received.</p>
-            <p>Please note that it may take up to four weeks to review and process your application. A staff member from the Procurement Concierge Program will be in touch with you shortly.</p>
+            <p>Your Unsolicited Proposal has been received.</p>
+            <p>Please note that it may take four to six weeks for your Unsolicited Proposal to be reviewed.</p>
             <p>Please send an email to <Link href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Link> if you have any questions.</p>
           </div>
         ),
@@ -169,7 +169,7 @@ function noticeIdToState(noticeId: NoticeId): State {
     case 'viEditedByVendor':
       return {
         title: 'Thank You',
-        body: 'Your changes to your Unsolicited Proposal application have been received. A staff member from the Procurement Concierge Program will be in touch with you shortly.',
+        body: 'Your changes to your Unsolicited Proposal have been received. A staff member from the Procurement Concierge Program will be in touch with you shortly.',
         button: {
           text: 'View My Unsolicited Proposals',
           route: {

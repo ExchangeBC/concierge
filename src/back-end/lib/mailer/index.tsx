@@ -734,7 +734,7 @@ interface CreateViLogItemEligibleToVendorProps {
 }
 
 export async function createViLogItemEligibleToVendor({ title, id, to }: CreateViLogItemEligibleToVendorProps): Promise<void> {
-  const subject = 'Your Unsolicited Proposal Application';
+  const subject = 'Your Unsolicited Proposal';
   await send({
     to,
     subject,
@@ -757,13 +757,13 @@ interface CreateViToProgramStaff {
 }
 
 export async function createViToProgramStaff({ title, createdAt, vendorName, id }: CreateViToProgramStaff): Promise<void> {
-  const subject = 'Unsolicited Proposal Application Received';
+  const subject = 'Unsolicited Proposal Received';
   await send({
     to: CONTACT_EMAIL,
     subject,
     html: templates.simple({
       title: subject,
-      description: 'An Unsolicited Proposal Application has been submitted for review by the Procurement Concierge Program.',
+      description: 'An Unsolicited Proposal has been submitted for review by the Procurement Concierge Program.',
       descriptionLists: [{
         title: 'Application Details',
         items: [
@@ -785,12 +785,12 @@ interface UpdateViToProgramStaff extends Omit<CreateViToProgramStaff, 'createdAt
 }
 
 export async function updateViToProgramStaffByVendor({ title, editsReceivedAt, vendorName, id }: UpdateViToProgramStaff): Promise<void> {
-  const subject = 'Unsolicited Proposal Application: Edits Received';
+  const subject = 'Unsolicited Proposal: Edits Received';
   await send({
     to: CONTACT_EMAIL,
     subject,
     html: templates.simple({ title: subject,
-      description: 'A Vendor has submitted edits to their Unsolicited Proposal Application.',
+      description: 'A Vendor has submitted edits to their Unsolicited Proposal.',
       descriptionLists: [{
         title: 'Application Details',
         items: [

@@ -145,7 +145,7 @@ const Features: ComponentView<State, Msg> = ({ state, dispatch }) => {
               Unsolicited Proposals
             </h4>
             <p className='text-center mb-0'>
-              Some copy text is required here. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque tempus, lectus in porttitor accumsan, diam est blandit eros, sit amet maximus sapien odio in enim.
+              TODO. Some copy text is required here. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque tempus, lectus in porttitor accumsan, diam est blandit eros, sit amet maximus sapien odio in enim.
             </p>
           </Col>
         </Row>

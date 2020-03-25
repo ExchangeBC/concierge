@@ -124,7 +124,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     } else if (state.programStaff) {
       return ProgramStaffEdit.getMetadata(state.programStaff);
     } else {
-      return makePageMetadata('Edit an Unsolicited Proposal Application');
+      return makePageMetadata('Edit an Unsolicited Proposal');
     }
   },
   getBreadcrumbs(state) {

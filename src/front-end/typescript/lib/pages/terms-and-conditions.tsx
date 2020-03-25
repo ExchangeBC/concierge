@@ -45,11 +45,11 @@ function warningIdToString(warningId: WarningId): string {
     case WarningId.CreateVi:
       return 'You must accept the terms and conditions in order to create an Unsolicited Proposal.';
     case WarningId.EditVi:
-      return 'You must accept the terms and conditions in order to edit an Unsolicited Proposal Application.';
+      return 'You must accept the terms and conditions in order to edit an Unsolicited Proposal.';
     case WarningId.ViewVisAsBuyer:
       return 'You must accept the terms and conditions in order to view Unsolicited Proposals.';
     case WarningId.UploadViApplicationTemplate:
-      return 'You must accept the terms and conditions in order to upload an Unsolicited Proposal Application template.';
+      return 'You must accept the terms and conditions in order to upload an Unsolicited Proposal template.';
   }
 }
 

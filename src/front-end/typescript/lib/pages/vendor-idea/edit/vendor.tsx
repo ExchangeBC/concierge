@@ -219,7 +219,7 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <Row>
         <Col xs='12' md='10'>
           <h3 className='d-flex flex-column-reverse flex-md-row align-items-start align-items-md-center flex-wrap'>
-            Unsolicited Proposal Application
+            Unsolicited Proposal
             <LogItemTypeBadge
               logItemType={vi.latestStatus}
               className='d-block d-md-inline mb-2 mb-md-0 ml-md-3 font-size-base' />
@@ -255,9 +255,9 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 export const getMetadata: PageGetMetadata<State> = state => {
   if (state.tag === 'valid') {
-    return makePageMetadata(`${state.value.vi.latestVersion.description.title} — Unsolicited Proposal Application`);
+    return makePageMetadata(`${state.value.vi.latestVersion.description.title} — Unsolicited Proposal`);
   } else {
-    return makePageMetadata('Edit an Unsolicited Proposal Application');
+    return makePageMetadata('Edit an Unsolicited Proposal');
   }
 };
 
@@ -271,7 +271,7 @@ export const getBreadcrumbs: PageGetBreadcrumbs<State, Msg> = state => {
       })
     },
     {
-      text: state.tag === 'valid' ? state.value.vi.latestVersion.description.title : 'Edit an Unsolicited Proposal Application'
+      text: state.tag === 'valid' ? state.value.vi.latestVersion.description.title : 'Edit an Unsolicited Proposal'
     }
   ];
 };

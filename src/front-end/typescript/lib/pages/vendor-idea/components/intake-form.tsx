@@ -143,11 +143,12 @@ export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
     productOffering: LongText.init({
       id: 'vi-product-offering',
       required: true,
-      label: 'Does the BC Public Sector need the product or service that you are offering? Please explain how the BC Public Sector would use the product or service and the benefits that it offers.',
+      label: 'Benefit to Province',
       placeholder: 'Please limit your response to 500 words.',
       value: getVi(['eligibility', 'productOffering'], ''),
       help: {
-        text: 'If the Province has purchased the product or service before, or the product or service is not a vast improvement on what has been purchased before, and/or the public sector need has not been demonstrated, the Unsolicited Proposal does not meet the requirements of the Program.',
+        //text: 'If the Province has purchased the product or service before, or the product or service is not a vast improvement on what has been purchased before, and/or the public sector need has not been demonstrated, the Unsolicited Proposal does not meet the requirements of the Program.',
+        text: 'Provide high-level information about how this Unsolicited Proposal would be beneficial for a potential Public Sector Buyer. This is not detailed business case-level information; if your idea is screen in, you can provide that analysis later.',
         show: false
       }
     }),
@@ -170,7 +171,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
     summary: LongText.init({
       id: 'vi-summary',
       required: true,
-      label: 'Brief Description',
+      label: 'Brief Description of your Unsolicited Proposal',
       placeholder: 'Please limit your response to 200 words.',
       value: getVi(['description', 'summary'], '')
     }),
@@ -180,7 +181,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
       isCreatable: true,
       formFieldMulti: {
         idNamespace: 'vi-industry-sectors',
-        label: 'Identify the industry sector(s) that apply to the product or service.',
+        label: 'Identify the industry sector(s) that apply to the good or service.',
         required: true,
         minFields: 1,
         fields: existingIndustrySectorFields.length ? existingIndustrySectorFields : SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
@@ -192,7 +193,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
       isCreatable: true,
       formFieldMulti: {
         idNamespace: 'rfi-categories',
-        label: 'Identify the area(s) of interest that apply to the product or service.',
+        label: 'Identify the area(s) of interest that apply to the good or service.',
         required: true,
         minFields: 1,
         fields: existingCategoryFields.length ? existingCategoryFields : SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
@@ -226,7 +227,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
       formFieldMulti: {
         idNamespace: 'vi-attachments',
         label: 'Section 1: Attachment(s)',
-        description: 'Please attach the completed "Unsolicited Proposal Application - Detailed Information" document. You may also attach any additional documents that you wish to be considered as part of your application.',
+        description: 'Please attach the completed "Unsolicited Proposal - Detailed Information" document. You may also attach additional relevant documents (e.g. drawings or schematics) that you wish to be considered as part of your Unsolicited Proposal.',
         required: false,
         fields: getVi(['attachments'], [])
           .map((attachment: FileResource.PublicFile) => {
@@ -498,7 +499,8 @@ const Eligibility: ComponentView<State, Msg> = ({ state, dispatch }) => {
     <div className='mb-5'>
       <Row className='mb-4'>
         <Col xs='12' md='10' lg='8'>
-          <h3>Section 2: Eligibility</h3>
+          <h3 className='mb-4'>Section 3: Eligibility</h3>
+          <p className='mb-0'>The information provided in this section will be used by Program Staff to assess if the Unsolicited Proposal meets the Eligibility Criteria.</p>
         </Col>
       </Row>
       <Row className='mb-4'>
@@ -544,12 +546,12 @@ const Eligibility: ComponentView<State, Msg> = ({ state, dispatch }) => {
       </Row>
       <Row>
         <Col xs='12' md='10' lg='8'>
-          <FieldLabel required text='Indicate which of the definition(s) of innovation apply to your product or service. Please select at least one and all that apply:' />
+          <FieldLabel required text='Use the checkboxes below to indicate how your Unsolicited Proposal is unique and/or innovative. Please select at least one and all that apply:' />
           <div>
             <InnovationDefinitionCheckbox def={{ tag: 'newTechnology', value: undefined }} label='An invention, new technology or new process that is not currently available in the marketplace.' />
+            <InnovationDefinitionCheckbox def={{ tag: 'newApplicationOfExistingTechnology', value: undefined }} label='A new application of an existing product, service, technology or process.' />
             <InnovationDefinitionCheckbox def={{ tag: 'existingTechnologyNotPurchased', value: undefined }} label='Goods or services that are available in the marketplace that the government has not yet purchased.' />
-            <InnovationDefinitionCheckbox def={{ tag: 'newApplicationOfExistingTechnology', value: undefined }} label='New application of an existing product, service or process.' />
-            <InnovationDefinitionCheckbox def={{ tag: 'improvementToExistingTechnology', value: undefined }} label='A significant improvement in functionality, cost or performance over an existing product, service or process that could be considered state-of-the-art or the current industry best practice.' />
+            <InnovationDefinitionCheckbox def={{ tag: 'improvementToExistingTechnology', value: undefined }} label='A significant improvement in functionality, cost or performance over an existing good or service that could be considered state-of-the-art or the current industry best practice.' />
             <InnovationDefinitionCheckbox def={{ tag: 'newGovernmentNeeds', value: undefined }} label={`Government's needs have changed and there is now interest.`} />
             <InnovationDefinitionCheckbox def={{ tag: 'other', value: state.innovationDefinitionOtherText.value }} label='Other' />
             <div className='pl-4'>
@@ -579,9 +581,8 @@ const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
     <div className='mb-5'>
       <Row className='mb-4'>
         <Col xs='12' md='10' lg='8'>
-          <h3 className='mb-4'>Section 3: Description</h3>
-          <p>If your Unsolicited Proposal is accepted into the Procurement Concierge Program, please note that information about the Unsolicited Proposal will be made available to Public Sector Buyers on the program's web application.</p>
-          <p className='mb-0'>As authentication cannot absolutely guarantee that only public sector staff will have access to the information about the Unsolicited Proposal, please do not include details related to confidential information or trade secrets.</p>
+          <h3 className='mb-4'>Section 2: Description</h3>
+          <p className='mb-0'>If your Unsolicited Proposal is accepted into the Procurement Concierge Program, please note that information about the Unsolicited Proposal will be anonymously made available to potential Public Sector Buyers via the Procurement Concierge Program's web application. Therefore, ensure that the information below is understandable without company information and/or proprietary trademarks.</p>
         </Col>
       </Row>
       <Row>
@@ -635,7 +636,7 @@ const Contact: ComponentView<State, Msg> = ({ state, dispatch }) => {
       <Row className='mb-4'>
         <Col xs='12' md='10' lg='8'>
           <h3 className='mb-4'>Section 4: Contact Information</h3>
-          <p className='mb-0'>Please provide the contact information for the individual that the Procurement Concierge Program should discuss the Unsolicited Proposal with.</p>
+          <p className='mb-0'>Please provide contact information and identify a representative for this Unsolicited Proposal. The contact person named in this section will be the primary point-of-contact for all of the program's activites related to this Unsolicited Proposal. This information will only be visible to the Procurement Concierge program's staff.</p>
         </Col>
       </Row>
       <Row>
@@ -671,8 +672,8 @@ export const view: ComponentView<State, Msg> = props => {
   return (
     <div>
       <Attachments {...props} />
-      <Eligibility {...props} />
       <Description {...props} />
+      <Eligibility {...props} />
       <Contact {...props} />
     </div>
   );
