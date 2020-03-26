@@ -367,7 +367,7 @@ export const view: ComponentView<State, Msg> = props => {
       <Row>
         <Col xs='12' md='10'>
           <h3 className='d-flex flex-column-reverse flex-md-row align-items-start align-items-md-center flex-wrap'>
-            Unsolicited Proposal
+            Unsolicited Proposal (UP) 
             <LogItemTypeBadge
               logItemType={vi.latestStatus}
               className='d-block d-md-inline mb-2 mb-md-0 ml-md-3 font-size-base' />

@@ -190,7 +190,7 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
     <div>
       <Row className='mb-5'>
         <Col xs='12' md='9' lg='8'>
-          <h1>Unsolicited Proposal</h1>
+          <h1>Unsolicited Proposal (UP)</h1>
           <p className='mb-3'>Complete the form below to submit your Unsolicited Proposal for review by the Procurement Concierge Program's staff. If you have not done so already, <b>please download and fill out the detailed information portion of the application</b> using the "Download Application – Detailed Information" button below, as you will not be able to save this application as a draft.</p>
           <Link button download color='info' href={VI_APPLICATION_DOWNLOAD_URL}>Download Application – Detailed Information</Link>
         </Col>

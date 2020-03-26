@@ -327,7 +327,7 @@ export const view: ComponentView<State, Msg> = props => {
     <div>
       <Row className='mb-5'>
         <Col xs='12' md='9' lg='8'>
-          <h1>Unsolicited Proposals</h1>
+          <h1>Unsolicited Proposals (UP)</h1>
         </Col>
       </Row>
       <Row className='mb-5'>

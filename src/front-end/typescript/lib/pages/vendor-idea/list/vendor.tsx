@@ -279,7 +279,7 @@ export const view: ComponentView<State, Msg> = props => {
     <div>
       <Row className='mb-5'>
         <Col xs='12' md='10' lg='9'>
-          <h1>My Unsolicited Proposals</h1>
+          <h1>My Unsolicited Proposals (UP)</h1>
           <p style={{ marginBottom: '2rem' }}>
             To submit an Unsolicited Proposal, <b>please download and fill out the detailed information portion of the application</b> using the "Download Application – Detailed Information" button below. Once the application has been completed, you may submit your idea for the Procurement Concierge Program's staff to review by clicking the "Create Unsolicited Proposal" button and filling out the form provided.
           </p>

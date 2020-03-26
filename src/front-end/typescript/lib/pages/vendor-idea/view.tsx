@@ -232,7 +232,7 @@ const view: ComponentView<State, Msg> = props => {
     <div>
       <Row className='mb-5'>
         <Col xs='12' className='d-flex flex-column text-center align-items-center'>
-          <h1 className='h4'>Unsolicited Proposal</h1>
+          <h1 className='h4'>Unsolicited Proposal (UP)</h1>
           <h2 className='h1'>{description.title}</h2>
           <div className='text-secondary small'>
             Published on {formatDate(vi.createdAt)}
