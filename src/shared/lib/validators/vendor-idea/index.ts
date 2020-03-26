@@ -72,8 +72,6 @@ export function validateEligibilityInnovationDefinition(raw: any): Validation<In
       return valid({ tag: 'newApplicationOfExistingTechnology', value: undefined });
     case 'improvementToExistingTechnology':
       return valid({ tag: 'improvementToExistingTechnology', value: undefined });
-    case 'newGovernmentNeeds':
-      return valid({ tag: 'newGovernmentNeeds', value: undefined });
     case 'other':
       const validatedValue = validateEligibilityInnovationDefinitionOtherText(value);
       return validators.mapValid(validatedValue, v => ({ tag: 'other', value: v }));

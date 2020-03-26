@@ -552,7 +552,6 @@ const Eligibility: ComponentView<State, Msg> = ({ state, dispatch }) => {
             <InnovationDefinitionCheckbox def={{ tag: 'newApplicationOfExistingTechnology', value: undefined }} label='A new application of an existing product, service, technology or process.' />
             <InnovationDefinitionCheckbox def={{ tag: 'existingTechnologyNotPurchased', value: undefined }} label='Goods or services that are available in the marketplace that the government has not yet purchased.' />
             <InnovationDefinitionCheckbox def={{ tag: 'improvementToExistingTechnology', value: undefined }} label='A significant improvement in functionality, cost or performance over an existing good or service that could be considered state-of-the-art or the current industry best practice.' />
-            <InnovationDefinitionCheckbox def={{ tag: 'newGovernmentNeeds', value: undefined }} label={`Government's needs have changed and there is now interest.`} />
             <InnovationDefinitionCheckbox def={{ tag: 'other', value: state.innovationDefinitionOtherText.value }} label='Other' />
             <div className='pl-4'>
               <LongText.view

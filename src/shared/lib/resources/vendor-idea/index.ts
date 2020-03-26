@@ -8,7 +8,6 @@ export type InnovationDefinition
   | ADT<'existingTechnologyNotPurchased'>
   | ADT<'newApplicationOfExistingTechnology'>
   | ADT<'improvementToExistingTechnology'>
-  | ADT<'newGovernmentNeeds'>
   | ADT<'other', string>;
 
 export interface VersionDescription {
