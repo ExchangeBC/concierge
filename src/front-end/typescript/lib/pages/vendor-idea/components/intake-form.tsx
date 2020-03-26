@@ -147,7 +147,6 @@ export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
       placeholder: 'Please limit your response to 500 words.',
       value: getVi(['eligibility', 'productOffering'], ''),
       help: {
-        //text: 'If the Province has purchased the product or service before, or the product or service is not a vast improvement on what has been purchased before, and/or the public sector need has not been demonstrated, the Unsolicited Proposal does not meet the requirements of the Program.',
         text: 'Provide high-level information about how this Unsolicited Proposal would be beneficial for a potential Public Sector Buyer. This is not detailed business case-level information; if your idea is screen in, you can provide that analysis later.',
         show: false
       }
@@ -550,7 +549,7 @@ const Eligibility: ComponentView<State, Msg> = ({ state, dispatch }) => {
           <div>
             <InnovationDefinitionCheckbox def={{ tag: 'newTechnology', value: undefined }} label='An invention, new technology or new process that is not currently available in the marketplace.' />
             <InnovationDefinitionCheckbox def={{ tag: 'newApplicationOfExistingTechnology', value: undefined }} label='A new application of an existing product, service, technology or process.' />
-            <InnovationDefinitionCheckbox def={{ tag: 'existingTechnologyNotPurchased', value: undefined }} label='Goods or services that are available in the marketplace that the government has not yet purchased.' />
+            <InnovationDefinitionCheckbox def={{ tag: 'existingTechnologyNotPurchased', value: undefined }} label='Available in the marketplace that the government has not yet purchased.' />
             <InnovationDefinitionCheckbox def={{ tag: 'improvementToExistingTechnology', value: undefined }} label='A significant improvement in functionality, cost or performance over an existing good or service that could be considered state-of-the-art or the current industry best practice.' />
             <InnovationDefinitionCheckbox def={{ tag: 'other', value: state.innovationDefinitionOtherText.value }} label='Other' />
             <div className='pl-4'>
