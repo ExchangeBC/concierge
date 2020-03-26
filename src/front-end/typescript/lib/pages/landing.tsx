@@ -120,32 +120,29 @@ const Features: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Row className='justify-content-center'>
           <Col xs='12' md='4' className='px-4 d-flex flex-column justify-content-start align-items-center'>
             <Icon name='rfi' color='secondary' width={4} height={4} />
-            <small className='text-uppercase text-center font-weight-bold text-success mt-3 mb-2 w-100'>Available Now</small>
-            <h4 className='text-center mb-3 font-weight-bold w-100'>
+            <h4 className='text-center my-3 font-weight-bold w-100'>
               Requests for Information
             </h4>
             <p className='text-center mb-0'>
-              Requests for Information ("RFIs") are posted directly to this website. Public Sector Buyers work with the Program's staff to develop RFIs, and Vendors respond to them by using an easy-to-use online form.
+              Requests for Information ("RFIs") are posted directly to this web app. Public Sector Buyers can work with the Ministry of Citizen's Services staff to develop RFIs, and Vendors respond by using a simple, online form.
             </p>
           </Col>
           <Col xs='12' md='4' className='my-5 my-md-0 px-4 d-flex flex-column justify-content-start align-items-center'>
             <Icon name='discovery-day' color='secondary' width={3} height={4} />
-            <small className='text-uppercase text-center font-weight-bold text-success mt-3 mb-2 w-100'>Available Now</small>
-            <h4 className='text-center mb-3 font-weight-bold w-100'>
+            <h4 className='text-center my-3 font-weight-bold w-100'>
               Discovery Day Sessions
             </h4>
             <p className='text-center mb-0'>
-              The Program's staff organises Discovery Day sessions related to posted Requests for Information ("RFIs") to enable Vendors and Public Sector Buyers to meet and discuss them.
+              The Procurement Concierge Program organizes Discovery Day sessions quarterly to bring together Public Sector Buyers and Vendors for in-person meetings to present RFIs and achieve a mutual understanding of a government issue or problem.
             </p>
           </Col>
           <Col xs='12' md='4' className='px-4 d-flex flex-column justify-content-start align-items-center'>
             <Icon name='matchmaking' color='secondary' width={4.5} height={4} />
-            <small className='text-uppercase text-center font-weight-bold text-success mt-3 mb-2 w-100'>Available Now</small>
-            <h4 className='text-center mb-3 font-weight-bold w-100'>
+            <h4 className='text-center my-3 font-weight-bold w-100'>
               Unsolicited Proposals
             </h4>
             <p className='text-center mb-0'>
-              TODO. Some copy text is required here. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque tempus, lectus in porttitor accumsan, diam est blandit eros, sit amet maximus sapien odio in enim.
+              Vendors with innovative goods and services that could solve government problems can submit proposals through this web app.
             </p>
           </Col>
         </Row>
