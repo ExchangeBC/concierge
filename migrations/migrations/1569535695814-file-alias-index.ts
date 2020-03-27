@@ -19,7 +19,11 @@ export const up: MigrationHook = async () => {
 
 export const down: MigrationHook = async () => {
   const { db } = await connect();
-  logger.info('dropping index...');
-  await db.collection('files').dropIndex(indexName);
-  logger.info('...index dropped.');
+  try {
+    logger.info('dropping index...');
+    await db.collection('files').dropIndex(indexName);
+    logger.info('...index dropped.');
+  } catch (e) {
+    logger.error('failed to drop fileAlias index');
+  }
 };
