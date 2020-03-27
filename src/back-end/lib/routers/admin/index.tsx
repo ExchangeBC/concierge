@@ -307,6 +307,7 @@ async function makeEmailNotificationReference(): Promise<View<{}>> {
       <html>
         <head>
           <meta charSet='utf8' />
+          <title>Email Notification Reference: Procurement Concierge Program</title>
         </head>
         <body style={{ ...styles.utilities.p[5], maxWidth: styles.helpers.px(styles.helpers.scale(40)), margin: '0 auto' }}>
           <a href='/' style={{ display: 'block', ...styles.classes.link, ...styles.utilities.mb[4] }}>Go back to the Procurement Concierge web app</a>
