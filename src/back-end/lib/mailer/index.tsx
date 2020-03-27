@@ -1,6 +1,6 @@
 import { CONTACT_EMAIL } from 'back-end/config';
 import * as templates from 'back-end/lib/mailer/templates';
-import { send } from 'back-end/lib/mailer/transport';
+import { send, SendParams } from 'back-end/lib/mailer/transport';
 import * as RfiSchema from 'back-end/lib/schemas/request-for-information';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import * as mongoose from 'mongoose';
@@ -11,11 +11,28 @@ import { PublicFeedback } from 'shared/lib/resources/feedback';
 import { PublicDiscoveryDay } from 'shared/lib/resources/request-for-information';
 import { PublicRfiResponse } from 'shared/lib/resources/request-for-information/response';
 import { PublicUser } from 'shared/lib/resources/user';
-import { Omit, profileToName, UserType, VerificationStatus } from 'shared/lib/types';
+import { Omit, profileToName, UserType, userTypeToTitleCase, VerificationStatus, verificationStatusToTitleCase } from 'shared/lib/types';
 
-export async function createUser(email: string): Promise<void> {
+export interface Email extends SendParams {
+  summary?: string;
+}
+
+export type Emails = Email[];
+
+function makeSend<Args extends Array<unknown>>(makeEmails: (...args: Args) => Promise<Emails>): (...args: Args) => Promise<void> {
+  return async (...args) => {
+    const emails = await makeEmails(...args);
+    for (const email of emails) {
+      await send(email);
+    }
+  };
+}
+
+export const createUser = makeSend(createUserT);
+
+export async function createUserT(email: string): Promise<Emails> {
   const title = 'Welcome to the Procurement Concierge Program';
-  await send({
+  return [{
     to: email,
     subject: title,
     html: templates.simple({
@@ -26,20 +43,25 @@ export async function createUser(email: string): Promise<void> {
         url: templates.makeUrl('sign-in')
       }
     })
-  });
+  }];
 }
 
-export async function deactivateUser(email: string, userType: UserType): Promise<void> {
-  await send({
+export const deactivateUser = makeSend(deactivateUserT);
+
+export async function deactivateUserT(email: string, userType: UserType): Promise<Emails> {
+  return [{
+    summary: `${userTypeToTitleCase(userType)} account deactivated`,
     to: email,
     subject: 'Your Account has been Deactivated',
     html: templates.deactivateUser({ userType })
-  });
+  }];
 }
 
-export async function reactivateUser(email: string): Promise<void> {
+export const reactivateUser = makeSend(reactivateUserT);
+
+export async function reactivateUserT(email: string): Promise<Emails> {
   const title = 'Welcome back to the Procurement Concierge Program';
-  await send({
+  return [{
     to: email,
     subject: title,
     html: templates.simple({
@@ -50,12 +72,14 @@ export async function reactivateUser(email: string): Promise<void> {
         url: templates.makeUrl('sign-in')
       }
     })
-  });
+  }];
 }
 
-export async function createForgotPasswordToken(email: string, token: string, userId: string): Promise<void> {
+export const createForgotPasswordToken = makeSend(createForgotPasswordTokenT);
+
+export async function createForgotPasswordTokenT(email: string, token: string, userId: string): Promise<Emails> {
   const title = 'Reset your Password';
-  await send({
+  return [{
     to: email,
     subject: title,
     html: templates.simple({
@@ -66,7 +90,7 @@ export async function createForgotPasswordToken(email: string, token: string, us
         url: templates.makeUrl(`reset-password/${token}/${userId}`)
       }
     })
-  });
+  }];
 }
 
 interface RfiResponseReceivedToProgramStaffParams {
@@ -74,14 +98,16 @@ interface RfiResponseReceivedToProgramStaffParams {
   rfi: RfiSchema.Data;
 }
 
-export async function rfiResponseReceivedToProgramStaff(params: RfiResponseReceivedToProgramStaffParams): Promise<void> {
+export const rfiResponseReceivedToProgramStaff = makeSend(rfiResponseReceivedToProgramStaffT);
+
+export async function rfiResponseReceivedToProgramStaffT(params: RfiResponseReceivedToProgramStaffParams): Promise<Emails> {
   const { rfi, rfiResponse } = params;
   const latestVersion = RfiSchema.getLatestVersion(rfi);
-  if (!latestVersion) { return; }
+  if (!latestVersion) { return []; }
   const rfiName = latestVersion.rfiNumber;
   const vendorName = profileToName(rfiResponse.createdBy.profile);
   const subject = `${rfiName}: RFI Response Received`;
-  await send({
+  return [{
     to: CONTACT_EMAIL,
     subject,
     html: templates.simple({
@@ -91,11 +117,11 @@ export async function rfiResponseReceivedToProgramStaff(params: RfiResponseRecei
           <p>
             A response has been submitted by <templates.Link url={templates.makeUrl(`users/${rfiResponse.createdBy._id}`)} text={vendorName} /> to <templates.Link url={templates.makeUrl(`requests-for-information/${rfi._id}/edit`)} text={`${latestVersion.rfiNumber}: ${latestVersion.title}`} />.
           </p>
-          <p>
-            Please note that you will only be able to view this Vendor's profile and download their response's attachments if you have already signed into your Program Staff account in the Procurement Concierge web application. <templates.Link text='Click here to sign in' url={templates.makeUrl('sign-in')} />.
-          </p>
+        <p>
+          Please note that you will only be able to view this Vendor's profile and download their response's attachments if you have already signed into your Program Staff account in the Procurement Concierge web application. <templates.Link text='Click here to sign in' url={templates.makeUrl('sign-in')} />.
+        </p>
         </div>
-      ),
+        ),
       linkLists: [{
         title: 'Attachments',
         links: rfiResponse.attachments.map(file => ({
@@ -108,7 +134,7 @@ export async function rfiResponseReceivedToProgramStaff(params: RfiResponseRecei
         url: templates.makeUrl(`requests-for-information/${rfi._id}/edit?activeTab=responses`)
       }
     })
-  });
+  }];
 }
 
 interface RfiResponseReceivedToVendorParams {
@@ -116,13 +142,15 @@ interface RfiResponseReceivedToVendorParams {
   to: string;
 }
 
-export async function rfiResponseReceivedToVendor(params: RfiResponseReceivedToVendorParams): Promise<void> {
+export const rfiResponseReceivedToVendor = makeSend(rfiResponseReceivedToVendorT);
+
+export async function rfiResponseReceivedToVendorT(params: RfiResponseReceivedToVendorParams): Promise<Emails> {
   const { rfi, to } = params;
   const latestVersion = RfiSchema.getLatestVersion(rfi);
-  if (!latestVersion) { return; }
+  if (!latestVersion) { return []; }
   const rfiName = latestVersion.rfiNumber;
   const subject = `${rfiName}: RFI Response Received`;
-  await send({
+  return [{
     to,
     subject,
     html: templates.simple({
@@ -133,7 +161,7 @@ export async function rfiResponseReceivedToVendor(params: RfiResponseReceivedToV
         </p>
       )
     })
-  });
+  }];
 }
 
 function makeDiscoveryDaySessionInformation(discoveryDay: PublicDiscoveryDay, showVenue: boolean, showRemoteAccess: boolean): templates.DescriptionListProps {
@@ -175,12 +203,14 @@ interface DiscoveryDayToAttendeesProps {
   attendees: Attendee[];
 }
 
-export async function updateDiscoveryDayToVendor({ rfi, to }: DiscoveryDayToVendorProps): Promise<void> {
+export const updateDiscoveryDayToVendor = makeSend(updateDiscoveryDayToVendorT);
+
+export async function updateDiscoveryDayToVendorT({ rfi, to }: DiscoveryDayToVendorProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
-  if (!latestVersion || !discoveryDay) { return; }
+  if (!latestVersion || !discoveryDay) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Update`;
-  await send({
+  return [{
     to,
     subject,
     html: templates.simple({
@@ -190,26 +220,29 @@ export async function updateDiscoveryDayToVendor({ rfi, to }: DiscoveryDayToVend
           <p>
             The Discovery Day session for <templates.Link url={templates.makeUrl(`requests-for-information/${rfi._id}/view`)} text={`${latestVersion.rfiNumber}: ${latestVersion.title}`} /> has been updated by the Procurement Concierge Program's staff. All attendees will receive an email to notify them of the changes.
           </p>
-          <p>
-            If this update impacts an attendee's ability to attend the session, please click on the button below to update your registration accordingly. We apologize for any inconvenience this may cause.
-          </p>
-          <p>
-            Please contact the Procurement Concierge Program's staff at <templates.Link url={`mailto:${CONTACT_EMAIL}`} text={CONTACT_EMAIL} /> if you have any questions.
-          </p>
+        <p>
+          If this update impacts an attendee's ability to attend the session, please click on the button below to update your registration accordingly. We apologize for any inconvenience this may cause.
+        </p>
+        <p>
+          Please contact the Procurement Concierge Program's staff at <templates.Link url={`mailto:${CONTACT_EMAIL}`} text={CONTACT_EMAIL} /> if you have any questions.
+        </p>
         </div>
-      ),
+        ),
       descriptionLists: [makeDiscoveryDaySessionInformation(discoveryDay, true, true)],
       callToAction: makeViewDdrRegistrationCta(rfi._id)
     })
-  });
+  }];
 }
 
-export async function updateDiscoveryDayToVendorSolo({ rfi, to, remote }: DiscoveryDayToVendorSoloProps): Promise<void> {
+export const updateDiscoveryDayToVendorSolo = makeSend(updateDiscoveryDayToVendorSoloT);
+
+export async function updateDiscoveryDayToVendorSoloT({ rfi, to, remote }: DiscoveryDayToVendorSoloProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
-  if (!latestVersion || !discoveryDay) { return; }
+  if (!latestVersion || !discoveryDay) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Update`;
-  await send({
+  return [{
+    summary: `Vendor is ${remote ? '' : 'not '}remote`,
     to,
     subject,
     html: templates.simple({
@@ -227,16 +260,20 @@ export async function updateDiscoveryDayToVendorSolo({ rfi, to, remote }: Discov
       descriptionLists: [makeDiscoveryDaySessionInformation(discoveryDay, !remote, remote)],
       callToAction: makeViewDdrRegistrationCta(rfi._id)
     })
-  });
+  }];
 }
 
-export async function updateDiscoveryDayToAttendees({ rfi, vendor, attendees }: DiscoveryDayToAttendeesProps): Promise<void> {
+export const updateDiscoveryDayToAttendees = makeSend(updateDiscoveryDayToAttendeesT);
+
+export async function updateDiscoveryDayToAttendeesT({ rfi, vendor, attendees }: DiscoveryDayToAttendeesProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
-  if (!latestVersion || !discoveryDay || vendor.profile.type !== UserType.Vendor) { return; }
+  if (!latestVersion || !discoveryDay || vendor.profile.type !== UserType.Vendor) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Update`;
+  const emails: Emails = [];
   for await (const attendee of attendees) {
-    await send({
+    emails.push({
+      summary: `Attendee is ${attendee.remote ? '' : 'not '}remote`,
       to: attendee.email,
       subject,
       html: templates.simple({
@@ -255,13 +292,16 @@ export async function updateDiscoveryDayToAttendees({ rfi, vendor, attendees }: 
       })
     });
   }
+  return emails;
 }
 
-export async function deleteDiscoveryDayToVendor({ rfi, to }: DiscoveryDayToVendorProps): Promise<void> {
+export const deleteDiscoveryDayToVendor = makeSend(deleteDiscoveryDayToVendorT);
+
+export async function deleteDiscoveryDayToVendorT({ rfi, to }: DiscoveryDayToVendorProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
-  if (!latestVersion) { return; }
+  if (!latestVersion) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Cancelled`;
-  await send({
+  return [{
     to,
     subject,
     html: templates.simple({
@@ -277,15 +317,18 @@ export async function deleteDiscoveryDayToVendor({ rfi, to }: DiscoveryDayToVend
         </div>
       )
     })
-  });
+  }];
 }
 
-export async function deleteDiscoveryDayToAttendees({ rfi, vendor, attendees }: DiscoveryDayToAttendeesProps): Promise<void> {
+export const deleteDiscoveryDayToAttendees = makeSend(deleteDiscoveryDayToAttendeesT);
+
+export async function deleteDiscoveryDayToAttendeesT({ rfi, vendor, attendees }: DiscoveryDayToAttendeesProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
-  if (!latestVersion || vendor.profile.type !== UserType.Vendor) { return; }
+  if (!latestVersion || vendor.profile.type !== UserType.Vendor) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Cancelled`;
+  const emails: Emails = [];
   for await (const attendee of attendees) {
-    await send({
+    emails.push({
       to: attendee.email,
       subject,
       html: templates.simple({
@@ -303,6 +346,7 @@ export async function deleteDiscoveryDayToAttendees({ rfi, vendor, attendees }: 
       })
     });
   }
+  return emails;
 }
 
 function makeViewDdrRegistrationCta(rfiId: mongoose.Types.ObjectId): templates.LinkProps {
@@ -324,12 +368,14 @@ function makeViewDdrRegistrationsCta(rfiId: mongoose.Types.ObjectId): templates.
   };
 }
 
-export async function createDdrToVendor({ rfi, to }: DiscoveryDayToVendorProps): Promise<void> {
+export const createDdrToVendor = makeSend(createDdrToVendorT);
+
+export async function createDdrToVendorT({ rfi, to }: DiscoveryDayToVendorProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
-  if (!latestVersion || !discoveryDay) { return; }
+  if (!latestVersion || !discoveryDay) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Registration Received`;
-  await send({
+  return [{
     to,
     subject,
     html: templates.simple({
@@ -339,23 +385,26 @@ export async function createDdrToVendor({ rfi, to }: DiscoveryDayToVendorProps):
           <p>
             Your registration for the Discovery Day session for <templates.Link url={templates.makeUrl(`requests-for-information/${rfi._id}/view`)} text={`${latestVersion.rfiNumber}: ${latestVersion.title}`} /> has been received. All attendees will receive an email confirmation with details on how to attend the event.
           </p>
-          <p>
-            You can access your registration by clicking on the button below. Any changes to your registration, including whether a registrant is attending the session in-person or remotely, can be submitted prior to its start date. Please note that in-person attendees can only be added to your registration at least 24 hours before a session's scheduled time.
-          </p>
+        <p>
+          You can access your registration by clicking on the button below. Any changes to your registration, including whether a registrant is attending the session in-person or remotely, can be submitted prior to its start date. Please note that in-person attendees can only be added to your registration at least 24 hours before a session's scheduled time.
+        </p>
         </div>
-      ),
+        ),
       descriptionLists: [makeDiscoveryDaySessionInformation(discoveryDay, true, true)],
       callToAction: makeViewDdrRegistrationCta(rfi._id)
     })
-  });
+  }];
 }
 
-export async function createDdrToVendorSolo({ rfi, to, remote }: DiscoveryDayToVendorSoloProps): Promise<void> {
+export const createDdrToVendorSolo = makeSend(createDdrToVendorSoloT);
+
+export async function createDdrToVendorSoloT({ rfi, to, remote }: DiscoveryDayToVendorSoloProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
-  if (!latestVersion || !discoveryDay) { return; }
+  if (!latestVersion || !discoveryDay) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Registration Received`;
-  await send({
+  return [{
+    summary: `Vendor is ${remote ? '' : 'not '}remote`,
     to,
     subject,
     html: templates.simple({
@@ -364,25 +413,29 @@ export async function createDdrToVendorSolo({ rfi, to, remote }: DiscoveryDayToV
         <div>
           <p>
             You have been registered to attend the Discovery Day session for <templates.Link url={templates.makeUrl(`requests-for-information/${rfi._id}/view`)} text={`${latestVersion.rfiNumber}: ${latestVersion.title}`} /> {remote ? 'remotely' : 'in-person'}.
-          </p>
-          <p>
-            You can access your registration by clicking on the button below. Any changes to your registration, including whether you are attending the session in-person or remotely, can be submitted prior to its start date.
-          </p>
-        </div>
+      </p>
+      <p>
+        You can access your registration by clicking on the button below. Any changes to your registration, including whether you are attending the session in-person or remotely, can be submitted prior to its start date.
+      </p>
+      </div>
       ),
       descriptionLists: [makeDiscoveryDaySessionInformation(discoveryDay, !remote, remote)],
       callToAction: makeViewDdrRegistrationCta(rfi._id)
     })
-  });
+  }];
 }
 
-export async function createDdrToAttendees({ rfi, vendor, attendees }: DiscoveryDayToAttendeesProps): Promise<void> {
+export const createDdrToAttendees = makeSend(createDdrToAttendeesT);
+
+export async function createDdrToAttendeesT({ rfi, vendor, attendees }: DiscoveryDayToAttendeesProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
-  if (!latestVersion || !discoveryDay || vendor.profile.type !== UserType.Vendor) { return; }
+  if (!latestVersion || !discoveryDay || vendor.profile.type !== UserType.Vendor) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Registration`;
+  const emails: Emails = [];
   for await (const attendee of attendees) {
-    await send({
+    emails.push({
+      summary: `Attendee is ${attendee.remote ? '' : 'not '}remote`,
       to: attendee.email,
       subject,
       html: templates.simple({
@@ -401,14 +454,17 @@ export async function createDdrToAttendees({ rfi, vendor, attendees }: Discovery
       })
     });
   }
+  return emails;
 }
 
-export async function createDdrToProgramStaff({ rfi, vendor }: DiscoveryDayToProgramStaffProps): Promise<void> {
+export const createDdrToProgramStaff = makeSend(createDdrToProgramStaffT);
+
+export async function createDdrToProgramStaffT({ rfi, vendor }: DiscoveryDayToProgramStaffProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
-  if (!latestVersion) { return; }
+  if (!latestVersion) { return []; }
   const vendorName = profileToName(vendor.profile) || 'Unknown Vendor';
   const subject = `${latestVersion.rfiNumber}: ${vendorName} — Discovery Day Session Registration Received`;
-  await send({
+  return [{
     to: CONTACT_EMAIL,
     subject,
     html: templates.simple({
@@ -420,15 +476,17 @@ export async function createDdrToProgramStaff({ rfi, vendor }: DiscoveryDayToPro
       ),
       callToAction: makeViewDdrRegistrationsCta(rfi._id)
     })
-  });
+  }];
 }
 
-export async function updateDdrToVendorByVendor({ rfi, to }: DiscoveryDayToVendorProps): Promise<void> {
+export const updateDdrToVendorByVendor = makeSend(updateDdrToVendorByVendorT);
+
+export async function updateDdrToVendorByVendorT({ rfi, to }: DiscoveryDayToVendorProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
-  if (!latestVersion || !discoveryDay) { return; }
+  if (!latestVersion || !discoveryDay) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Registration Updated`;
-  await send({
+  return [{
     to,
     subject,
     html: templates.simple({
@@ -440,15 +498,18 @@ export async function updateDdrToVendorByVendor({ rfi, to }: DiscoveryDayToVendo
       ),
       callToAction: makeViewDdrRegistrationCta(rfi._id)
     })
-  });
+  }];
 }
 
-export async function updateDdrToVendorSoloByVendor({ rfi, to, remote }: DiscoveryDayToVendorSoloProps): Promise<void> {
+export const updateDdrToVendorSoloByVendor = makeSend(updateDdrToVendorSoloByVendorT);
+
+export async function updateDdrToVendorSoloByVendorT({ rfi, to, remote }: DiscoveryDayToVendorSoloProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
-  if (!latestVersion || !discoveryDay) { return; }
+  if (!latestVersion || !discoveryDay) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Registration Updated`;
-  await send({
+  return [{
+    summary: `Vendor is ${remote ? '' : 'not '}remote`,
     to,
     subject,
     html: templates.simple({
@@ -456,20 +517,22 @@ export async function updateDdrToVendorSoloByVendor({ rfi, to, remote }: Discove
       description: (
         <div>
           Your registration for the Discovery Day session for <templates.Link url={templates.makeUrl(`requests-for-information/${rfi._id}/view`)} text={`${latestVersion.rfiNumber}: ${latestVersion.title}`} /> has been updated. You have been registered to attend this session {remote ? 'remotely' : 'in-person'}.
-        </div>
+      </div>
       ),
       descriptionLists: [makeDiscoveryDaySessionInformation(discoveryDay, !remote, remote)],
       callToAction: makeViewDdrRegistrationCta(rfi._id)
     })
-  });
+  }];
 }
 
-export async function updateDdrToProgramStaffByVendor({ rfi, vendor }: DiscoveryDayToProgramStaffProps): Promise<void> {
+export const updateDdrToProgramStaffByVendor = makeSend(updateDdrToProgramStaffByVendorT);
+
+export async function updateDdrToProgramStaffByVendorT({ rfi, vendor }: DiscoveryDayToProgramStaffProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
-  if (!latestVersion) { return; }
+  if (!latestVersion) { return []; }
   const vendorName = profileToName(vendor.profile) || 'Unknown Vendor';
   const subject = `${latestVersion.rfiNumber}: ${vendorName} — Discovery Day Session Registration Updated`;
-  await send({
+  return [{
     to: CONTACT_EMAIL,
     subject,
     html: templates.simple({
@@ -481,15 +544,17 @@ export async function updateDdrToProgramStaffByVendor({ rfi, vendor }: Discovery
       ),
       callToAction: makeViewDdrRegistrationsCta(rfi._id)
     })
-  });
+  }];
 }
 
-export async function updateDdrToVendorByProgramStaff({ rfi, to }: DiscoveryDayToVendorProps): Promise<void> {
+export const updateDdrToVendorByProgramStaff = makeSend(updateDdrToVendorByProgramStaffT);
+
+export async function updateDdrToVendorByProgramStaffT({ rfi, to }: DiscoveryDayToVendorProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
-  if (!latestVersion || !discoveryDay) { return; }
+  if (!latestVersion || !discoveryDay) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Registration Updated`;
-  await send({
+  return [{
     to,
     subject,
     html: templates.simple({
@@ -499,25 +564,28 @@ export async function updateDdrToVendorByProgramStaff({ rfi, to }: DiscoveryDayT
           <p>
             Your registration for the Discovery Day session for <templates.Link url={templates.makeUrl(`requests-for-information/${rfi._id}/view`)} text={`${latestVersion.rfiNumber}: ${latestVersion.title}`} /> has been updated by the Procurement Concierge Program's staff. Attendees will receive an email confirmation to notify them of any changes that impact their attendance.
           </p>
-          <p>
-            You can view the changes that were made to your registration by clicking on the button below. If these changes impact an attendee's ability to attend the session, please update your registration accordingly.
-          </p>
-          <p>
-            Please contact the Procurement Concierge Program's staff at <templates.Link url={`mailto:${CONTACT_EMAIL}`} text={CONTACT_EMAIL} /> if you have any questions.
-          </p>
+        <p>
+          You can view the changes that were made to your registration by clicking on the button below. If these changes impact an attendee's ability to attend the session, please update your registration accordingly.
+        </p>
+        <p>
+          Please contact the Procurement Concierge Program's staff at <templates.Link url={`mailto:${CONTACT_EMAIL}`} text={CONTACT_EMAIL} /> if you have any questions.
+        </p>
         </div>
-      ),
+        ),
       callToAction: makeViewDdrRegistrationCta(rfi._id)
     })
-  });
+  }];
 }
 
-export async function updateDdrToVendorSoloByProgramStaff({ rfi, to, remote }: DiscoveryDayToVendorSoloProps): Promise<void> {
+export const updateDdrToVendorSoloByProgramStaff = makeSend(updateDdrToVendorSoloByProgramStaffT);
+
+export async function updateDdrToVendorSoloByProgramStaffT({ rfi, to, remote }: DiscoveryDayToVendorSoloProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
-  if (!latestVersion || !discoveryDay) { return; }
+  if (!latestVersion || !discoveryDay) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Registration Updated`;
-  await send({
+  return [{
+    summary: `Vendor is ${remote ? '' : 'not '}remote`,
     to,
     subject,
     html: templates.simple({
@@ -526,28 +594,32 @@ export async function updateDdrToVendorSoloByProgramStaff({ rfi, to, remote }: D
         <div>
           <p>
             Your registration for the Discovery Day session for <templates.Link url={templates.makeUrl(`requests-for-information/${rfi._id}/view`)} text={`${latestVersion.rfiNumber}: ${latestVersion.title}`} /> has been updated by the Procurement Concierge Program's staff. You have been registered to attend this session {remote ? 'remotely' : 'in-person'}.
-          </p>
-          <p>
-            You can view the changes that were made to your registration by clicking on the button below. If these changes impact your ability to attend the session, please update your registration accordingly.
-          </p>
-          <p>
-            Please contact the Procurement Concierge Program's staff at <templates.Link url={`mailto:${CONTACT_EMAIL}`} text={CONTACT_EMAIL} /> if you have any questions.
-          </p>
-        </div>
+      </p>
+      <p>
+        You can view the changes that were made to your registration by clicking on the button below. If these changes impact your ability to attend the session, please update your registration accordingly.
+      </p>
+      <p>
+        Please contact the Procurement Concierge Program's staff at <templates.Link url={`mailto:${CONTACT_EMAIL}`} text={CONTACT_EMAIL} /> if you have any questions.
+      </p>
+      </div>
       ),
       descriptionLists: [makeDiscoveryDaySessionInformation(discoveryDay, !remote, remote)],
       callToAction: makeViewDdrRegistrationCta(rfi._id)
     })
-  });
+  }];
 }
 
-export async function updateDdrToAttendees({ rfi, vendor, attendees }: DiscoveryDayToAttendeesProps): Promise<void> {
+export const updateDdrToAttendees = makeSend(updateDdrToAttendeesT);
+
+export async function updateDdrToAttendeesT({ rfi, vendor, attendees }: DiscoveryDayToAttendeesProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
-  if (!latestVersion || !discoveryDay || vendor.profile.type !== UserType.Vendor) { return; }
+  if (!latestVersion || !discoveryDay || vendor.profile.type !== UserType.Vendor) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Registration Updated`;
+  const emails: Emails = [];
   for await (const attendee of attendees) {
-    await send({
+    emails.push({
+      summary: `Attendee is ${attendee.remote ? '' : 'not '}remote`,
       to: attendee.email,
       subject,
       html: templates.simple({
@@ -566,14 +638,17 @@ export async function updateDdrToAttendees({ rfi, vendor, attendees }: Discovery
       })
     });
   }
+  return emails;
 }
 
-export async function deleteDdrToVendorByVendor({ rfi, to }: DiscoveryDayToVendorProps): Promise<void> {
+export const deleteDdrToVendorByVendor = makeSend(deleteDdrToVendorByVendorT);
+
+export async function deleteDdrToVendorByVendorT({ rfi, to }: DiscoveryDayToVendorProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
-  if (!latestVersion || !discoveryDay) { return; }
+  if (!latestVersion || !discoveryDay) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Registration Cancelled`;
-  await send({
+  return [{
     to,
     subject,
     html: templates.simple({
@@ -584,15 +659,17 @@ export async function deleteDdrToVendorByVendor({ rfi, to }: DiscoveryDayToVendo
         </div>
       )
     })
-  });
+  }];
 }
 
-export async function deleteDdrToVendorSoloByVendor({ rfi, to }: Omit<DiscoveryDayToVendorSoloProps, 'remote'>): Promise<void> {
+export const deleteDdrToVendorSoloByVendor = makeSend(deleteDdrToVendorSoloByVendorT);
+
+export async function deleteDdrToVendorSoloByVendorT({ rfi, to }: Omit<DiscoveryDayToVendorSoloProps, 'remote'>): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
-  if (!latestVersion || !discoveryDay) { return; }
+  if (!latestVersion || !discoveryDay) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Registration Cancelled`;
-  await send({
+  return [{
     to,
     subject,
     html: templates.simple({
@@ -603,15 +680,17 @@ export async function deleteDdrToVendorSoloByVendor({ rfi, to }: Omit<DiscoveryD
         </div>
       )
     })
-  });
+  }];
 }
 
-export async function deleteDdrToProgramStaffByVendor({ rfi, vendor }: DiscoveryDayToProgramStaffProps): Promise<void> {
+export const deleteDdrToProgramStaffByVendor = makeSend(deleteDdrToProgramStaffByVendorT);
+
+export async function deleteDdrToProgramStaffByVendorT({ rfi, vendor }: DiscoveryDayToProgramStaffProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
-  if (!latestVersion) { return; }
+  if (!latestVersion) { return []; }
   const vendorName = profileToName(vendor.profile) || 'Unknown Vendor';
   const subject = `${latestVersion.rfiNumber}: ${vendorName} — Discovery Day Session Registration Cancelled`;
-  await send({
+  return [{
     to: CONTACT_EMAIL,
     subject,
     html: templates.simple({
@@ -623,15 +702,17 @@ export async function deleteDdrToProgramStaffByVendor({ rfi, vendor }: Discovery
       ),
       callToAction: makeViewDdrRegistrationsCta(rfi._id)
     })
-  });
+  }];
 }
 
-export async function deleteDdrToVendorByProgramStaff({ rfi, to }: DiscoveryDayToVendorProps): Promise<void> {
+export const deleteDdrToVendorByProgramStaff = makeSend(deleteDdrToVendorByProgramStaffT);
+
+export async function deleteDdrToVendorByProgramStaffT({ rfi, to }: DiscoveryDayToVendorProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
-  if (!latestVersion || !discoveryDay) { return; }
+  if (!latestVersion || !discoveryDay) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Registration Cancelled`;
-  await send({
+  return [{
     to,
     subject,
     html: templates.simple({
@@ -641,21 +722,23 @@ export async function deleteDdrToVendorByProgramStaff({ rfi, to }: DiscoveryDayT
           <p>
             Your registration for the Discovery Day session for <templates.Link url={templates.makeUrl(`requests-for-information/${rfi._id}/view`)} text={`${latestVersion.rfiNumber}: ${latestVersion.title}`} /> has been cancelled by the Procurement Concierge Program's staff. All attendees will receive an email confirmation to notify them of the cancellation.
           </p>
-          <p>
-            Please contact the Procurement Concierge Program's staff at <templates.Link url={`mailto:${CONTACT_EMAIL}`} text={CONTACT_EMAIL} /> if you have any questions.
-          </p>
+        <p>
+          Please contact the Procurement Concierge Program's staff at <templates.Link url={`mailto:${CONTACT_EMAIL}`} text={CONTACT_EMAIL} /> if you have any questions.
+        </p>
         </div>
-      )
+        )
     })
-  });
+  }];
 }
 
-export async function deleteDdrToVendorSoloByProgramStaff({ rfi, to }: Omit<DiscoveryDayToVendorSoloProps, 'remote'>): Promise<void> {
+export const deleteDdrToVendorSoloByProgramStaff = makeSend(deleteDdrToVendorSoloByProgramStaffT);
+
+export async function deleteDdrToVendorSoloByProgramStaffT({ rfi, to }: Omit<DiscoveryDayToVendorSoloProps, 'remote'>): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
-  if (!latestVersion || !discoveryDay) { return; }
+  if (!latestVersion || !discoveryDay) { return []; }
   const subject = `${latestVersion.rfiNumber}: Discovery Day Session Registration Cancelled`;
-  await send({
+  return [{
     to,
     subject,
     html: templates.simple({
@@ -665,22 +748,25 @@ export async function deleteDdrToVendorSoloByProgramStaff({ rfi, to }: Omit<Disc
           <p>
             Your registration for the Discovery Day session for <templates.Link url={templates.makeUrl(`requests-for-information/${rfi._id}/view`)} text={`${latestVersion.rfiNumber}: ${latestVersion.title}`} /> has been cancelled by the Procurement Concierge Program's staff.
           </p>
-          <p>
-            Please contact the Procurement Concierge Program's staff at <templates.Link url={`mailto:${CONTACT_EMAIL}`} text={CONTACT_EMAIL} /> if you have any questions.
-          </p>
+        <p>
+          Please contact the Procurement Concierge Program's staff at <templates.Link url={`mailto:${CONTACT_EMAIL}`} text={CONTACT_EMAIL} /> if you have any questions.
+        </p>
         </div>
-      )
+        )
     })
-  });
+  }];
 }
 
-export async function deleteDdrToAttendees({ rfi, vendor, attendees }: DiscoveryDayToAttendeesProps): Promise<void> {
+export const deleteDdrToAttendees = makeSend(deleteDdrToAttendeesT);
+
+export async function deleteDdrToAttendeesT({ rfi, vendor, attendees }: DiscoveryDayToAttendeesProps): Promise<Emails> {
   const latestVersion = RfiSchema.getLatestVersion(rfi);
   const discoveryDay = latestVersion && latestVersion.discoveryDay;
-  if (!latestVersion || !discoveryDay || vendor.profile.type !== UserType.Vendor) { return; }
+  if (!latestVersion || !discoveryDay || vendor.profile.type !== UserType.Vendor) { return []; }
   const subject = `${latestVersion.rfiNumber}: Removed from Discovery Day Session Registration`;
+  const emails: Emails = [];
   for await (const attendee of attendees) {
-    await send({
+    emails.push({
       to: attendee.email,
       subject,
       html: templates.simple({
@@ -698,6 +784,7 @@ export async function deleteDdrToAttendees({ rfi, vendor, attendees }: Discovery
       })
     });
   }
+  return emails;
 }
 
 interface CreateFeedbackEmailParams {
@@ -705,10 +792,12 @@ interface CreateFeedbackEmailParams {
   feedbackResponse: PublicFeedback;
 }
 
-export async function createFeedback(params: CreateFeedbackEmailParams): Promise<void> {
+export const createFeedback = makeSend(createFeedbackT);
+
+export async function createFeedbackT(params: CreateFeedbackEmailParams): Promise<Emails> {
   const { feedbackEmail, feedbackResponse } = params;
   const subject = 'Feedback Received';
-  await send({
+  return [{
     to: feedbackEmail,
     subject,
     html: templates.feedback({
@@ -716,15 +805,18 @@ export async function createFeedback(params: CreateFeedbackEmailParams): Promise
       text: feedbackResponse.text,
       userType: feedbackResponse.userType
     })
-  });
+  }];
 }
 
-export async function buyerStatusUpdated(buyerEmail: string, verificationStatus: VerificationStatus): Promise<void> {
-  await send({
+export const buyerStatusUpdated = makeSend(buyerStatusUpdatedT);
+
+export async function buyerStatusUpdatedT(buyerEmail: string, verificationStatus: VerificationStatus): Promise<Emails> {
+  return [{
+    summary: verificationStatusToTitleCase(verificationStatus),
     to: buyerEmail,
     subject: 'Account Status Updated',
     html: templates.buyerStatusUpdated({ verificationStatus })
-  });
+  }];
 }
 
 interface CreateViLogItemEligibleToVendorProps {
@@ -733,9 +825,11 @@ interface CreateViLogItemEligibleToVendorProps {
   to: string;
 }
 
-export async function createViLogItemEligibleToVendor({ title, id, to }: CreateViLogItemEligibleToVendorProps): Promise<void> {
+export const createViLogItemEligibleToVendor = makeSend(createViLogItemEligibleToVendorT);
+
+export async function createViLogItemEligibleToVendorT({ title, id, to }: CreateViLogItemEligibleToVendorProps): Promise<Emails> {
   const subject = 'Your Unsolicited Proposal';
-  await send({
+  return [{
     to,
     subject,
     html: templates.simple({
@@ -746,7 +840,7 @@ export async function createViLogItemEligibleToVendor({ title, id, to }: CreateV
         url: templates.makeUrl(`unsolicited-proposals/${id}/edit`)
       }
     })
-  });
+  }];
 }
 
 interface CreateViToProgramStaff {
@@ -756,9 +850,11 @@ interface CreateViToProgramStaff {
   id: string;
 }
 
-export async function createViToProgramStaff({ title, createdAt, vendorName, id }: CreateViToProgramStaff): Promise<void> {
+export const createViToProgramStaff = makeSend(createViToProgramStaffT);
+
+export async function createViToProgramStaffT({ title, createdAt, vendorName, id }: CreateViToProgramStaff): Promise<Emails> {
   const subject = 'Unsolicited Proposal Received';
-  await send({
+  return [{
     to: CONTACT_EMAIL,
     subject,
     html: templates.simple({
@@ -777,16 +873,18 @@ export async function createViToProgramStaff({ title, createdAt, vendorName, id 
         url: templates.makeUrl(`unsolicited-proposals/${id}/edit`)
       }
     })
-  });
+  }];
 }
 
 interface UpdateViToProgramStaff extends Omit<CreateViToProgramStaff, 'createdAt'> {
   editsReceivedAt: Date;
 }
 
-export async function updateViToProgramStaffByVendor({ title, editsReceivedAt, vendorName, id }: UpdateViToProgramStaff): Promise<void> {
+export const updateViToProgramStaffByVendor = makeSend(updateViToProgramStaffByVendorT);
+
+export async function updateViToProgramStaffByVendorT({ title, editsReceivedAt, vendorName, id }: UpdateViToProgramStaff): Promise<Emails> {
   const subject = 'Unsolicited Proposal: Edits Received';
-  await send({
+  return [{
     to: CONTACT_EMAIL,
     subject,
     html: templates.simple({ title: subject,
@@ -804,5 +902,5 @@ export async function updateViToProgramStaffByVendor({ title, editsReceivedAt, v
         url: templates.makeUrl(`unsolicited-proposals/${id}/edit`)
       }
     })
-  });
+  }];
 }

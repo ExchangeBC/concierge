@@ -11,12 +11,6 @@ type StyleUtilities = Record<string, Record<string, CSSProperties>>;
 
 type StyleClasses = Record<string, CSSProperties>;
 
-interface Styles {
-  variables: StyleVariables;
-  utilities: StyleUtilities;
-  classes: StyleClasses;
-}
-
 type CSSProperty = keyof CSSProperties;
 
 type StyleUnit
@@ -31,7 +25,7 @@ type StyleLevelUtilities = {
   [level in StyleLevel]: CSSProperties;
 }
 
-const styles: Styles = (() => {
+export const styles = (() => {
   const spacer = 16;
   const scale = (n: number) => n * spacer;
   const units = (n: number | string, unit: StyleUnit) => `${n}${unit}`;
@@ -172,7 +166,19 @@ const styles: Styles = (() => {
       height: px(scale(2))
     }
   };
-  return { variables, utilities, classes };
+  return {
+    variables,
+    utilities,
+    classes,
+    helpers: {
+      spacer,
+      scale,
+      units,
+      px,
+      style,
+      styleScale
+    }
+  };
 })();
 
 // Utility types and functions.
@@ -191,7 +197,7 @@ interface WithStyle {
   style: CSSProperties;
 }
 
-type View<Props> = (props: Props) => ReactElement | null;
+export type View<Props> = (props: Props) => ReactElement | null;
 
 type TemplateBaseProps = Omit<LayoutProps, 'children'>;
 
@@ -454,7 +460,7 @@ export interface DeactivateUserProps {
 const DeactivateUser: View<DeactivateUserProps> = ({ userType }) => {
   const description = (
     <div>
-      <p>Your Procurement Concierge Program account has been deactivated. Your no longer have access to the program's web application.</p>
+      <p>Your Procurement Concierge Program account has been deactivated. You no longer have access to the program's web application.</p>
       {userType !== UserType.ProgramStaff
         ? (<p>If you would like to return to the Procurement Concierge Program's web application, you can reactivate your account at any time by logging in with your email and password.</p>)
         : null}

@@ -15,6 +15,7 @@ import SessionResource from 'back-end/lib/resources/session';
 import UserResource from 'back-end/lib/resources/user';
 import ViResource from 'back-end/lib/resources/vendor-idea';
 import ViLogItemResource from 'back-end/lib/resources/vendor-idea/log-item';
+import AdminRouter from 'back-end/lib/routers/admin';
 import FrontEndRouter from 'back-end/lib/routers/front-end';
 import StatusRouter from 'back-end/lib/routers/status';
 import * as FeedbackSchema from 'back-end/lib/schemas/feedback';
@@ -102,6 +103,8 @@ export function createRouter(params: CreateRouterParams): Router<SupportedReques
     // API routes.
     // Do not expose CRUD routes if undergoing scheduled maintenance.
     flippedConcat(SCHEDULED_MAINTENANCE ? [] : crudRoutes),
+    // Vend an HTML page with all email notifications for reference.
+    flippedConcat(AdminRouter().map(r => namespaceRoute('/admin', r))),
     // Front-end router.
     // Vend the downtime HTML file during scheduled maintenance.
     flippedConcat(FrontEndRouter(SCHEDULED_MAINTENANCE ? 'downtime.html' : 'index.html')),

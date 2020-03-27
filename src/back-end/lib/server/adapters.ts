@@ -1,7 +1,7 @@
 import { COOKIE_SECRET, ENV, TMP_DIR } from 'back-end/config';
 import { makeDomainLogger } from 'back-end/lib/logger';
 import { console as consoleAdapter } from 'back-end/lib/logger/adapters';
-import { ErrorResponseBody, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, makeErrorResponseBody, makeFileRequestBody, makeJsonRequestBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
+import { ErrorResponseBody, FileRequestBody, FileResponseBody, HtmlResponseBody, JsonRequestBody, JsonResponseBody, makeErrorResponseBody, makeFileRequestBody, makeJsonRequestBody, parseHttpMethod, parseSessionId, Request, Response, Route, Router, SessionIdToSession, SessionToSessionId, TextResponseBody } from 'back-end/lib/server';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import expressLib from 'express';
@@ -30,7 +30,7 @@ export type Adapter<App, SupportedRequestBodies, SupportedResponseBodies, FileUp
 
 export type ExpressRequestBodies<FileUploadMetadata> = JsonRequestBody | FileRequestBody<FileUploadMetadata>;
 
-export type ExpressResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody | ErrorResponseBody;
+export type ExpressResponseBodies = HtmlResponseBody | JsonResponseBody | FileResponseBody | TextResponseBody | ErrorResponseBody;
 
 export type ExpressAdapter<Session, FileUploadMetadata> = Adapter<expressLib.Application, ExpressRequestBodies<FileUploadMetadata>, ExpressResponseBodies, FileUploadMetadata, Session>;
 
@@ -155,6 +155,10 @@ export function express<Session, FileUploadMetadata>(): ExpressAdapter<Session, 
         case 'text':
           expressRes
             .set('Content-Type', 'text/plain')
+            .send(response.body.value);
+        case 'html':
+          expressRes
+            .set('Content-Type', 'text/html')
             .send(response.body.value);
           break;
       }

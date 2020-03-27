@@ -6,7 +6,7 @@ import * as RfiResponseSchema from 'back-end/lib/schemas/request-for-information
 import * as SessionSchema from 'back-end/lib/schemas/session';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import * as ViSchema from 'back-end/lib/schemas/vendor-idea';
-import { ErrorResponseBody, FileRequestBody, FileResponseBody, JsonRequestBody, JsonResponseBody, TextResponseBody } from 'back-end/lib/server';
+import { ErrorResponseBody, FileRequestBody, FileResponseBody, HtmlResponseBody, JsonRequestBody, JsonResponseBody, TextResponseBody } from 'back-end/lib/server';
 import { AuthLevel, UserType } from 'shared/lib/types';
 import { Validation } from 'shared/lib/validators';
 
@@ -31,4 +31,4 @@ export interface FileUploadMetadata {
 
 export type SupportedRequestBodies = JsonRequestBody | FileRequestBody<FileUploadMetadata>;
 
-export type SupportedResponseBodies = JsonResponseBody | FileResponseBody | TextResponseBody | ErrorResponseBody;
+export type SupportedResponseBodies = HtmlResponseBody | JsonResponseBody | FileResponseBody | TextResponseBody | ErrorResponseBody;
