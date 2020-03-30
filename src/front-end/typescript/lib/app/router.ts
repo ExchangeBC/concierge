@@ -378,6 +378,20 @@ const router: Router<Route> = {
       }
     },
     {
+      path: '/notice/coming-soon',
+      makeRoute() {
+        return {
+          tag: 'notice',
+          value: {
+            noticeId: {
+              tag: 'comingSoon',
+              value: undefined
+            }
+          }
+        };
+      }
+    },
+    {
       path: '/notice/change-password',
       makeRoute() {
         return {
@@ -631,6 +645,8 @@ const router: Router<Route> = {
       case 'notice':
         return (() => {
           switch (route.value.noticeId.tag) {
+            case 'comingSoon':
+              return '/notice/coming-soon';
             case 'changePassword':
               return '/notice/change-password';
             case 'resetPassword':

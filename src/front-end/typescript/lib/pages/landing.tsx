@@ -26,10 +26,10 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 const Hero: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
     <div className='bg-info py-6'>
-      <Container style={{ minHeight: '40vh' }} className='d-flex flex-column justify-content-center'>
+      <Container style={{ height: '40vh', maxHeight: '600px' }} className='d-flex flex-column justify-content-center'>
         <Row className='mb-4'>
           <Col className='text-white'>
-            <div className='font-weight-bold'>The Province of British Columbia's</div>
+            <div className='font-weight-bold font-size-large'>The Province of British Columbia's</div>
             <h1 className='font-weight-bolder mb-3 display-4'>
               Procurement Concierge&nbsp;
               <br className='d-lg-none' />
@@ -124,7 +124,7 @@ const Features: ComponentView<State, Msg> = ({ state, dispatch }) => {
               Requests for Information
             </h4>
             <p className='text-center mb-0'>
-              Requests for Information ("RFIs") are posted directly to this web app. Public Sector Buyers can work with the Ministry of Citizen's Services staff to develop RFIs, and Vendors respond by using a simple, online form.
+              Requests for Information (RFIs) are posted directly to this web app. Public Sector Buyers can work with the Ministry of Citizen's Services staff to develop RFIs, and Vendors respond by using a simple, online form.
             </p>
           </Col>
           <Col xs='12' md='4' className='my-5 my-md-0 px-4 d-flex flex-column justify-content-start align-items-center'>
@@ -142,7 +142,7 @@ const Features: ComponentView<State, Msg> = ({ state, dispatch }) => {
               Unsolicited Proposals
             </h4>
             <p className='text-center mb-0'>
-              Vendors with innovative goods and services that could solve government problems can submit proposals through this web app.
+              Vendors with innovative goods and services that could solve government problems can submit proposals through this web app. More information on eligibility criteria, proposal screening, and matching processes can be found <Link newTab route={{ tag: 'notice', value: { noticeId: { tag: 'comingSoon', value: undefined }}}}>here</Link>.
             </p>
           </Col>
         </Row>

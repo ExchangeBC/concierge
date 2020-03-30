@@ -11,6 +11,7 @@ type RfiId = string;
 
 export type NoticeId
   = ADT<'notFound'>
+  | ADT<'comingSoon'>
   | ADT<'changePassword'>
   | ADT<'resetPassword'>
   | ADT<'forgotPassword'>
@@ -30,6 +31,19 @@ function noticeIdToState(noticeId: NoticeId): State {
       return {
         title: 'Page Not Found',
         body: 'The page you are looking for does not exist.',
+        button: {
+          text: 'Return to the Home Page',
+          route: {
+            tag: 'landing',
+            value: null
+          }
+        }
+      };
+
+    case 'comingSoon':
+      return {
+        title: 'Coming Soon',
+        body: 'The page you are looking for is not yet available.',
         button: {
           text: 'Return to the Home Page',
           route: {
@@ -153,7 +167,7 @@ function noticeIdToState(noticeId: NoticeId): State {
         body: (
           <div>
             <p>Your Unsolicited Proposal has been received.</p>
-            <p>Please note that it may take four to six weeks for your Unsolicited Proposal to be reviewed.</p>
+            <p>Please note that it may take four to six weeks for your Unsolicited Proposal to be assessed for eligibility.</p>
             <p>Please send an email to <Link href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Link> if you have any questions.</p>
           </div>
         ),
@@ -169,7 +183,7 @@ function noticeIdToState(noticeId: NoticeId): State {
     case 'viEditedByVendor':
       return {
         title: 'Thank You',
-        body: 'Your changes to your Unsolicited Proposal have been received. A staff member from the Procurement Concierge Program will be in touch with you shortly.',
+        body: 'Your changes to your Unsolicited Proposal have been received. A staff member from the Procurement Concierge Program will continue to assess your Unsolicited Proposal\'s eligibility, and you will be notified once it has been assessed.',
         button: {
           text: 'View My Unsolicited Proposals',
           route: {

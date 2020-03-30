@@ -2,9 +2,10 @@ The Procurement Concierge Program (the “Program”) is a key component of the 
 
 The Program’s web application, the Concierge Web App, is intended to make it easier for public-sector buyers and vendors to take full advantage of what the Program has to offer.
 
-Table of Contents
-1.	[Public-Sector Buyers](#buyers)
-2.	[Vendors](#vendors)
+## Table of Contents
+
+1. [Public-Sector Buyers](#buyers)
+2. [Vendors](#vendors)
 
 <i id="buyers"></i>
 ## **1. Public-Sector Buyers**
@@ -212,7 +213,7 @@ The **“industry sector”** and **“area of interest”** fields will be used
 
 While Vendors can select all “industry sectors” and “areas of interest”, selecting all “industry sectors” and “areas of interest” when not all apply may undermine the relevance of the UP in the applicable “industry sectors” and “areas of interest”. It is therefore recommended that only the “industry sectors” and “areas of interest” that Vendors believe are relevant to the goods and services proposed should be selected. The screenshot below shows how eligible UPs are displayed to Registered Buyers in the web app.
 
- [Unsolicited Proposals Screenshot](/unsolicited_proposal_list_screenshot.png)
+![Unsolicited Proposals Screenshot](/unsolicited_proposal_list_screenshot.png)
 
 ##### ***Section 3: Eligibility***
 The information provided in this section will be used by Program Staff to assess if the UP meets the Eligibility Criteria.
@@ -229,7 +230,7 @@ Use the selection boxes to indicate how your UP is unique and innovative.  The i
 The contact person named in this section will be the primary point of contact for all Program activities related to this particular UP.
 
 
-##### ***Step 5. Submit Your Unsolicited Proposal***
+##### **Step 5. Submit Your Unsolicited Proposal**
 Once all mandatory fields are completed, ensure the “Detailed Information” form and any other relevant documents are attached.  Submit your UP by selecting the “Submit Application” button.  A confirmation email that your UP has been received will be sent to the email address provided in this section.
 
 Note that the “Submit Application” button will not activate until the Detailed Information form is attached and all required fields are completed.
@@ -237,13 +238,13 @@ Note that the “Submit Application” button will not activate until the Detail
 ##### **Step 6. Monitor Your Unsolicited Proposal**
 Program Staff will review your UP to see if it meets eligibility criteria and update the status of your application as required.   Status may appear as:
 
-**Application Submitted** – the UP has been received is in the queue to be assessed by Program Staff
-**Under Review** – the UP is being assessed by Program Staff
-**Edits Required** – Program Staff have identified changes that the Vendor must make before the UP can proceed (e.g. remove identifying information)
-**Edits Submitted** – the edits made by the Vendor have been submitted, to be reviewed by Program Staff
-**Eligible** – UP has met eligibility considerations and is now visible to Potential Buyers
-**Ineligible** – UP has not met eligibility considerations, not visible to Potential Buyers
-**Under Procurement** – UP has been accepted by a Potential Buyer and procurement is underway.  No longer visible to Potential Buyers.
+**Application Submitted** – the UP has been received is in the queue to be assessed by Program Staff  
+**Under Review** – the UP is being assessed by Program Staff  
+**Edits Required** – Program Staff have identified changes that the Vendor must make before the UP can proceed (e.g. remove identifying information)  
+**Edits Submitted** – the edits made by the Vendor have been submitted, to be reviewed by Program Staff  
+**Eligible** – UP has met eligibility considerations and is now visible to Potential Buyers  
+**Ineligible** – UP has not met eligibility considerations, not visible to Potential Buyers  
+**Under Procurement** – UP has been accepted by a Potential Buyer and procurement is underway.  No longer visible to Potential Buyers.  
 **Closed** – the UP is closed and not being considered 
 
 ### **Further Reading for Vendors**

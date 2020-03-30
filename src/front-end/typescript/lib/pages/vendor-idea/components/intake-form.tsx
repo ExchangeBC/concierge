@@ -4,7 +4,6 @@ import * as SelectMulti from 'front-end/lib/components/form-field-multi/select';
 import { Component, ComponentView, Dispatch, Immutable, immutable, Init, mapComponentDispatch, Update, updateComponentChild, View } from 'front-end/lib/framework';
 import * as LongText from 'front-end/lib/views/form-field/long-text';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
-import Link from 'front-end/lib/views/link';
 import { get } from 'lodash';
 import React from 'react';
 import { Col, CustomInput, Label, Row } from 'reactstrap';
@@ -14,17 +13,14 @@ import * as FileResource from 'shared/lib/resources/file';
 import { CreateRequestBody, CreateValidationErrors, InnovationDefinition, PublicVendorIdeaForProgramStaff, PublicVendorIdeaForVendors } from 'shared/lib/resources/vendor-idea';
 import { ADT, Omit } from 'shared/lib/types';
 import { getInvalidValue, mapValid, validateCategories, validateIndustrySectors, Validation } from 'shared/lib/validators';
-import { validateContactEmail, validateContactName, validateContactPhoneNumber, validateDescriptionSummary, validateDescriptionTitle, validateEligibilityExistingPurchase, validateEligibilityInnovationDefinitionOtherText, validateEligibilityProductOffering } from 'shared/lib/validators/vendor-idea';
+import { validateContactEmail, validateContactName, validateContactPhoneNumber, validateDescriptionSummary, validateDescriptionTitle, validateEligibilityInnovationDefinitionOtherText, validateEligibilityProductOffering } from 'shared/lib/validators/vendor-idea';
 
 export interface Params {
   isEditing: boolean; existingVi?: PublicVendorIdeaForVendors | PublicVendorIdeaForProgramStaff;
 }
 
 export type Msg
-  = ADT<'onChangeHasExistingPurchase', boolean>
-  | ADT<'onChangeExistingPurchaseSummary', string>
-  | ADT<'onChangeSearchDeclaration', boolean>
-  | ADT<'onChangeProductOffering', string>
+  = ADT<'onChangeProductOffering', string>
   | ADT<'onChangeInnovationDefinitionOtherText', string>
   | ADT<'onChangeInnovationDefinition', [InnovationDefinition, boolean]> // [def, add/remove]
   | ADT<'onChangeTitle', string>
@@ -35,7 +31,6 @@ export type Msg
   | ADT<'onChangeIndustrySectors', SelectMulti.Msg>
   | ADT<'onChangeCategories', SelectMulti.Msg>
   | ADT<'onChangeAttachments', FileMulti.Msg>
-  | ADT<'validateExistingPurchaseSummary'>
   | ADT<'validateProductOffering'>
   | ADT<'validateInnovationDefinitionOtherText'>
   | ADT<'validateTitle'>
@@ -47,9 +42,6 @@ export type Msg
 
 export interface State {
   isEditing: boolean;
-  hasExistingPurchase: boolean;
-  existingPurchaseSummary: LongText.State;
-  searchDeclaration: boolean;
   productOffering: LongText.State;
   innovationDefinitions: InnovationDefinition[];
   innovationDefinitionOtherText: LongText.State;
@@ -75,8 +67,7 @@ function getInnovationDefinitionOtherText(defs: InnovationDefinition[]): string 
 }
 
 type FormFieldKeys
-  = 'existingPurchaseSummary'
-  | 'productOffering'
+  = 'productOffering'
   | 'innovationDefinitionOtherText'
   | 'title'
   | 'summary'
@@ -100,7 +91,6 @@ export function getValues(state: State): Values {
       categories: SelectMulti.getValuesAsStrings(state.categories)
     },
     eligibility: {
-      existingPurchase: state.hasExistingPurchase ? state.existingPurchaseSummary.value : undefined,
       productOffering: state.productOffering.value,
       innovationDefinitions: state.innovationDefinitions
     },
@@ -139,7 +129,6 @@ export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
       placeholder: 'Please limit your response to 300 words.',
       value: getVi(['eligibility', 'existingPurchase'], '')
     }),
-    searchDeclaration: existingVi ? !getVi(['eligibility', 'existingPurchase'], undefined) : false,
     productOffering: LongText.init({
       id: 'vi-product-offering',
       required: true,
@@ -147,7 +136,7 @@ export const init: Init<Params, State> = async ({ isEditing, existingVi }) => {
       placeholder: 'Please limit your response to 500 words.',
       value: getVi(['eligibility', 'productOffering'], ''),
       help: {
-        text: 'Provide high-level information about how this Unsolicited Proposal would be beneficial for a potential Public Sector Buyer. This is not detailed business case-level information; if your idea is screen in, you can provide that analysis later.',
+        text: 'Provide high-level information about how this Unsolicited Proposal would be beneficial for a potential Public Sector Buyer. This is not detailed business case-level information; if your idea is screened in, you can provide that analysis later.',
         show: false
       }
     }),
@@ -256,12 +245,6 @@ function onChangeInnovationDefinition(state: Immutable<State>, change: [Innovati
 
 export const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
-    case 'onChangeHasExistingPurchase':
-      return [state.set('hasExistingPurchase', msg.value)];
-    case 'onChangeExistingPurchaseSummary':
-      return [updateValue(state, 'existingPurchaseSummary', msg.value)];
-    case 'onChangeSearchDeclaration':
-      return [state.set('searchDeclaration', msg.value)];
     case 'onChangeProductOffering':
       return [updateValue(state, 'productOffering', msg.value)];
     case 'onChangeInnovationDefinitionOtherText':
@@ -312,8 +295,6 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       // is fairly 'intelligent' about file names,
       // and handles file size constraint validation as-is.
       return [state];
-    case 'validateExistingPurchaseSummary':
-    return [validateValue(state, 'existingPurchaseSummary', v => mapValid(validateEligibilityExistingPurchase(v), u => u || ''))];
     case 'validateProductOffering':
       return [validateValue(state, 'productOffering', validateEligibilityProductOffering)];
     case 'validateInnovationDefinitionOtherText':
@@ -357,7 +338,6 @@ function validateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K,
 export function setErrors(state: Immutable<State>, errors: CreateValidationErrors): Immutable<State> {
   const getErrors = (kp: string[]) => get(errors, kp, []);
   return state
-    .setIn(['existingPurchaseSummary', 'errors'], getErrors(['eligibility', 'existingPurchase']))
     .setIn(['productOffering', 'errors'], getErrors(['eligibility', 'productOffering']))
     .setIn(['innovationDefinitionOtherText', 'errors'], getErrors(['eligibility', 'innovationDefinitions']).reduce((acc: string[], v: string[][], i: number) => {
       const def = state.innovationDefinitions[i];
@@ -378,9 +358,6 @@ export function setErrors(state: Immutable<State>, errors: CreateValidationError
 
 export function hasProvidedRequiredFields(state: State): boolean {
   const {
-    hasExistingPurchase,
-    existingPurchaseSummary,
-    searchDeclaration,
     productOffering,
     innovationDefinitions,
     title,
@@ -389,17 +366,13 @@ export function hasProvidedRequiredFields(state: State): boolean {
     emailAddress,
     attachments
   } = state;
-  const existingPurchaseIsOk = !hasExistingPurchase || !!(hasExistingPurchase && existingPurchaseSummary.value);
-  const searchDeclarationIsOk = hasExistingPurchase || (!hasExistingPurchase && searchDeclaration);
   const innovationDefinitionOtherText = getInnovationDefinitionOtherText(innovationDefinitions);
   const innovationDefinitionOtherTextIsOk = innovationDefinitionOtherText === null || !!innovationDefinitionOtherText;
-  return !!(existingPurchaseIsOk && searchDeclarationIsOk && productOffering.value && innovationDefinitions.length && innovationDefinitionOtherTextIsOk && title.value && summary.value && contactName.value && emailAddress.value && attachments.formFieldMulti.fields.length);
+  return !!(productOffering.value && innovationDefinitions.length && innovationDefinitionOtherTextIsOk && title.value && summary.value && contactName.value && emailAddress.value && attachments.formFieldMulti.fields.length);
 }
 
 export function hasValidationErrors(state: State): boolean {
   const {
-    hasExistingPurchase,
-    existingPurchaseSummary,
     productOffering,
     innovationDefinitionOtherText,
     title,
@@ -411,8 +384,7 @@ export function hasValidationErrors(state: State): boolean {
     categories,
     attachments
   } = state;
-  const existingPurchaseErrors = hasExistingPurchase && !!existingPurchaseSummary.errors.length;
-  const errors = !!(existingPurchaseErrors || productOffering.errors.length || title.errors.length || summary.errors.length || contactName.errors.length || emailAddress.errors.length || phoneNumber.errors.length || innovationDefinitionOtherText.errors.length);
+  const errors = !!(productOffering.errors.length || title.errors.length || summary.errors.length || contactName.errors.length || emailAddress.errors.length || phoneNumber.errors.length || innovationDefinitionOtherText.errors.length);
   return errors || !SelectMulti.isValid(industrySectors) || !SelectMulti.isValid(categories) || !FileMulti.isValid(attachments);
 }
 
@@ -482,7 +454,6 @@ const Checkbox: View<CheckboxProps> = ({ id, radio = false, label, disabled, che
 
 const Eligibility: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isDisabled = !state.isEditing;
-  const onChangeHasExistingPurchase = (value: boolean) => dispatch({ tag: 'onChangeHasExistingPurchase', value });
   const hasInnovationDefinition = (def: InnovationDefinition) => !!state.innovationDefinitions.filter(({ tag }) => tag === def.tag).length;
   const onChangeInnovationDefinition = (def: InnovationDefinition) => (checked: boolean) => dispatch({
     tag: 'onChangeInnovationDefinition',
@@ -500,36 +471,6 @@ const Eligibility: ComponentView<State, Msg> = ({ state, dispatch }) => {
         <Col xs='12' md='10' lg='8'>
           <h3 className='mb-4'>Section 3: Eligibility</h3>
           <p className='mb-0'>The information provided in this section will be used by Program Staff to assess if the Unsolicited Proposal meets the Eligibility Criteria.</p>
-        </Col>
-      </Row>
-      <Row className='mb-4'>
-        <Col xs='12' md='10' lg='8'>
-          <FieldLabel required text='Has this, or a similar product or service, been sold to the Province of BC before?' className='pt-0' />
-          <div>
-            <Checkbox radio id='vi-has-existing-purchase-yes' label='Yes' disabled={isDisabled} checked={state.hasExistingPurchase} onChange={v => v && onChangeHasExistingPurchase(true)} inline />
-            <Checkbox radio id='vi-has-existing-purchase-no' label='No' disabled={isDisabled} checked={!state.hasExistingPurchase} onChange={v => v && onChangeHasExistingPurchase(false)} inline />
-          </div>
-        </Col>
-      </Row>
-      <Row className='mb-4'>
-        <Col xs='12' md='10' lg='8'>
-          {state.hasExistingPurchase
-            ? (<LongText.view
-                style={{ minHeight: '240px' }}
-                state={state.existingPurchaseSummary}
-                disabled={isDisabled}
-                onChangeDebounced={onChangeDebounced('validateExistingPurchaseSummary')}
-                onChange={onChangeLongText('onChangeExistingPurchaseSummary')} />)
-            : (<div>
-              <Checkbox id='vi-search-declaration' disabled={isDisabled} checked={state.searchDeclaration} onChange={value => dispatch({ tag: 'onChangeSearchDeclaration', value })} className='font-weight-bold mb-2' label='You have searched, and a similar product and/or service cannot be found in any of the following websites: *' />
-                <ul className='mb-0'>
-                  <li><Link newTab href='http://www.bcbid.gov.bc.ca/open.dll/welcome?language=En'>BC Bid</Link></li>
-                  <li><Link newTab href='https://www2.gov.bc.ca/gov/content/employment-business/business/business-government/respond-to-opportunities/contract-opportunities'>Contract Opportunities – Advance Notice</Link></li>
-                  <li><Link newTab href='https://www2.gov.bc.ca/gov/content/employment-business/business/business-government/vendor-user-of-bc-bid/view-contract-awards'>Contract Award Summaries</Link></li>
-                  <li><Link newTab href='http://www2.gov.bc.ca/gov/content/governments/services-for-government/bc-bid-resources/goods-and-services-catalogue'>Goods and Services Catalogue</Link></li>
-                  <li><Link newTab href='https://www2.gov.bc.ca/gov/content/governments/about-the-bc-government/open-government/open-information/directly-awarded-contracts'>Directly-Awarded Contracts</Link></li>
-                </ul>
-              </div>)}
         </Col>
       </Row>
       <Row className='mb-4'>
