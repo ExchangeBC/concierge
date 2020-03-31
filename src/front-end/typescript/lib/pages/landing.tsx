@@ -25,7 +25,12 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 
 const Hero: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
-    <div className='bg-info py-6'>
+    <div className='bg-info py-6' style={{
+      backgroundImage: 'url("/images/hero_image.jpg")',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
+    }}>
       <Container style={{ height: '40vh', maxHeight: '600px' }} className='d-flex flex-column justify-content-center'>
         <Row className='mb-4'>
           <Col className='text-white'>

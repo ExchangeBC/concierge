@@ -29,6 +29,7 @@ This document describes the project's developer environment, technical architect
     + [Restoring from Backup](#restoring-from-backup)
   * [Replica Sets](#replica-sets)
 - [Team](#team)
+- [Credits](#credits)
 
 <!-- tocstop -->
 
@@ -280,3 +281,9 @@ IMPORTANT: Create a backup of your existing database before migrating to a repli
 The Procurement Concierge is currently operated by the BC Developers' Exchange within the Government of British Columbia.
 
 This project was originally built by the digital product development team at [Real Folk](https://www.realfolk.io).
+
+## Credits
+
+This project would not have been possible by the incredible work done by open source project maintainers. The licenses for open source projects used by the Procurement Concierge Program's web app are documented in OPEN_SOURCE_LICENSES.tx.
+
+In addition, the hero image on the web app's landing page is provided by [Cytonn Photography](https://unsplash.com/@cytonn_photography?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText) on [Unsplash](https://unsplash.com/?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText).
