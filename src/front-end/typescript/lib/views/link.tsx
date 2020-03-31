@@ -78,7 +78,7 @@ function ButtonLink(props: ButtonProps) {
     ...props,
     button: false,
     color: undefined,
-    className: `${className} btn btn-${size} ${color ? `btn-${outline ? 'outline-' : ''}${color}` : ''}`
+    className: `${className} btn btn-${size} ${color ? `btn-${outline ? 'outline-' : ''}${color}` : ''} text-nowrap`
   };
   return (
     <AnchorLink {...anchorProps} />
