@@ -108,7 +108,7 @@ async function validateUpdateRequestBody(UserModel: UserSchema.Model, FileModel:
 
 const resource: Resource = {
 
-  routeNamespace: 'vendorIdeas',
+  routeNamespace: 'unsolicitedProposals',
 
   create(Models) {
     const ViModel = Models.VendorIdea;
@@ -138,7 +138,8 @@ const resource: Resource = {
           log: [{
             createdAt: version.createdAt,
             type: LogItemType.ApplicationSubmitted,
-            note: 'The vendor submitted this application.'
+            note: 'The vendor submitted this application.',
+            attachments: []
           }]
         });
         await vendorIdea.save();

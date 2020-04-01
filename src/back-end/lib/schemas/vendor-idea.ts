@@ -47,7 +47,7 @@ export async function makePublicLogItem(UserModel: UserSchema.Model, FileModel: 
     createdBy: logItem.createdBy && await UserSchema.findPublicUserByIdUnsafely(UserModel, logItem.createdBy),
     type: logItem.type,
     note: logItem.note,
-    attachments: await Promise.all(logItem.attachments.map(fileId => FileSchema.findPublicFileByIdUnsafely(FileModel, fileId)))
+    attachments: await Promise.all((logItem.attachments || []).map(fileId => FileSchema.findPublicFileByIdUnsafely(FileModel, fileId)))
   };
 }
 

@@ -515,7 +515,7 @@ function rawLogItemToPublicLogItem(raw: RawLogItem): LogItemResource.PublicLogIt
 }
 
 export async function createViLogItem(body: LogItemResource.CreateRequestBody): Promise<ValidOrInvalid<LogItemResource.PublicLogItem, LogItemResource.CreateValidationErrors>> {
-  const response = await request(HttpMethod.Post, `vendorIdeaLogItems`, body);
+  const response = await request(HttpMethod.Post, `unsolicitedProposalLogItems`, body);
   switch (response.status) {
     case 201:
       const rawResponseBody = response.data as RawLogItem;
@@ -613,7 +613,7 @@ function rawViForProgramStaffToPublicViForProgramStaff(raw: RawViForProgramStaff
 
 // Only vendors create vendor ideas.
 export async function createVi(vi: ViResource.CreateRequestBody): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForVendors, ViResource.CreateValidationErrors>> {
-  const response = await request(HttpMethod.Post, 'vendorIdeas', vi);
+  const response = await request(HttpMethod.Post, 'unsolicitedProposals', vi);
   switch (response.status) {
     case 201:
       const rawVi = response.data as RawViForVendors;
@@ -678,7 +678,7 @@ interface RawViSlimForProgramStaff extends Omit<ViResource.PublicVendorIdeaSlimF
 }
 
 export async function readManyVisForBuyers(): Promise<ValidOrInvalid<PaginatedList<ViResource.PublicVendorIdeaSlimForBuyers>, null>> {
-  const response = await request(HttpMethod.Get, 'vendorIdeas');
+  const response = await request(HttpMethod.Get, 'unsolicitedProposals');
   switch (response.status) {
     case 200:
       const raw = response.data as PaginatedList<RawViSlimForBuyers>;
@@ -692,7 +692,7 @@ export async function readManyVisForBuyers(): Promise<ValidOrInvalid<PaginatedLi
 }
 
 export async function readManyVisForVendors(): Promise<ValidOrInvalid<PaginatedList<ViResource.PublicVendorIdeaSlimForVendors>, null>> {
-  const response = await request(HttpMethod.Get, 'vendorIdeas');
+  const response = await request(HttpMethod.Get, 'unsolicitedProposals');
   switch (response.status) {
     case 200:
       const raw = response.data as PaginatedList<RawViSlimForVendors>;
@@ -706,7 +706,7 @@ export async function readManyVisForVendors(): Promise<ValidOrInvalid<PaginatedL
 }
 
 export async function readManyVisForProgramStaff(): Promise<ValidOrInvalid<PaginatedList<ViResource.PublicVendorIdeaSlimForProgramStaff>, null>> {
-  const response = await request(HttpMethod.Get, 'vendorIdeas');
+  const response = await request(HttpMethod.Get, 'unsolicitedProposals');
   switch (response.status) {
     case 200:
       const raw = response.data as PaginatedList<RawViSlimForProgramStaff>;
@@ -720,7 +720,7 @@ export async function readManyVisForProgramStaff(): Promise<ValidOrInvalid<Pagin
 }
 
 export async function readOneViForBuyers(id: string): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForBuyers, null>> {
-  const response = await request(HttpMethod.Get, `vendorIdeas/${id}`);
+  const response = await request(HttpMethod.Get, `unsolicitedProposals/${id}`);
   switch (response.status) {
     case 200:
       const rawVi = response.data as RawViForBuyers;
@@ -731,7 +731,7 @@ export async function readOneViForBuyers(id: string): Promise<ValidOrInvalid<ViR
 }
 
 export async function readOneViForProgramStaff(id: string): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForProgramStaff, null>> {
-  const response = await request(HttpMethod.Get, `vendorIdeas/${id}`);
+  const response = await request(HttpMethod.Get, `unsolicitedProposals/${id}`);
   switch (response.status) {
     case 200:
       const rawVi = response.data as RawViForProgramStaff;
@@ -742,7 +742,7 @@ export async function readOneViForProgramStaff(id: string): Promise<ValidOrInval
 }
 
 export async function readOneViForVendors(id: string): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForVendors, null>> {
-  const response = await request(HttpMethod.Get, `vendorIdeas/${id}`);
+  const response = await request(HttpMethod.Get, `unsolicitedProposals/${id}`);
   switch (response.status) {
     case 200:
       const rawVi = response.data as RawViForVendors;
@@ -753,7 +753,7 @@ export async function readOneViForVendors(id: string): Promise<ValidOrInvalid<Vi
 }
 
 export async function updateViForVendors(vi: ViResource.UpdateRequestBody, id: string): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForVendors, ViResource.UpdateValidationErrors>> {
-  const response = await request(HttpMethod.Put, `vendorIdeas/${id}`, vi);
+  const response = await request(HttpMethod.Put, `unsolicitedProposals/${id}`, vi);
   switch (response.status) {
     case 200:
       const rawVi = response.data as RawViForVendors;
@@ -766,7 +766,7 @@ export async function updateViForVendors(vi: ViResource.UpdateRequestBody, id: s
 }
 
 export async function updateViForProgramStaff(vi: ViResource.UpdateRequestBody, id: string): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForProgramStaff, ViResource.UpdateValidationErrors>> {
-  const response = await request(HttpMethod.Put, `vendorIdeas/${id}`, vi);
+  const response = await request(HttpMethod.Put, `unsolicitedProposals/${id}`, vi);
   switch (response.status) {
     case 200:
       const rawVi = response.data as RawViForProgramStaff;

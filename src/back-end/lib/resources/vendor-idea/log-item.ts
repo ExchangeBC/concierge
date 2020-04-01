@@ -18,7 +18,7 @@ type CreateResponseBody = JsonResponseBody<PublicLogItem | CreateValidationError
 
 const resource: Resource = {
 
-  routeNamespace: 'vendorIdeaLogItems',
+  routeNamespace: 'unsolicitedProposalLogItems',
 
   create(Models) {
     const ViModel = Models.VendorIdea;
