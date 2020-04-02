@@ -156,6 +156,7 @@ export function express<Session, FileUploadMetadata>(): ExpressAdapter<Session, 
           expressRes
             .set('Content-Type', 'text/plain')
             .send(response.body.value);
+          break;
         case 'html':
           expressRes
             .set('Content-Type', 'text/html')
