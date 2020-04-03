@@ -258,7 +258,7 @@ function tableBodyRows(vis: VendorIdea[], dispatch: Dispatch<Msg>): Table.RowsSp
 }
 
 const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (!state.vis.length) { return (<div>There are currently no Vendor Initiated-Ideas available.</div>); }
+  if (!state.vis.length) { return (<div>There are currently no Unsolicited Proposals available.</div>); }
   if (!state.visibleVis.length) { return (<div>There are no Unsolicited Proposals that match the search criteria.</div>); }
   const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
   return (
