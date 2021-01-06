@@ -4,17 +4,17 @@ apiVersion: v1
 metadata:
   annotations:
     description: Deployment template for the Procurement Concierge web application.
-    tags: "${NAME}-${TAG_NAME}"
-  name: "${NAME}-${TAG_NAME}-deploy"
+    tags: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+  name: "${NAME}-${APP_GROUP}-${TAG_NAME}-deploy"
 objects:
 - kind: ConfigMap
   apiVersion: v1
   metadata:
-    name: "${NAME}-${TAG_NAME}-config"
+    name: "${NAME}-${APP_GROUP}-${TAG_NAME}-config"
   data:
     NODE_ENV: production
     SERVER_HOST: 0.0.0.0
-    DATABASE_SERVICE_NAME: "mongodb-${APP_GROUP}-${TAG_NAME}"
+    DATABASE_SERVICE_NAME: "${DATABASE_SERVICE_NAME}-${APP_GROUP}-${TAG_NAME}"
     FILE_STORAGE_DIR: "/opt/app-root/tmp/files/storage"
     CONTACT_EMAIL: replaceme@email.com
     SCHEDULED_MAINTENANCE: '0'
@@ -24,13 +24,14 @@ objects:
     MAILER_PORT: '25'
     MAILER_ROOT_URL: https://procurementconcierge.gov.bc.ca
     TZ: America/Vancouver
+    MONGODB_REPLICA_NAME: ${MONGODB_REPLICA_NAME}
 - kind: Secret
   type: Opaque
   apiVersion: v1
   metadata:
-    name: "${NAME}-${TAG_NAME}-secret"
+    name: "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
     labels:
-      app: "${NAME}-${TAG_NAME}"
+      app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
       app-group: ${APP_GROUP}
       template: "${NAME}-deploy"
   stringData:
@@ -39,9 +40,9 @@ objects:
 - kind: DeploymentConfig
   apiVersion: v1
   metadata:
-    name: "${NAME}-${TAG_NAME}"
+    name: "${NAME}-${APP_GROUP}-${TAG_NAME}"
     labels:
-      app: "${NAME}-${TAG_NAME}"
+      app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
       app-group: "${APP_GROUP}"
       template: "${NAME}-deploy"
   spec:
@@ -53,33 +54,22 @@ objects:
         timeoutSeconds: 600
         maxUnavailable: 25%
         maxSurge: 25%
-    triggers:
-    - type: ImageChange
-      imageChangeParams:
-        automatic: true
-        containerNames:
-        - "${NAME}-${TAG_NAME}"
-        from:
-          kind: ImageStreamTag
-          namespace: "${IMAGE_NAMESPACE}"
-          name: "${NAME}-${TAG_NAME}:latest"
-    - type: ConfigChange
     replicas: ${{REPLICAS}}
     test: false
     selector:
-      app: "${NAME}-${TAG_NAME}"
-      deploymentconfig: "${NAME}-${TAG_NAME}"
+      app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+      deploymentconfig: "${NAME}-${APP_GROUP}-${TAG_NAME}"
     template:
       metadata:
         labels:
-          app: "${NAME}-${TAG_NAME}"
+          app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
           app-group: "${APP_GROUP}"
-          deploymentconfig: "${NAME}-${TAG_NAME}"
-          template: "${NAME}-deploy"
+          deploymentconfig: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+          template: "${NAME}-${APP_GROUP}-deploy"
       spec:
         containers:
-        - name: "${NAME}-${TAG_NAME}"
-          image: docker-registry.default.svc:5000/${IMAGE_NAMESPACE}/${NAME}:${TAG_NAME}
+        - name: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+          image: image-registry.openshift-image-registry.svc:5000/${IMAGE_NAMESPACE}/${NAME}-${APP_GROUP}-${TAG_NAME}:latest
           ports:
           - containerPort: 3000
             protocol: TCP
@@ -87,31 +77,31 @@ objects:
           - name: MONGODB_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: "mongodb-${APP_GROUP}-${TAG_NAME}-secret"
-                key: DATABASE_PASSWORD
+                name: "${DATABASE_SERVICE_NAME}-${APP_GROUP}-${TAG_NAME}-secret"
+                key: MONGODB_PASSWORD
           - name: TOKEN_SECRET
             valueFrom:
               secretKeyRef:
-                name: "${NAME}-${TAG_NAME}-secret"
+                name: "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
                 key: TOKEN_SECRET
           - name: COOKIE_SECRET
             valueFrom:
               secretKeyRef:
-                name: "${NAME}-${TAG_NAME}-secret"
+                name: "${NAME}-${APP_GROUP}-${TAG_NAME}-secret"
                 key: COOKIE_SECRET
           - name: MONGODB_USER
             valueFrom:
               configMapKeyRef:
-                name: "mongodb-${APP_GROUP}-${TAG_NAME}-config"
-                key: DATABASE_USER
+                name: "${DATABASE_SERVICE_NAME}-${APP_GROUP}-${TAG_NAME}-config"
+                key: MONGODB_USER
           - name: MONGODB_DATABASE_NAME
             valueFrom:
               configMapKeyRef:
-                name: "mongodb-${APP_GROUP}-${TAG_NAME}-config"
-                key: DATABASE_NAME
+                name: "${DATABASE_SERVICE_NAME}-${APP_GROUP}-${TAG_NAME}-config"
+                key: MONGODB_DATABASE_NAME
           envFrom:
           - configMapRef:
-              name: "${NAME}-${TAG_NAME}-config"
+              name: "${NAME}-${APP_GROUP}-${TAG_NAME}-config"
           resources:
             requests:
               cpu: "${CPU_REQUEST}"
@@ -148,12 +138,12 @@ objects:
 - kind: Service
   apiVersion: v1
   metadata:
-    name: "${NAME}-${TAG_NAME}"
+    name: "${NAME}-${APP_GROUP}-${TAG_NAME}"
     creationTimestamp:
     labels:
-      app: "${NAME}-${TAG_NAME}"
+      app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
       app-group: "${APP_GROUP}"
-      template: "${NAME}-deploy"
+      template: "${NAME}-${APP_GROUP}-deploy"
   spec:
     ports:
     - name: 3000-tcp
@@ -161,7 +151,7 @@ objects:
       port: 3000
       targetPort: 3000
     selector:
-      deploymentconfig: "${NAME}-${TAG_NAME}"
+      deploymentconfig: "${NAME}-${APP_GROUP}-${TAG_NAME}"
     type: ClusterIP
     sessionAffinity: None
   status:
@@ -169,16 +159,16 @@ objects:
 - kind: Route
   apiVersion: v1
   metadata:
-    name: "${NAME}-${TAG_NAME}"
+    name: "${NAME}-${APP_GROUP}-${TAG_NAME}"
     labels:
-      app: "${NAME}-${TAG_NAME}"
+      app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
       app-group: "${APP_GROUP}"
-      template: "${NAME}-deploy"
+      template: "${NAME}-${APP_GROUP}-deploy"
   spec:
-    host: "${NAME}-${TAG_NAME}.apps.silver.devops.gov.bc.ca"
+    host: "${NAME}-${APP_GROUP}-${TAG_NAME}.apps.silver.devops.gov.bc.ca"
     to:
       kind: Service
-      name: "${NAME}-${TAG_NAME}"
+      name: "${NAME}-${APP_GROUP}-${TAG_NAME}"
       weight: 100
     port:
       targetPort: 3000-tcp
@@ -187,7 +177,7 @@ objects:
     wildcardPolicy: None
   status:
     ingress:
-    - host: "${NAME}-${TAG_NAME}.silver.devops.gov.bc.ca"
+    - host: "${NAME}-${APP_GROUP}-${TAG_NAME}.silver.devops.gov.bc.ca"
       routerName: router
       conditions:
       - type: Admitted
@@ -197,46 +187,65 @@ parameters:
 - name: NAME
   displayName: Name
   required: true
-  value: concierge
+  value: app
+
 - name: APP_GROUP
   displayName: App Group
   required: true
   value: concierge
+
 - name: IMAGE_NAMESPACE
   displayName: Image Namespace
   required: true
   value: 1b91ec-tools
+
 - name: TAG_NAME
   displayName: Environment TAG name
   required: true
   value: dev
+
 - name: CPU_REQUEST
   displayName: Resources CPU Request
   required: true
   value: 500m
+
 - name: CPU_LIMIT
   displayName: Resources CPU Limit
   required: true
   value: 1500m
+
 - name: MEMORY_REQUEST
   displayName: Resources Memory Request
   required: true
   value: 512Mi
+
 - name: MEMORY_LIMIT
   displayName: Resources Memory Limit
   required: true
-  value: 2Gi
+  value: 1Gi
+
 - name: REPLICAS
   displayName: The number of replicas to run
   required: true
   value: "3"
+
 - name: COOKIE_SECRET
   displayName: Cookie Secret
   required: true
   generate: expression
   from: "[a-zA-Z0-9]{16}"
+
 - name: TOKEN_SECRET
   displayName: Cookie Secret
   required: true
   generate: expression
   from: "[a-zA-Z0-9]{16}"
+
+- name: DATABASE_SERVICE_NAME
+  displayName: The name of the database service this app should connect to.
+  required: true
+  value: mongodb
+
+- name: MONGODB_REPLICA_NAME
+  displayName: The MongoDB replica set name.
+  required: false

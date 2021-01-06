@@ -4,18 +4,18 @@ metadata:
   annotations:
     description: Build template for the Procurment Concierge app.
     tags: node
-  name: "${NAME}-build"
+  name: "${NAME}-${APP_GROUP}-build"
 objects:
 - kind: ImageStream
   apiVersion: v1
   metadata:
-    name: ${NAME}
+    name: "${NAME}-${APP_GROUP}-${ENV_NAME}"
 - kind: BuildConfig
   apiVersion: v1
   metadata:
-    name: ${NAME}
+    name: "${NAME}-${APP_GROUP}-${ENV_NAME}"
     labels:
-      app: ${NAME}
+      app: "${NAME}-${APP_GROUP}"
       app-group: ${APP_GROUP}
       template: ${NAME}-build
   spec:
@@ -45,14 +45,12 @@ objects:
     output:
       to:
         kind: ImageStreamTag
-        name: ${NAME}:${OUTPUT_IMAGE_TAG}
-    triggers:
-    - type: ConfigChange
+        name: ${NAME}-${APP_GROUP}-${ENV_NAME}:${OUTPUT_IMAGE_TAG}
 parameters:
 - name: NAME
   displayName: Name
   required: true
-  value: concierge-dev
+  value: app
 - name: APP_GROUP
   displayName: Application Group
   required: true
@@ -81,6 +79,10 @@ parameters:
   displayName: Source Image Tag
   required: true
   value: '10'
+- name: ENV_NAME
+  displayName: The environment tag, one of dev/test/prod.
+  required: true
+  value: dev
 - name: OUTPUT_IMAGE_TAG
   displayName: Output Image Tag
   description: The tag given to the built image.

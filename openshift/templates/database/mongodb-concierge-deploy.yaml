@@ -59,22 +59,22 @@ objects:
             valueFrom:
               configMapKeyRef:
                 name: "${NAME}-${TAG_NAME}-config"
-                key: DATABASE_USER
+                key: MONGODB_USER
           - name: MONGODB_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: "${NAME}-${TAG_NAME}-secret"
-                key: DATABASE_PASSWORD
+                key: MONGODB_PASSWORD
           - name: MONGODB_DATABASE
             valueFrom:
               configMapKeyRef:
                 name: "${NAME}-${TAG_NAME}-config"
-                key: DATABASE_NAME
+                key: MONGODB_DATABASE_NAME
           - name: MONGODB_ADMIN_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: "${NAME}-${TAG_NAME}-secret"
-                key: DATABASE_ADMIN_PASSWORD
+                key: MONGODB_ADMIN_PASSWORD
           resources:
             limits:
               memory: "${MEMORY_LIMIT}"
@@ -124,8 +124,8 @@ objects:
       app-group: "${APP_GROUP}"
       template: "${NAME}-deploy"
   data:
-    DATABASE_NAME: "${DATABASE_NAME}"
-    DATABASE_USER: "${DATABASE_USER}"
+    MONGODB_DATABASE_NAME: "${MONGODB_DATABASE_NAME}"
+    MONGODB_USER: "${MONGODB_USER}"
 - kind: Secret
   apiVersion: v1
   metadata:
@@ -135,8 +135,8 @@ objects:
       app-group: "${APP_GROUP}"
       template: "${NAME}-deploy"
   stringData:
-    DATABASE_PASSWORD: "${MONGODB_PASSWORD}"
-    DATABASE_ADMIN_PASSWORD: "${MONGODB_ADMIN_PASSWORD}"
+    MONGODB_PASSWORD: "${MONGODB_PASSWORD}"
+    MONGODB_ADMIN_PASSWORD: "${MONGODB_ADMIN_PASSWORD}"
   type: Opaque
 - kind: Service
   apiVersion: v1
@@ -161,43 +161,52 @@ parameters:
   displayName: Name
   required: true
   value: mongodb-concierge
+
 - name: APP_GROUP
   displayName: App Group
   required: true
   value: concierge
+
 - name: TAG_NAME
   displayName: Environment TAG name
   required: true
   value: dev
+
 - name: MEMORY_LIMIT
   displayName: Memory Limit
   description: Maximum amount of memory the container can use.
   required: true
   value: 512Mi
+
 - name: PERSISTENT_VOLUME_SIZE
   displayName: Persistent Volume Size
   description: The size of the persistent volume , e.g. 512Mi, 1Gi, 2Gi.
   required: true
   value: 1Gi
+
 - name: PERSISTENT_VOLUME_CLASS
   displayName: Persistent Volume Class name
   required: false
   value: netapp-file-standard
+
 - name: MONGODB_PASSWORD
   displayName: MongoDB Connection Password
   required: true
   generate: expression
   from: "[a-zA-Z0-9]{16}"
+
 - name: MONGODB_ADMIN_PASSWORD
   displayName: MongoDB Connection Admin Password
   required: true
   generate: expression
   from: "[a-zA-Z0-9]{16}"
-- name: DATABASE_NAME
+
+- name: MONGODB_DATABASE_NAME
   displayName: Database Name
   required: true
   value: concierge
-- name: DATABASE_USER
+  
+- name: MONGODB_USER
   displayName: Database User
   description: A valid database user used by the service.
   required: true
