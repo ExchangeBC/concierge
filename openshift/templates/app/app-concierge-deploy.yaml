@@ -207,12 +207,12 @@ parameters:
 - name: CPU_REQUEST
   displayName: Resources CPU Request
   required: true
-  value: 500m
+  value: 100m
 
 - name: CPU_LIMIT
   displayName: Resources CPU Limit
   required: true
-  value: 1500m
+  value: 250m
 
 - name: MEMORY_REQUEST
   displayName: Resources Memory Request

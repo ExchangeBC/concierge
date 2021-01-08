@@ -114,8 +114,12 @@ objects:
                 - secretRef:
                     name: "${MONGODB_SERVICE_NAME}-${APP_GROUP}-${TAG_NAME}-secret"
               resources:
+                requests:
+                  memory: "${MEMORY_REQUESTS}"
+                  cpu: "${CPU_REQUESTS}"
                 limits:
                   memory: "${MEMORY_LIMIT}"
+                  cpu: "${CPU_LIMIT}"
               readinessProbe:
                 exec:
                   command:
@@ -208,7 +212,25 @@ parameters:
     value: "10Gi"
     required: true
 
+  - name: MEMORY_REQUESTS
+    displayName: Memory Requests
+    description: Requested amount of memory for the container.
+    required: true
+    value: 512Mi
+
   - name: MEMORY_LIMIT
-    displayName: "Memory Limit"
-    description: "Maximum amount of memory the container can use."
-    value: "512Mi"
+    displayName: Memory Limit
+    description: Maximum amount of memory the container can use.
+    value: 512Mi
+      
+  - name: CPU_REQUESTS
+    displayName: CPU Requests
+    description: Requested amount of CPU cores for the container.
+    required: true
+    value: 500m
+
+  - name: CPU_LIMIT
+    displayName: CPU Limit
+    description: Maximum amount of CPU cores the container can use.
+    required: true
+    value: 750m

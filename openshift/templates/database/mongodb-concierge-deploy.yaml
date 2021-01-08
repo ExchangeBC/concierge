@@ -76,7 +76,11 @@ objects:
                 name: "${NAME}-${TAG_NAME}-secret"
                 key: MONGODB_ADMIN_PASSWORD
           resources:
+            requests:
+              cpu: "${CPU_REQUESTS}"
+              memory: "${MEMORY_REQUESTS}"
             limits:
+              cpu: "${CPU_LIMIT}"
               memory: "${MEMORY_LIMIT}"
           volumeMounts:
           - name: "${NAME}-data"
@@ -172,11 +176,29 @@ parameters:
   required: true
   value: dev
 
+- name: MEMORY_REQUESTS
+  displayName: Memory Requests
+  description: Requested amount of memory for the container.
+  required: true
+  value: 512Mi 
+
 - name: MEMORY_LIMIT
   displayName: Memory Limit
   description: Maximum amount of memory the container can use.
   required: true
   value: 512Mi
+
+- name: CPU_REQUESTS
+  displayName: CPU Requests
+  description: Requested amount of CPU cores for the container.
+  required: true
+  value: 100m
+
+- name: CPU_LIMIT
+  displayName: CPU Limit
+  description: Maximum amount of CPU cores the container can use.
+  required: true
+  value: 250m
 
 - name: PERSISTENT_VOLUME_SIZE
   displayName: Persistent Volume Size

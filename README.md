@@ -203,7 +203,7 @@ As a convenience, developers can refer to `sample.env` as a guide.
 
 ## Deployment
 
-This project is deployed to the Government of British Columbia's own OpenShift infrastructure.
+This project is deployed to the Government of British Columbia's own OpenShift infrastructure.  *NOTE* The instructions below apply to deployment to the OpenShift 4 (OCP4) environment, and no longer apply to deployment to OCP3 environments.
 
 ### Environments
 
@@ -211,22 +211,23 @@ We have four environments:
 
 | OpenShift Project | Name | URL |
 |---|---|---|
-| akpalw-dev | Development | https://concierge-dev.pathfinder.gov.bc.ca |
-| akpalw-test | Test | https://concierge-test.pathfinder.gov.bc.ca |
-| akpalw-prod | Staging | https://concierge-staging.pathfinder.gov.bc.ca |
-| akpalw-prod | Production | https://concierge.pathfinder.gov.bc.ca |
-
-The Test and Staging environments share the same database instance, whereas the Development and Production environments have their own databases.
+| 1b91ec-dev | Development | https://app-concierge-dev.apps.silver.devops.gov.bc.ca |
+| 1b91ec-test | Test | https://app-concierge-test.apps.silver.devops.gov.bc.ca |
+| 1b91ec-prod | Production | https://app-concierge-prod.apps.silver.devops.gov.bc.ca |
 
 The Development, Test and Staging environments are secured behind HTTP Basic Auth. Please contact a team member to access these credentials.
 
 ### Deployment Process
 
-The "akpalw-tools" OpenShift project is used to trigger the deployment process for all environments.
+The "1b91ec-tools" OpenShift project is used to trigger the deployment process for all environments.
 
-To deploy to the Development environment, start a build for "akpalw-dev", and OpenShift will build and deploy HEAD from the `develop` branch.
+To deploy to the Development environment, start a build for "app-concierge-dev", and OpenShift will build and deploy HEAD from the `development` branch into the Dev environment listed above.
 
-To deploy to the Production environment, merge the `develop` branch into the `master` branch. "akpalw-prod" has been configured to start the deployment process for production automatically when commits are made to the `master` branch. Note that the Production deployment process first deploys to the Staging environment, and requires approval before the deployment continues to the Production environment.
+To deploy to the Test environment, start a build for "app-concierge-test", and OpenShift will build and deploy HEAD from the `master` branch into the Test environment listed above.
+
+To deploy to the Production environment, start a build for "app-concierge-prod", and OpenShift will build HEAD from the `master` branch. You will need to manually deploy the build to the Production environment listed above once it completes by deploying the "app-concierge-prod" deployment in the "1b91ec-prod" project.
+
+For instructions on building images for each of the environments and setting up build and deployment configurations in OpenShift 4, please refer to the instructions in [openshift/README.md](./openshift/README.md).  
 
 #### Running Database Migrations
 
@@ -234,47 +235,26 @@ Using an environment's deployment shell, run `npm run migrations:up` or `npm run
 
 ### Backups
 
-Automated backups are currently performed once per day at 12:00 AM UTC.  A rolling set of 7 backups is kept (1 week's worth), and as each new backup is created it replaces the oldest in the set.  The automated backups are completed using the BC Developers' Exchange Backup Utility located here: https://github.com/BCDevExchange/devexUtils/tree/master/backup
+Automated backups of the MongoDB database are performed with the BC Government Backup Container. Full documentation for this tool can be found here: https://github.com/BCDevOps/backup-container. The schedule for automated backups is as follows:
 
-Backups are stored in OpenShift on a separate provisioned volume.  For instructions on how to deploy and configure the MongoDB backup utility to your OpenShift project, please refer to: https://github.com/BCDevExchange/devexUtils/blob/master/openshift/README.md
+* Every 6 hours with a retention of 4 backups
+* Every 24 hours with a retention of 1 backup (daily)
+* Every week with a retention of 4 backups (weekly)
+* Every month with a retention of 1 backup (monthly)
+
+A manual backup can be immediately performed by connecting to the backup container pod in OpenShift and running `backup.sh -1`.
+
+Backup archives are stored in the same OpenShift project as the Procurement Concierge application, on a separate provisioned volume.
+
+You can find instructions for building and deploying the Backup Container images to OpenShift 4 [here](./openshift/BACKUPS.md).
 
 #### Restoring from Backup
 
-In the unfortunate event that you need to restore your data from a backup archive, you will need to use the following command to do so:
-
-```bash
-mongorestore -u admin -p $MONGODB_ADMIN_PASSWORD --authenticationDatabase=admin --gzip --archive="/path/to/backup/archive"
-```
+In the unfortunate event that you need to restore your data from a backup archive, the `backup.sh` script can  be used to restore from the last backup file. Refer to https://github.com/BCDevOps/backup-container#restore for details on how to use this script.
 
 ### Replica Sets
 
-If you are deploying the Concierge application to OpenShift, we recommend running the MongoDB database as a replica set, or Stateful Set in OpenShift.  Replica sets use redundant pods on separate nodes to minimize downtime and mitigate data loss.  We have provided the necessary configuration and instructions for setting up the replica set and configuring the application below.
-
-IMPORTANT: Create a backup of your existing database before migrating to a replica set.  This is in case anything goes wrong, and for transferring over data to the replica set.
-
-1. Create the replicaset
-	* If you wish to change any of the defaults (i.e. database name, passwords, etc.), edit the file `openshift/mongodb-replicaset` and change the appropriate parameters values before performing the steps below
-	* Run `oc new-app openshift/mongodb-replicaset.yaml` to create the replicaset from the openshift command line tools
-
-2. Migrate existing data to the replicaset
-	* Scale down the Concierge application using the existing MongoDB database OR set the SCHEDULED_MAINTENANCE environment variable in the Concierge application deployment to 1
-	* Create a data dump of your existing database with `mongodump -u admin -p <admin-password> --authenticationDatabase=admin`
-	* Use the mongo-restore tool to transfer the existing database data to the new replicaset `mongorestore -u admin -p <admin-password> --authenticationDatabase=admin`
-
-3. Configure the Concierge application to use the replicaset
-	* Update the environment variables for DATABASE_SERVICE_NAME, MONGODB_USER, MONGODB_PASSWORD, MONGODB_DATABASE_NAME
-	* Add a new environment variable called MONGODB_REPLICA_NAME and assign it the name of the replicaset (by default this is `rs0`)
-	* Scale the Concierge application back up / change SCHEDULED_MAINTENANCE environment variable to 0
-
-4. Set the backup pod to point to the replicaset
-	* Update the environment variable MONGODB_URI in the devexutils_backup deployment to reflect the new username, password, database service name, and database name.
-	* Redeploy
-
-5. Cleanup
-	* Remove the old mongodb deployment
-	* Remove the old mongodb service
-	* Remove the old mongodb storage
-	* Remove the old mongodb persistent volume
+If you are deploying the Concierge application to OpenShift, we recommend running the MongoDB database as a replica set, or Stateful Set in OpenShift.  Replica sets use redundant pods on separate nodes to minimize downtime and mitigate data loss.  We have provided the necessary configuration and instructions for setting up the replica set in [openshift/README.md](./openshift/README.md).
 
 ## Team
 
