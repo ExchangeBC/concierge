@@ -48,14 +48,16 @@ oc process -f templates/database/mongodb-concierge-deploy.yaml -p TAG_NAME=test 
 
 To deploy a highly available MongoDB stateful set (for use in PROD):
 
+```
 oc process -f templates/database/mongodb-concierge-replicaset-deploy.yaml -p TAG_NAME=prod | oc create -f -
+```
 
 ------
 
 To deploy the Concierge app, run these commands in each namespace (dev/test/prod).
 
 ```
-oc process -f templates/app/app-concierge-deploy.yaml 
+oc process -f templates/app/app-concierge-deploy.yaml \
 	-p TAG_NAME=dev | oc create -f -
 ```
 

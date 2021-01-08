@@ -28,8 +28,7 @@ oc process -f templates/backup/backup-config.yaml \
 oc process -f templates/backup/backup-deploy.yaml \
 -p DATABASE_DEPLOYMENT_NAME=mongodb-concierge-prod \
 -p TAG_NAME=prod \
--p BACKUP_VOLUME_SIZE=10Gi \
--p VERIFICATION_VOLUME_SIZE=10Gi | oc create -f -
+-p BACKUP_VOLUME_SIZE=10Gi | oc create -f -
 ```
 
 TEST:
@@ -45,8 +44,7 @@ oc process -f templates/backup/backup-config.yaml \
 oc process -f templates/backup/backup-deploy.yaml \
 -p DATABASE_DEPLOYMENT_NAME=mongodb-concierge-test \
 -p TAG_NAME=test \
--p BACKUP_VOLUME_SIZE=1Gi \
--p VERIFICATION_VOLUME_SIZE=1Gi | oc create -f -
+-p BACKUP_VOLUME_SIZE=1Gi | oc create -f -
 ```
 
 DEV:
@@ -62,6 +60,5 @@ oc process -f templates/backup/backup-config.yaml \
 oc process -f templates/backup/backup-deploy.yaml \
 -p DATABASE_DEPLOYMENT_NAME=mongodb-concierge-dev \
 -p TAG_NAME=dev \
--p BACKUP_VOLUME_SIZE=1Gi \
--p VERIFICATION_VOLUME_SIZE=1Gi | oc create -f -
+-p BACKUP_VOLUME_SIZE=1Gi | oc create -f -
 ```

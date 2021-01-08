@@ -209,7 +209,7 @@ parameters:
 - name: PERSISTENT_VOLUME_CLASS
   displayName: Persistent Volume Class name
   required: false
-  value: netapp-file-standard
+  value: netapp-block-standard
 
 - name: MONGODB_PASSWORD
   displayName: MongoDB Connection Password

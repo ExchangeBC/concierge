@@ -137,11 +137,12 @@ objects:
               # https://docs.okd.io/latest/install_config/persistent_storage/dynamically_provisioning_pvs.html
               # volume.alpha.kubernetes.io/storage-class: anything
           spec:
+            storageClassName: ${PERSISTENT_VOLUME_CLASS}
             # the volume can be mounted as read-write by a single node
             accessModes: [ ReadWriteOnce ]
             resources:
               requests:
-                storage: "${VOLUME_CAPACITY}"
+                storage: ${PERSISTENT_VOLUME_SIZE}
 parameters:
 
   - name: APP_GROUP
@@ -206,11 +207,16 @@ parameters:
     value: mongodb
     required: true
 
-  - name: VOLUME_CAPACITY
-    displayName: "Volume Capacity"
-    description: "Volume space available for data, e.g. 512Mi, 2Gi."
-    value: "10Gi"
+  - name: PERSISTENT_VOLUME_SIZE
+    displayName: Persistent Volume Size
+    description: The size of the persistent volume , e.g. 512Mi, 1Gi, 2Gi.
     required: true
+    value: 10Gi
+
+  - name: PERSISTENT_VOLUME_CLASS
+    displayName: Persistent Volume Class name
+    required: false
+    value: netapp-block-standard
 
   - name: MEMORY_REQUESTS
     displayName: Memory Requests

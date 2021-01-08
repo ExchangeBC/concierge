@@ -15,7 +15,7 @@ objects:
     NODE_ENV: production
     SERVER_HOST: 0.0.0.0
     DATABASE_SERVICE_NAME: "${DATABASE_SERVICE_NAME}-${APP_GROUP}-${TAG_NAME}"
-    FILE_STORAGE_DIR: "/opt/app-root/tmp/files/storage"
+    FILE_STORAGE_DIR: "${FILE_STORAGE_PATH}/storage"
     CONTACT_EMAIL: replaceme@email.com
     SCHEDULED_MAINTENANCE: '0'
     BASIC_AUTH_PASSWORD_HASH: ''
@@ -37,6 +37,7 @@ objects:
   stringData:
     COOKIE_SECRET: ${COOKIE_SECRET}
     TOKEN_SECRET: ${TOKEN_SECRET}
+
 - kind: DeploymentConfig
   apiVersion: v1
   metadata:
@@ -67,6 +68,10 @@ objects:
           deploymentconfig: "${NAME}-${APP_GROUP}-${TAG_NAME}"
           template: "${NAME}-${APP_GROUP}-deploy"
       spec:
+        volumes:
+        - name: ${NAME}-${APP_GROUP}-${TAG_NAME}-data
+          persistentVolumeClaim:
+            claimName: "${NAME}-${APP_GROUP}-${TAG_NAME}-pvc"
         containers:
         - name: "${NAME}-${APP_GROUP}-${TAG_NAME}"
           image: image-registry.openshift-image-registry.svc:5000/${IMAGE_NAMESPACE}/${NAME}-${APP_GROUP}-${TAG_NAME}:latest
@@ -109,6 +114,9 @@ objects:
             limits:
               cpu: "${CPU_LIMIT}"
               memory: "${MEMORY_LIMIT}"
+          volumeMounts:
+          - name: "${NAME}-${APP_GROUP}-${TAG_NAME}-data"
+            mountPath: ${FILE_STORAGE_PATH}
           livenessProbe:
             httpGet:
               path: "/status"
@@ -183,6 +191,23 @@ objects:
       - type: Admitted
         status: 'True'
       wildcardPolicy: None
+
+- kind: PersistentVolumeClaim
+  apiVersion: v1
+  metadata:
+    name: "${NAME}-${APP_GROUP}-${TAG_NAME}-pvc"
+    labels:
+      app: "${NAME}-${APP_GROUP}-${TAG_NAME}"
+      app-group: "${APP_GROUP}"
+      template: "${NAME}-deploy"
+  spec:
+    storageClassName: "${PERSISTENT_VOLUME_CLASS}"
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: "${PERSISTENT_VOLUME_SIZE}"
+
 parameters:
 - name: NAME
   displayName: Name
@@ -249,3 +274,19 @@ parameters:
 - name: MONGODB_REPLICA_NAME
   displayName: The MongoDB replica set name.
   required: false
+
+- name: PERSISTENT_VOLUME_SIZE
+  displayName: Persistent Volume Size
+  description: The size of the persistent volume , e.g. 512Mi, 1Gi, 2Gi.
+  required: true
+  value: 5Gi
+
+- name: PERSISTENT_VOLUME_CLASS
+  displayName: Persistent Volume Class name
+  required: true
+  value: netapp-file-standard
+
+- name: FILE_STORAGE_PATH
+  displayName: File path for the persistent file storage mount.
+  required: true
+  value: /opt/app-root/tmp/files
