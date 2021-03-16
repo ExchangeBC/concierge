@@ -10,8 +10,8 @@ To create default network security policies, run this command in each namespace,
 
 ```
 oc process -f \
-https://raw.githubusercontent.com/BCDevOps/platform-services/master/security/aporeto/docs/sample/quickstart-nsp.yaml \
--p NAMESPACE=<namespace> | oc create -f -
+https://github.com/bcgov/networkpolicy-migration-workshop/blob/main/quickstart.yaml \
+-p NAMESPACE=<namespace> | oc apply -f -
 ```
 
 -----
