@@ -31,11 +31,7 @@ export interface RouteParams {
   preview?: boolean;
 }
 
-export type InnerMsg
-  = ADT<'hideResponseConfirmationPrompt'>
-  | ADT<'hideDiscoveryDayConfirmationPrompt'>
-  | ADT<'respondToRfi'>
-  | ADT<'attendDiscoveryDay'>;
+export type InnerMsg = ADT<'hideResponseConfirmationPrompt'> | ADT<'hideDiscoveryDayConfirmationPrompt'> | ADT<'respondToRfi'> | ADT<'attendDiscoveryDay'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -51,7 +47,7 @@ export interface State {
   sessionUser?: PublicSessionUser;
   rfi?: PublicRfi;
   ddr?: DdrResource.PublicDiscoveryDayResponse;
-};
+}
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParams, shared }) => {
   const { rfiId, preview = false } = routeParams;
@@ -86,7 +82,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
       } else {
         // Use `mightViewResponseButtons` to only show response-related infoAlerts
         // to unauthenticated users and Vendor.
-        const mightViewResponseButtons = sessionUser && sessionUser.type === UserType.Vendor || !sessionUser;
+        const mightViewResponseButtons = (sessionUser && sessionUser.type === UserType.Vendor) || !sessionUser;
         const rfiStatus = rfiToRfiStatus(rfi);
         if (mightViewResponseButtons && rfiStatus === RfiStatus.Closed) {
           infoAlerts.push(`This RFI is still accepting responses up to ${rfi.latestVersion.gracePeriodDays} calendar day${rfi.latestVersion.gracePeriodDays === 1 ? 's' : ''} after the closing date and time.`);
@@ -111,7 +107,9 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
 };
 
 const update: Update<State, Msg> = ({ state, msg }) => {
-  if (!state.rfi) { return [state]; }
+  if (!state.rfi) {
+    return [state];
+  }
   switch (msg.tag) {
     case 'hideResponseConfirmationPrompt':
       return [state.set('promptResponseConfirmation', false)];
@@ -124,12 +122,14 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           if (!state.rfi) {
             return null;
           } else if (state.promptResponseConfirmation || !state.sessionUser || (await api.hasUserAcceptedTerms(state.sessionUser.id))) {
-            dispatch(newRoute({
-              tag: 'requestForInformationRespond',
-              value: {
-                rfiId: state.rfi._id
-              }
-            }));
+            dispatch(
+              newRoute({
+                tag: 'requestForInformationRespond',
+                value: {
+                  rfiId: state.rfi._id
+                }
+              })
+            );
             return null;
           } else {
             return state.set('promptResponseConfirmation', true);
@@ -143,12 +143,14 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           if (!state.rfi) {
             return null;
           } else if (state.promptDiscoveryDayConfirmation || !state.sessionUser || (await api.hasUserAcceptedTerms(state.sessionUser.id))) {
-            dispatch(newRoute({
-              tag: 'requestForInformationAttendDiscoveryDay',
-              value: {
-                rfiId: state.rfi._id
-              }
-            }));
+            dispatch(
+              newRoute({
+                tag: 'requestForInformationAttendDiscoveryDay',
+                value: {
+                  rfiId: state.rfi._id
+                }
+              })
+            );
             return null;
           } else {
             return state.set('promptDiscoveryDayConfirmation', true);
@@ -166,104 +168,102 @@ interface DetailProps {
 }
 
 const Detail: View<DetailProps> = ({ title, values }) => {
-  values = values.map((v, i) => (<div key={`${title}-${i}`}>{v}</div>));
+  values = values.map((v, i) => <div key={`${title}-${i}`}>{v}</div>);
   return (
-    <Row className='align-items-start mb-3'>
-      <Col xs='12' md='5' className='font-weight-bold text-secondary text-center text-md-right'>{title}</Col>
-      <Col xs='12' md='7' className='text-center text-md-left'>{values}</Col>
+    <Row className="align-items-start mb-3">
+      <Col xs="12" md="5" className="font-weight-bold text-secondary text-center text-md-right">
+        {title}
+      </Col>
+      <Col xs="12" md="7" className="text-center text-md-left">
+        {values}
+      </Col>
     </Row>
   );
 };
 
 const Details: View<{ rfi: PublicRfi }> = ({ rfi }) => {
   const version = rfi.latestVersion;
-  const contactValues = [
-    `${version.programStaffContact.firstName} ${version.programStaffContact.lastName}`,
-    version.programStaffContact.positionTitle,
-    (<a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>)
-  ];
-  const statusValues = [
-    (<StatusBadge rfi={rfi} />)
-  ];
-  const discoveryDayValues = version.discoveryDay
-    ? [(<a href={`#${DISCOVERY_DAY_ID}`}>View Discovery Day Information</a>)]
-    : ['No Discovery Day session'];
-  const attachmentsValues = version.attachments.length
-    ? [(<a href={`#${ATTACHMENTS_ID}`}>View Attachments</a>)]
-    : ['No attachments'];
+  const contactValues = [`${version.programStaffContact.firstName} ${version.programStaffContact.lastName}`, version.programStaffContact.positionTitle, <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>];
+  const statusValues = [<StatusBadge rfi={rfi} />];
+  const discoveryDayValues = version.discoveryDay ? [<a href={`#${DISCOVERY_DAY_ID}`}>View Discovery Day Information</a>] : ['No Discovery Day session'];
+  const attachmentsValues = version.attachments.length ? [<a href={`#${ATTACHMENTS_ID}`}>View Attachments</a>] : ['No attachments'];
   return (
     <Row>
-      <Col xs='12' md='7'>
-        <Detail title='Public Sector Entity' values={[version.publicSectorEntity]} />
-        <Detail title='Contact' values={contactValues} />
-        <Detail title='Commodity Code(s)' values={version.categories} />
+      <Col xs="12" md="7">
+        <Detail title="Public Sector Entity" values={[version.publicSectorEntity]} />
+        <Detail title="Contact" values={contactValues} />
+        <Detail title="Commodity Code(s)" values={version.categories} />
       </Col>
-      <Col xs='12' md='5'>
-        <Detail title='Status' values={statusValues} />
-        <Detail title='Closing Date' values={[formatDate(version.closingAt)]} />
-        <Detail title='Closing Time' values={[formatTime(version.closingAt, true)]} />
-        <Detail title='Discovery Day' values={discoveryDayValues} />
-        <Detail title='Attachments' values={attachmentsValues} />
+      <Col xs="12" md="5">
+        <Detail title="Status" values={statusValues} />
+        <Detail title="Closing Date" values={[formatDate(version.closingAt)]} />
+        <Detail title="Closing Time" values={[formatTime(version.closingAt, true)]} />
+        <Detail title="Discovery Day" values={discoveryDayValues} />
+        <Detail title="Attachments" values={attachmentsValues} />
       </Col>
     </Row>
   );
-}
+};
 
 const Description: View<{ value: string }> = ({ value }) => {
   return (
-    <div className='mt-5 pt-5 border-top'>
+    <div className="mt-5 pt-5 border-top">
       <Row>
-        <Col xs='12'>
+        <Col xs="12">
           <Markdown source={value} openLinksInNewTabs />
         </Col>
       </Row>
     </div>
   );
-}
+};
 
 const DiscoveryDay: View<{ discoveryDay?: RfiResource.PublicDiscoveryDay }> = ({ discoveryDay }) => {
-  if (!discoveryDay) { return null; }
+  if (!discoveryDay) {
+    return null;
+  }
   return (
-    <div className='pt-5 mt-5 border-top' id={DISCOVERY_DAY_ID}>
-      <FormSectionHeading text='Discovery Day Session' />
+    <div className="pt-5 mt-5 border-top" id={DISCOVERY_DAY_ID}>
+      <FormSectionHeading text="Discovery Day Session" />
       <DiscoveryDayInfo discoveryDay={discoveryDay} />
     </div>
   );
-}
+};
 
 const Attachments: View<{ files: FileResource.PublicFile[] }> = ({ files }) => {
-  if (!files.length) { return null; }
+  if (!files.length) {
+    return null;
+  }
   const children = files.map((file, i) => {
     return (
-      <div className='d-flex align-items-start mb-3' key={`view-rfi-attachment-${i}`}>
-        <Icon name='paperclip' color='secondary' className='mr-2 mt-1 flex-shrink-0' width={1.1} height={1.1} />
-        <Link href={makeFileBlobPath(file._id)} className='d-block' download>
+      <div className="d-flex align-items-start mb-3" key={`view-rfi-attachment-${i}`}>
+        <Icon name="paperclip" color="secondary" className="mr-2 mt-1 flex-shrink-0" width={1.1} height={1.1} />
+        <Link href={makeFileBlobPath(file._id)} className="d-block" download>
           {file.originalName}
         </Link>
       </div>
     );
   });
   return (
-    <div className='pt-5 mt-5 border-top' id={ATTACHMENTS_ID}>
-      <FormSectionHeading text='Attachments' />
+    <div className="pt-5 mt-5 border-top" id={ATTACHMENTS_ID}>
+      <FormSectionHeading text="Attachments" />
       <Row>
-        <Col xs='12'>
-          {children}
-        </Col>
+        <Col xs="12">{children}</Col>
       </Row>
     </div>
   );
-}
+};
 
 const Addenda: View<{ addenda: Addendum[] }> = ({ addenda }) => {
-  if (!addenda.length) { return null; }
+  if (!addenda.length) {
+    return null;
+  }
   const children = addenda.map((addendum, i) => {
     return (
       <div key={`view-rfi-addendum-${i}`} className={`pb-${i === addenda.length - 1 ? '0' : '4'} w-100`}>
-        <Col xs='12' md={{ size: 10, offset: 1 }} className={i !== 0 ? 'pt-4 border-top' : ''}>
-          <Markdown source={addendum.description} className='mb-2' openLinksInNewTabs />
+        <Col xs="12" md={{ size: 10, offset: 1 }} className={i !== 0 ? 'pt-4 border-top' : ''}>
+          <Markdown source={addendum.description} className="mb-2" openLinksInNewTabs />
         </Col>
-        <Col xs='12' md={{ size: 10, offset: 1 }} className='d-flex flex-column flex-md-row justify-content-between text-secondary'>
+        <Col xs="12" md={{ size: 10, offset: 1 }} className="d-flex flex-column flex-md-row justify-content-between text-secondary">
           <small>{publishedDateToString(addendum.createdAt)}</small>
           <small>{updatedDateToString(addendum.updatedAt)}</small>
         </Col>
@@ -271,62 +271,64 @@ const Addenda: View<{ addenda: Addendum[] }> = ({ addenda }) => {
     );
   });
   return (
-    <Row className='mt-5 pt-5 border-top'>
-      <Col xs='12'>
-        <h3 className='pb-3'>Addenda</h3>
+    <Row className="mt-5 pt-5 border-top">
+      <Col xs="12">
+        <h3 className="pb-3">Addenda</h3>
       </Col>
       {children}
     </Row>
   );
-}
+};
 
 function showButtons(rfiStatus: RfiStatus, userType?: UserType): boolean {
   return (!userType || userType === UserType.Vendor) && !!rfiStatus && rfiStatus !== RfiStatus.Expired;
 }
 
-const viewBottomBar: ComponentView<State, Msg> = props => {
+const viewBottomBar: ComponentView<State, Msg> = (props) => {
   const { state, dispatch } = props;
   // Do not show buttons for previews.
-  if (state.preview || !state.rfi) { return null; }
+  if (state.preview || !state.rfi) {
+    return null;
+  }
   // Only show these buttons for Vendors and unauthenticated users.
   const rfiStatus = rfiToRfiStatus(state.rfi);
-  if (!showButtons(rfiStatus, state.sessionUser && state.sessionUser.type)) { return null; }
+  if (!showButtons(rfiStatus, state.sessionUser && state.sessionUser.type)) {
+    return null;
+  }
   const version = state.rfi.latestVersion;
   const alreadyRespondedToDiscoveryDay = !!state.ddr;
   const attendDiscoveryDay = () => dispatch({ tag: 'attendDiscoveryDay', value: undefined });
   const respondToRfi = () => dispatch({ tag: 'respondToRfi', value: undefined });
   return (
     <FixedBar>
-      <Link onClick={respondToRfi} button color='primary' className='text-nowrap'>
+      <Link onClick={respondToRfi} button color="primary" className="text-nowrap">
         Respond to RFI
       </Link>
-      {version.discoveryDay && rfiStatus === RfiStatus.Open && !RfiResource.discoveryDayHasPassed(version.discoveryDay.occurringAt)
-        ? (<Link onClick={attendDiscoveryDay} button color='info' className='text-nowrap mr-md-3 mr-0 ml-3 ml-md-0'>
-            {alreadyRespondedToDiscoveryDay ? 'View Discovery Day Session Registration' : 'Attend Discovery Day Session'}
-          </Link>)
-        : null}
-      <div className='text-secondary font-weight-bold d-none d-md-block mr-auto'>I want to...</div>
+      {version.discoveryDay && rfiStatus === RfiStatus.Open && !RfiResource.discoveryDayHasPassed(version.discoveryDay.occurringAt) ? (
+        <Link onClick={attendDiscoveryDay} button color="info" className="text-nowrap mr-md-3 mr-0 ml-3 ml-md-0">
+          {alreadyRespondedToDiscoveryDay ? 'View Discovery Day Session Registration' : 'Attend Discovery Day Session'}
+        </Link>
+      ) : null}
+      <div className="text-secondary font-weight-bold d-none d-md-block mr-auto">I want to...</div>
     </FixedBar>
   );
 };
 
-const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = (props) => {
   const { state } = props;
-  if (!state.rfi) { return null; }
+  if (!state.rfi) {
+    return null;
+  }
   const rfi = state.rfi;
   const version = state.rfi.latestVersion;
   return (
     <div>
-      <Row className='mb-5'>
-        <Col xs='12' className='d-flex flex-column text-center align-items-center'>
-          <h1 className='h4'>RFI Number: {version.rfiNumber}</h1>
-          <h2 className='h1'>{version.title}</h2>
-          <div className='text-secondary small'>
-            {publishedDateToString(rfi.publishedAt)}
-          </div>
-          <div className='text-secondary small'>
-            {updatedDateToString(version.createdAt)}
-          </div>
+      <Row className="mb-5">
+        <Col xs="12" className="d-flex flex-column text-center align-items-center">
+          <h1 className="h4">RFI Number: {version.rfiNumber}</h1>
+          <h2 className="h1">{version.title}</h2>
+          <div className="text-secondary small">{publishedDateToString(rfi.publishedAt)}</div>
+          <div className="text-secondary small">{updatedDateToString(version.createdAt)}</div>
         </Col>
       </Row>
       <Details rfi={rfi} />
@@ -356,20 +358,24 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     return makePageMetadata(title);
   },
   getBreadcrumbs(state) {
-    const breadcrumbs: PageBreadcrumbs<Msg> = [{
-      text: 'RFIs',
-      onClickMsg: newRoute({
-        tag: 'requestForInformationList',
-        value: null
-      })
-    }];
+    const breadcrumbs: PageBreadcrumbs<Msg> = [
+      {
+        text: 'RFIs',
+        onClickMsg: newRoute({
+          tag: 'requestForInformationList',
+          value: null
+        })
+      }
+    ];
     breadcrumbs.push({
       text: state.rfi ? state.rfi.latestVersion.rfiNumber : 'Request for Information'
     });
     return breadcrumbs;
   },
   getModal(state) {
-    if (!state.rfi) { return null; }
+    if (!state.rfi) {
+      return null;
+    }
     if (state.promptResponseConfirmation) {
       return {
         title: 'Review Terms and Conditions',
@@ -392,7 +398,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     } else if (state.promptDiscoveryDayConfirmation) {
       return {
         title: 'Review Terms and Conditions',
-        body: 'You must accept the Procurement Concierge Terms and Conditions in order to attend this RFI\'s Discovery Day session.',
+        body: "You must accept the Procurement Concierge Terms and Conditions in order to attend this RFI's Discovery Day session.",
         onCloseMsg: { tag: 'hideDiscoveryDayConfirmationPrompt', value: undefined },
         actions: [
           {
@@ -407,7 +413,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
             msg: { tag: 'hideDiscoveryDayConfirmationPrompt', value: undefined }
           }
         ]
-      }
+      };
     } else {
       return null;
     }

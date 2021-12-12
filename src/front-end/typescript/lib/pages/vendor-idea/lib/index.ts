@@ -8,8 +8,8 @@ import { LogItemType, logItemTypeIsSystem } from 'shared/lib/resources/vendor-id
 import { ADT, UserType } from 'shared/lib/types';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
-type LogItemTypeCopy
-  = ADT<'badge', [BootstrapColor, string]> // [badge color, badge text]
+type LogItemTypeCopy =
+  | ADT<'badge', [BootstrapColor, string]> // [badge color, badge text]
   | ADT<'label', string>
   | ADT<'badgeAndLabel', [BootstrapColor, string, string]>; // [badge color, badge text, label text]
 
@@ -69,41 +69,20 @@ export function getLogItemTypeDropdownItems(): Array<OptionGroup<LogItemType>> {
   return [
     {
       label: 'Statuses',
-      options: [
-        LogItemType.ApplicationSubmitted,
-        LogItemType.UnderReview,
-        LogItemType.EditsRequired,
-        LogItemType.EditsSubmitted,
-        LogItemType.Eligible,
-        LogItemType.Ineligible,
-        LogItemType.UnderProcurement,
-        LogItemType.ClosedPurchasedFromVendor,
-        LogItemType.ClosedPurchasedFromAnotherVendor,
-        LogItemType.ClosedOther
-      ]
+      options: [LogItemType.ApplicationSubmitted, LogItemType.UnderReview, LogItemType.EditsRequired, LogItemType.EditsSubmitted, LogItemType.Eligible, LogItemType.Ineligible, LogItemType.UnderProcurement, LogItemType.ClosedPurchasedFromVendor, LogItemType.ClosedPurchasedFromAnotherVendor, LogItemType.ClosedOther]
     },
     {
       label: 'Events',
-      options: [
-        LogItemType.BuyerInitiatedInterest,
-        LogItemType.MatchInitiated,
-        LogItemType.MatchMeetingHeld,
-        LogItemType.PurchaseDirectAwardWithNoi,
-        LogItemType.PurchaseDirectAwardWithoutNoi,
-        LogItemType.PurchaseSolicitationBcBid,
-        LogItemType.PurchaseSolicitationSelectedVendors
-      ]
+      options: [LogItemType.BuyerInitiatedInterest, LogItemType.MatchInitiated, LogItemType.MatchMeetingHeld, LogItemType.PurchaseDirectAwardWithNoi, LogItemType.PurchaseDirectAwardWithoutNoi, LogItemType.PurchaseSolicitationBcBid, LogItemType.PurchaseSolicitationSelectedVendors]
     },
     {
       label: 'Other',
-      options: [
-        LogItemType.GeneralNote
-      ]
+      options: [LogItemType.GeneralNote]
     }
   ].map(({ label, options }) => {
     return {
       label,
-      options: options.map(o => makeItem(o))
+      options: options.map((o) => makeItem(o))
     };
   });
 }

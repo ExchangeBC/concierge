@@ -4,6 +4,8 @@
 *.map
 *.DS_Store
 .env
+.envrc
+.direnv
 .sass-cache/
 node_modules/
 /tmp/

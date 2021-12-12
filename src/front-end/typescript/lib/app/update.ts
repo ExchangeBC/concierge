@@ -32,10 +32,10 @@ import * as PageViView from 'front-end/lib/pages/vendor-idea/view';
 import { ValidOrInvalid } from 'shared/lib/validators';
 
 function setSession(state: Immutable<State>, validated: ValidOrInvalid<Session, null>): Immutable<State> {
-return state.set('shared', {
-  session: validated.tag === 'valid' ? validated.value : undefined
+  return state.set('shared', {
+    session: validated.tag === 'valid' ? validated.value : undefined
   });
-};
+}
 
 const startTransition: UpdateState<State> = makeStartLoading('transitionLoading');
 const stopTransition: UpdateState<State> = makeStopLoading('transitionLoading');
@@ -49,14 +49,11 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
     },
     setModal(state: Immutable<State>, modal: PageModal<Msg>) {
       state = state.setIn(['modal', 'open'], !!modal);
-      return modal
-        ? state.setIn(['modal', 'content'], modal)
-        : state;
+      return modal ? state.setIn(['modal', 'content'], modal) : state;
     }
   };
 
   switch (route.tag) {
-
     case 'landing':
       return await initAppChildPage({
         ...defaultPageInitParams,
@@ -410,7 +407,6 @@ async function initPage(state: Immutable<State>, dispatch: Dispatch<Msg>, route:
           return { tag: 'pageFeedback' as const, value };
         }
       });
-
   }
 }
 
@@ -419,14 +415,11 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     state,
     setModal(state: Immutable<State>, modal: PageModal<Msg>) {
       state = state.setIn(['modal', 'open'], !!modal);
-      return modal
-        ? state.setIn(['modal', 'content'], modal)
-        : state;
+      return modal ? state.setIn(['modal', 'content'], modal) : state;
     }
   };
 
   switch (msg.tag) {
-
     case 'noop':
       return [state];
 
@@ -452,7 +445,9 @@ const update: Update<State, Msg> = ({ state, msg }) => {
             state = setSession(state, await getSession());
           }
           const html = document.documentElement;
-          if (html.scrollTo) { html.scrollTo(0, 0); }
+          if (html.scrollTo) {
+            html.scrollTo(0, 0);
+          }
           return state;
         }
       ];
@@ -468,9 +463,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           // in case the user closes the modal using the "Esc" key,
           // "X" icon or by clicking the page backdrop.
           const [newState, asyncState] = update({ state, msg: state.modal.content.onCloseMsg });
-          state = asyncState
-            ? await asyncState(newState, dispatch) || newState
-            : newState;
+          state = asyncState ? (await asyncState(newState, dispatch)) || newState : newState;
           return state.setIn(['modal', 'open'], false);
         }
       ];
@@ -478,7 +471,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageLanding':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageLanding', value }),
+        mapChildMsg: (value) => ({ tag: 'pageLanding', value }),
         childStatePath: ['pages', 'landing'],
         childUpdate: PageLanding.component.update,
         childGetMetadata: PageLanding.component.getMetadata,
@@ -489,7 +482,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageSignIn':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageSignIn', value }),
+        mapChildMsg: (value) => ({ tag: 'pageSignIn', value }),
         childStatePath: ['pages', 'signIn'],
         childUpdate: PageSignIn.component.update,
         childGetMetadata: PageSignIn.component.getMetadata,
@@ -500,7 +493,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageSignUp':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageSignUp', value }),
+        mapChildMsg: (value) => ({ tag: 'pageSignUp', value }),
         childStatePath: ['pages', 'signUp'],
         childUpdate: PageSignUp.component.update,
         childGetMetadata: PageSignUp.component.getMetadata,
@@ -511,7 +504,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageSignUpBuyer':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageSignUpBuyer', value }),
+        mapChildMsg: (value) => ({ tag: 'pageSignUpBuyer', value }),
         childStatePath: ['pages', 'signUpBuyer'],
         childUpdate: PageSignUpBuyer.component.update,
         childGetMetadata: PageSignUpBuyer.component.getMetadata,
@@ -522,7 +515,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageSignUpVendor':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageSignUpVendor', value }),
+        mapChildMsg: (value) => ({ tag: 'pageSignUpVendor', value }),
         childStatePath: ['pages', 'signUpVendor'],
         childUpdate: PageSignUpVendor.component.update,
         childGetMetadata: PageSignUpVendor.component.getMetadata,
@@ -533,7 +526,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageSignUpProgramStaff':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageSignUpProgramStaff', value }),
+        mapChildMsg: (value) => ({ tag: 'pageSignUpProgramStaff', value }),
         childStatePath: ['pages', 'signUpProgramStaff'],
         childUpdate: PageSignUpProgramStaff.component.update,
         childGetMetadata: PageSignUpProgramStaff.component.getMetadata,
@@ -544,7 +537,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageSignOut':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageSignOut', value }),
+        mapChildMsg: (value) => ({ tag: 'pageSignOut', value }),
         childStatePath: ['pages', 'signOut'],
         childUpdate: PageSignOut.component.update,
         childGetMetadata: PageSignOut.component.getMetadata,
@@ -555,7 +548,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageChangePassword':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageChangePassword', value }),
+        mapChildMsg: (value) => ({ tag: 'pageChangePassword', value }),
         childStatePath: ['pages', 'changePassword'],
         childUpdate: PageChangePassword.component.update,
         childGetMetadata: PageChangePassword.component.getMetadata,
@@ -566,7 +559,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageResetPassword':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageResetPassword', value }),
+        mapChildMsg: (value) => ({ tag: 'pageResetPassword', value }),
         childStatePath: ['pages', 'resetPassword'],
         childUpdate: PageResetPassword.component.update,
         childGetMetadata: PageResetPassword.component.getMetadata,
@@ -577,7 +570,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageForgotPassword':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageForgotPassword', value }),
+        mapChildMsg: (value) => ({ tag: 'pageForgotPassword', value }),
         childStatePath: ['pages', 'forgotPassword'],
         childUpdate: PageForgotPassword.component.update,
         childGetMetadata: PageForgotPassword.component.getMetadata,
@@ -588,7 +581,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageTermsAndConditions':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageTermsAndConditions', value }),
+        mapChildMsg: (value) => ({ tag: 'pageTermsAndConditions', value }),
         childStatePath: ['pages', 'termsAndConditions'],
         childUpdate: PageTermsAndConditions.component.update,
         childGetMetadata: PageTermsAndConditions.component.getMetadata,
@@ -599,7 +592,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageUserView':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageUserView', value }),
+        mapChildMsg: (value) => ({ tag: 'pageUserView', value }),
         childStatePath: ['pages', 'userView'],
         childUpdate: PageUserView.component.update,
         childGetMetadata: PageUserView.component.getMetadata,
@@ -610,7 +603,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageUserList':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageUserList', value }),
+        mapChildMsg: (value) => ({ tag: 'pageUserList', value }),
         childStatePath: ['pages', 'userList'],
         childUpdate: PageUserList.component.update,
         childGetMetadata: PageUserList.component.getMetadata,
@@ -621,7 +614,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageRequestForInformationCreate':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageRequestForInformationCreate', value }),
+        mapChildMsg: (value) => ({ tag: 'pageRequestForInformationCreate', value }),
         childStatePath: ['pages', 'requestForInformationCreate'],
         childUpdate: PageRequestForInformationCreate.component.update,
         childGetMetadata: PageRequestForInformationCreate.component.getMetadata,
@@ -632,7 +625,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageRequestForInformationEdit':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageRequestForInformationEdit', value }),
+        mapChildMsg: (value) => ({ tag: 'pageRequestForInformationEdit', value }),
         childStatePath: ['pages', 'requestForInformationEdit'],
         childUpdate: PageRequestForInformationEdit.component.update,
         childGetMetadata: PageRequestForInformationEdit.component.getMetadata,
@@ -643,7 +636,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageRequestForInformationView':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageRequestForInformationView', value }),
+        mapChildMsg: (value) => ({ tag: 'pageRequestForInformationView', value }),
         childStatePath: ['pages', 'requestForInformationView'],
         childUpdate: PageRequestForInformationView.component.update,
         childGetMetadata: PageRequestForInformationView.component.getMetadata,
@@ -654,7 +647,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageRequestForInformationPreview':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageRequestForInformationPreview', value }),
+        mapChildMsg: (value) => ({ tag: 'pageRequestForInformationPreview', value }),
         childStatePath: ['pages', 'requestForInformationPreview'],
         childUpdate: PageRequestForInformationPreview.component.update,
         childGetMetadata: PageRequestForInformationPreview.component.getMetadata,
@@ -665,7 +658,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageRequestForInformationRespond':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageRequestForInformationRespond', value }),
+        mapChildMsg: (value) => ({ tag: 'pageRequestForInformationRespond', value }),
         childStatePath: ['pages', 'requestForInformationRespond'],
         childUpdate: PageRequestForInformationRespond.component.update,
         childGetMetadata: PageRequestForInformationRespond.component.getMetadata,
@@ -676,7 +669,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageRequestForInformationAttendDiscoveryDay':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageRequestForInformationAttendDiscoveryDay', value }),
+        mapChildMsg: (value) => ({ tag: 'pageRequestForInformationAttendDiscoveryDay', value }),
         childStatePath: ['pages', 'requestForInformationAttendDiscoveryDay'],
         childUpdate: PageRequestForInformationAttendDiscoveryDay.component.update,
         childGetMetadata: PageRequestForInformationAttendDiscoveryDay.component.getMetadata,
@@ -687,7 +680,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageRequestForInformationList':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageRequestForInformationList', value }),
+        mapChildMsg: (value) => ({ tag: 'pageRequestForInformationList', value }),
         childStatePath: ['pages', 'requestForInformationList'],
         childUpdate: PageRequestForInformationList.component.update,
         childGetMetadata: PageRequestForInformationList.component.getMetadata,
@@ -698,7 +691,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageViCreate':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageViCreate', value }),
+        mapChildMsg: (value) => ({ tag: 'pageViCreate', value }),
         childStatePath: ['pages', 'viCreate'],
         childUpdate: PageViCreate.component.update,
         childGetMetadata: PageViCreate.component.getMetadata,
@@ -709,7 +702,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageViEdit':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageViEdit', value }),
+        mapChildMsg: (value) => ({ tag: 'pageViEdit', value }),
         childStatePath: ['pages', 'viEdit'],
         childUpdate: PageViEdit.component.update,
         childGetMetadata: PageViEdit.component.getMetadata,
@@ -720,7 +713,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageViView':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageViView', value }),
+        mapChildMsg: (value) => ({ tag: 'pageViView', value }),
         childStatePath: ['pages', 'viView'],
         childUpdate: PageViView.component.update,
         childGetMetadata: PageViView.component.getMetadata,
@@ -731,7 +724,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageViList':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageViList', value }),
+        mapChildMsg: (value) => ({ tag: 'pageViList', value }),
         childStatePath: ['pages', 'viList'],
         childUpdate: PageViList.component.update,
         childGetMetadata: PageViList.component.getMetadata,
@@ -742,7 +735,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageMarkdown':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageMarkdown', value }),
+        mapChildMsg: (value) => ({ tag: 'pageMarkdown', value }),
         childStatePath: ['pages', 'markdown'],
         childUpdate: PageMarkdown.component.update,
         childGetMetadata: PageMarkdown.component.getMetadata,
@@ -753,7 +746,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageNotice':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageNotice', value }),
+        mapChildMsg: (value) => ({ tag: 'pageNotice', value }),
         childStatePath: ['pages', 'notice'],
         childUpdate: PageNotice.component.update,
         childGetMetadata: PageNotice.component.getMetadata,
@@ -764,7 +757,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'pageFeedback':
       return updateAppChildPage({
         ...defaultPageUpdateParams,
-        mapChildMsg: value => ({ tag: 'pageFeedback', value }),
+        mapChildMsg: (value) => ({ tag: 'pageFeedback', value }),
         childStatePath: ['pages', 'feedback'],
         childUpdate: PageFeedback.component.update,
         childGetMetadata: PageFeedback.component.getMetadata,

@@ -34,7 +34,7 @@ async function validateCreateRequestBody(RfiResponseModel: RfiResponseSchema.Mod
       createdAt: new Date(),
       createdBy: validatedCreatedBy.value._id,
       rfi: validatedRfi.value._id,
-      attachments: validatedAttachments.value.map(file => file._id)
+      attachments: validatedAttachments.value.map((file) => file._id)
     };
     return valid({
       rfiResponse: new RfiResponseModel(data),
@@ -59,7 +59,6 @@ type RequiredModels = 'RfiResponse' | 'Rfi' | 'User' | 'File';
 export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, Session>;
 
 export const resource: Resource = {
-
   routeNamespace: 'requestForInformationResponses',
 
   create(Models) {
@@ -87,7 +86,7 @@ export const resource: Resource = {
           case 'valid':
             const rfiResponse = validated.value.rfiResponse;
             await rfiResponse.save();
-            const publicRfiResponse = await RfiResponseSchema.makePublicRfiResponse(UserModel, FileModel, rfiResponse, request.session);
+            const publicRfiResponse = await RfiResponseSchema.makePublicRfiResponse(UserModel, FileModel, rfiResponse);
             // notify vendor
             mailer.rfiResponseReceivedToVendor({
               rfi: validated.value.rfi,
@@ -133,18 +132,20 @@ export const resource: Resource = {
         const rfiResponses = await RfiResponseModel.find({ rfi: validatedRfi.value._id });
         const publicRfiResponses: PublicRfiResponse[] = [];
         for (const rfiResponse of rfiResponses) {
-          publicRfiResponses.push(await RfiResponseSchema.makePublicRfiResponse(UserModel, FileModel, rfiResponse, request.session));
+          publicRfiResponses.push(await RfiResponseSchema.makePublicRfiResponse(UserModel, FileModel, rfiResponse));
         }
-        return respond(200, makeJsonResponseBody({
-          total: publicRfiResponses.length,
-          count: publicRfiResponses.length,
-          offset: 0,
-          items: publicRfiResponses
-        }));
+        return respond(
+          200,
+          makeJsonResponseBody({
+            total: publicRfiResponses.length,
+            count: publicRfiResponses.length,
+            offset: 0,
+            items: publicRfiResponses
+          })
+        );
       }
     };
   }
-
-}
+};
 
 export default resource;

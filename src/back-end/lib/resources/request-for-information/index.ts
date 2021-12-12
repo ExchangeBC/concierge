@@ -15,7 +15,7 @@ import { PaginatedList, UserType } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, valid, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
 import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validateDiscoveryDay, validateGracePeriodDays, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
 
-async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: UserSchema.Model, FileModel: FileSchema.Model, body: CreateRequestBody, session: Session): Promise<ValidOrInvalid<RfiSchema.Version, CreateValidationErrors>> {
+async function validateCreateRequestBody(UserModel: UserSchema.Model, FileModel: FileSchema.Model, body: CreateRequestBody, session: Session): Promise<ValidOrInvalid<RfiSchema.Version, CreateValidationErrors>> {
   // Get raw values.
   const createdBy = getString(session.user, 'id');
   const { rfiNumber, title, publicSectorEntity, description, discoveryDay, closingDate, closingTime, gracePeriodDays, buyerContact, programStaffContact, categories, attachments, addenda } = body;
@@ -43,7 +43,7 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
       createdAt,
       createdBy: (validatedCreatedBy.value as InstanceType<UserSchema.Model>)._id,
       closingAt: new Date(`${validatedClosingDate.value} ${validatedClosingTime.value}`),
-      gracePeriodDays: (validatedGracePeriodDays.value as number),
+      gracePeriodDays: validatedGracePeriodDays.value as number,
       rfiNumber: validatedRfiNumber.value as string,
       title: validatedTitle.value as string,
       description: validatedDescription.value as string,
@@ -57,7 +57,7 @@ async function validateCreateRequestBody(RfiModel: RfiSchema.Model, UserModel: U
           description
         };
       }),
-      attachments: (validatedAttachments.value as Array<InstanceType<FileSchema.Model>>).map(file => file._id),
+      attachments: (validatedAttachments.value as Array<InstanceType<FileSchema.Model>>).map((file) => file._id),
       buyerContact: (validatedBuyerContact.value as InstanceType<UserSchema.Model>)._id,
       programStaffContact: (validatedProgramStaffContact.value as InstanceType<UserSchema.Model>)._id
     };
@@ -99,7 +99,9 @@ function getDiscoveryDayBody(raw: any): CreateDiscoveryDayBody | undefined {
 }
 
 function getImpactedAttendeesWhenDiscoveryDayHasChanged(attendees: Attendee[], oldRfiVersion?: RfiSchema.Version, newRfiVersion?: RfiSchema.Version): Attendee[] {
-  if (!oldRfiVersion || !newRfiVersion || !oldRfiVersion.discoveryDay || !newRfiVersion.discoveryDay) { return []; }
+  if (!oldRfiVersion || !newRfiVersion || !oldRfiVersion.discoveryDay || !newRfiVersion.discoveryDay) {
+    return [];
+  }
   const oldDiscoveryDay = oldRfiVersion.discoveryDay;
   const newDiscoveryDay = newRfiVersion.discoveryDay;
   if (oldDiscoveryDay.occurringAt.toString() !== newDiscoveryDay.occurringAt.toString()) {
@@ -107,27 +109,21 @@ function getImpactedAttendeesWhenDiscoveryDayHasChanged(attendees: Attendee[], o
   }
   let impactedAttendees: Attendee[] = [];
   if (oldDiscoveryDay.venue !== newDiscoveryDay.venue) {
-    impactedAttendees = [
-      ...impactedAttendees,
-      ...attendees.filter(({ remote }) => !remote)
-    ];
+    impactedAttendees = [...impactedAttendees, ...attendees.filter(({ remote }) => !remote)];
   }
   if (oldDiscoveryDay.remoteAccess !== newDiscoveryDay.remoteAccess) {
-    impactedAttendees = [
-      ...impactedAttendees,
-      ...attendees.filter(({ remote }) => remote)
-    ];
+    impactedAttendees = [...impactedAttendees, ...attendees.filter(({ remote }) => remote)];
   }
   return impactedAttendees;
 }
 
 function hasDiscoveryDayBeenUpdated(oldRfiVersion?: RfiSchema.Version, newRfiVersion?: RfiSchema.Version): boolean {
-  if (!oldRfiVersion || !newRfiVersion || !oldRfiVersion.discoveryDay || !newRfiVersion.discoveryDay) { return false; }
+  if (!oldRfiVersion || !newRfiVersion || !oldRfiVersion.discoveryDay || !newRfiVersion.discoveryDay) {
+    return false;
+  }
   const oldDiscoveryDay = oldRfiVersion.discoveryDay;
   const newDiscoveryDay = newRfiVersion.discoveryDay;
-  return oldDiscoveryDay.occurringAt.toString() !== newDiscoveryDay.occurringAt.toString()
-      || oldDiscoveryDay.venue !== newDiscoveryDay.venue
-      || oldDiscoveryDay.remoteAccess !== newDiscoveryDay.remoteAccess;
+  return oldDiscoveryDay.occurringAt.toString() !== newDiscoveryDay.occurringAt.toString() || oldDiscoveryDay.venue !== newDiscoveryDay.venue || oldDiscoveryDay.remoteAccess !== newDiscoveryDay.remoteAccess;
 }
 
 function hasDiscoveryDayBeenDeleted(oldRfiVersion?: RfiSchema.Version, newRfiVersion?: RfiSchema.Version): boolean {
@@ -149,9 +145,7 @@ type GetRfiModel<RfiModelName extends keyof AvailableModels> = (Models: Pick<Ava
 type GlobalPermissions = (session: Session) => boolean;
 
 export function makeResource<RfiModelName extends keyof AvailableModels>(routeNamespace: string, getRfiModel: GetRfiModel<RfiModelName>, globalPermissions: GlobalPermissions): Resource<RfiModelName | 'User' | 'File'> {
-
   return {
-
     routeNamespace,
 
     create(Models) {
@@ -184,12 +178,12 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
               permissions: [permissions.ERROR_MESSAGE]
             });
           }
-          const validatedVersion = await validateCreateRequestBody(RfiModel, UserModel, FileModel, request.body, request.session);
+          const validatedVersion = await validateCreateRequestBody(UserModel, FileModel, request.body, request.session);
           switch (validatedVersion.tag) {
             case 'valid':
               const version = validatedVersion.value;
               // Remove addenda matching the DELETE_ADDENDUM_TOKEN
-              version.addenda = version.addenda.filter(addendum => {
+              version.addenda = version.addenda.filter((addendum) => {
                 return addendum.description !== DELETE_ADDENDUM_TOKEN;
               });
               const rfi = new RfiModel({
@@ -252,17 +246,21 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
           }
           let rfis = await RfiModel.find().exec();
           if (!permissions.isProgramStaff(request.session)) {
-            rfis = rfis.filter(rfi => {
+            rfis = rfis.filter((rfi) => {
               return RfiSchema.hasBeenPublished(rfi);
             });
           }
-          const publicRfis = await Promise.all(rfis.map(rfi => RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session)));
-          return basicResponse(200, request.session, makeJsonResponseBody({
-            total: publicRfis.length,
-            offset: 0,
-            count: publicRfis.length,
-            items: publicRfis
-          }));
+          const publicRfis = await Promise.all(rfis.map((rfi) => RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session)));
+          return basicResponse(
+            200,
+            request.session,
+            makeJsonResponseBody({
+              total: publicRfis.length,
+              offset: 0,
+              count: publicRfis.length,
+              items: publicRfis
+            })
+          );
         }
       };
     },
@@ -303,7 +301,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
               rfiId: ['RFI not found']
             });
           }
-          const validatedVersion = await validateCreateRequestBody(RfiModel, UserModel, FileModel, request.body, request.session);
+          const validatedVersion = await validateCreateRequestBody(UserModel, FileModel, request.body, request.session);
           switch (validatedVersion.tag) {
             case 'valid':
               const currentVersion = RfiSchema.getLatestVersion(rfi);
@@ -329,7 +327,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
                   return newAddendum;
                 }
               });
-              newVersion.addenda = newAddenda.filter(addendum => {
+              newVersion.addenda = newAddenda.filter((addendum) => {
                 return addendum.description !== DELETE_ADDENDUM_TOKEN;
               });
               // Persist the new version
@@ -379,9 +377,12 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
       };
     }
   };
-
 }
 
-export const resource = makeResource('requestsForInformation', Models => Models.Rfi, () => true);
+export const resource = makeResource(
+  'requestsForInformation',
+  (Models) => Models.Rfi,
+  () => true
+);
 
 export default resource;

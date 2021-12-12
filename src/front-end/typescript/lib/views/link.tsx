@@ -32,34 +32,23 @@ export type Props = AnchorProps | ButtonProps;
 
 function AnchorLink(props: AnchorProps) {
   // Initialize props.
-  const {
-    color,
-    nav = false,
-    className = '',
-    disabled = false,
-    children,
-    href,
-    route,
-    onClick,
-    newTab = false,
-    download = false,
-    style
-  } = props;
+  const { color, nav = false, className = '', disabled = false, children, href, route, onClick, newTab = false, download = false, style } = props;
   // Give precedence to the `route` prop over the `href` prop.
-  const finalHref: string | undefined
-    = disabled
-    ? undefined
-    : route
-    ? router.routeToUrl(route)
-    : href;
+  const finalHref: string | undefined = disabled ? undefined : route ? router.routeToUrl(route) : href;
   let finalClassName = className;
   finalClassName += nav ? ' nav-link' : '';
   finalClassName += disabled ? ' disabled' : '';
   finalClassName += color ? ` text-${color}` : '';
-  const finalOnClick = onClick && ((e: MouseEvent<HTMLAnchorElement>) => {
-    if (!e.ctrlKey && !e.metaKey && !e.shiftKey) { e.preventDefault(); }
-    if (!disabled) { onClick(); }
-  });
+  const finalOnClick =
+    onClick &&
+    ((e: MouseEvent<HTMLAnchorElement>) => {
+      if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+        e.preventDefault();
+      }
+      if (!disabled) {
+        onClick();
+      }
+    });
   return (
     <a href={finalHref} onClick={finalOnClick} className={finalClassName} target={newTab ? '_blank' : undefined} download={download} style={style}>
       {children}
@@ -68,28 +57,21 @@ function AnchorLink(props: AnchorProps) {
 }
 
 function ButtonLink(props: ButtonProps) {
-  const {
-    color,
-    size = 'md',
-    className = '',
-    outline = false
-  } = props;
+  const { color, size = 'md', className = '', outline = false } = props;
   const anchorProps: AnchorProps = {
     ...props,
     button: false,
     color: undefined,
     className: `${className} btn btn-${size} ${color ? `btn-${outline ? 'outline-' : ''}${color}` : ''} text-nowrap`
   };
-  return (
-    <AnchorLink {...anchorProps} />
-  );
+  return <AnchorLink {...anchorProps} />;
 }
 
 function Link(props: Props) {
   if (props.button) {
-    return (<ButtonLink {...props} />);
+    return <ButtonLink {...props} />;
   } else {
-    return (<AnchorLink {...props} />);
+    return <AnchorLink {...props} />;
   }
 }
 

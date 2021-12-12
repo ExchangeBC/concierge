@@ -49,7 +49,7 @@ export async function createUser(user: UserResource.CreateRequestBody): Promise<
     default:
       return invalid({});
   }
-};
+}
 
 export async function updateUser(user: UserResource.UpdateRequestBody): Promise<ValidOrInvalid<UserResource.PublicUser, UserResource.UpdateValidationErrors>> {
   user.currentPassword = user.currentPassword ? hashPassword(user.currentPassword) : undefined;
@@ -77,7 +77,7 @@ export async function readManyUsers(): Promise<ValidOrInvalid<ReadManyUserRespon
       const rawResponseBody = response.data as RawReadManyUserResponseBody;
       const responseBody: ReadManyUserResponseBody = {
         ...rawResponseBody,
-        items: rawResponseBody.items.map(user => rawUserToPublicUser(user))
+        items: rawResponseBody.items.map((user) => rawUserToPublicUser(user))
       };
       return valid(responseBody);
     default:
@@ -98,7 +98,9 @@ export async function readOneUser(userId: string): Promise<ValidOrInvalid<UserRe
 
 export async function hasUserAcceptedTerms(userId: string): Promise<boolean> {
   const user = await readOneUser(userId);
-  if (user.tag === 'invalid') { return false; }
+  if (user.tag === 'invalid') {
+    return false;
+  }
   return !!user.value.acceptedTermsAt;
 }
 
@@ -135,7 +137,7 @@ export async function createSession(body: SessionResource.CreateRequestBody): Pr
 }
 
 function withCurrentSession(method: HttpMethod): () => Promise<ValidOrInvalid<SessionResource.PublicSession, null>> {
-return async () => {
+  return async () => {
     const response = await request(method, 'sessions/current');
     switch (response.status) {
       case 200:
@@ -144,7 +146,7 @@ return async () => {
       default:
         return invalid(null);
     }
-  }
+  };
 }
 
 export const getSession = withCurrentSession(HttpMethod.Get);
@@ -219,10 +221,13 @@ export async function createFile(file: CreateFileRequestBody): Promise<ValidOrIn
   const requestBody = new FormData();
   requestBody.append('file', file.file);
   requestBody.append('name', file.name);
-  requestBody.append('metadata', JSON.stringify({
-    authLevel: file.authLevel,
-    alias: file.alias
-  }));
+  requestBody.append(
+    'metadata',
+    JSON.stringify({
+      authLevel: file.authLevel,
+      alias: file.alias
+    })
+  );
   const response = await request(HttpMethod.Post, 'files', requestBody);
   switch (response.status) {
     case 200:
@@ -257,7 +262,7 @@ export async function readOneFile(id: string): Promise<ValidOrInvalid<FileResour
  */
 
 export async function uploadFiles(files: FileMulti.Value[], authLevel?: AuthLevel<UserType>): Promise<ArrayValidation<string>> {
-  return validateArrayAsync(files, async file => {
+  return validateArrayAsync(files, async (file) => {
     switch (file.tag) {
       case 'existing':
         return valid(file.value._id);
@@ -298,8 +303,8 @@ function rawRfiToPublicRfi(raw: RawRfi): RfiResource.PublicRfi {
         ...raw.latestVersion.discoveryDay,
         occurringAt: new Date(raw.latestVersion.discoveryDay.occurringAt)
       },
-      attachments: raw.latestVersion.attachments.map(file => rawFileToPublicFile(file)),
-      addenda: raw.latestVersion.addenda.map(addendum => ({
+      attachments: raw.latestVersion.attachments.map((file) => rawFileToPublicFile(file)),
+      addenda: raw.latestVersion.addenda.map((addendum) => ({
         ...addendum,
         createdAt: new Date(addendum.createdAt),
         updatedAt: new Date(addendum.updatedAt)
@@ -356,7 +361,7 @@ export async function readManyRfis(): Promise<ValidOrInvalid<ReadManyRfiResponse
       const rawResponseBody = response.data as RawReadManyRfiResponseBody;
       return valid({
         ...rawResponseBody,
-        items: rawResponseBody.items.map(rawRfi => rawRfiToPublicRfi(rawRfi))
+        items: rawResponseBody.items.map((rawRfi) => rawRfiToPublicRfi(rawRfi))
       });
     default:
       return invalid(null);
@@ -464,7 +469,7 @@ function rawRfiResponseToPublicRfiResponse(raw: RawRfiResponse): RfiResponseReso
     ...raw,
     createdAt: new Date(raw.createdAt),
     createdBy: rawUserToPublicUser(raw.createdBy),
-    attachments: raw.attachments.map(file => rawFileToPublicFile(file))
+    attachments: raw.attachments.map((file) => rawFileToPublicFile(file))
   };
 }
 
@@ -492,7 +497,7 @@ export async function readManyRfiResponses(rfiId: string): Promise<ValidOrInvali
       const rawResponseBody = response.data as RawReadManyRfiResponsesResponseBody;
       return valid({
         ...rawResponseBody,
-        items: rawResponseBody.items.map(rawRfi => rawRfiResponseToPublicRfiResponse(rawRfi))
+        items: rawResponseBody.items.map((rawRfi) => rawRfiResponseToPublicRfiResponse(rawRfi))
       });
     default:
       return invalid(null);
@@ -510,12 +515,12 @@ function rawLogItemToPublicLogItem(raw: RawLogItem): LogItemResource.PublicLogIt
     ...raw,
     createdAt: new Date(raw.createdAt),
     createdBy: raw.createdBy && rawUserToPublicUser(raw.createdBy),
-    attachments: raw.attachments.map(file => rawFileToPublicFile(file))
+    attachments: raw.attachments.map((file) => rawFileToPublicFile(file))
   };
 }
 
 export async function createViLogItem(body: LogItemResource.CreateRequestBody): Promise<ValidOrInvalid<LogItemResource.PublicLogItem, LogItemResource.CreateValidationErrors>> {
-  const response = await request(HttpMethod.Post, `unsolicitedProposalLogItems`, body);
+  const response = await request(HttpMethod.Post, 'unsolicitedProposalLogItems', body);
   switch (response.status) {
     case 201:
       const rawResponseBody = response.data as RawLogItem;
@@ -534,7 +539,7 @@ function rawViVersionForBuyersToPublicViVersionForBuyers(raw: RawViVersionForBuy
   return {
     ...raw,
     createdAt: new Date(raw.createdAt),
-    attachments: raw.attachments.map(file => rawFileToPublicFile(file))
+    attachments: raw.attachments.map((file) => rawFileToPublicFile(file))
   };
 }
 
@@ -549,7 +554,7 @@ function rawViVersionForProgramStaffToPublicViVersionForProgramStaff(raw: RawViV
     ...raw,
     createdAt: new Date(raw.createdAt),
     createdBy: rawUserToPublicUser(raw.createdBy),
-    attachments: raw.attachments.map(file => rawFileToPublicFile(file))
+    attachments: raw.attachments.map((file) => rawFileToPublicFile(file))
   };
 }
 
@@ -562,7 +567,7 @@ function rawViVersionForVendorsToPublicViVersionForVendors(raw: RawViVersionForV
   return {
     ...raw,
     createdAt: new Date(raw.createdAt),
-    attachments: raw.attachments.map(file => rawFileToPublicFile(file))
+    attachments: raw.attachments.map((file) => rawFileToPublicFile(file))
   };
 }
 
@@ -607,7 +612,7 @@ function rawViForProgramStaffToPublicViForProgramStaff(raw: RawViForProgramStaff
     createdAt: new Date(raw.createdAt),
     latestVersion: rawViVersionForProgramStaffToPublicViVersionForProgramStaff(raw.latestVersion),
     createdBy: rawUserToPublicUser(raw.createdBy),
-    log: raw.log.map(item => rawLogItemToPublicLogItem(item))
+    log: raw.log.map((item) => rawLogItemToPublicLogItem(item))
   };
 }
 
@@ -684,7 +689,7 @@ export async function readManyVisForBuyers(): Promise<ValidOrInvalid<PaginatedLi
       const raw = response.data as PaginatedList<RawViSlimForBuyers>;
       return valid({
         ...raw,
-        items: raw.items.map(i => rawViSlimForBuyersToPublicViSlimForBuyers(i))
+        items: raw.items.map((i) => rawViSlimForBuyersToPublicViSlimForBuyers(i))
       });
     default:
       return invalid(null);
@@ -698,7 +703,7 @@ export async function readManyVisForVendors(): Promise<ValidOrInvalid<PaginatedL
       const raw = response.data as PaginatedList<RawViSlimForVendors>;
       return valid({
         ...raw,
-        items: raw.items.map(i => rawViSlimForVendorsToPublicViSlimForVendors(i))
+        items: raw.items.map((i) => rawViSlimForVendorsToPublicViSlimForVendors(i))
       });
     default:
       return invalid(null);
@@ -712,7 +717,7 @@ export async function readManyVisForProgramStaff(): Promise<ValidOrInvalid<Pagin
       const raw = response.data as PaginatedList<RawViSlimForProgramStaff>;
       return valid({
         ...raw,
-        items: raw.items.map(i => rawViSlimForProgramStaffToPublicViSlimForProgramStaff(i))
+        items: raw.items.map((i) => rawViSlimForProgramStaffToPublicViSlimForProgramStaff(i))
       });
     default:
       return invalid(null);

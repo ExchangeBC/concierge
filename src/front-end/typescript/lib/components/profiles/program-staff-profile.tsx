@@ -19,10 +19,7 @@ export interface State {
   positionTitle: ShortText.State;
 }
 
-type FormFieldKeys
-  = 'firstName'
-  | 'lastName'
-  | 'positionTitle';
+type FormFieldKeys = 'firstName' | 'lastName' | 'positionTitle';
 
 export function getValues(state: Immutable<State>): ProgramStaffProfile {
   return {
@@ -41,28 +38,30 @@ export function setValues(state: Immutable<State>, profile: ProgramStaffProfile)
 }
 
 export function setErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
-  return state
-    .set('validationErrors', errors)
-    // Don't show validation errors for empty required fields.
-    .setIn(['firstName', 'errors'], state.firstName.value ? errors.firstName || [] : [])
-    // All other fields are optional.
-    .setIn(['lastName', 'errors'], state.lastName.value ? errors.lastName || [] : [])
-    .setIn(['positionTitle', 'errors'], state.positionTitle.value ? errors.positionTitle || [] : []);
+  return (
+    state
+      .set('validationErrors', errors)
+      // Don't show validation errors for empty required fields.
+      .setIn(['firstName', 'errors'], state.firstName.value ? errors.firstName || [] : [])
+      // All other fields are optional.
+      .setIn(['lastName', 'errors'], state.lastName.value ? errors.lastName || [] : [])
+      .setIn(['positionTitle', 'errors'], state.positionTitle.value ? errors.positionTitle || [] : [])
+  );
 }
 
 export function isValid(state: Immutable<State>): boolean {
   const providedRequiredFields = !!(state.firstName.value && state.lastName.value && state.positionTitle.value);
-  const noValidationErrors = reduce(state.validationErrors, (acc: boolean, v: string[] | string[][] | undefined, k: string) => {
-    return acc && (!v || !v.length);
-  }, true);
+  const noValidationErrors = reduce(
+    state.validationErrors,
+    (acc: boolean, v: string[] | string[][] | undefined, k: string) => {
+      return acc && (!v || !v.length);
+    },
+    true
+  );
   return providedRequiredFields && noValidationErrors;
 }
 
-export type Msg
-  = ADT<'firstName', string>
-  | ADT<'lastName', string>
-  | ADT<'positionTitle', string>
-  | ADT<'validate'>;
+export type Msg = ADT<'firstName', string> | ADT<'lastName', string> | ADT<'positionTitle', string> | ADT<'validate'>;
 
 export type Params = ProfileParams<ProgramStaffProfile>;
 
@@ -134,34 +133,22 @@ function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<
 }
 
 export const ProgramStaffInformation: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, (value) => ({ tag, value }));
   const validate = () => dispatch({ tag: 'validate', value: undefined });
   return (
-    <div className='mt-4'>
+    <div className="mt-4">
       <FormSectionHeading text={`${userTypeToTitleCase(UserType.ProgramStaff)} Information`} />
       <Row>
-        <Col xs='12' md='5'>
-          <ShortText.view
-            state={state.firstName}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('firstName')} />
+        <Col xs="12" md="5">
+          <ShortText.view state={state.firstName} disabled={disabled} onChangeDebounced={validate} onChange={onChangeShortText('firstName')} />
         </Col>
-        <Col xs='12' md='5'>
-          <ShortText.view
-            state={state.lastName}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('lastName')} />
+        <Col xs="12" md="5">
+          <ShortText.view state={state.lastName} disabled={disabled} onChangeDebounced={validate} onChange={onChangeShortText('lastName')} />
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='7'>
-          <ShortText.view
-            state={state.positionTitle}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('positionTitle')} />
+        <Col xs="12" md="7">
+          <ShortText.view state={state.positionTitle} disabled={disabled} onChangeDebounced={validate} onChange={onChangeShortText('positionTitle')} />
         </Col>
       </Row>
     </div>

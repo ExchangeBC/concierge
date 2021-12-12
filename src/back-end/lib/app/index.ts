@@ -51,7 +51,7 @@ export function createModels(): AvailableModels {
     RfiResponse: mongoose.model('RfiResponse', RfiResponseSchema.schema),
     VendorIdea: mongoose.model('VendorIdea', ViSchema.schema)
   };
-};
+}
 
 interface CreateRouterParams {
   Models: AvailableModels;
@@ -62,25 +62,10 @@ interface CreateRouterParams {
 }
 
 export function createRouter(params: CreateRouterParams): Router<SupportedRequestBodies, SupportedResponseBodies, Session> {
-  const hooks = [
-    loggerHook
-  ];
+  const hooks = [loggerHook];
 
   // Add new resources to this array.
-  const resources: Array<crud.Resource<SupportedRequestBodies, SupportedResponseBodies, AvailableModels, any, any, any, Session>> = [
-    UserResource,
-    SessionResource,
-    ForgotPasswordTokenResource,
-    FeedbackResource,
-    FileResource,
-    FileBlobResource,
-    RfiResource,
-    RfiPreviewResource,
-    DiscoveryDayResponseResource,
-    RfiResponseResource,
-    ViResource,
-    ViLogItemResource
-  ];
+  const resources: Array<crud.Resource<SupportedRequestBodies, SupportedResponseBodies, AvailableModels, any, any, any, Session>> = [UserResource, SessionResource, ForgotPasswordTokenResource, FeedbackResource, FileResource, FileBlobResource, RfiResource, RfiPreviewResource, DiscoveryDayResponseResource, RfiResponseResource, ViResource, ViLogItemResource];
 
   // Define CRUD routes.
   // We need to use `flippedConcat` as using `concat` binds the routes in the wrong order.
@@ -104,7 +89,7 @@ export function createRouter(params: CreateRouterParams): Router<SupportedReques
     // Do not expose CRUD routes if undergoing scheduled maintenance.
     flippedConcat(SCHEDULED_MAINTENANCE ? [] : crudRoutes),
     // Vend an HTML page with all email notifications for reference.
-    flippedConcat(AdminRouter().map(r => namespaceRoute('/admin', r))),
+    flippedConcat(AdminRouter().map((r) => namespaceRoute('/admin', r))),
     // Front-end router.
     // Vend the downtime HTML file during scheduled maintenance.
     flippedConcat(FrontEndRouter(SCHEDULED_MAINTENANCE ? 'downtime.html' : 'index.html')),
@@ -114,10 +99,12 @@ export function createRouter(params: CreateRouterParams): Router<SupportedReques
 
   // Add basic auth if required.
   if (params.basicAuth) {
-    allRoutes = allRoutes.map(basicAuth({
-      ...params.basicAuth,
-      mapHook: a => a
-    }));
+    allRoutes = allRoutes.map(
+      basicAuth({
+        ...params.basicAuth,
+        mapHook: (a) => a
+      })
+    );
   }
 
   // Add the status router.

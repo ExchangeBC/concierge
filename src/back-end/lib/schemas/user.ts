@@ -88,8 +88,8 @@ export const schema: mongoose.Schema = new mongoose.Schema({
 
 export async function authenticate(user: InstanceType<Model>, password: string): Promise<boolean> {
   return await security.authenticatePassword(password, user.passwordHash);
-};
+}
 
 export async function hashPassword(password: string): Promise<string> {
   return await security.hashPassword(password);
-};
+}

@@ -5,7 +5,7 @@ const statusRoute: Route<any, null, TextResponseBody, null, any> = {
   method: HttpMethod.Get,
   path: '/status',
   handler: {
-    async transformRequest(request) {
+    async transformRequest() {
       return null;
     },
     async respond(request) {
@@ -19,6 +19,6 @@ const statusRoute: Route<any, null, TextResponseBody, null, any> = {
   }
 };
 
-const router: Router<any, TextResponseBody, any> = [ statusRoute ];
+const router: Router<any, TextResponseBody, any> = [statusRoute];
 
 export default router;

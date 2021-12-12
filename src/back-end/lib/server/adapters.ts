@@ -65,8 +65,8 @@ function parseMultipartRequest<FileUploadMetadata>(maxSize: number, parseFileUpl
     // Listen for files and fields.
     // We only want to receive one file, so we disregard all other files.
     // We only want the (optional) metadata field, so we disregard all other fields.
-    form.on('part', part => {
-      part.on('error', error => reject(error));
+    form.on('part', (part) => {
+      part.on('error', (error) => reject(error));
       // We expect the file's field to have the name `file`.
       if (part.name === 'file' && part.filename && !filePath) {
         // We only want to receive one file.
@@ -75,12 +75,12 @@ function parseMultipartRequest<FileUploadMetadata>(maxSize: number, parseFileUpl
         filePath = tmpPath;
       } else if (part.name === 'metadata' && !part.filename && !metadata) {
         part.setEncoding('utf8');
-        part.on('data', chunk => metadata += chunk);
+        part.on('data', (chunk) => (metadata += chunk));
         // No need to listen to 'end' event as the multiparty form won't end until the
         // entire request body has been processed.
       } else if (part.name === 'name' && !part.filename && !metadata) {
         part.setEncoding('utf8');
-        part.on('data', chunk => fileName += chunk);
+        part.on('data', (chunk) => (fileName += chunk));
         // No need to listen to 'end' event as the multiparty form won't end until the
         // entire request body has been processed.
       } else {
@@ -89,28 +89,32 @@ function parseMultipartRequest<FileUploadMetadata>(maxSize: number, parseFileUpl
       }
     });
     // Handle errors.
-    form.on('error', error => reject(error));
+    form.on('error', (error) => reject(error));
     // Resolve the promise once the request has finished parsing.
     form.on('close', () => {
       if (filePath && metadata && fileName) {
         const jsonMetadata = parseJsonSafely(metadata);
         switch (jsonMetadata.tag) {
           case 'valid':
-            resolve(makeFileRequestBody({
-              name: fileName,
-              path: filePath,
-              metadata: parseFileUploadMetadata(jsonMetadata.value)
-            }));
+            resolve(
+              makeFileRequestBody({
+                name: fileName,
+                path: filePath,
+                metadata: parseFileUploadMetadata(jsonMetadata.value)
+              })
+            );
             break;
           case 'invalid':
             reject(new Error('Invalid `metadata` field.'));
             break;
         }
       } else if (filePath && fileName) {
-        resolve(makeFileRequestBody({
-          name: fileName,
-          path: filePath
-        }));
+        resolve(
+          makeFileRequestBody({
+            name: fileName,
+            path: filePath
+          })
+        );
       } else {
         reject(new Error('No file uploaded'));
       }
@@ -125,15 +129,14 @@ export function express<Session, FileUploadMetadata>(): ExpressAdapter<Session, 
 
   return ({ router, sessionIdToSession, sessionToSessionId, host, port, maxMultipartFilesSize, parseFileUploadMetadata }) => {
     function respond(response: Response<ExpressResponseBodies, Session>, expressRes: expressLib.Response): void {
-      expressRes
-        .status(response.code)
-        .set(response.headers);
+      expressRes.status(response.code).set(response.headers);
       // Manage the session ID cookie.
-      const setSessionId = (id: string) => expressRes.cookie(SESSION_COOKIE_NAME, id, {
-        signed: true,
-        secure: ENV !== 'development'
-      });
-      const sessionId = sessionToSessionId(response.session)
+      const setSessionId = (id: string) =>
+        expressRes.cookie(SESSION_COOKIE_NAME, id, {
+          signed: true,
+          secure: ENV !== 'development'
+        });
+      const sessionId = sessionToSessionId(response.session);
       setSessionId(sessionId.toString());
       // TODO make switch statement more type-safe.
       switch (response.body.tag) {
@@ -143,24 +146,20 @@ export function express<Session, FileUploadMetadata>(): ExpressAdapter<Session, 
           break;
         case 'file':
           const file = response.body.value;
-          expressRes.set('Content-Type', file.contentType)
+          expressRes.set('Content-Type', file.contentType);
           if (file.contentEncoding) {
-            expressRes.set('Content-Encoding', file.contentEncoding)
+            expressRes.set('Content-Encoding', file.contentEncoding);
           }
           if (file.contentDisposition) {
-            expressRes.set('Content-Disposition', file.contentDisposition)
+            expressRes.set('Content-Disposition', file.contentDisposition);
           }
           expressRes.send(response.body.value.buffer);
           break;
         case 'text':
-          expressRes
-            .set('Content-Type', 'text/plain')
-            .send(response.body.value);
+          expressRes.set('Content-Type', 'text/plain').send(response.body.value);
           break;
         case 'html':
-          expressRes
-            .set('Content-Type', 'text/html')
-            .send(response.body.value);
+          expressRes.set('Content-Type', 'text/html').send(response.body.value);
           break;
       }
     }
@@ -168,22 +167,22 @@ export function express<Session, FileUploadMetadata>(): ExpressAdapter<Session, 
     function makeExpressRequestHandler(route: Route<ExpressRequestBodies<FileUploadMetadata>, any, ExpressResponseBodies, any, Session>): expressLib.RequestHandler {
       function asyncHandler(fn: (request: expressLib.Request, expressRes: expressLib.Response, next: expressLib.NextFunction) => Promise<void>): expressLib.RequestHandler {
         return (expressReq, expressRes, next) => {
-          fn(expressReq, expressRes, next)
-            .catch(error => {
-              const jsonError = makeErrorResponseBody(error).value;
-              // Respond with a 500 if an error occurs.
-              logger.error('unhandled error', jsonError);
-              expressRes
-                .status(500)
-                .json(jsonError);
-            });
+          fn(expressReq, expressRes, next).catch((error) => {
+            const jsonError = makeErrorResponseBody(error).value;
+            // Respond with a 500 if an error occurs.
+            logger.error('unhandled error', jsonError);
+            expressRes.status(500).json(jsonError);
+          });
         };
       }
       return asyncHandler(async (expressReq, expressRes, next) => {
         // Handle the request if it has the correct HTTP method.
         // Default to `Any` to make following logic simpler.
         const method = parseHttpMethod(expressReq.method) || HttpMethod.Any;
-        if (method !== route.method) { next(); return; }
+        if (method !== route.method) {
+          next();
+          return;
+        }
         // Create the session.
         const sessionId = parseSessionId(expressReq.signedCookies[SESSION_COOKIE_NAME]);
         const session = await sessionIdToSession(sessionId);
@@ -228,7 +227,9 @@ export function express<Session, FileUploadMetadata>(): ExpressAdapter<Session, 
         // Run the after hook if specified.
         // Note: we run the after hook after our business logic has completed,
         // not once the express framework sends the response.
-        if (route.hook && route.hook.after) { await route.hook.after(hookState, request, response); }
+        if (route.hook && route.hook.after) {
+          await route.hook.after(hookState, request, response);
+        }
         // Respond over HTTP.
         respond(response, expressRes);
       });
@@ -237,14 +238,16 @@ export function express<Session, FileUploadMetadata>(): ExpressAdapter<Session, 
     // Set up the express app.
     const app = expressLib();
     // Parse JSON request bodies when provided.
-    app.use(bodyParser.json({
-      type: 'application/json'
-    }));
+    app.use(
+      bodyParser.json({
+        type: 'application/json'
+      })
+    );
     // Sign and parse cookies.
     app.use(cookieParser(COOKIE_SECRET));
 
     // Mount each route to the Express application.
-    router.forEach(route => {
+    router.forEach((route) => {
       app.all(route.path, makeExpressRequestHandler(route));
     });
 
@@ -253,5 +256,4 @@ export function express<Session, FileUploadMetadata>(): ExpressAdapter<Session, 
 
     return app;
   };
-
-};
+}

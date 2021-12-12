@@ -10,7 +10,7 @@ interface Props {
   style?: CSSProperties;
 }
 
-export const LogItemTypeBadge: View<Props> = props => {
+export const LogItemTypeBadge: View<Props> = (props) => {
   const { logItemType, className = '', style = {} } = props;
   const copy = logItemTypeToCopy(logItemType);
   switch (copy.tag) {
@@ -26,7 +26,7 @@ export const LogItemTypeBadge: View<Props> = props => {
   }
 };
 
-export const LogItemTypeFull: View<Props> = props => {
+export const LogItemTypeFull: View<Props> = (props) => {
   const { logItemType, className = '', style = {} } = props;
   const copy = logItemTypeToCopy(logItemType);
   switch (copy.tag) {
@@ -45,12 +45,10 @@ export const LogItemTypeFull: View<Props> = props => {
     case 'badgeAndLabel':
       return (
         <div className={className} style={style || {}}>
-          <BootstrapBadge color={copy.value[0]} className='mb-2 text-uppercase'>
+          <BootstrapBadge color={copy.value[0]} className="mb-2 text-uppercase">
             {copy.value[1]}
           </BootstrapBadge>
-          <div>
-            {copy.value[2]}
-          </div>
+          <div>{copy.value[2]}</div>
         </div>
       );
   }

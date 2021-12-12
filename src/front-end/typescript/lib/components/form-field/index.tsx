@@ -44,43 +44,38 @@ export interface Params<Value> extends ChildParams<Value> {
   validate?(value: Value): Validation<Value>;
 }
 
-export type Msg<InnerChildMsg>
-  = ADT<'toggleHelp'>
-  | ADT<'validate'>
-  | ADT<'child', ChildMsg<InnerChildMsg>>;
+export type Msg<InnerChildMsg> = ADT<'toggleHelp'> | ADT<'validate'> | ADT<'child', ChildMsg<InnerChildMsg>>;
 
 function makeInit<Value, ChildState extends ChildStateBase<Value>, InnerChildMsg>(childInit: ChildComponent<Value, ChildState, InnerChildMsg>['init']): Init<Params<Value>, State<Value, ChildState>> {
-  return async params => ({
+  return async (params) => ({
     id: params.id,
     errors: params.errors,
     showHelp: false,
-    child: immutable(await childInit({
-      value: params.value,
-      id: params.id
-    })),
+    child: immutable(
+      await childInit({
+        value: params.value,
+        id: params.id
+      })
+    ),
     validate: params.validate
   });
-};
+}
 
 function validate<Value, ChildState extends ChildStateBase<Value>>(state: Immutable<State<Value, ChildState>>): Immutable<State<Value, ChildState>> {
-  return state.validate
-    ? validateAndSetValue(state, getValue(state), state.validate)
-    : state;
+  return state.validate ? validateAndSetValue(state, getValue(state), state.validate) : state;
 }
 
 function makeUpdate<Value, ChildState extends ChildStateBase<Value>, InnerChildMsg>(childUpdate: ChildComponent<Value, ChildState, InnerChildMsg>['update']): Update<State<Value, ChildState>, Msg<InnerChildMsg>> {
   return ({ state, msg }) => {
     switch (msg.tag) {
       case 'toggleHelp':
-        return [
-          state.update('showHelp', v => !v)
-        ];
+        return [state.update('showHelp', (v) => !v)];
       case 'validate':
-        return [state, async state => validate(state)];
+        return [state, async (state) => validate(state)];
       case 'child':
         const result = updateComponentChild({
           state,
-          mapChildMsg: value => ({ tag: 'child', value } as const),
+          mapChildMsg: (value) => ({ tag: 'child', value } as const),
           childStatePath: ['child'],
           childUpdate,
           childMsg: msg.value
@@ -102,7 +97,7 @@ function makeUpdate<Value, ChildState extends ChildStateBase<Value>, InnerChildM
         return [state];
     }
   };
-};
+}
 
 interface ViewProps<Value, ChildState extends ChildStateBase<Value>, InnerChildMsg> extends ComponentViewProps<State<Value, ChildState>, Msg<InnerChildMsg>> {
   className?: string;
@@ -120,21 +115,22 @@ function ConditionalHelpToggle<Value, ChildState extends ChildStateBase<Value>, 
   if (help && !disabled) {
     return (
       <Icon
-        name='question-circle'
-        color='secondary'
+        name="question-circle"
+        color="secondary"
         width={1}
         height={1}
-        className='mt-n1 ml-2 text-hover-dark flex-shrink-0 d-inline'
+        className="mt-n1 ml-2 text-hover-dark flex-shrink-0 d-inline"
         style={{ cursor: 'pointer' }}
-        onClick={e => {
+        onClick={(e) => {
           dispatch({ tag: 'toggleHelp', value: undefined });
           e.preventDefault();
-        }} />
+        }}
+      />
     );
   } else {
     return null;
   }
-};
+}
 
 function ConditionalLabel<Value, ChildState extends ChildStateBase<Value>, InnerChildMsg>(props: ViewProps<Value, ChildState, InnerChildMsg>): ViewElement<ViewProps<Value, ChildState, InnerChildMsg>> {
   const { state, label, required, labelClassName } = props;
@@ -144,7 +140,7 @@ function ConditionalLabel<Value, ChildState extends ChildStateBase<Value>, Inner
       <Label for={state.child.id} className={className}>
         <span>
           {label}
-          {required ? (<span className='text-info ml-1'>*</span>) : null}
+          {required ? <span className="text-info ml-1">*</span> : null}
           <ConditionalHelpToggle {...props} />
         </span>
       </Label>
@@ -152,13 +148,13 @@ function ConditionalLabel<Value, ChildState extends ChildStateBase<Value>, Inner
   } else {
     return null;
   }
-};
+}
 
 function ConditionalHelp<Value, ChildState extends ChildStateBase<Value>, InnerChildMsg>(props: ViewProps<Value, ChildState, InnerChildMsg>): ViewElement<ViewProps<Value, ChildState, InnerChildMsg>> {
   const { state, help, disabled } = props;
   if (help && state.showHelp && !disabled) {
     return (
-      <Alert color='info' style={{ whiteSpace: 'pre-line' }}>
+      <Alert color="info" style={{ whiteSpace: 'pre-line' }}>
         {help}
       </Alert>
     );
@@ -171,24 +167,24 @@ function ConditionalErrors<Value, ChildState extends ChildStateBase<Value>, Inne
   const { state } = props;
   if (state.errors.length) {
     const errorElements = state.errors.map((error, i) => {
-      return (<div key={`form-field-conditional-errors-${i}`}>{error}</div>);
+      return <div key={`form-field-conditional-errors-${i}`}>{error}</div>;
     });
-    return (
-      <FormText color='danger'>
-        {errorElements}
-      </FormText>
-    );
+    return <FormText color="danger">{errorElements}</FormText>;
   } else {
     return null;
   }
 }
 
 function makeView<Value, ChildState extends ChildStateBase<Value>, InnerChildMsg>(ChildView: ChildComponent<Value, ChildState, InnerChildMsg>['view']): View<ViewProps<Value, ChildState, InnerChildMsg>> {
-  const debouncedValidate = debounce((dispatch: Dispatch<Msg<InnerChildMsg>>) => dispatch({
-    tag: 'validate',
-    value: undefined
-  }), FORM_FIELD_DEBOUNCE_DURATION);
-  return props => {
+  const debouncedValidate = debounce(
+    (dispatch: Dispatch<Msg<InnerChildMsg>>) =>
+      dispatch({
+        tag: 'validate',
+        value: undefined
+      }),
+    FORM_FIELD_DEBOUNCE_DURATION
+  );
+  return (props) => {
     const { state, dispatch, style } = props;
     const invalid = !!state.errors.length;
     const childClassName = 'flex-grow-1 align-self-stretch';
@@ -197,19 +193,12 @@ function makeView<Value, ChildState extends ChildStateBase<Value>, InnerChildMsg
       <FormGroup className={`form-field-${state.child.id} d-flex flex-column ${props.className || ''}`} style={style}>
         <ConditionalLabel {...props} />
         <ConditionalHelp {...props} />
-        <ChildView
-          state={state.child}
-          className={childClassName}
-          validityClassName={validityClassName}
-          disabled={props.disabled}
-          placeholder={props.placeholder}
-          dispatch={mapComponentDispatch(dispatch, value => ({ tag: 'child', value }))}
-          onChange={() => debouncedValidate(dispatch)} />
+        <ChildView state={state.child} className={childClassName} validityClassName={validityClassName} disabled={props.disabled} placeholder={props.placeholder} dispatch={mapComponentDispatch(dispatch, (value) => ({ tag: 'child', value }))} onChange={() => debouncedValidate(dispatch)} />
         <ConditionalErrors {...props} />
       </FormGroup>
     );
   };
-};
+}
 
 export type Component<Value, ChildState extends ChildStateBase<Value>, InnerChildMsg> = framework.Component<Params<Value>, State<Value, ChildState>, Msg<InnerChildMsg>, ViewProps<Value, ChildState, InnerChildMsg>>;
 
@@ -227,7 +216,7 @@ export function getValue<Value, ChildState extends ChildStateBase<Value>>(state:
 
 export function setValue<Value, ChildState extends ChildStateBase<Value>>(state: Immutable<State<Value, ChildState>>, value: Value): Immutable<State<Value, ChildState>> {
   // Use updateIn because the compiler can't reconcile ChildState['value'] and Value
-  return state.updateIn(['child'], child => child.set('value', value));
+  return state.updateIn(['child'], (child) => child.set('value', value));
 }
 
 export function setErrors<Value, ChildState extends ChildStateBase<Value>>(state: Immutable<State<Value, ChildState>>, errors: string[]): Immutable<State<Value, ChildState>> {
@@ -236,9 +225,11 @@ export function setErrors<Value, ChildState extends ChildStateBase<Value>>(state
 
 export function validateAndSetValue<Value, ChildState extends ChildStateBase<Value>>(state: Immutable<State<Value, ChildState>>, value: Value, validate: (value: Value) => Validation<Value>): Immutable<State<Value, ChildState>> {
   const validation = validate(value);
-  return setErrors(state, getInvalidValue(validation, []))
-    // Use setIn because the compiler can't reconcile ChildState['value'] and Value
-    .update('child', child => child.setIn(['value'], getValidValue(validation, value)));
+  return (
+    setErrors(state, getInvalidValue(validation, []))
+      // Use setIn because the compiler can't reconcile ChildState['value'] and Value
+      .update('child', (child) => child.setIn(['value'], getValidValue(validation, value)))
+  );
 }
 
 export function isValid<Value, ChildState extends ChildStateBase<Value>>(state: Immutable<State<Value, ChildState>>): boolean {

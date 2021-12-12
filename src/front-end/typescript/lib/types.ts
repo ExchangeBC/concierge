@@ -2,6 +2,4 @@ export type BootstrapColor = 'body' | 'primary' | 'secondary' | 'success' | 'dan
 
 export type TextColor = BootstrapColor;
 
-export type ButtonColor
-  = Exclude<BootstrapColor, 'body' | 'white' | 'muted'>
-  | 'link';
+export type ButtonColor = Exclude<BootstrapColor, 'body' | 'white' | 'muted'> | 'link';

@@ -27,13 +27,13 @@ export interface State<Value> {
   help?: {
     text: string | ReactElement;
     show: boolean;
-  }
+  };
 }
 
 export type OnChange<Value> = (value: Value) => void;
 
 export function getFieldValues<Value>(state: State<Value>): Value[] {
-  return state.fields.map(field => field.value);
+  return state.fields.map((field) => field.value);
 }
 
 export function setFieldValues<Value>(state: Immutable<State<Value>>, values: Value[]): Immutable<State<Value>> {
@@ -47,14 +47,18 @@ export function setFieldValues<Value>(state: Immutable<State<Value>>, values: Va
 
 export function setFieldErrors<Value>(state: Immutable<State<Value>>, errors: string[][]): Immutable<State<Value>> {
   const fields = cloneDeep(state.fields);
-  fields.forEach((field, i) => field.errors = errors[i] || []);
+  fields.forEach((field, i) => (field.errors = errors[i] || []));
   return state.set('fields', fields);
 }
 
 export function isValid<Value>(state: Immutable<State<Value>>): boolean {
-  return reduce(state.fields, (acc: boolean, v: Field<Value>) => {
-    return acc && (!v.errors || !v.errors.length);
-  }, true);
+  return reduce(
+    state.fields,
+    (acc: boolean, v: Field<Value>) => {
+      return acc && (!v.errors || !v.errors.length);
+    },
+    true
+  );
 }
 
 export interface ChildProps<ExtraProps, Value> {
@@ -93,16 +97,7 @@ export interface Props<OnAddParams, ChildExtraProps, Value> {
 const ConditionalHelpToggle: View<Props<any, any, any>> = ({ state, toggleHelp, disabled = false }) => {
   const { help } = state;
   if (help && toggleHelp && !disabled) {
-    return (
-      <Icon
-        name='question-circle'
-        color='secondary'
-        width={1}
-        height={1}
-        className='ml-3 text-hover-dark flex-shrink-0'
-        style={{ cursor: 'pointer' }}
-        onClick={() => toggleHelp()} />
-    );
+    return <Icon name="question-circle" color="secondary" width={1} height={1} className="ml-3 text-hover-dark flex-shrink-0" style={{ cursor: 'pointer' }} onClick={() => toggleHelp()} />;
   } else {
     return null;
   }
@@ -115,7 +110,7 @@ const ConditionalLabel: View<Props<any, any, any>> = ({ state, labelClassName = 
       <Label className={`mb-0 mr-3 ${required ? 'font-weight-bold' : ''} ${labelClassName}`}>
         <span>
           {label}
-          {required ? (<span className='text-info ml-1'>*</span>) : null }
+          {required ? <span className="text-info ml-1">*</span> : null}
         </span>
       </Label>
     );
@@ -125,9 +120,9 @@ const ConditionalLabel: View<Props<any, any, any>> = ({ state, labelClassName = 
 };
 
 export function makeDefaultAddButton(text = 'Add'): View<AddButtonProps<void>> {
-  return props => {
+  return (props) => {
     return (
-      <Button color='info' size='sm' onClick={() => props.onAdd()}>
+      <Button color="info" size="sm" onClick={() => props.onAdd()}>
         {text}
       </Button>
     );
@@ -139,7 +134,7 @@ function ConditionalAddButton<OnAddParams>(props: Props<OnAddParams, any, any>) 
   if (disabled) {
     return null;
   } else {
-    return (<AddButton onAdd={addButtonProps.onAdd} />);
+    return <AddButton onAdd={addButtonProps.onAdd} />;
   }
 }
 
@@ -147,29 +142,25 @@ const ConditionalHelp: View<Props<any, any, any>> = ({ state, disabled = false }
   const { help } = state;
   if (help && help.show && !disabled) {
     return (
-      <Alert color='info' className='mt-4'>
+      <Alert color="info" className="mt-4">
         {help.text}
       </Alert>
     );
   } else {
     return null;
   }
-}
+};
 
 const ConditionalFieldErrors: View<Field<any>> = ({ errors }) => {
   if (errors.length) {
     const errorElements = errors.map((error, i) => {
-      return (<div key={`form-field-multi-conditional-errors-${i}`}>{error}</div>);
+      return <div key={`form-field-multi-conditional-errors-${i}`}>{error}</div>;
     });
-    return (
-      <FormText color='danger'>
-        {errorElements}
-      </FormText>
-    );
+    return <FormText color="danger">{errorElements}</FormText>;
   } else {
     return null;
   }
-}
+};
 
 export function ConditionalRemoveButton<Value>(props: ChildProps<any, Value>) {
   if (props.disabled) {
@@ -177,16 +168,7 @@ export function ConditionalRemoveButton<Value>(props: ChildProps<any, Value>) {
   } else {
     const { removable } = props;
     const className = `${!removable ? 'disabled' : ''} btn btn-sm btn-link text-hover-danger`;
-    return (
-      <Icon
-        name='trash'
-        color='secondary'
-        width={1.25}
-        height={1.25}
-        className={className}
-        style={{ boxSizing: 'content-box', cursor: 'pointer' }}
-        onClick={() => removable && props.onRemove()} />
-    );
+    return <Icon name="trash" color="secondary" width={1.25} height={1.25} className={className} style={{ boxSizing: 'content-box', cursor: 'pointer' }} onClick={() => removable && props.onRemove()} />;
   }
 }
 
@@ -203,7 +185,7 @@ export interface DefaultChildProps<ExtraProps, Value> {
 export function DefaultChild<ExtraProps, Value>(props: DefaultChildProps<ExtraProps, Value>) {
   const { childProps, children } = props;
   return (
-    <div className='d-flex align-items-center'>
+    <div className="d-flex align-items-center">
       {children}
       <ConditionalRemoveButton {...childProps} />
     </div>
@@ -220,17 +202,7 @@ function Children<OnAddParams, ChildExtraProps, Value>(props: Props<OnAddParams,
     const childClassName = invalid ? 'is-invalid' : '';
     const child = (
       <FormGroup key={`form-field-multi-child-${i}`} className={`${formGroupClassName} ${i === fields.length - 1 ? 'mb-0' : ''}`}>
-        <Child
-          key={`form-field-multi-child-${i}`}
-          id={id}
-          index={i}
-          className={childClassName}
-          field={field}
-          onChange={onChange(i)}
-          onRemove={onRemove(i)}
-          extraProps={extraChildProps}
-          disabled={disabled}
-          removable={removable} />
+        <Child key={`form-field-multi-child-${i}`} id={id} index={i} className={childClassName} field={field} onChange={onChange(i)} onRemove={onRemove(i)} extraProps={extraChildProps} disabled={disabled} removable={removable} />
         <ConditionalFieldErrors {...field} />
       </FormGroup>
     );
@@ -241,10 +213,8 @@ function Children<OnAddParams, ChildExtraProps, Value>(props: Props<OnAddParams,
     }
     return acc;
   }, [] as Array<ReactElement<any>>);
-  return (
-    <div>{children}</div>
-  );
-};
+  return <div>{children}</div>;
+}
 
 export function view<OnAddParams, ChildExtraProps, Value>(props: Props<OnAddParams, ChildExtraProps, Value>) {
   const { state, labelWrapperClassName = '', className = '' } = props;
@@ -255,9 +225,9 @@ export function view<OnAddParams, ChildExtraProps, Value>(props: Props<OnAddPara
         <ConditionalAddButton {...props} />
         <ConditionalHelpToggle {...props} />
       </div>
-      {state.description ? (<p className={state.fields.length ? 'mb-4' : 'mb-0'}>{state.description}</p>) : null}
+      {state.description ? <p className={state.fields.length ? 'mb-4' : 'mb-0'}>{state.description}</p> : null}
       <ConditionalHelp {...props} />
       <Children {...props} />
-    </FormGroup >
+    </FormGroup>
   );
 }

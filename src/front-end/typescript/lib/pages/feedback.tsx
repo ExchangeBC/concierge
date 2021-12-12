@@ -16,14 +16,10 @@ import { validateFeedbackText, validateRating } from 'shared/lib/validators/feed
 export interface State {
   loading: number;
   rating?: Rating;
-  feedbackText: LongText.State
+  feedbackText: LongText.State;
 }
 
-type InnerMsg
-  = ADT<'onChangeRating', Rating>
-  | ADT<'onChangeFeedbackText', string>
-  | ADT<'validateFeedback'>
-  | ADT<'submit'>;
+type InnerMsg = ADT<'onChangeRating', Rating> | ADT<'onChangeFeedbackText', string> | ADT<'validateFeedback'> | ADT<'submit'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -52,7 +48,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'onChangeFeedbackText':
       return [updateField(state, 'feedbackText', msg.value)];
     case 'validateFeedback':
-      return [validateField(state, 'feedbackText', validateFeedbackText)]
+      return [validateField(state, 'feedbackText', validateFeedbackText)];
     case 'submit':
       state = startLoading(state);
       return [
@@ -70,15 +66,17 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           switch (result.tag) {
             case 'valid':
               // Route to feedback submitted notice
-              dispatch(newRoute({
-                tag: 'notice' as const,
-                value: {
-                  noticeId: {
-                    tag: 'feedbackSubmitted' as const,
-                    value: undefined
+              dispatch(
+                newRoute({
+                  tag: 'notice' as const,
+                  value: {
+                    noticeId: {
+                      tag: 'feedbackSubmitted' as const,
+                      value: undefined
+                    }
                   }
-                }
-              }));
+                })
+              );
               return null;
             case 'invalid':
               state = state.setIn(['feedbackText', 'errors'], result.value.text || []);
@@ -89,15 +87,15 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     default:
       return [state];
   }
-}
+};
 
 function isValid(state: State): boolean {
   const validatedRating = validateRating(state.rating);
   const validatedFeedbackText = validateFeedbackText(state.feedbackText.value);
-  return (validatedRating.tag === 'valid' && validatedFeedbackText.tag === 'valid');
+  return validatedRating.tag === 'valid' && validatedFeedbackText.tag === 'valid';
 }
 
-const RatingSelector: ComponentView<State, Msg> = props => {
+const RatingSelector: ComponentView<State, Msg> = (props) => {
   const { state, dispatch } = props;
   const setRating = (value: Rating) => () => dispatch({ tag: 'onChangeRating', value });
   const isRating = (rating: Rating) => state.rating === rating;
@@ -116,17 +114,17 @@ const RatingSelector: ComponentView<State, Msg> = props => {
     };
   };
   return (
-    <Row className='mb-4'>
-      <Col xs='12' className='d-flex'>
+    <Row className="mb-4">
+      <Col xs="12" className="d-flex">
         <Icon {...iconProps('good', 'rating-good', 'success')} />
         <Icon {...iconProps('neutral', 'rating-neutral', 'warning')} />
         <Icon {...iconProps('bad', 'rating-bad', 'danger')} />
       </Col>
     </Row>
   );
-}
+};
 
-const viewBottomBar: ComponentView<State, Msg> = props => {
+const viewBottomBar: ComponentView<State, Msg> = (props) => {
   const { state, dispatch } = props;
   const isLoading = state.loading > 0;
   const isDisabled = isLoading || !isValid(state);
@@ -134,48 +132,48 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
     <FixedBar>
-      <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled}>
+      <LoadingButton color="primary" onClick={submit} loading={isLoading} disabled={isDisabled}>
         Send Feedback
       </LoadingButton>
-      <Link route={cancelRoute} color='secondary' className='mx-3'>Cancel</Link>
+      <Link route={cancelRoute} color="secondary" className="mx-3">
+        Cancel
+      </Link>
     </FixedBar>
-  )
-}
+  );
+};
 
-const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = (props) => {
   const { state, dispatch } = props;
-  const onChangeFeedbackText = LongText.makeOnChange(dispatch, value => ({ tag: 'onChangeFeedbackText' as const, value }));
-  const validate = () => dispatch({ tag: 'validateFeedback', value: undefined })
+  const onChangeFeedbackText = LongText.makeOnChange(dispatch, (value) => ({ tag: 'onChangeFeedbackText' as const, value }));
+  const validate = () => dispatch({ tag: 'validateFeedback', value: undefined });
   return (
     <div>
       <Row>
-        <Col xs='12'>
+        <Col xs="12">
           <h1>Send Feedback</h1>
         </Col>
       </Row>
-      <Row className='mb-3'>
-        <Col xs='12' md='8'>
+      <Row className="mb-3">
+        <Col xs="12" md="8">
           <p>Your feedback is important to us. Please use this form to share your thoughts with the Procurement Concierge Program's staff.</p>
         </Col>
       </Row>
       <Row>
-        <Col xs='12'>
-          <label className='font-weight-bold'>How would you rate your experience?<span className='text-primary ml-1'>*</span></label>
+        <Col xs="12">
+          <label className="font-weight-bold">
+            How would you rate your experience?<span className="text-primary ml-1">*</span>
+          </label>
           <RatingSelector {...props} />
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='10'>
-          <LongText.view
-            state={state.feedbackText}
-            onChange={onChangeFeedbackText}
-            onChangeDebounced={validate}
-            style={{ width: '100%', height: '25vh', minHeight: '10rem' }} />
+        <Col xs="12" md="10">
+          <LongText.view state={state.feedbackText} onChange={onChangeFeedbackText} onChangeDebounced={validate} style={{ width: '100%', height: '25vh', minHeight: '10rem' }} />
         </Col>
       </Row>
     </div>
   );
-}
+};
 
 export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   init,

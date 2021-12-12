@@ -7,7 +7,7 @@ export function validateConfirmPassword(password: string, confirmPassword: strin
       if (password === confirmPassword) {
         return valid(confirmPassword);
       } else {
-        return invalid(['Password confirmation doesn\'t match original password.']);
+        return invalid(["Password confirmation doesn't match original password."]);
       }
     default:
       return validatedPassword;

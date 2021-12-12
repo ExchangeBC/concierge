@@ -21,8 +21,7 @@ export interface Params {
   responses: PublicRfiResponse[];
 }
 
-export type Msg
-  = ADT<'table', Table.Msg>
+export type Msg = ADT<'table', Table.Msg>;
 
 interface RfiResponse {
   createdBy: PublicRfiResponse['createdBy'];
@@ -34,7 +33,7 @@ export interface State {
   rfi: PublicRfi;
   responses: RfiResponse[];
   table: Immutable<Table.State>;
-};
+}
 
 const tableHeadCells: Table.THSpec[] = [
   {
@@ -66,7 +65,9 @@ export const init: Init<Params, State> = async ({ rfi, responses }) => {
   // Combine all of a vendor's responses into a single response.
   // Each response's attachments are sorted by creation date, newest first.
   // All responses are sorted alphabetically by vendor's name.
-  const transformedResponses: RfiResponse[] = reduce(responsesByVendor, (acc: RfiResponse[], v, k) => {
+  const transformedResponses: RfiResponse[] = reduce(
+    responsesByVendor,
+    (acc: RfiResponse[], v, k) => {
       // Sort to ensure newest responses are first,
       // so `createdAt` reflects the most recent response, and
       // the attachments are shown in reverse order of submission.
@@ -77,14 +78,17 @@ export const init: Init<Params, State> = async ({ rfi, responses }) => {
         attachments: vendorResponses.reduce((acc: PublicFile[], { attachments }) => [...acc, ...attachments], [])
       });
       return acc;
-    }, [])
-    .sort((a, b) => profileToName(a.createdBy.profile).localeCompare(profileToName(b.createdBy.profile)));
+    },
+    []
+  ).sort((a, b) => profileToName(a.createdBy.profile).localeCompare(profileToName(b.createdBy.profile)));
   return {
     rfi,
     responses: transformedResponses,
-    table: immutable(await Table.init({
-      idNamespace: 'rfi-responses'
-    }))
+    table: immutable(
+      await Table.init({
+        idNamespace: 'rfi-responses'
+      })
+    )
   };
 };
 
@@ -93,7 +97,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'table':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'table' as const, value }),
+        mapChildMsg: (value) => ({ tag: 'table' as const, value }),
         childStatePath: ['table'],
         childUpdate: Table.update,
         childMsg: msg.value
@@ -112,67 +116,66 @@ function tableBodyRows(responses: RfiResponse[]): Table.RowsSpec {
       {
         children: (
           <div>
-            <Link route={{ tag: 'userView', value: { profileUserId: response.createdBy._id }}} className='mr-2' newTab>
+            <Link route={{ tag: 'userView', value: { profileUserId: response.createdBy._id } }} className="mr-2" newTab>
               {profileToName(response.createdBy.profile)}
             </Link>
             {'('}
             <Link href={`mailto:${response.createdBy.email}`}>{response.createdBy.email}</Link>
             {')'}
           </div>
-          ),
+        ),
         className: 'bg-light font-size-base text-wrap',
         colSpan: NUM_COLUMNS
       }
     ]);
     // Add attachment rows.
-    return tableRows.concat(response.attachments.reduce((responseRows: Table.RowsSpec, attachment) => {
-      responseRows.push([
-        {
-          children: (
-            <div className='d-flex flex-nowrap'>
-              <Icon name='paperclip' color='secondary' className='mr-2 mt-1 flex-shrink-0' width={1} height={1} />
-              <Link href={makeFileBlobPath(attachment._id)} className='d-block' download>
-                {attachment.originalName}
-              </Link>
-            </div>
-          ),
-          className: 'align-top'
-        },
-        {
-          children: formatDateAndTime(attachment.createdAt, true),
-          className: 'align-top text-right'
-        }
-      ]);
-      return responseRows;
-    }, []));
+    return tableRows.concat(
+      response.attachments.reduce((responseRows: Table.RowsSpec, attachment) => {
+        responseRows.push([
+          {
+            children: (
+              <div className="d-flex flex-nowrap">
+                <Icon name="paperclip" color="secondary" className="mr-2 mt-1 flex-shrink-0" width={1} height={1} />
+                <Link href={makeFileBlobPath(attachment._id)} className="d-block" download>
+                  {attachment.originalName}
+                </Link>
+              </div>
+            ),
+            className: 'align-top'
+          },
+          {
+            children: formatDateAndTime(attachment.createdAt, true),
+            className: 'align-top text-right'
+          }
+        ]);
+        return responseRows;
+      }, [])
+    );
   }, []);
 }
 
 const ResponsesReceived: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (!state.responses.length) { return null; }
-  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, value => ({ tag:  'table' as const, value }));
+  if (!state.responses.length) {
+    return null;
+  }
+  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, (value) => ({ tag: 'table' as const, value }));
   return (
     <div>
-      <Row className='mb-3'>
-        <Col xs='12'>
+      <Row className="mb-3">
+        <Col xs="12">
           <h4>Response(s) Received</h4>
         </Col>
       </Row>
       <Row>
-        <Col xs='12'>
-          <Table.view
-            className='text-nowrap'
-            headCells={tableHeadCells}
-            bodyRows={tableBodyRows(state.responses)}
-            state={state.table}
-            dispatch={dispatchTable} />
+        <Col xs="12">
+          <Table.view className="text-nowrap" headCells={tableHeadCells} bodyRows={tableBodyRows(state.responses)} state={state.table} dispatch={dispatchTable} />
         </Col>
       </Row>
     </div>
   );
 };
 
-export const view: ComponentView<State, Msg> = props => {
+export const view: ComponentView<State, Msg> = (props) => {
   const { state } = props;
   const { responses, rfi } = state;
   const { closingAt, gracePeriodDays, addenda } = rfi.latestVersion;
@@ -180,7 +183,7 @@ export const view: ComponentView<State, Msg> = props => {
   const numAddenda = addenda.length;
   let numByClosingTime = 0;
   let numDuringGracePeriod = 0;
-  responses.forEach(response => {
+  responses.forEach((response) => {
     const diffDays = diffDates(response.createdAt, closingAt, 'days');
     const byClosingTime = diffDays <= 0;
     const duringGracePeriod = diffDays > 0 && diffDays <= gracePeriodDays;
@@ -193,17 +196,37 @@ export const view: ComponentView<State, Msg> = props => {
   });
   return (
     <div>
-      <Row className='mb-3'>
-        <Col xs='12'>
-          <FormSectionHeading text='Vendor Responses' />
+      <Row className="mb-3">
+        <Col xs="12">
+          <FormSectionHeading text="Vendor Responses" />
         </Col>
       </Row>
-      <Row className='mb-5'>
-        <Col xs='12'>
+      <Row className="mb-5">
+        <Col xs="12">
           <Stats>
-            <BigStat color='primary-alt' count={numResponses} label={(<span>Response{numResponses === 1 ? '' : 's'}<br />Received</span>)} />
+            <BigStat
+              color="primary-alt"
+              count={numResponses}
+              label={
+                <span>
+                  Response{numResponses === 1 ? '' : 's'}
+                  <br />
+                  Received
+                </span>
+              }
+            />
             <SmallStats a={{ color: 'primary-alt', count: numByClosingTime, label: 'Received by closing time' }} b={{ color: 'info', count: numDuringGracePeriod, label: 'Received during grace period' }} />
-            <BigStat color='info' count={numAddenda} label={(<span>Addend{numAddenda === 1 ? 'um' : 'a'}<br />Issued</span>)} />
+            <BigStat
+              color="info"
+              count={numAddenda}
+              label={
+                <span>
+                  Addend{numAddenda === 1 ? 'um' : 'a'}
+                  <br />
+                  Issued
+                </span>
+              }
+            />
           </Stats>
         </Col>
       </Row>

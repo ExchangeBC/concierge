@@ -25,7 +25,6 @@ export interface Props {
 }
 
 export class View extends React.Component<Props> {
-
   private ref: HTMLTextAreaElement | null;
   private selectionStart: number | null;
   private selectionEnd: number | null;
@@ -48,18 +47,7 @@ export class View extends React.Component<Props> {
   }
 
   public render() {
-    const {
-      id,
-      value = '',
-      placeholder = '',
-      className = '',
-      disabled = false,
-      style = {},
-      onChange,
-      onChangeDebounced,
-      onKeyUp,
-      autoFocus = false
-    } = this.props;
+    const { id, value = '', placeholder = '', className = '', disabled = false, style = {}, onChange, onChangeDebounced, onKeyUp, autoFocus = false } = this.props;
     // Manage this.onChangeDebounced.
     // This is pretty gross, but the only (simple) way to support real-time validation
     // and live user feedback of user input. We assume that onChangeDebounced never
@@ -95,13 +83,16 @@ export class View extends React.Component<Props> {
         style={style}
         onChange={this.onChange.bind(this, onChange)}
         onKeyUp={onKeyUp}
-        ref={ref => { this.ref = ref; }}
-        autoFocus={autoFocus} />
+        ref={(ref) => {
+          this.ref = ref;
+        }}
+        autoFocus={autoFocus}
+      />
     );
   }
 
   public shouldComponentUpdate(nextProps: Props) {
-    return this.value !== (nextProps.value || '') || this.className !== (nextProps.className || '') || (this.disabled !== !!nextProps.disabled) || !isEqual(this.style, nextProps.style || {});
+    return this.value !== (nextProps.value || '') || this.className !== (nextProps.className || '') || this.disabled !== !!nextProps.disabled || !isEqual(this.style, nextProps.style || {});
   }
 
   public componentDidUpdate() {
@@ -114,6 +105,8 @@ export class View extends React.Component<Props> {
     this.selectionStart = event.target.selectionStart;
     this.selectionEnd = event.target.selectionEnd;
     onChange(event);
-    if (this.onChangeDebounced) { this.onChangeDebounced(); }
+    if (this.onChangeDebounced) {
+      this.onChangeDebounced();
+    }
   }
 }

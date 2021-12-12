@@ -6,13 +6,7 @@ import Markdown from 'front-end/lib/views/markdown';
 import React from 'react';
 import { Col, Row } from 'reactstrap';
 
-type DocumentId
-  = 'about'
-  | 'accessibility'
-  | 'copyright'
-  | 'disclaimer'
-  | 'privacy'
-  | 'guide';
+type DocumentId = 'about' | 'accessibility' | 'copyright' | 'disclaimer' | 'privacy' | 'guide';
 
 function documentIdToTitle(documentId: DocumentId): string {
   switch (documentId) {
@@ -27,18 +21,18 @@ function documentIdToTitle(documentId: DocumentId): string {
     case 'privacy':
       return 'Privacy';
     case 'guide':
-      return 'How to Use the Procurement Concierge Program\'s Web Application';
+      return "How to Use the Procurement Concierge Program's Web Application";
   }
 }
 
 export interface State {
   title: string;
   markdownSource: string;
-};
+}
 
 export interface RouteParams {
   documentId: DocumentId;
-};
+}
 
 export type Msg = GlobalComponentMsg<null, Route>;
 
@@ -54,17 +48,17 @@ const update: Update<State, Msg> = ({ state, msg }) => {
   return [state];
 };
 
-const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = (props) => {
   const { state } = props;
   return (
     <div>
-      <Row className='mb-3'>
-        <Col xs='12'>
+      <Row className="mb-3">
+        <Col xs="12">
           <h1>{state.title}</h1>
         </Col>
       </Row>
-      <Row className='mb-5'>
-        <Col xs='12'>
+      <Row className="mb-5">
+        <Col xs="12">
           <Markdown source={state.markdownSource} escapeHtml={false} openLinksInNewTabs />
         </Col>
       </Row>

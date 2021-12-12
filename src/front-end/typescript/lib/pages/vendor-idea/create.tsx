@@ -19,12 +19,7 @@ import { invalid, valid } from 'shared/lib/validators';
 
 export type RouteParams = null;
 
-type InnerMsg
-  = ADT<'intakeForm', IntakeForm.Msg>
-  | ADT<'hideCancelConfirmationPrompt'>
-  | ADT<'showCancelConfirmationPrompt'>
-  | ADT<'hideSubmitConfirmationPrompt'>
-  | ADT<'submit'>;
+type InnerMsg = ADT<'intakeForm', IntakeForm.Msg> | ADT<'hideCancelConfirmationPrompt'> | ADT<'showCancelConfirmationPrompt'> | ADT<'hideSubmitConfirmationPrompt'> | ADT<'submit'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -33,81 +28,89 @@ interface ValidState {
   promptCancelConfirmation: boolean;
   promptSubmitConfirmation: boolean;
   intakeForm: Immutable<IntakeForm.State>;
-};
+}
 
-export type State
-  = ADT<'valid', Immutable<ValidState>>
-  | ADT<'invalid'>;
+export type State = ADT<'valid', Immutable<ValidState>> | ADT<'invalid'>;
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
-
   userTypes: [UserType.Vendor],
 
   async success({ shared, dispatch }) {
     const user = await api.readOneUser(shared.sessionUser.id);
     if (user.tag === 'valid' && !user.value.acceptedTermsAt) {
-      dispatch(replaceRoute({
-        tag: 'termsAndConditions' as const,
-        value: {
-          warningId: WarningId.CreateVi,
-          redirectOnAccept: router.routeToUrl({
-            tag: 'viCreate',
-            value: null
-          }),
-          redirectOnSkip: router.routeToUrl({
-            tag: 'viList',
-            value: null
-          })
-        }
-      }));
+      dispatch(
+        replaceRoute({
+          tag: 'termsAndConditions' as const,
+          value: {
+            warningId: WarningId.CreateVi,
+            redirectOnAccept: router.routeToUrl({
+              tag: 'viCreate',
+              value: null
+            }),
+            redirectOnSkip: router.routeToUrl({
+              tag: 'viList',
+              value: null
+            })
+          }
+        })
+      );
     }
-    return valid(immutable({
-      loading: 0,
-      promptCancelConfirmation: false,
-      promptSubmitConfirmation: false,
-      intakeForm: immutable(await IntakeForm.init({
-        isEditing: true
-      }))
-    }));
+    return valid(
+      immutable({
+        loading: 0,
+        promptCancelConfirmation: false,
+        promptSubmitConfirmation: false,
+        intakeForm: immutable(
+          await IntakeForm.init({
+            isEditing: true
+          })
+        )
+      })
+    );
   },
 
   async fail({ shared, routeParams, dispatch }) {
     if (!shared.session || !shared.session.user) {
-      dispatch(replaceRoute({
-        tag: 'signIn' as const,
-        value: {
-          redirectOnSuccess: router.routeToUrl({
-            tag: 'viCreate',
-            value: null
-          })
-        }
-      }));
-    } else {
-      dispatch(replaceRoute({
-        tag: 'notice' as const,
-        value: {
-          noticeId: {
-            tag: 'notFound',
-            value: undefined
+      dispatch(
+        replaceRoute({
+          tag: 'signIn' as const,
+          value: {
+            redirectOnSuccess: router.routeToUrl({
+              tag: 'viCreate',
+              value: null
+            })
           }
-        }
-      }));
+        })
+      );
+    } else {
+      dispatch(
+        replaceRoute({
+          tag: 'notice' as const,
+          value: {
+            noticeId: {
+              tag: 'notFound',
+              value: undefined
+            }
+          }
+        })
+      );
     }
     return invalid(undefined);
   }
-
 });
 
 const startLoading: UpdateState<ValidState> = makeStartLoading('loading');
 const stopLoading: UpdateState<ValidState> = makeStopLoading('loading');
 
 const update: Update<State, Msg> = ({ state, msg }) => {
-  if (state.tag === 'invalid') { return [state]; }
+  if (state.tag === 'invalid') {
+    return [state];
+  }
   switch (msg.tag) {
     case 'intakeForm':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'intakeForm', value }),
+        mapChildMsg: (value) => ({ tag: 'intakeForm', value }),
         childStatePath: ['value', 'intakeForm'],
         childUpdate: IntakeForm.update,
         childMsg: msg.value
@@ -127,9 +130,13 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [
         state.set('value', startLoading(state.value)),
         async (state, dispatch) => {
-          if (state.tag === 'invalid') { return state; }
+          if (state.tag === 'invalid') {
+            return state;
+          }
           const fail = (state: Immutable<State>, errors: CreateValidationErrors) => {
-            if (state.tag === 'invalid') { return state; }
+            if (state.tag === 'invalid') {
+              return state;
+            }
             state = state.set('value', stopLoading(state.value));
             return state.setIn(['value', 'intakeForm'], IntakeForm.setErrors(state.value.intakeForm, errors));
           };
@@ -139,19 +146,23 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               const result = await api.createVi(requestBody.value);
               switch (result.tag) {
                 case 'valid':
-                  dispatch(newRoute({
-                    tag: 'notice' as const,
-                    value: {
-                      noticeId: {
-                        tag: 'viCreated',
-                        value: undefined
+                  dispatch(
+                    newRoute({
+                      tag: 'notice' as const,
+                      value: {
+                        noticeId: {
+                          tag: 'viCreated',
+                          value: undefined
+                        }
                       }
-                    }
-                  }));
+                    })
+                  );
                   return null;
                 case 'invalid':
                   state = fail(state, result.value);
-                  if (window.scrollTo) { window.scrollTo(0, 0); }
+                  if (window.scrollTo) {
+                    window.scrollTo(0, 0);
+                  }
                   break;
               }
               break;
@@ -168,31 +179,41 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (state.tag === 'invalid') { return null; }
+  if (state.tag === 'invalid') {
+    return null;
+  }
   const showCancelConfirmationPrompt = () => dispatch({ tag: 'showCancelConfirmationPrompt', value: undefined });
   const submit = () => dispatch({ tag: 'submit', value: undefined });
   const isLoading = state.value.loading > 0;
   const isDisabled = isLoading || !IntakeForm.isValid(state.value.intakeForm);
   return (
     <FixedBar>
-      <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled} className='text-nowrap'>
+      <LoadingButton color="primary" onClick={submit} loading={isLoading} disabled={isDisabled} className="text-nowrap">
         Submit Application
       </LoadingButton>
-      <Link onClick={showCancelConfirmationPrompt} color='secondary' disabled={isLoading} className='px-3'>Cancel</Link>
+      <Link onClick={showCancelConfirmationPrompt} color="secondary" disabled={isLoading} className="px-3">
+        Cancel
+      </Link>
     </FixedBar>
   );
 };
 
 const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (state.tag === 'invalid') { return null; }
-  const dispatchIntakeForm: Dispatch<IntakeForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'intakeForm' as const, value }));
+  if (state.tag === 'invalid') {
+    return null;
+  }
+  const dispatchIntakeForm: Dispatch<IntakeForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'intakeForm' as const, value }));
   return (
     <div>
-      <Row className='mb-5'>
-        <Col xs='12' md='9' lg='8'>
+      <Row className="mb-5">
+        <Col xs="12" md="9" lg="8">
           <h1>Unsolicited Proposal (UP)</h1>
-          <p className='mb-3'>Complete the form below to submit your Unsolicited Proposal for review by the Procurement Concierge Program's staff. If you have not done so already, <b>please download and fill out the detailed information portion of the application</b> using the "Download Application – Detailed Information" button below, as you will not be able to save this application as a draft.</p>
-          <Link button download color='info' href={VI_APPLICATION_DOWNLOAD_URL}>Download Application – Detailed Information</Link>
+          <p className="mb-3">
+            Complete the form below to submit your Unsolicited Proposal for review by the Procurement Concierge Program's staff. If you have not done so already, <b>please download and fill out the detailed information portion of the application</b> using the "Download Application – Detailed Information" button below, as you will not be able to save this application as a draft.
+          </p>
+          <Link button download color="info" href={VI_APPLICATION_DOWNLOAD_URL}>
+            Download Application – Detailed Information
+          </Link>
         </Col>
       </Row>
       <IntakeForm.view state={state.value.intakeForm} dispatch={dispatchIntakeForm} />
@@ -211,11 +232,13 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   },
   getBreadcrumbs: emptyPageBreadcrumbs,
   getModal(state) {
-    if (state.tag === 'invalid') { return null; }
+    if (state.tag === 'invalid') {
+      return null;
+    }
     if (state.value.promptSubmitConfirmation) {
       return {
         title: 'Submit Application?',
-        body: 'Please ensure all information provided is accurate. You will not be able to edit your application once it has been submitted unless requested by the program\'s staff.',
+        body: "Please ensure all information provided is accurate. You will not be able to edit your application once it has been submitted unless requested by the program's staff.",
         onCloseMsg: { tag: 'hideSubmitConfirmationPrompt', value: undefined },
         actions: [
           {

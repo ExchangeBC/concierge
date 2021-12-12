@@ -15,13 +15,9 @@ export interface State {
   categories: Immutable<SelectMulti.State>;
 }
 
-type FormFieldMultiKeys
-  = 'industrySectors'
-  | 'categories';
+type FormFieldMultiKeys = 'industrySectors' | 'categories';
 
-export type InnerMsg
-  = ADT<'onChangeIndustrySectors', SelectMulti.Msg>
-  | ADT<'onChangeCategories', SelectMulti.Msg>;
+export type InnerMsg = ADT<'onChangeIndustrySectors', SelectMulti.Msg> | ADT<'onChangeCategories', SelectMulti.Msg>;
 
 export type Msg = StepMsg<InnerMsg>;
 
@@ -29,31 +25,35 @@ export type Params = null;
 
 const init: Init<Params, State> = async () => {
   return {
-    industrySectors: immutable(await SelectMulti.init({
-      options: AVAILABLE_INDUSTRY_SECTORS.toJS().map(value => ({ label: value, value })),
-      placeholder: 'Select Industry Sector',
-      isCreatable: true,
-      autoFocus: true,
-      formFieldMulti: {
-        idNamespace: 'buyer-industry-sectors',
-        label: 'Industry Sector(s)',
-        required: true,
-        minFields: 1,
-        fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
-      }
-    })),
-    categories: immutable(await SelectMulti.init({
-      options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value })),
-      placeholder: 'Select an Area of Interest',
-      isCreatable: true,
-      formFieldMulti: {
-        idNamespace: 'buyer-categories',
-        label: 'Area(s) of Interest',
-        required: true,
-        minFields: 1,
-        fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
-      }
-    }))
+    industrySectors: immutable(
+      await SelectMulti.init({
+        options: AVAILABLE_INDUSTRY_SECTORS.toJS().map((value) => ({ label: value, value })),
+        placeholder: 'Select Industry Sector',
+        isCreatable: true,
+        autoFocus: true,
+        formFieldMulti: {
+          idNamespace: 'buyer-industry-sectors',
+          label: 'Industry Sector(s)',
+          required: true,
+          minFields: 1,
+          fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
+        }
+      })
+    ),
+    categories: immutable(
+      await SelectMulti.init({
+        options: AVAILABLE_CATEGORIES.toJS().map((value) => ({ label: value, value })),
+        placeholder: 'Select an Area of Interest',
+        isCreatable: true,
+        formFieldMulti: {
+          idNamespace: 'buyer-categories',
+          label: 'Area(s) of Interest',
+          required: true,
+          minFields: 1,
+          fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
+        }
+      })
+    )
   };
 };
 
@@ -62,7 +62,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'onChangeIndustrySectors':
       state = updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'onChangeIndustrySectors', value }),
+        mapChildMsg: (value) => ({ tag: 'onChangeIndustrySectors', value }),
         childStatePath: ['industrySectors'],
         childUpdate: SelectMulti.update,
         childMsg: msg.value
@@ -71,7 +71,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'onChangeCategories':
       state = updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'onChangeCategories', value }),
+        mapChildMsg: (value) => ({ tag: 'onChangeCategories', value }),
         childStatePath: ['categories'],
         childUpdate: SelectMulti.update,
         childMsg: msg.value
@@ -89,33 +89,28 @@ function validateSelectMulti<K extends FormFieldMultiKeys>(state: Immutable<Stat
 }
 
 const isValid: IsValid<State> = (state) => {
-  return !!(
-    (compact(SelectMulti.getValuesAsStrings(state.industrySectors))).length &&
-    (compact(SelectMulti.getValuesAsStrings(state.categories))).length &&
-    SelectMulti.isValid(state.industrySectors) &&
-    SelectMulti.isValid(state.categories)
-  );
+  return !!(compact(SelectMulti.getValuesAsStrings(state.industrySectors)).length && compact(SelectMulti.getValuesAsStrings(state.categories)).length && SelectMulti.isValid(state.industrySectors) && SelectMulti.isValid(state.categories));
 };
 
 const isLoading: IsLoading<State> = (state) => false;
 
 const IndustrySectors: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeIndustrySectors' as const, value }));
+  const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'onChangeIndustrySectors' as const, value }));
   return (
-    <Row className='mt-3'>
-      <Col xs='12' md='7' lg='6'>
-        <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} labelClassName='h3' labelWrapperClassName='mb-3' />
+    <Row className="mt-3">
+      <Col xs="12" md="7" lg="6">
+        <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} labelClassName="h3" labelWrapperClassName="mb-3" />
       </Col>
     </Row>
   );
 };
 
 const Categories: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeCategories' as const, value }));
+  const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'onChangeCategories' as const, value }));
   return (
-    <Row className='mt-3'>
-      <Col xs='12' md='7' lg='6'>
-        <SelectMulti.view state={state.categories} dispatch={dispatchCategories} labelClassName='h3' labelWrapperClassName='mb-3' />
+    <Row className="mt-3">
+      <Col xs="12" md="7" lg="6">
+        <SelectMulti.view state={state.categories} dispatch={dispatchCategories} labelClassName="h3" labelWrapperClassName="mb-3" />
       </Col>
     </Row>
   );
@@ -150,7 +145,5 @@ export const component: StepComponent<Params, State, InnerMsg> = {
 export default component;
 
 export function setErrors(state: Immutable<State>, errors: CreateValidationErrors): Immutable<State> {
-  return state
-    .set('industrySectors', SelectMulti.setErrors(state.industrySectors, get(errors.profile, 'industrySectors', [])))
-    .set('categories', SelectMulti.setErrors(state.categories, get(errors.profile, 'categories', [])));
+  return state.set('industrySectors', SelectMulti.setErrors(state.industrySectors, get(errors.profile, 'industrySectors', []))).set('categories', SelectMulti.setErrors(state.categories, get(errors.profile, 'categories', [])));
 }

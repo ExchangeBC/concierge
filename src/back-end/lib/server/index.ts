@@ -39,9 +39,9 @@ export type SessionIdToSession<Session> = (sessionId: SessionId) => Promise<Sess
 
 export type SessionToSessionId<Session> = (session: Session) => SessionId;
 
-export interface Request<Body, Session>        {
+export interface Request<Body, Session> {
   readonly id: mongoose.Types.ObjectId;
-  readonly path: string,
+  readonly path: string;
   readonly headers: IncomingHttpHeaders;
   readonly logger: DomainLogger;
   readonly method: HttpMethod;
@@ -228,7 +228,7 @@ export function mapErrorResponse<Session>(response: Response<Error, Session>): R
 export type TransformRequest<RBA, RBB, Session> = (request: Request<RBA, Session>) => Promise<RBB>;
 
 export function composeTransformRequest<RBA, RBB, RBC, Session>(a: TransformRequest<RBA, RBB, Session>, b: TransformRequest<RBB, RBC, Session>): TransformRequest<RBA, RBC, Session> {
-  return async request => {
+  return async (request) => {
     const bodyA = await a(request);
     return await b({
       ...request,
@@ -240,7 +240,7 @@ export function composeTransformRequest<RBA, RBB, RBC, Session>(a: TransformRequ
 export type Respond<ReqB, ResB, Session> = (request: Request<ReqB, Session>) => Promise<Response<ResB, Session>>;
 
 export function mapRespond<ReqB, ResBA, ResBB, Session>(respond: Respond<ReqB, ResBA, Session>, fn: (response: Response<ResBA, Session>) => Response<ResBB, Session>): Respond<ReqB, ResBB, Session> {
-  return async request => {
+  return async (request) => {
     const response = await respond(request);
     return fn(response);
   };
@@ -252,7 +252,6 @@ export interface Handler<ReqBA, ReqBB, ResB, Session> {
 }
 
 export const notFoundJsonHandler: Handler<any, any, JsonResponseBody, any> = {
-
   async transformRequest(request) {
     return request;
   },
@@ -265,7 +264,6 @@ export const notFoundJsonHandler: Handler<any, any, JsonResponseBody, any> = {
       body: makeJsonResponseBody({})
     };
   }
-
 };
 
 type BeforeHook<ReqB, State, Session> = (request: Request<ReqB, Session>) => Promise<State>;
@@ -331,7 +329,7 @@ export type MapRoute<ReqBA, ReqBB, ReqBC, ResBA, ResBB, HookStateA, HookStateB, 
  */
 
 export function createMapRoute<ReqBA, ReqBB, ReqBC, ResBA, ResBB, HookStateA, HookStateB, Session>(mapHandler: MapHandler<ReqBA, ReqBB, ReqBC, ResBA, ResBB, Session>, mapHook: MapHook<ReqBB, ReqBC, ResBA, ResBB, HookStateA, HookStateB, Session>): MapRoute<ReqBA, ReqBB, ReqBC, ResBA, ResBB, HookStateA, HookStateB, Session> {
-  return route => ({
+  return (route) => ({
     ...route,
     handler: mapHandler(route.handler),
     hook: route.hook && mapHook(route.hook)
@@ -342,6 +340,6 @@ export const notFoundJsonRoute: Route<any, any, JsonResponseBody, any, any> = {
   method: HttpMethod.Any,
   path: '*',
   handler: notFoundJsonHandler
-}
+};
 
 export type Router<ReqB, ResB, Session> = Array<Route<ReqB, any, ResB, any, Session>>;

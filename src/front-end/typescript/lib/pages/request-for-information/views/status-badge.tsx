@@ -22,7 +22,7 @@ export function rfiStatusToColor(s: RfiStatus): BootstrapColor {
   }
 }
 
-export const Badge: View<Props> = props => {
+export const Badge: View<Props> = (props) => {
   const { rfi, className = '', style = {} } = props;
   const rfiStatus = props.status || (rfi && rfiToRfiStatus(rfi));
   let text = 'Unknown';

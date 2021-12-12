@@ -47,10 +47,12 @@ const ViewModal: View<ViewModalProps> = ({ dispatch, modal }) => {
   // TODO custom X icon
   return (
     <Modal isOpen={open} toggle={closeModal}>
-      <ModalHeader className='align-items-center' toggle={closeModal} close={(<Icon name='times' color='secondary' onClick={closeModal} style={{ cursor: 'pointer' }}/>)}>{content.title}</ModalHeader>
+      <ModalHeader className="align-items-center" toggle={closeModal} close={<Icon name="times" color="secondary" onClick={closeModal} style={{ cursor: 'pointer' }} />}>
+        {content.title}
+      </ModalHeader>
       <ModalBody>{content.body}</ModalBody>
-      <ModalFooter className='p-0' style={{ overflowX: 'auto', justifyContent: 'normal' }}>
-        <div className='p-3 d-flex flex-md-row-reverse justify-content-start align-items-center text-nowrap flex-grow-1'>
+      <ModalFooter className="p-0" style={{ overflowX: 'auto', justifyContent: 'normal' }}>
+        <div className="p-3 d-flex flex-md-row-reverse justify-content-start align-items-center text-nowrap flex-grow-1">
           {content.actions.map(({ button, text, color, msg }, i) => {
             const props = {
               key: `modal-action-${i}`,
@@ -59,9 +61,13 @@ const ViewModal: View<ViewModalProps> = ({ dispatch, modal }) => {
               className: i === 0 ? 'mx-0' : 'ml-3 mr-0 ml-md-0 mr-md-3'
             };
             if (button) {
-              return (<Link button {...props}>{text}</Link>);
+              return (
+                <Link button {...props}>
+                  {text}
+                </Link>
+              );
             } else {
-              return (<Link {...props}>{text}</Link>);
+              return <Link {...props}>{text}</Link>;
             }
           })}
         </div>
@@ -72,254 +78,91 @@ const ViewModal: View<ViewModalProps> = ({ dispatch, modal }) => {
 
 const ViewActiveRoute: ComponentView<State, Msg> = ({ state, dispatch }) => {
   switch (state.activeRoute.tag) {
-
     case 'landing':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.landing}
-          mapPageMsg={value => ({ tag: 'pageLanding', value })}
-          component={PageLanding.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.landing} mapPageMsg={(value) => ({ tag: 'pageLanding', value })} component={PageLanding.component} />;
 
     case 'signIn':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.signIn}
-          mapPageMsg={value => ({ tag: 'pageSignIn', value })}
-          component={PageSignIn.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.signIn} mapPageMsg={(value) => ({ tag: 'pageSignIn', value })} component={PageSignIn.component} />;
 
     case 'signUp':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.signUp}
-          mapPageMsg={value => ({ tag: 'pageSignUp', value })}
-          component={PageSignUp.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.signUp} mapPageMsg={(value) => ({ tag: 'pageSignUp', value })} component={PageSignUp.component} />;
 
     case 'signUpBuyer':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.signUpBuyer}
-          mapPageMsg={value => ({ tag: 'pageSignUpBuyer', value })}
-          component={PageSignUpBuyer.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.signUpBuyer} mapPageMsg={(value) => ({ tag: 'pageSignUpBuyer', value })} component={PageSignUpBuyer.component} />;
 
     case 'signUpVendor':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.signUpVendor}
-          mapPageMsg={value => ({ tag: 'pageSignUpVendor', value })}
-          component={PageSignUpVendor.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.signUpVendor} mapPageMsg={(value) => ({ tag: 'pageSignUpVendor', value })} component={PageSignUpVendor.component} />;
 
     case 'signUpProgramStaff':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.signUpProgramStaff}
-          mapPageMsg={value => ({ tag: 'pageSignUpProgramStaff', value })}
-          component={PageSignUpProgramStaff.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.signUpProgramStaff} mapPageMsg={(value) => ({ tag: 'pageSignUpProgramStaff', value })} component={PageSignUpProgramStaff.component} />;
 
     case 'signOut':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.signOut}
-          mapPageMsg={value => ({ tag: 'pageSignOut', value })}
-          component={PageSignOut.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.signOut} mapPageMsg={(value) => ({ tag: 'pageSignOut', value })} component={PageSignOut.component} />;
 
     case 'changePassword':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.changePassword}
-          mapPageMsg={value => ({ tag: 'pageChangePassword', value })}
-          component={PageChangePassword.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.changePassword} mapPageMsg={(value) => ({ tag: 'pageChangePassword', value })} component={PageChangePassword.component} />;
 
     case 'resetPassword':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.resetPassword}
-          mapPageMsg={value => ({ tag: 'pageResetPassword', value })}
-          component={PageResetPassword.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.resetPassword} mapPageMsg={(value) => ({ tag: 'pageResetPassword', value })} component={PageResetPassword.component} />;
 
     case 'forgotPassword':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.forgotPassword}
-          mapPageMsg={value => ({ tag: 'pageForgotPassword', value })}
-          component={PageForgotPassword.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.forgotPassword} mapPageMsg={(value) => ({ tag: 'pageForgotPassword', value })} component={PageForgotPassword.component} />;
 
     case 'feedback':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.feedback}
-          mapPageMsg={value => ({ tag: 'pageFeedback', value })}
-          component={PageFeedback.component} />
-      )
+      return <ViewPage dispatch={dispatch} pageState={state.pages.feedback} mapPageMsg={(value) => ({ tag: 'pageFeedback', value })} component={PageFeedback.component} />;
 
     case 'termsAndConditions':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.termsAndConditions}
-          mapPageMsg={value => ({ tag: 'pageTermsAndConditions', value })}
-          component={PageTermsAndConditions.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.termsAndConditions} mapPageMsg={(value) => ({ tag: 'pageTermsAndConditions', value })} component={PageTermsAndConditions.component} />;
 
     case 'userView':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.userView}
-          mapPageMsg={value => ({ tag: 'pageUserView', value })}
-          component={PageUserView.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.userView} mapPageMsg={(value) => ({ tag: 'pageUserView', value })} component={PageUserView.component} />;
 
     case 'userList':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.userList}
-          mapPageMsg={value => ({ tag: 'pageUserList', value })}
-          component={PageUserList.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.userList} mapPageMsg={(value) => ({ tag: 'pageUserList', value })} component={PageUserList.component} />;
 
     case 'requestForInformationCreate':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.requestForInformationCreate}
-          mapPageMsg={value => ({ tag: 'pageRequestForInformationCreate', value })}
-          component={PageRequestForInformationCreate.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.requestForInformationCreate} mapPageMsg={(value) => ({ tag: 'pageRequestForInformationCreate', value })} component={PageRequestForInformationCreate.component} />;
 
     case 'requestForInformationEdit':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.requestForInformationEdit}
-          mapPageMsg={value => ({ tag: 'pageRequestForInformationEdit', value })}
-          component={PageRequestForInformationEdit.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.requestForInformationEdit} mapPageMsg={(value) => ({ tag: 'pageRequestForInformationEdit', value })} component={PageRequestForInformationEdit.component} />;
 
     case 'requestForInformationView':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.requestForInformationView}
-          mapPageMsg={value => ({ tag: 'pageRequestForInformationView', value })}
-          component={PageRequestForInformationView.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.requestForInformationView} mapPageMsg={(value) => ({ tag: 'pageRequestForInformationView', value })} component={PageRequestForInformationView.component} />;
 
     case 'requestForInformationPreview':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.requestForInformationPreview}
-          mapPageMsg={value => ({ tag: 'pageRequestForInformationPreview', value })}
-          component={PageRequestForInformationPreview.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.requestForInformationPreview} mapPageMsg={(value) => ({ tag: 'pageRequestForInformationPreview', value })} component={PageRequestForInformationPreview.component} />;
 
     case 'requestForInformationRespond':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.requestForInformationRespond}
-          mapPageMsg={value => ({ tag: 'pageRequestForInformationRespond', value })}
-          component={PageRequestForInformationRespond.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.requestForInformationRespond} mapPageMsg={(value) => ({ tag: 'pageRequestForInformationRespond', value })} component={PageRequestForInformationRespond.component} />;
 
     case 'requestForInformationAttendDiscoveryDay':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.requestForInformationAttendDiscoveryDay}
-          mapPageMsg={value => ({ tag: 'pageRequestForInformationAttendDiscoveryDay', value })}
-          component={PageRequestForInformationAttendDiscoveryDay.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.requestForInformationAttendDiscoveryDay} mapPageMsg={(value) => ({ tag: 'pageRequestForInformationAttendDiscoveryDay', value })} component={PageRequestForInformationAttendDiscoveryDay.component} />;
 
     case 'requestForInformationList':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.requestForInformationList}
-          mapPageMsg={value => ({ tag: 'pageRequestForInformationList', value })}
-          component={PageRequestForInformationList.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.requestForInformationList} mapPageMsg={(value) => ({ tag: 'pageRequestForInformationList', value })} component={PageRequestForInformationList.component} />;
 
     case 'viCreate':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.viCreate}
-          mapPageMsg={value => ({ tag: 'pageViCreate', value })}
-          component={PageViCreate.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.viCreate} mapPageMsg={(value) => ({ tag: 'pageViCreate', value })} component={PageViCreate.component} />;
 
     case 'viEdit':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.viEdit}
-          mapPageMsg={value => ({ tag: 'pageViEdit', value })}
-          component={PageViEdit.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.viEdit} mapPageMsg={(value) => ({ tag: 'pageViEdit', value })} component={PageViEdit.component} />;
 
     case 'viView':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.viView}
-          mapPageMsg={value => ({ tag: 'pageViView', value })}
-          component={PageViView.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.viView} mapPageMsg={(value) => ({ tag: 'pageViView', value })} component={PageViView.component} />;
 
     case 'viList':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.viList}
-          mapPageMsg={value => ({ tag: 'pageViList', value })}
-          component={PageViList.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.viList} mapPageMsg={(value) => ({ tag: 'pageViList', value })} component={PageViList.component} />;
 
     case 'markdown':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.markdown}
-          mapPageMsg={value => ({ tag: 'pageMarkdown', value })}
-          component={PageMarkdown.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.markdown} mapPageMsg={(value) => ({ tag: 'pageMarkdown', value })} component={PageMarkdown.component} />;
 
     case 'notice':
-      return (
-        <ViewPage
-          dispatch={dispatch}
-          pageState={state.pages.notice}
-          mapPageMsg={value => ({ tag: 'pageNotice', value })}
-          component={PageNotice.component} />
-      );
+      return <ViewPage dispatch={dispatch} pageState={state.pages.notice} mapPageMsg={(value) => ({ tag: 'pageNotice', value })} component={PageNotice.component} />;
   }
-}
+};
 
 const TestEnvironmentBanner: View<{}> = () => (
-  <a href={`https://${LIVE_SITE_DOMAIN}`} className='bg-danger text-white text-center p-2'>
+  <a href={`https://${LIVE_SITE_DOMAIN}`} className="bg-danger text-white text-center p-2">
     You are in a test environment. Click here to go to the live site.
   </a>
 );

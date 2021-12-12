@@ -22,27 +22,9 @@ export interface State {
   headOfficeLocation: Select.State;
 }
 
-type FormFieldKeys
-  = 'businessName'
-  | 'businessCity'
-  | 'contactName'
-  | 'numberOfEmployees'
-  | 'indigenousOwnership'
-  | 'headOfficeLocation';
+type FormFieldKeys = 'businessName' | 'businessCity' | 'contactName' | 'numberOfEmployees' | 'indigenousOwnership' | 'headOfficeLocation';
 
-export type InnerMsg
-  = ADT<'onChangeBusinessName', string>
-  | ADT<'onChangeBusinessCity', string>
-  | ADT<'onChangeContactName', string>
-  | ADT<'onChangeNumberOfEmployees', Select.Value>
-  | ADT<'onChangeIndigenousOwnership', Select.Value>
-  | ADT<'onChangeHeadOfficeLocation', Select.Value>
-  | ADT<'validateBusinessName'>
-  | ADT<'validateBusinessCity'>
-  | ADT<'validateContactName'>
-  | ADT<'validateNumberOfEmployees'>
-  | ADT<'validateIndigenousOwnership'>
-  | ADT<'validateHeadOfficeLocation'>;
+export type InnerMsg = ADT<'onChangeBusinessName', string> | ADT<'onChangeBusinessCity', string> | ADT<'onChangeContactName', string> | ADT<'onChangeNumberOfEmployees', Select.Value> | ADT<'onChangeIndigenousOwnership', Select.Value> | ADT<'onChangeHeadOfficeLocation', Select.Value> | ADT<'validateBusinessName'> | ADT<'validateBusinessCity'> | ADT<'validateContactName'> | ADT<'validateNumberOfEmployees'> | ADT<'validateIndigenousOwnership'> | ADT<'validateHeadOfficeLocation'>;
 
 export type Msg = StepMsg<InnerMsg>;
 
@@ -78,7 +60,7 @@ const init: Init<Params, State> = async () => {
       placeholder: 'Select Number of Employees',
       options: {
         tag: 'options',
-        value: AVAILABLE_NUMBER_OF_EMPLOYEES.toJS().map(value => ({ label: value, value }))
+        value: AVAILABLE_NUMBER_OF_EMPLOYEES.toJS().map((value) => ({ label: value, value }))
       }
     }),
     indigenousOwnership: Select.init({
@@ -88,7 +70,7 @@ const init: Init<Params, State> = async () => {
       placeholder: 'Select Indigenous Ownership',
       options: {
         tag: 'options',
-        value: AVAILABLE_INDIGENOUS_OWNERSHIP.toJS().map(value => ({ label: value, value }))
+        value: AVAILABLE_INDIGENOUS_OWNERSHIP.toJS().map((value) => ({ label: value, value }))
       }
     }),
     headOfficeLocation: Select.init({
@@ -98,7 +80,7 @@ const init: Init<Params, State> = async () => {
       placeholder: 'Select Head Office Location',
       options: {
         tag: 'options',
-        value: AVAILABLE_HEAD_OFFICE_LOCATIONS.toJS().map(value => ({ label: value, value }))
+        value: AVAILABLE_HEAD_OFFICE_LOCATIONS.toJS().map((value) => ({ label: value, value }))
       }
     })
   };
@@ -134,11 +116,11 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 function makeValidateBusinessCity(state: Immutable<State>): (raw: string) => Validation<string> {
-  return v => mapValid(validateBusinessCity(v, get(state.headOfficeLocation.value, 'value', '')), w => w || '');
+  return (v) => mapValid(validateBusinessCity(v, get(state.headOfficeLocation.value, 'value', '')), (w) => w || '');
 }
 
 function validateOption(validate: (_: string) => Validation<unknown>): (option: Select.Value) => Validation<Select.Value> {
-  return option => {
+  return (option) => {
     const raw = option ? option.value : '';
     return mapValid(validate(raw), () => option);
   };
@@ -154,19 +136,7 @@ function validateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K,
 }
 
 const isValid: IsValid<State> = (state) => {
-  return !!(
-    !state.businessName.errors.length &&
-    !state.businessCity.errors.length &&
-    !state.contactName.errors.length &&
-    !state.numberOfEmployees.errors.length &&
-    !state.indigenousOwnership.errors.length &&
-    !state.headOfficeLocation.errors.length &&
-    state.businessName.value &&
-    state.contactName.value &&
-    state.numberOfEmployees.value &&
-    state.indigenousOwnership.value &&
-    state.headOfficeLocation.value
-  );
+  return !!(!state.businessName.errors.length && !state.businessCity.errors.length && !state.contactName.errors.length && !state.numberOfEmployees.errors.length && !state.indigenousOwnership.errors.length && !state.headOfficeLocation.errors.length && state.businessName.value && state.contactName.value && state.numberOfEmployees.value && state.indigenousOwnership.value && state.headOfficeLocation.value);
 };
 
 const isLoading: IsLoading<State> = (state) => false;
@@ -175,53 +145,37 @@ const view: ComponentView<State, Msg> = makeView({
   title: 'Business Information',
   stepIndicator: 'Step 3 of 4',
   view({ state, dispatch }) {
-    const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+    const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, (value) => ({ tag, value }));
     const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
-    const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
+    const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, (value) => ({ tag, value }));
     return (
       <div>
         <Row>
-          <Col xs='12' md='7'>
-            <ShortText.view
-              state={state.businessName}
-              onChangeDebounced={onChangeDebounced('validateBusinessName')}
-              onChange={onChangeShortText('onChangeBusinessName')}
-              autoFocus />
+          <Col xs="12" md="7">
+            <ShortText.view state={state.businessName} onChangeDebounced={onChangeDebounced('validateBusinessName')} onChange={onChangeShortText('onChangeBusinessName')} autoFocus />
           </Col>
         </Row>
         <Row>
-          <Col xs='12' md='7'>
-            <ShortText.view
-              state={state.contactName}
-              onChangeDebounced={onChangeDebounced('validateContactName')}
-              onChange={onChangeShortText('onChangeContactName')} />
+          <Col xs="12" md="7">
+            <ShortText.view state={state.contactName} onChangeDebounced={onChangeDebounced('validateContactName')} onChange={onChangeShortText('onChangeContactName')} />
           </Col>
         </Row>
         <Row>
-          <Col xs='12' md='5' lg='4'>
-            <Select.view
-              state={state.numberOfEmployees}
-              onChange={onChangeSelect('onChangeNumberOfEmployees')} />
+          <Col xs="12" md="5" lg="4">
+            <Select.view state={state.numberOfEmployees} onChange={onChangeSelect('onChangeNumberOfEmployees')} />
           </Col>
         </Row>
         <Row>
-          <Col xs='12' md='5' lg='4'>
-            <Select.view
-              state={state.indigenousOwnership}
-              onChange={onChangeSelect('onChangeIndigenousOwnership')} />
+          <Col xs="12" md="5" lg="4">
+            <Select.view state={state.indigenousOwnership} onChange={onChangeSelect('onChangeIndigenousOwnership')} />
           </Col>
         </Row>
         <Row>
-          <Col xs='12' md='5' lg='4'>
-            <Select.view
-              state={state.headOfficeLocation}
-              onChange={onChangeSelect('onChangeHeadOfficeLocation')} />
+          <Col xs="12" md="5" lg="4">
+            <Select.view state={state.headOfficeLocation} onChange={onChangeSelect('onChangeHeadOfficeLocation')} />
           </Col>
-          <Col xs='12' md='4' lg='3'>
-            <ShortText.view
-              state={state.businessCity}
-              onChangeDebounced={onChangeDebounced('validateBusinessCity')}
-              onChange={onChangeShortText('onChangeBusinessCity')} />
+          <Col xs="12" md="4" lg="3">
+            <ShortText.view state={state.businessCity} onChangeDebounced={onChangeDebounced('validateBusinessCity')} onChange={onChangeShortText('onChangeBusinessCity')} />
           </Col>
         </Row>
       </div>
@@ -245,11 +199,5 @@ export const component: StepComponent<Params, State, InnerMsg> = {
 export default component;
 
 export function setErrors(state: Immutable<State>, errors: CreateValidationErrors): Immutable<State> {
-  return state
-    .setIn(['businessName', 'errors'], get(errors.profile, 'businessName', []))
-    .setIn(['businessCity', 'errors'], get(errors.profile, 'businessCity', []))
-    .setIn(['contactName', 'errors'], get(errors.profile, 'contactName', []))
-    .setIn(['numberOfEmployees', 'errors'], get(errors.profile, 'numberOfEmployees', []))
-    .setIn(['indigenousOwnership', 'errors'], get(errors.profile, 'indigenousOwnership', []))
-    .setIn(['headOfficeLocation', 'errors'], get(errors.profile, 'headOfficeLocation', []));
+  return state.setIn(['businessName', 'errors'], get(errors.profile, 'businessName', [])).setIn(['businessCity', 'errors'], get(errors.profile, 'businessCity', [])).setIn(['contactName', 'errors'], get(errors.profile, 'contactName', [])).setIn(['numberOfEmployees', 'errors'], get(errors.profile, 'numberOfEmployees', [])).setIn(['indigenousOwnership', 'errors'], get(errors.profile, 'indigenousOwnership', [])).setIn(['headOfficeLocation', 'errors'], get(errors.profile, 'headOfficeLocation', []));
 }

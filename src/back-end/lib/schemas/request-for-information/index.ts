@@ -5,7 +5,7 @@ import * as FileSchema from 'back-end/lib/schemas/file';
 import * as UserSchema from 'back-end/lib/schemas/user';
 import mongooseDefault, * as mongoose from 'mongoose';
 import { Attendee, PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
-import { PublicDiscoveryDay, PublicRfi, PublicVersion } from 'shared/lib/resources/request-for-information';
+import { PublicDiscoveryDay, PublicRfi } from 'shared/lib/resources/request-for-information';
 import { Addendum, ProgramStaffProfile } from 'shared/lib/types';
 
 export interface Version {
@@ -66,16 +66,15 @@ export async function getPublicDiscoveryDayResponses(UserModel: UserSchema.Model
       if (publicDdr.vendor.active) {
         responses.push(publicDdr);
       }
-    // tslint:disable:next-line no-empty
-    } catch (e) {
-    }
+      // eslint-disable-next-line no-empty
+    } catch (e) {}
   }
   return responses;
 }
 
 export async function getDiscoveryDayResponses(UserModel: UserSchema.Model, rfi: Data): Promise<DiscoveryDayResponse[]> {
   const responses = await getPublicDiscoveryDayResponses(UserModel, rfi);
-  return responses.map(r => ({
+  return responses.map((r) => ({
     ...r,
     vendor: new mongooseDefault.Types.ObjectId(r.vendor._id)
   }));
@@ -93,12 +92,13 @@ export async function makePublicDiscoveryDayResponse(UserModel: UserSchema.Model
 export async function makePublicRfi(UserModel: UserSchema.Model, FileModel: FileSchema.Model, rfi: Data, session: Session): Promise<PublicRfi> {
   const isProgramStaff = permissions.isProgramStaff(session);
   const latestVersion = getLatestVersion(rfi);
-  let latestPublicVersion: PublicVersion | undefined;
-  if (!latestVersion) { throw new Error('RFI does not have at least one version'); }
-  const attachments = await Promise.all(latestVersion.attachments.map(fileId => FileSchema.findPublicFileByIdUnsafely(FileModel, fileId)));
+  if (!latestVersion) {
+    throw new Error('RFI does not have at least one version');
+  }
+  const attachments = await Promise.all(latestVersion.attachments.map((fileId) => FileSchema.findPublicFileByIdUnsafely(FileModel, fileId)));
   const programStaffContact = await UserSchema.findPublicUserByIdUnsafely(UserModel, latestVersion.programStaffContact);
   const programStaffProfile = programStaffContact.profile as ProgramStaffProfile;
-  latestPublicVersion = {
+  const latestPublicVersion = {
     createdAt: latestVersion.createdAt,
     closingAt: latestVersion.closingAt,
     gracePeriodDays: latestVersion.gracePeriodDays,

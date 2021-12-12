@@ -11,7 +11,6 @@ type RequiredModels = 'File';
 export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody | FileResponseBody, AvailableModels, RequiredModels, null, null, Session>;
 
 export const resource: Resource = {
-
   routeNamespace: 'fileBlobs',
 
   readOne(Models) {
@@ -40,7 +39,6 @@ export const resource: Resource = {
       }
     };
   }
-
-}
+};
 
 export default resource;

@@ -29,7 +29,6 @@ function getQueryParamString(query: RouteQuery, key: string): string {
 }
 
 const router: Router<Route> = {
-
   routes: [
     {
       path: '/',
@@ -133,7 +132,7 @@ const router: Router<Route> = {
         return {
           tag: 'feedback',
           value: null
-        }
+        };
       }
     },
     {
@@ -145,7 +144,7 @@ const router: Router<Route> = {
           value: {
             redirectOnAccept: getQueryParamString(query, 'redirectOnAccept') || undefined,
             redirectOnSkip: getQueryParamString(query, 'redirectOnSkip') || undefined,
-            warningId: rawWarningId && PageTermsAndConditions.parseWarningId(rawWarningId) || undefined
+            warningId: (rawWarningId && PageTermsAndConditions.parseWarningId(rawWarningId)) || undefined
           }
         };
       }
@@ -266,10 +265,14 @@ const router: Router<Route> = {
             rfiId: getParamString(params, 'rfiId'),
             activeTab: (() => {
               switch (getQueryParamString(query, 'activeTab')) {
-                case 'details': return 'details';
-                case 'discoveryDay': return 'discoveryDay';
-                case 'responses': return 'responses';
-                default: return undefined;
+                case 'details':
+                  return 'details';
+                case 'discoveryDay':
+                  return 'discoveryDay';
+                case 'responses':
+                  return 'responses';
+                default:
+                  return undefined;
               }
             })()
           }
@@ -348,9 +351,12 @@ const router: Router<Route> = {
             viId: getParamString(params, 'viId'),
             activeTab: (() => {
               switch (getQueryParamString(query, 'activeTab')) {
-                case 'management': return 'management';
-                case 'application': return 'application';
-                default: return undefined;
+                case 'management':
+                  return 'management';
+                case 'application':
+                  return 'application';
+                default:
+                  return undefined;
               }
             })()
           }
@@ -500,7 +506,7 @@ const router: Router<Route> = {
               value: undefined
             }
           }
-        }
+        };
       }
     },
     {
@@ -514,7 +520,7 @@ const router: Router<Route> = {
               value: undefined
             }
           }
-        }
+        };
       }
     },
     {
@@ -528,7 +534,7 @@ const router: Router<Route> = {
               value: undefined
             }
           }
-        }
+        };
       }
     },
     {
@@ -542,7 +548,7 @@ const router: Router<Route> = {
               value: undefined
             }
           }
-        }
+        };
       }
     },
     {
@@ -568,7 +574,9 @@ const router: Router<Route> = {
       case 'signIn':
         const siRedirectOnSuccess = route.value.redirectOnSuccess;
         const siQueryParams: string[] = [];
-        if (siRedirectOnSuccess) { siQueryParams.push(`redirectOnSuccess=${encodeURIComponent(siRedirectOnSuccess)}`); }
+        if (siRedirectOnSuccess) {
+          siQueryParams.push(`redirectOnSuccess=${encodeURIComponent(siRedirectOnSuccess)}`);
+        }
         const siQueryString = siQueryParams.join('&');
         return `/sign-in?${siQueryString}`;
       case 'signUp':
@@ -594,9 +602,15 @@ const router: Router<Route> = {
         const tcRedirectOnSkip = route.value.redirectOnSkip;
         const tcWarningId = route.value.warningId;
         const tcQueryParams: string[] = [];
-        if (tcRedirectOnAccept) { tcQueryParams.push(`redirectOnAccept=${encodeURIComponent(tcRedirectOnAccept)}`); }
-        if (tcRedirectOnSkip) { tcQueryParams.push(`redirectOnSkip=${encodeURIComponent(tcRedirectOnSkip)}`); }
-        if (tcWarningId) { tcQueryParams.push(`warningId=${encodeURIComponent(tcWarningId)}`); }
+        if (tcRedirectOnAccept) {
+          tcQueryParams.push(`redirectOnAccept=${encodeURIComponent(tcRedirectOnAccept)}`);
+        }
+        if (tcRedirectOnSkip) {
+          tcQueryParams.push(`redirectOnSkip=${encodeURIComponent(tcRedirectOnSkip)}`);
+        }
+        if (tcWarningId) {
+          tcQueryParams.push(`warningId=${encodeURIComponent(tcWarningId)}`);
+        }
         const tcQueryString = tcQueryParams.join('&');
         return `/terms-and-conditions?${tcQueryString}`;
       case 'userView':
@@ -664,7 +678,7 @@ const router: Router<Route> = {
             case 'notFound':
               return '/not-found';
             case 'feedbackSubmitted':
-              return '/notice/feedback-submitted'
+              return '/notice/feedback-submitted';
             case 'viCreated':
               return '/notice/unsolicited-proposals/created';
             case 'viEditedByVendor':
@@ -675,7 +689,6 @@ const router: Router<Route> = {
         })();
     }
   }
-
 };
 
 export default router;

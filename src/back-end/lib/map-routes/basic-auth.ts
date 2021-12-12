@@ -2,26 +2,29 @@ import { authenticatePassword } from 'back-end/lib/security';
 import { createMapRoute, JsonResponseBody, makeJsonResponseBody, MapHandler, MapHook, MapRoute } from 'back-end/lib/server';
 import { ADT } from 'shared/lib/types';
 
-type BasicAuthRequestBody<Body>
-  = ADT<'authorized', Body>
-  | ADT<'unauthorized'>;
+type BasicAuthRequestBody<Body> = ADT<'authorized', Body> | ADT<'unauthorized'>;
 
 type UnauthorizedResponseBody = JsonResponseBody<['Unauthorized']>;
 
-function addBasicAuth<ReqBA, ReqBB, ResB, Session>(username: string, passwordHash: string): MapHandler<ReqBA, ReqBB, BasicAuthRequestBody<ReqBB> , ResB, ResB | UnauthorizedResponseBody, Session> {
-  return oldHandler => ({
-
+function addBasicAuth<ReqBA, ReqBB, ResB, Session>(username: string, passwordHash: string): MapHandler<ReqBA, ReqBB, BasicAuthRequestBody<ReqBB>, ResB, ResB | UnauthorizedResponseBody, Session> {
+  return (oldHandler) => ({
     async transformRequest(request) {
       const unauthorized: BasicAuthRequestBody<ReqBB> = { tag: 'unauthorized', value: undefined };
       let authHeader = request.headers.authorization;
-      if (!authHeader) { return unauthorized; };
+      if (!authHeader) {
+        return unauthorized;
+      }
       authHeader = typeof authHeader === 'string' ? authHeader : authHeader[0];
       const basicAuthMatch = authHeader.match(/\s*Basic\s+(\S+)/);
-      if (!basicAuthMatch) { return unauthorized; };
+      if (!basicAuthMatch) {
+        return unauthorized;
+      }
       const decoded = Buffer.from(basicAuthMatch[1], 'base64').toString('utf8');
       const [rawUsername = '', rawPassword = ''] = decoded.split(':');
-      const authorized = rawUsername === username && await authenticatePassword(rawPassword, passwordHash);
-      if (!authorized) { return unauthorized; };
+      const authorized = rawUsername === username && (await authenticatePassword(rawPassword, passwordHash));
+      if (!authorized) {
+        return unauthorized;
+      }
       return {
         tag: 'authorized',
         value: await oldHandler.transformRequest(request)
@@ -46,7 +49,6 @@ function addBasicAuth<ReqBA, ReqBB, ResB, Session>(username: string, passwordHas
           };
       }
     }
-
   });
 }
 
@@ -56,6 +58,6 @@ interface Params<ReqB, ResB, HookState, Session> {
   mapHook: MapHook<ReqB, BasicAuthRequestBody<ReqB>, ResB, ResB | UnauthorizedResponseBody, HookState, HookState, Session>;
 }
 
-export default function<ReqBA, ReqBB, ResB, HookState, Session>(params: Params<ReqBB, ResB, HookState, Session>): MapRoute<ReqBA, ReqBB, BasicAuthRequestBody<ReqBB>, ResB, ResB | UnauthorizedResponseBody, HookState, HookState, Session> {
+export default function <ReqBA, ReqBB, ResB, HookState, Session>(params: Params<ReqBB, ResB, HookState, Session>): MapRoute<ReqBA, ReqBB, BasicAuthRequestBody<ReqBB>, ResB, ResB | UnauthorizedResponseBody, HookState, HookState, Session> {
   return createMapRoute(addBasicAuth(params.username, params.passwordHash), params.mapHook);
 }

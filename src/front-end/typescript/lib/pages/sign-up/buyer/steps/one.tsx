@@ -18,27 +18,9 @@ export interface State {
   contactCity: ShortText.State;
 }
 
-type FormFieldKeys
-  = 'firstName'
-  | 'lastName'
-  | 'positionTitle'
-  | 'publicSectorEntity'
-  | 'branch'
-  | 'contactCity';
+type FormFieldKeys = 'firstName' | 'lastName' | 'positionTitle' | 'publicSectorEntity' | 'branch' | 'contactCity';
 
-export type InnerMsg
-  = ADT<'onChangeFirstName', string>
-  | ADT<'onChangeLastName', string>
-  | ADT<'onChangePositionTitle', string>
-  | ADT<'onChangePublicSectorEntity', string>
-  | ADT<'onChangeBranch', string>
-  | ADT<'onChangeContactCity', string>
-  | ADT<'validateFirstName'>
-  | ADT<'validateLastName'>
-  | ADT<'validatePositionTitle'>
-  | ADT<'validatePublicSectorEntity'>
-  | ADT<'validateBranch'>
-  | ADT<'validateContactCity'>;
+export type InnerMsg = ADT<'onChangeFirstName', string> | ADT<'onChangeLastName', string> | ADT<'onChangePositionTitle', string> | ADT<'onChangePublicSectorEntity', string> | ADT<'onChangeBranch', string> | ADT<'onChangeContactCity', string> | ADT<'validateFirstName'> | ADT<'validateLastName'> | ADT<'validatePositionTitle'> | ADT<'validatePublicSectorEntity'> | ADT<'validateBranch'> | ADT<'validateContactCity'>;
 
 export type Msg = StepMsg<InnerMsg>;
 
@@ -114,7 +96,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'validatePublicSectorEntity':
       return [validateValue(state, 'publicSectorEntity', validatePublicSectorEntity)];
     case 'validateBranch':
-      return [validateValue(state, 'branch', v => mapValid(validateBranch(v), w => w || ''))];
+      return [validateValue(state, 'branch', (v) => mapValid(validateBranch(v), (w) => w || ''))];
     case 'validateContactCity':
       return [validateValue(state, 'contactCity', validateCity)];
     default:
@@ -132,19 +114,7 @@ function validateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K,
 }
 
 const isValid: IsValid<State> = (state) => {
-  return !!(
-    !state.firstName.errors.length &&
-    !state.lastName.errors.length &&
-    !state.positionTitle.errors.length &&
-    !state.publicSectorEntity.errors.length &&
-    !state.branch.errors.length &&
-    !state.contactCity.errors.length &&
-    state.firstName.value &&
-    state.lastName.value &&
-    state.positionTitle.value &&
-    state.publicSectorEntity.value &&
-    state.contactCity.value
-  );
+  return !!(!state.firstName.errors.length && !state.lastName.errors.length && !state.positionTitle.errors.length && !state.publicSectorEntity.errors.length && !state.branch.errors.length && !state.contactCity.errors.length && state.firstName.value && state.lastName.value && state.positionTitle.value && state.publicSectorEntity.value && state.contactCity.value);
 };
 
 const isLoading: IsLoading<State> = (state) => false;
@@ -153,53 +123,34 @@ const view: ComponentView<State, Msg> = makeView({
   title: `${userTypeToTitleCase(UserType.Buyer)} Information`,
   stepIndicator: 'Step 3 of 4',
   view({ state, dispatch }) {
-    const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+    const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, (value) => ({ tag, value }));
     const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
     return (
       <div>
         <Row>
-          <Col xs='12' md='4'>
-            <ShortText.view
-              state={state.firstName}
-              onChangeDebounced={onChangeDebounced('validateFirstName')}
-              onChange={onChangeShortText('onChangeFirstName')}
-              autoFocus />
+          <Col xs="12" md="4">
+            <ShortText.view state={state.firstName} onChangeDebounced={onChangeDebounced('validateFirstName')} onChange={onChangeShortText('onChangeFirstName')} autoFocus />
           </Col>
-          <Col xs='12' md='4'>
-            <ShortText.view
-              state={state.lastName}
-              onChangeDebounced={onChangeDebounced('validateLastName')}
-              onChange={onChangeShortText('onChangeLastName')} />
+          <Col xs="12" md="4">
+            <ShortText.view state={state.lastName} onChangeDebounced={onChangeDebounced('validateLastName')} onChange={onChangeShortText('onChangeLastName')} />
           </Col>
         </Row>
         <Row>
-          <Col xs='12' md='4'>
-            <ShortText.view
-              state={state.positionTitle}
-              onChangeDebounced={onChangeDebounced('validatePositionTitle')}
-              onChange={onChangeShortText('onChangePositionTitle')} />
+          <Col xs="12" md="4">
+            <ShortText.view state={state.positionTitle} onChangeDebounced={onChangeDebounced('validatePositionTitle')} onChange={onChangeShortText('onChangePositionTitle')} />
           </Col>
         </Row>
         <Row>
-          <Col xs='12' md='4'>
-            <ShortText.view
-              state={state.publicSectorEntity}
-              onChangeDebounced={onChangeDebounced('validatePublicSectorEntity')}
-              onChange={onChangeShortText('onChangePublicSectorEntity')} />
+          <Col xs="12" md="4">
+            <ShortText.view state={state.publicSectorEntity} onChangeDebounced={onChangeDebounced('validatePublicSectorEntity')} onChange={onChangeShortText('onChangePublicSectorEntity')} />
           </Col>
-          <Col xs='12' md='4'>
-            <ShortText.view
-              state={state.branch}
-              onChangeDebounced={onChangeDebounced('validateBranch')}
-              onChange={onChangeShortText('onChangeBranch')} />
+          <Col xs="12" md="4">
+            <ShortText.view state={state.branch} onChangeDebounced={onChangeDebounced('validateBranch')} onChange={onChangeShortText('onChangeBranch')} />
           </Col>
         </Row>
         <Row>
-          <Col xs='12' md='4'>
-            <ShortText.view
-              state={state.contactCity}
-              onChangeDebounced={onChangeDebounced('validateContactCity')}
-              onChange={onChangeShortText('onChangeContactCity')} />
+          <Col xs="12" md="4">
+            <ShortText.view state={state.contactCity} onChangeDebounced={onChangeDebounced('validateContactCity')} onChange={onChangeShortText('onChangeContactCity')} />
           </Col>
         </Row>
       </div>
@@ -223,11 +174,5 @@ export const component: StepComponent<Params, State, InnerMsg> = {
 export default component;
 
 export function setErrors(state: Immutable<State>, errors: CreateValidationErrors): Immutable<State> {
-  return state
-    .setIn(['firstName', 'errors'], get(errors.profile, 'firstName', []))
-    .setIn(['lastName', 'errors'], get(errors.profile, 'lastName', []))
-    .setIn(['postitionTitle', 'errors'], get(errors.profile, 'postitionTitle', []))
-    .setIn(['publicSectorEntity', 'errors'], get(errors.profile, 'publicSectorEntity', []))
-    .setIn(['branch', 'errors'], get(errors.profile, 'branch', []))
-    .setIn(['contactCity', 'errors'], get(errors.profile, 'contactCity', []));
+  return state.setIn(['firstName', 'errors'], get(errors.profile, 'firstName', [])).setIn(['lastName', 'errors'], get(errors.profile, 'lastName', [])).setIn(['postitionTitle', 'errors'], get(errors.profile, 'postitionTitle', [])).setIn(['publicSectorEntity', 'errors'], get(errors.profile, 'publicSectorEntity', [])).setIn(['branch', 'errors'], get(errors.profile, 'branch', [])).setIn(['contactCity', 'errors'], get(errors.profile, 'contactCity', []));
 }

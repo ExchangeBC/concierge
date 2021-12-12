@@ -7,7 +7,7 @@ interface Props {
   source: string;
   className?: string;
   escapeHtml?: boolean;
-  openLinksInNewTabs?: boolean
+  openLinksInNewTabs?: boolean;
 }
 
 const MAILTO_REGEXP = /^mailto:/i;
@@ -23,10 +23,7 @@ function linkTarget(url: string): string {
 const Markdown: View<Props> = ({ source, className = '', escapeHtml = true, openLinksInNewTabs = false }) => {
   return (
     <div className={`markdown ${className}`}>
-      <ReactMarkdown
-        source={source}
-        escapeHtml={escapeHtml}
-        linkTarget={openLinksInNewTabs ? linkTarget : undefined} />
+      <ReactMarkdown source={source} escapeHtml={escapeHtml} linkTarget={openLinksInNewTabs ? linkTarget : undefined} />
     </div>
   );
 };

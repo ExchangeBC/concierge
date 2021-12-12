@@ -18,17 +18,11 @@ export interface State {
   signUpReason: Select.State;
 }
 
-type FormFieldMultiKeys
-  = 'industrySectors'
-  | 'categories';
+type FormFieldMultiKeys = 'industrySectors' | 'categories';
 
-type FormFieldKeys
-  = 'signUpReason';
+type FormFieldKeys = 'signUpReason';
 
-export type InnerMsg
-  = ADT<'onChangeIndustrySectors', SelectMulti.Msg>
-  | ADT<'onChangeCategories', SelectMulti.Msg>
-  | ADT<'onChangeSignUpReason', Select.Value>;
+export type InnerMsg = ADT<'onChangeIndustrySectors', SelectMulti.Msg> | ADT<'onChangeCategories', SelectMulti.Msg> | ADT<'onChangeSignUpReason', Select.Value>;
 
 export type Msg = StepMsg<InnerMsg>;
 
@@ -36,31 +30,35 @@ export type Params = null;
 
 const init: Init<Params, State> = async () => {
   return {
-    industrySectors: immutable(await SelectMulti.init({
-      options: AVAILABLE_INDUSTRY_SECTORS.toJS().map(value => ({ label: value, value })),
-      placeholder: 'Select Industry Sector',
-      isCreatable: true,
-      autoFocus: true,
-      formFieldMulti: {
-        idNamespace: 'vendor-industry-sectors',
-        label: 'Industry Sector(s)',
-        required: true,
-        minFields: 1,
-        fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
-      }
-    })),
-    categories: immutable(await SelectMulti.init({
-      options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value })),
-      placeholder: 'Select an Area of Interest',
-      isCreatable: true,
-      formFieldMulti: {
-        idNamespace: 'vendor-categories',
-        label: 'Area(s) of Interest',
-        required: true,
-        minFields: 1,
-        fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
-      }
-    })),
+    industrySectors: immutable(
+      await SelectMulti.init({
+        options: AVAILABLE_INDUSTRY_SECTORS.toJS().map((value) => ({ label: value, value })),
+        placeholder: 'Select Industry Sector',
+        isCreatable: true,
+        autoFocus: true,
+        formFieldMulti: {
+          idNamespace: 'vendor-industry-sectors',
+          label: 'Industry Sector(s)',
+          required: true,
+          minFields: 1,
+          fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
+        }
+      })
+    ),
+    categories: immutable(
+      await SelectMulti.init({
+        options: AVAILABLE_CATEGORIES.toJS().map((value) => ({ label: value, value })),
+        placeholder: 'Select an Area of Interest',
+        isCreatable: true,
+        formFieldMulti: {
+          idNamespace: 'vendor-categories',
+          label: 'Area(s) of Interest',
+          required: true,
+          minFields: 1,
+          fields: SelectMulti.DEFAULT_SELECT_MULTI_FIELDS
+        }
+      })
+    ),
     signUpReason: Select.init({
       id: 'vendor-profile-sign-up-reason',
       required: false,
@@ -69,7 +67,7 @@ const init: Init<Params, State> = async () => {
       placeholder: 'Select',
       options: {
         tag: 'options',
-        value: AVAILABLE_SIGN_UP_REASONS.toJS().map(value => ({ label: value, value }))
+        value: AVAILABLE_SIGN_UP_REASONS.toJS().map((value) => ({ label: value, value }))
       }
     })
   };
@@ -80,7 +78,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'onChangeIndustrySectors':
       state = updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'onChangeIndustrySectors', value }),
+        mapChildMsg: (value) => ({ tag: 'onChangeIndustrySectors', value }),
         childStatePath: ['industrySectors'],
         childUpdate: SelectMulti.update,
         childMsg: msg.value
@@ -89,7 +87,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'onChangeCategories':
       state = updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'onChangeCategories', value }),
+        mapChildMsg: (value) => ({ tag: 'onChangeCategories', value }),
         childStatePath: ['categories'],
         childUpdate: SelectMulti.update,
         childMsg: msg.value
@@ -109,7 +107,7 @@ function validateSelectMulti<K extends FormFieldMultiKeys>(state: Immutable<Stat
 }
 
 function validateOption(validate: (_: string) => Validation<unknown>): (option: Select.Value) => Validation<Select.Value> {
-  return option => {
+  return (option) => {
     const raw = option ? option.value : '';
     return mapValid(validate(raw), () => option);
   };
@@ -125,34 +123,28 @@ function validateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K,
 }
 
 const isValid: IsValid<State> = (state) => {
-  return !!(
-    (compact(SelectMulti.getValuesAsStrings(state.industrySectors))).length &&
-    (compact(SelectMulti.getValuesAsStrings(state.categories))).length &&
-    SelectMulti.isValid(state.industrySectors) &&
-    SelectMulti.isValid(state.categories) &&
-    !state.signUpReason.errors.length
-  );
+  return !!(compact(SelectMulti.getValuesAsStrings(state.industrySectors)).length && compact(SelectMulti.getValuesAsStrings(state.categories)).length && SelectMulti.isValid(state.industrySectors) && SelectMulti.isValid(state.categories) && !state.signUpReason.errors.length);
 };
 
 const isLoading: IsLoading<State> = (state) => false;
 
 const IndustrySectors: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeIndustrySectors' as const, value }));
+  const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'onChangeIndustrySectors' as const, value }));
   return (
-    <Row className='mt-3'>
-      <Col xs='12' md='7' lg='6'>
-        <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} labelClassName='h3' labelWrapperClassName='mb-3' />
+    <Row className="mt-3">
+      <Col xs="12" md="7" lg="6">
+        <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} labelClassName="h3" labelWrapperClassName="mb-3" />
       </Col>
     </Row>
   );
 };
 
 const Categories: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeCategories' as const, value }));
+  const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'onChangeCategories' as const, value }));
   return (
-    <Row className='mt-3'>
-      <Col xs='12' md='7' lg='6'>
-        <SelectMulti.view state={state.categories} dispatch={dispatchCategories} labelClassName='h3' labelWrapperClassName='mb-3' />
+    <Row className="mt-3">
+      <Col xs="12" md="7" lg="6">
+        <SelectMulti.view state={state.categories} dispatch={dispatchCategories} labelClassName="h3" labelWrapperClassName="mb-3" />
       </Col>
     </Row>
   );
@@ -163,16 +155,14 @@ const view: ComponentView<State, Msg> = makeView({
   stepIndicator: 'Step 4 of 4',
   view(props) {
     const { state, dispatch } = props;
-    const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
+    const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, (value) => ({ tag, value }));
     return (
       <div>
         <IndustrySectors {...props} />
         <Categories {...props} />
-        <Row className='mt-3'>
-          <Col xs='12' md='7' lg='6'>
-            <Select.view
-              state={state.signUpReason}
-              onChange={onChangeSelect('onChangeSignUpReason')} />
+        <Row className="mt-3">
+          <Col xs="12" md="7" lg="6">
+            <Select.view state={state.signUpReason} onChange={onChangeSelect('onChangeSignUpReason')} />
           </Col>
         </Row>
       </div>

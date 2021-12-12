@@ -17,7 +17,6 @@ export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, A
 type CreateResponseBody = JsonResponseBody<PublicLogItem | CreateValidationErrors>;
 
 const resource: Resource = {
-
   routeNamespace: 'unsolicitedProposalLogItems',
 
   create(Models) {
@@ -71,7 +70,7 @@ const resource: Resource = {
           createdBy: request.session.user.id,
           type: validatedType.value,
           note: validatedNote.value,
-          attachments: validatedAttachments.value.map(file => file._id)
+          attachments: validatedAttachments.value.map((file) => file._id)
         };
         vendorIdea.log.push(logItem);
         await vendorIdea.save();
@@ -89,7 +88,6 @@ const resource: Resource = {
       }
     };
   }
-
 };
 
 export default resource;

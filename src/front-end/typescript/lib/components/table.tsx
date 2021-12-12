@@ -9,7 +9,7 @@ export interface State {
   TDView: View<TDProps>;
   activeTooltipThIndex: number | null;
   activeTooltipTdIndex: [number, number] | null; // [row, cell]
-};
+}
 
 export interface Params {
   idNamespace: string;
@@ -17,9 +17,7 @@ export interface Params {
   TDView?: View<TDProps>;
 }
 
-export type Msg
-  = ADT<'toggleTooltipTh', number>
-  | ADT<'toggleTooltipTd', [number, number]>; // [row, cell]
+export type Msg = ADT<'toggleTooltipTh', number> | ADT<'toggleTooltipTd', [number, number]>; // [row, cell]
 
 export const init: Init<Params, State> = async ({ idNamespace, THView = DefaultTHView, TDView = DefaultTDView }) => ({
   idNamespace,
@@ -57,9 +55,9 @@ interface TableTooltipProps {
   toggle(): any;
 }
 
-const TableTooltip: View<TableTooltipProps> = props => {
+const TableTooltip: View<TableTooltipProps> = (props) => {
   return (
-    <Tooltip autohide={false} placement='top' boundariesElement='window' {...props}>
+    <Tooltip autohide={false} placement="top" boundariesElement="window" {...props}>
       {props.text}
     </Tooltip>
   );
@@ -90,12 +88,14 @@ export const DefaultTHView: View<THProps> = ({ id, style, className, children, i
       };
   return (
     <th key={id} style={style} className={className}>
-      {tooltipProps
-        ? (<div className='d-inline-block' id={id}>
-            {children}
-            <TableTooltip {...tooltipProps} />
-          </div>)
-        : children}
+      {tooltipProps ? (
+        <div className="d-inline-block" id={id}>
+          {children}
+          <TableTooltip {...tooltipProps} />
+        </div>
+      ) : (
+        children
+      )}
     </th>
   );
 };
@@ -106,12 +106,10 @@ interface THeadProps {
 }
 
 export const THead: View<THeadProps> = ({ cells, THView }) => {
-  const children = cells.map((cell, i) => (<THView key={`table-thead-${i}`} {...cell} />));
+  const children = cells.map((cell, i) => <THView key={`table-thead-${i}`} {...cell} />);
   return (
     <thead>
-      <tr>
-        {children}
-      </tr>
+      <tr>{children}</tr>
     </thead>
   );
 };
@@ -143,15 +141,17 @@ export function DefaultTDView(props: TDProps): ReactElement {
       };
   return (
     <td key={id} style={style} className={className} colSpan={colSpan}>
-      {tooltipProps
-        ? (<div className='d-inline-block' id={id}>
-            {children}
-            <TableTooltip {...tooltipProps} />
-          </div>)
-        : children}
+      {tooltipProps ? (
+        <div className="d-inline-block" id={id}>
+          {children}
+          <TableTooltip {...tooltipProps} />
+        </div>
+      ) : (
+        children
+      )}
     </td>
   );
-};
+}
 
 export type RowSpec = TDSpec[];
 
@@ -170,12 +170,8 @@ interface TBodyProps {
 
 const TBody: View<TBodyProps> = ({ id, rows, TDView, borderless }) => {
   const children = rows.map((row, rowIndex) => {
-    const cellChildren = row.map(cell => (<TDView key={`${cell.id}-wrapper`} {...cell} />));
-    return (
-      <tr key={`${id}-row-${rowIndex}`}>
-        {cellChildren}
-      </tr>
-    );
+    const cellChildren = row.map((cell) => <TDView key={`${cell.id}-wrapper`} {...cell} />);
+    return <tr key={`${id}-row-${rowIndex}`}>{cellChildren}</tr>;
   });
   return (
     <tbody style={{ fontSize: '0.875rem' }} className={borderless ? 'table-borderless' : ''}>
@@ -192,7 +188,7 @@ interface ViewProps extends ComponentViewProps<State, Msg> {
   borderless?: boolean;
 }
 
-export const view: View<ViewProps> = props => {
+export const view: View<ViewProps> = (props) => {
   const { state, dispatch, className, style, headCells, bodyRows, borderless } = props;
   const headProps: THeadProps = {
     THView: state.THView,

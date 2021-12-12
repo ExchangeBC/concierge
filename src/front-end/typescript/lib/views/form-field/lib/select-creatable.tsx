@@ -6,7 +6,7 @@ import { Props as SelectProps } from 'react-select/creatable';
 
 export { Option, Props, Value } from 'front-end/lib/views/form-field/lib/select';
 
-export const view: View<Props> = props => {
+export const view: View<Props> = (props) => {
   const { options, formatGroupLabel, disabled = false, className = '', onChange } = props;
   const selectProps: SelectProps<Value> = {
     ...props,
@@ -59,7 +59,7 @@ export const view: View<Props> = props => {
       }
     }
   };
-  return (<Select {...selectProps} />);
+  return <Select {...selectProps} />;
 };
 
 export default view;

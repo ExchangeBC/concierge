@@ -32,24 +32,15 @@ export interface State {
   statusFilter: Select.State;
   searchFilter: ShortText.State;
   table: Immutable<Table.State>;
-};
+}
 
-type FormFieldKeys
-  = 'statusFilter'
-  | 'searchFilter';
+type FormFieldKeys = 'statusFilter' | 'searchFilter';
 
 export interface Params {
   sessionUser: PublicSessionUser;
 }
 
-type InnerMsg
-  = ADT<'statusFilter', Select.Value>
-  | ADT<'searchFilter', string>
-  | ADT<'table', Table.Msg>
-  | ADT<'createVi'>
-  | ADT<'editVi', string>
-  | ADT<'hideCreateConfirmationPrompt'>
-  | ADT<'hideEditConfirmationPrompt'>;
+type InnerMsg = ADT<'statusFilter', Select.Value> | ADT<'searchFilter', string> | ADT<'table', Table.Msg> | ADT<'createVi'> | ADT<'editVi', string> | ADT<'hideCreateConfirmationPrompt'> | ADT<'hideEditConfirmationPrompt'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -58,7 +49,7 @@ export const init: Init<Params, State> = async ({ sessionUser }) => {
   let vis: VendorIdea[] = [];
   if (result.tag === 'valid') {
     vis = result.value.items
-      .map(vi => ({ ...vi, createdByName: profileToName(vi.createdBy.profile) }))
+      .map((vi) => ({ ...vi, createdByName: profileToName(vi.createdBy.profile) }))
       // Sort vendor ideas by date submitted.
       .sort((a, b) => {
         return compareDates(a.createdAt, b.createdAt) * -1;
@@ -84,14 +75,18 @@ export const init: Init<Params, State> = async ({ sessionUser }) => {
       required: false,
       placeholder: 'Search'
     }),
-    table: immutable(await Table.init({
-      idNamespace: 'rfi-list'
-    }))
+    table: immutable(
+      await Table.init({
+        idNamespace: 'rfi-list'
+      })
+    )
   };
 };
 
 function viMatchesStatus(vi: VendorIdea, filterStatus: LogItemType | null): boolean {
-  if (!filterStatus) { return false; }
+  if (!filterStatus) {
+    return false;
+  }
   return vi.latestStatus === filterStatus;
 }
 
@@ -106,13 +101,13 @@ function updateAndQuery<K extends FormFieldKeys>(state: Immutable<State>, key: K
   const statusQuery = state.statusFilter.value && state.statusFilter.value.value;
   const rawSearchQuery = state.searchFilter.value;
   const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split(/\s+/).join('.*'), 'i') : null;
-  const vis = state.vis.filter(vi => {
+  const vis = state.vis.filter((vi) => {
     let match = true;
     match = match && (!statusQuery || viMatchesStatus(vi, parseLogItemType(statusQuery)));
     match = match && (!searchQuery || viMatchesSearch(vi, searchQuery));
     return match;
   });
-  return state.set('visibleVis', vis); ;
+  return state.set('visibleVis', vis);
 }
 
 const startCreateLoading: UpdateState<State> = makeStartLoading('createLoading');
@@ -127,7 +122,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'table':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'table' as const, value }),
+        mapChildMsg: (value) => ({ tag: 'table' as const, value }),
         childStatePath: ['table'],
         childUpdate: Table.update,
         childMsg: msg.value
@@ -138,10 +133,12 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
         async (state, dispatch) => {
           state = stopCreateLoading(state);
           if (state.promptCreateConfirmation || (await hasUserAcceptedTerms(state.sessionUser.id))) {
-            dispatch(newRoute({
-              tag: 'viCreate',
-              value: null
-            }));
+            dispatch(
+              newRoute({
+                tag: 'viCreate',
+                value: null
+              })
+            );
             return null;
           } else {
             return state.set('promptCreateConfirmation', true);
@@ -153,10 +150,12 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
         state,
         async (state, dispatch) => {
           if (state.promptEditConfirmation || (await hasUserAcceptedTerms(state.sessionUser.id))) {
-            dispatch(newRoute({
-              tag: 'viEdit',
-              value: { viId: msg.value }
-            }));
+            dispatch(
+              newRoute({
+                tag: 'viEdit',
+                value: { viId: msg.value }
+              })
+            );
             return null;
           } else {
             return state.set('promptEditConfirmation', msg.value);
@@ -173,28 +172,21 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, (value) => ({ tag, value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, (value) => ({ tag, value }));
   return (
     <div>
       <Row>
-        <Col xs='12'>
-          <h3 className='mb-3'>
-            Submission(s)
-          </h3>
+        <Col xs="12">
+          <h3 className="mb-3">Submission(s)</h3>
         </Col>
       </Row>
-      <Row className='d-none d-md-flex align-items-end'>
-        <Col xs='12' md='5' lg='4'>
-          <Select.view
-            state={state.statusFilter}
-            formatGroupLabel={LogItemTypeSelectGroupLabel}
-            onChange={onChangeSelect('statusFilter')} />
+      <Row className="d-none d-md-flex align-items-end">
+        <Col xs="12" md="5" lg="4">
+          <Select.view state={state.statusFilter} formatGroupLabel={LogItemTypeSelectGroupLabel} onChange={onChangeSelect('statusFilter')} />
         </Col>
-        <Col xs='12' md='4' className='ml-md-auto'>
-          <ShortText.view
-            state={state.searchFilter}
-            onChange={onChangeShortText('searchFilter')} />
+        <Col xs="12" md="4" className="ml-md-auto">
+          <ShortText.view state={state.searchFilter} onChange={onChangeShortText('searchFilter')} />
         </Col>
       </Row>
     </div>
@@ -235,14 +227,18 @@ function formatTableDate(date: Date): string {
 
 function tableBodyRows(vis: VendorIdea[], dispatch: Dispatch<Msg>): Table.RowsSpec {
   const className = (center?: boolean, wrap?: boolean) => `align-top ${center ? 'text-center' : ''} ${wrap ? 'text-wrap' : ''}`;
-  return vis.map(vi => {
+  return vis.map((vi) => {
     return [
       {
-        children: (<LogItemTypeBadge logItemType={vi.latestStatus} />),
+        children: <LogItemTypeBadge logItemType={vi.latestStatus} />,
         className: className()
       },
       {
-        children: (<Link onClick={() => dispatch({ tag: 'editVi', value: vi._id })} className='mb-1'>{vi.latestVersion.description.title}</Link>),
+        children: (
+          <Link onClick={() => dispatch({ tag: 'editVi', value: vi._id })} className="mb-1">
+            {vi.latestVersion.description.title}
+          </Link>
+        ),
         className: className(false, true)
       },
       {
@@ -258,44 +254,44 @@ function tableBodyRows(vis: VendorIdea[], dispatch: Dispatch<Msg>): Table.RowsSp
 }
 
 const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (!state.vis.length) { return (<div>There are currently no Unsolicited Proposals available.</div>); }
-  if (!state.visibleVis.length) { return (<div>There are no Unsolicited Proposals that match the search criteria.</div>); }
-  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
-  return (
-    <Table.view
-      className='text-nowrap'
-      style={{ lineHeight: '1.5rem' }}
-      headCells={tableHeadCells}
-      bodyRows={tableBodyRows(state.visibleVis, dispatch)}
-      state={state.table}
-      dispatch={dispatchTable} />
-  );
-}
+  if (!state.vis.length) {
+    return <div>There are currently no Unsolicited Proposals available.</div>;
+  }
+  if (!state.visibleVis.length) {
+    return <div>There are no Unsolicited Proposals that match the search criteria.</div>;
+  }
+  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, (value) => ({ tag: 'table' as const, value }));
+  return <Table.view className="text-nowrap" style={{ lineHeight: '1.5rem' }} headCells={tableHeadCells} bodyRows={tableBodyRows(state.visibleVis, dispatch)} state={state.table} dispatch={dispatchTable} />;
+};
 
-export const view: ComponentView<State, Msg> = props => {
+export const view: ComponentView<State, Msg> = (props) => {
   const { dispatch, state } = props;
   const createVi = () => dispatch({ tag: 'createVi', value: undefined });
   return (
     <div>
-      <Row className='mb-5'>
-        <Col xs='12' md='10' lg='9'>
+      <Row className="mb-5">
+        <Col xs="12" md="10" lg="9">
           <h1>My Unsolicited Proposals (UP)</h1>
           <p style={{ marginBottom: '2rem' }}>
             To submit an Unsolicited Proposal, <b>please download and fill out the detailed information portion of the application</b> using the "Download Application – Detailed Information" button below. Once the application has been completed, you may submit your idea for the Procurement Concierge Program's staff to review by clicking the "Create Unsolicited Proposal" button and filling out the form provided.
           </p>
-          <div className='d-flex flex-column flex-md-row align-items-start text-nowrap'>
-            <Link button download color='info' href={VI_APPLICATION_DOWNLOAD_URL} className='mr-0 mr-md-2 mb-2 mb-md-0'>1. Download Application – Detailed Information</Link>
-            <Link button color='primary' onClick={createVi}>2. Create Unsolicited Proposal</Link>
+          <div className="d-flex flex-column flex-md-row align-items-start text-nowrap">
+            <Link button download color="info" href={VI_APPLICATION_DOWNLOAD_URL} className="mr-0 mr-md-2 mb-2 mb-md-0">
+              1. Download Application – Detailed Information
+            </Link>
+            <Link button color="primary" onClick={createVi}>
+              2. Create Unsolicited Proposal
+            </Link>
           </div>
         </Col>
       </Row>
-      {state.vis.length ? (<Filters {...props} />) : null}
+      {state.vis.length ? <Filters {...props} /> : null}
       <ConditionalTable {...props} />
     </div>
   );
 };
 
-export const getModal: PageGetModal<State, Msg> = state => {
+export const getModal: PageGetModal<State, Msg> = (state) => {
   if (state.promptCreateConfirmation) {
     return {
       title: 'Review Terms and Conditions',

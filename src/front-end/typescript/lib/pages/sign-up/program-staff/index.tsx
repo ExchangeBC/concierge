@@ -37,50 +37,52 @@ async function makeInitState(): Promise<State> {
       one: { component: StepOne.component, state: immutable(await StepOne.component.init(null)) }
     }
   };
-};
+}
 
 const init: Component['init'] = isUserType({
-
   userTypes: [UserType.ProgramStaff],
   async success({ shared, dispatch }) {
     if (!(await api.hasUserAcceptedTerms(shared.sessionUser.id))) {
-      dispatch(replaceRoute({
-        tag: 'termsAndConditions' as const,
-        value: {
-          warningId: WarningId.SignUpProgramStaff,
-          redirectOnAccept: router.routeToUrl({
-            tag: 'signUpProgramStaff',
-            value: null
-          }),
-          redirectOnSkip: router.routeToUrl({
-            tag: 'userList',
-            value: null
-          })
-        }
-      }));
+      dispatch(
+        replaceRoute({
+          tag: 'termsAndConditions' as const,
+          value: {
+            warningId: WarningId.SignUpProgramStaff,
+            redirectOnAccept: router.routeToUrl({
+              tag: 'signUpProgramStaff',
+              value: null
+            }),
+            redirectOnSkip: router.routeToUrl({
+              tag: 'userList',
+              value: null
+            })
+          }
+        })
+      );
     }
     return await makeInitState();
   },
 
   async fail({ routeParams, dispatch }) {
-    dispatch(replaceRoute({
-      tag: 'signIn' as const,
-      value: {
-        redirectOnSuccess: router.routeToUrl({
-          tag: 'signUpProgramStaff',
-          value: null
-        })
-      }
-    }));
+    dispatch(
+      replaceRoute({
+        tag: 'signIn' as const,
+        value: {
+          redirectOnSuccess: router.routeToUrl({
+            tag: 'signUpProgramStaff',
+            value: null
+          })
+        }
+      })
+    );
     return await makeInitState();
   }
-
 });
 
 const startLoading: UpdateState<State> = makeStartLoading('loading');
 const stopLoading: UpdateState<State> = makeStopLoading('loading');
 
-const onNext: ControllerHook = state => {
+const onNext: ControllerHook = (state) => {
   switch (state.currentStep) {
     case 'zero':
       return [state.set('currentStep', 'one')];
@@ -102,10 +104,12 @@ const onNext: ControllerHook = state => {
           const result = await api.createUser(user);
           switch (result.tag) {
             case 'valid':
-              dispatch(newRoute({
-                tag: 'userList' as const,
-                value: null
-              }));
+              dispatch(
+                newRoute({
+                  tag: 'userList' as const,
+                  value: null
+                })
+              );
               return null;
             case 'invalid':
               return stopLoading(state)
@@ -122,7 +126,7 @@ const onNext: ControllerHook = state => {
   }
 };
 
-const onBack: ControllerHook = state => {
+const onBack: ControllerHook = (state) => {
   switch (state.currentStep) {
     case 'zero':
       return [state.set('currentStep', 'one')];
@@ -131,7 +135,7 @@ const onBack: ControllerHook = state => {
   }
 };
 
-const onCancel: ControllerHook = state => {
+const onCancel: ControllerHook = (state) => {
   return [
     state,
     async (state, dispatch) => {
@@ -144,7 +148,7 @@ const onCancel: ControllerHook = state => {
   ];
 };
 
-const onFail: ControllerHook = state => {
+const onFail: ControllerHook = (state) => {
   return [state];
 };
 

@@ -49,7 +49,7 @@ function tableBodyRows(logItems: LogItem[], dispatch: Dispatch<Msg>): Table.Rows
   return logItems.map((li, i) => {
     return [
       {
-        children: (<LogItemTypeFull logItemType={li.type} />),
+        children: <LogItemTypeFull logItemType={li.type} />,
         className: className(false, true)
       },
       {
@@ -57,8 +57,8 @@ function tableBodyRows(logItems: LogItem[], dispatch: Dispatch<Msg>): Table.Rows
           <div>
             <div>{li.note || '-'}</div>
             {li.attachments.map((a, j) => (
-              <Link href={makeFileBlobPath(a._id)} download className='d-flex align-items-start mt-2' key={`vi-log-item-attachment-${i}-${j}`}>
-                <Icon name='paperclip' color='primary' className='mr-2 mt-1 flex-shrink-0' width={1} height={1} />
+              <Link href={makeFileBlobPath(a._id)} download className="d-flex align-items-start mt-2" key={`vi-log-item-attachment-${i}-${j}`}>
+                <Icon name="paperclip" color="primary" className="mr-2 mt-1 flex-shrink-0" width={1} height={1} />
                 {a.originalName}
               </Link>
             ))}
@@ -71,7 +71,7 @@ function tableBodyRows(logItems: LogItem[], dispatch: Dispatch<Msg>): Table.Rows
           <div>
             <div>{rawFormatDate(li.createdAt, 'YYYY-MM-DD', false)}</div>
             <div>{formatTime(li.createdAt, true)}</div>
-            <div className='small text-uppercase text-secondary'>{li.createdByName}</div>
+            <div className="small text-uppercase text-secondary">{li.createdByName}</div>
           </div>
         ),
         className: className()
@@ -85,16 +85,7 @@ export interface Params {
   logItems: PublicLogItem[];
 }
 
-export type Msg
-  = ADT<'onChangeNewLogItemType', Select.Value>
-  | ADT<'onChangeNewLogItemNote', string>
-  | ADT<'onChangeNewLogItemAttachments', FileMulti.Msg>
-  | ADT<'onChangeLogItemTypeFilter', Select.Value>
-  | ADT<'onChangeLogItemAttachmentFilter', boolean>
-  | ADT<'onChangeSearchFilter', string>
-  | ADT<'table', Table.Msg>
-  | ADT<'cancel'>
-  | ADT<'submit'>;
+export type Msg = ADT<'onChangeNewLogItemType', Select.Value> | ADT<'onChangeNewLogItemNote', string> | ADT<'onChangeNewLogItemAttachments', FileMulti.Msg> | ADT<'onChangeLogItemTypeFilter', Select.Value> | ADT<'onChangeLogItemAttachmentFilter', boolean> | ADT<'onChangeSearchFilter', string> | ADT<'table', Table.Msg> | ADT<'cancel'> | ADT<'submit'>;
 
 interface LogItem extends PublicLogItem {
   createdByName: string;
@@ -114,20 +105,12 @@ export interface State {
   table: Immutable<Table.State>;
 }
 
-type FormFieldKeys
-  = 'newLogItemType'
-  | 'newLogItemNote'
-  | 'logItemTypeFilter'
-  | 'searchFilter';
+type FormFieldKeys = 'newLogItemType' | 'newLogItemNote' | 'logItemTypeFilter' | 'searchFilter';
 
-type QueryKeys
-  = 'logItemTypeFilter'
-  | 'searchFilter';
+type QueryKeys = 'logItemTypeFilter' | 'searchFilter';
 
 function cleanUpLogItems(logItems: PublicLogItem[]): LogItem[] {
-  return logItems
-    .map(li => ({ ...li, createdByName: li.createdBy ? profileToName(li.createdBy.profile) : 'System' }))
-    .sort((a, b) => compareDates(a.createdAt, b.createdAt) * -1);
+  return logItems.map((li) => ({ ...li, createdByName: li.createdBy ? profileToName(li.createdBy.profile) : 'System' })).sort((a, b) => compareDates(a.createdAt, b.createdAt) * -1);
 }
 
 export const init: Init<Params, State> = async ({ viId, logItems }) => {
@@ -152,14 +135,16 @@ export const init: Init<Params, State> = async ({ viId, logItems }) => {
       placeholder: 'Comments/Notes',
       value: ''
     }),
-    newLogItemAttachments: immutable(await FileMulti.init({
-      formFieldMulti: {
-        idNamespace: 'vi-management-new-log-item-attachments',
-        label: 'Attachments (Optional)',
-        required: false,
-        fields: []
-      }
-    })),
+    newLogItemAttachments: immutable(
+      await FileMulti.init({
+        formFieldMulti: {
+          idNamespace: 'vi-management-new-log-item-attachments',
+          label: 'Attachments (Optional)',
+          required: false,
+          fields: []
+        }
+      })
+    ),
     logItemTypeFilter: Select.init({
       id: 'vi-management-log-item-type-filter',
       required: false,
@@ -175,9 +160,11 @@ export const init: Init<Params, State> = async ({ viId, logItems }) => {
       placeholder: 'Search',
       value: ''
     }),
-    table: immutable(await Table.init({
-      idNamespace: 'vi-management-history-table'
-    }))
+    table: immutable(
+      await Table.init({
+        idNamespace: 'vi-management-history-table'
+      })
+    )
   };
 };
 
@@ -190,11 +177,11 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       return [updateValue(state, 'newLogItemType', msg.value)];
     case 'onChangeNewLogItemNote':
       state = updateValue(state, 'newLogItemNote', msg.value);
-      return [validateValue(state, 'newLogItemNote', v => mapValid(validateLogItemNote(v), w => w || ''))];
+      return [validateValue(state, 'newLogItemNote', (v) => mapValid(validateLogItemNote(v), (w) => w || ''))];
     case 'onChangeNewLogItemAttachments':
       state = updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'onChangeNewLogItemAttachments', value }),
+        mapChildMsg: (value) => ({ tag: 'onChangeNewLogItemAttachments', value }),
         childStatePath: ['newLogItemAttachments'],
         childUpdate: FileMulti.update,
         childMsg: msg.value
@@ -213,23 +200,21 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'table':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'table' as const, value }),
+        mapChildMsg: (value) => ({ tag: 'table' as const, value }),
         childStatePath: ['table'],
         childUpdate: Table.update,
         childMsg: msg.value
       });
     case 'cancel':
-      return [
-        state
-          .setIn(['newLogItemType', 'value'], null)
-          .setIn(['newLogItemNote', 'value'], '')
-      ];
+      return [state.setIn(['newLogItemType', 'value'], null).setIn(['newLogItemNote', 'value'], '')];
     case 'submit':
       return [
         startSubmitLoading(state),
-        async state => {
+        async (state) => {
           state = stopSubmitLoading(state);
-          if (!state.newLogItemType.value) { return state; }
+          if (!state.newLogItemType.value) {
+            return state;
+          }
           //TODO
           const uploadedFiles = await api.uploadFiles(FileMulti.getValues(state.newLogItemAttachments), {
             tag: 'userType',
@@ -267,9 +252,7 @@ function updateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K, v
 }
 
 function liMatchesSearch(li: LogItem, query: RegExp): boolean {
-  return !!(li.note && li.note.match(query))
-      || !!li.createdByName.match(query)
-      || li.attachments.reduce((acc, a) => acc || !!a.originalName.match(query), false as boolean);
+  return !!(li.note && li.note.match(query)) || !!li.createdByName.match(query) || li.attachments.reduce((acc, a) => acc || !!a.originalName.match(query), false as boolean);
 }
 
 function query(state: Immutable<State>): Immutable<State> {
@@ -278,14 +261,14 @@ function query(state: Immutable<State>): Immutable<State> {
   const rawSearchQuery = state.searchFilter.value;
   const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split(/\s+/).join('.*'), 'i') : null;
   const attachmentsOnly = state.logItemAttachmentFilter;
-  const logItems = state.logItems.filter(li => {
+  const logItems = state.logItems.filter((li) => {
     let match = true;
     match = match && (!attachmentsOnly || !!li.attachments.length);
     match = match && (!logItemTypeQuery || logItemTypeQuery === li.type);
     match = match && (!searchQuery || liMatchesSearch(li, searchQuery));
     return match;
   });
-  return state.set('visibleLogItems', logItems); ;
+  return state.set('visibleLogItems', logItems);
 }
 
 function updateAndQuery<K extends QueryKeys>(state: Immutable<State>, key: K, value: State[K]['value']): Immutable<State> {
@@ -300,9 +283,7 @@ function validateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K,
 
 export function setErrors(state: Immutable<State>, errors: CreateValidationErrors): Immutable<State> {
   const getErrors = (k: keyof CreateValidationErrors) => get(errors, k, []);
-  return state
-    .setIn(['newLogItemNote', 'errors'], getErrors('note'))
-    .set('newLogItemAttachments', FileMulti.setErrors(state.newLogItemAttachments, errors.attachments || []));
+  return state.setIn(['newLogItemNote', 'errors'], getErrors('note')).set('newLogItemAttachments', FileMulti.setErrors(state.newLogItemAttachments, errors.attachments || []));
 }
 
 export function hasProvidedRequiredFields(state: State): boolean {
@@ -320,99 +301,76 @@ export function isValid(state: State): boolean {
 }
 
 const CreateEntry: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
-  const onChangeLongText = (tag: any) => LongText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, (value) => ({ tag, value }));
+  const onChangeLongText = (tag: any) => LongText.makeOnChange(dispatch, (value) => ({ tag, value }));
   const isSubmitLoading = state.submitLoading > 0;
   const isDisabled = isSubmitLoading;
   const submit = () => dispatch({ tag: 'submit', value: undefined });
   const cancel = () => dispatch({ tag: 'cancel', value: undefined });
   return (
-    <div className='mb-5 pb-5 border-bottom'>
-      <Row className='mb-4'>
-        <Col xs='12' md='10' lg='8'>
-          <h3 className='mb-0'>Create Entry</h3>
+    <div className="mb-5 pb-5 border-bottom">
+      <Row className="mb-4">
+        <Col xs="12" md="10" lg="8">
+          <h3 className="mb-0">Create Entry</h3>
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='5' lg='4'>
-          <Select.view
-            state={state.newLogItemType}
-            formatGroupLabel={LogItemTypeSelectGroupLabel}
-            onChange={onChangeSelect('onChangeNewLogItemType')} />
+        <Col xs="12" md="5" lg="4">
+          <Select.view state={state.newLogItemType} formatGroupLabel={LogItemTypeSelectGroupLabel} onChange={onChangeSelect('onChangeNewLogItemType')} />
         </Col>
-        {state.newLogItemType.value
-          ? (<Col xs='12' md='7' lg='8'>
-              <div>
-                <LongText.view
-                  style={{ minHeight: '120px' }}
-                  state={state.newLogItemNote}
-                  disabled={isDisabled}
-                  onChange={onChangeLongText('onChangeNewLogItemNote')} />
-              </div>
-              <Row className='pt-3'>
-                <Col xs='12' md='10' lg='8'>
-                  <FileMulti.view
-                    state={state.newLogItemAttachments}
-                    dispatch={mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeNewLogItemAttachments' as const, value }))}
-                    labelWrapperClassName='mb-3'
-                    disabled={isDisabled} />
-                </Col>
-              </Row>
-              <div className='pt-3 d-flex flex-md-row-reverse flex-nowrap align-items-center'>
-                <LoadingButton color='primary' onClick={submit} loading={isSubmitLoading} disabled={isDisabled || !isValid(state)} className='text-nowrap'>Submit Entry</LoadingButton>
-                <Link onClick={cancel} color='secondary' disabled={isSubmitLoading} className='mx-3'>Cancel</Link>
-              </div>
-            </Col>)
-          : null}
+        {state.newLogItemType.value ? (
+          <Col xs="12" md="7" lg="8">
+            <div>
+              <LongText.view style={{ minHeight: '120px' }} state={state.newLogItemNote} disabled={isDisabled} onChange={onChangeLongText('onChangeNewLogItemNote')} />
+            </div>
+            <Row className="pt-3">
+              <Col xs="12" md="10" lg="8">
+                <FileMulti.view state={state.newLogItemAttachments} dispatch={mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'onChangeNewLogItemAttachments' as const, value }))} labelWrapperClassName="mb-3" disabled={isDisabled} />
+              </Col>
+            </Row>
+            <div className="pt-3 d-flex flex-md-row-reverse flex-nowrap align-items-center">
+              <LoadingButton color="primary" onClick={submit} loading={isSubmitLoading} disabled={isDisabled || !isValid(state)} className="text-nowrap">
+                Submit Entry
+              </LoadingButton>
+              <Link onClick={cancel} color="secondary" disabled={isSubmitLoading} className="mx-3">
+                Cancel
+              </Link>
+            </div>
+          </Col>
+        ) : null}
       </Row>
     </div>
   );
 };
 
 const History: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
-  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, (value) => ({ tag, value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, (value) => ({ tag, value }));
+  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, (value) => ({ tag: 'table' as const, value }));
   return (
     <div>
-      <Row className='mb-4'>
-        <Col xs='12' md='10' lg='8'>
-          <h3 className='mb-0'>History</h3>
+      <Row className="mb-4">
+        <Col xs="12" md="10" lg="8">
+          <h3 className="mb-0">History</h3>
         </Col>
       </Row>
-      <Row className='d-none d-md-flex align-items-end'>
-        <Col xs='12' md='5' lg='4'>
-          <Select.view
-            state={state.logItemTypeFilter}
-            formatGroupLabel={LogItemTypeSelectGroupLabel}
-            onChange={onChangeSelect('onChangeLogItemTypeFilter')} />
+      <Row className="d-none d-md-flex align-items-end">
+        <Col xs="12" md="5" lg="4">
+          <Select.view state={state.logItemTypeFilter} formatGroupLabel={LogItemTypeSelectGroupLabel} onChange={onChangeSelect('onChangeLogItemTypeFilter')} />
         </Col>
-        <Col xs='12' md='3' lg='4' className='py-2 mb-3'>
-          <CustomInput
-            id='vi-management-filter-log-item-has-attachment'
-            type='checkbox'
-            label='Attachments Only'
-            checked={state.logItemAttachmentFilter}
-            onChange={event => dispatch({ tag: 'onChangeLogItemAttachmentFilter', value: event.currentTarget.checked })} />
+        <Col xs="12" md="3" lg="4" className="py-2 mb-3">
+          <CustomInput id="vi-management-filter-log-item-has-attachment" type="checkbox" label="Attachments Only" checked={state.logItemAttachmentFilter} onChange={(event) => dispatch({ tag: 'onChangeLogItemAttachmentFilter', value: event.currentTarget.checked })} />
         </Col>
-        <Col xs='12' md='4' className='ml-md-auto'>
-          <ShortText.view
-            state={state.searchFilter}
-            onChange={onChangeShortText('onChangeSearchFilter')} />
+        <Col xs="12" md="4" className="ml-md-auto">
+          <ShortText.view state={state.searchFilter} onChange={onChangeShortText('onChangeSearchFilter')} />
         </Col>
       </Row>
-      <Table.view
-        className='text-nowrap'
-        style={{ lineHeight: '1.5rem' }}
-        headCells={tableHeadCells}
-        bodyRows={tableBodyRows(state.visibleLogItems, dispatch)}
-        state={state.table}
-        dispatch={dispatchTable} />
+      <Table.view className="text-nowrap" style={{ lineHeight: '1.5rem' }} headCells={tableHeadCells} bodyRows={tableBodyRows(state.visibleLogItems, dispatch)} state={state.table} dispatch={dispatchTable} />
     </div>
   );
 };
 
-export const view: ComponentView<State, Msg> = props => {
+export const view: ComponentView<State, Msg> = (props) => {
   return (
     <div>
       <CreateEntry {...props} />

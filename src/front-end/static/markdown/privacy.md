@@ -25,7 +25,7 @@ The B.C. government collects personal information under the authority of section
 
 ## What is the purpose for collecting my personal information and how will it be used?
 
-The B.C. government collects personal information through cookies to better understand general user trends at an aggregate level and improve web performance, web services, and website maintenance. Personal information will only be used by authorized staff to fulfill the purpose for which it was originally collected or for a use consistent with that purpose, unless you expressly consent otherwise. 
+The B.C. government collects personal information through cookies to better understand general user trends at an aggregate level and improve web performance, web services, and website maintenance. Personal information will only be used by authorized staff to fulfill the purpose for which it was originally collected or for a use consistent with that purpose, unless you expressly consent otherwise.
 
 The B.C. government collects personal information through security audits to protect against threats from hackers, and for other enforcement and security purposes. The B.C. government does not use this data to determine your identity unless required to do so as part of an internal investigation or for another enforcement-related purpose, and then, only in compliance with *FOIPPA*.
 
@@ -51,4 +51,4 @@ B.C. government websites may include links to external websites. Once you leave 
 
 ## Who can I contact for more information about this privacy statement?
 
-Questions regarding this privacy statement, including the collection of personal information, can be directed to a Senior Legislative and Policy Advisor at [Legislation, Privacy and Policy Branch](https://www2.gov.bc.ca/gov/content/governments/services-for-government/information-management-technology/privacy) in the Ministry of Citizens’ Services, PO Box 9493 Stn Prov Govt, Victoria, BC., V8W 9N7, telephone (250) 356-1851.  [Privacy.Helpline@gov.bc.ca](mailto:Privacy.Helpline@gov.bc.ca).
+Questions regarding this privacy statement, including the collection of personal information, can be directed to a Senior Legislative and Policy Advisor at [Legislation, Privacy and Policy Branch](https://www2.gov.bc.ca/gov/content/governments/services-for-government/information-management-technology/privacy) in the Ministry of Citizens’ Services, PO Box 9493 Stn Prov Govt, Victoria, BC., V8W 9N7, telephone (250) 356-1851. [Privacy.Helpline@gov.bc.ca](mailto:Privacy.Helpline@gov.bc.ca).

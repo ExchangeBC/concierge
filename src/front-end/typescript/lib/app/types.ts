@@ -31,8 +31,8 @@ import { ADT } from 'shared/lib/types';
 
 export type Session = PublicSession;
 
-export type Route
-  = ADT<'landing', PageLanding.RouteParams>
+export type Route =
+  | ADT<'landing', PageLanding.RouteParams>
   | ADT<'signIn', PageSignIn.RouteParams>
   | ADT<'signUp', PageSignUp.RouteParams>
   | ADT<'signUpBuyer', PageSignUpBuyer.RouteParams>
@@ -73,7 +73,7 @@ export interface State {
   modal: {
     open: boolean;
     content: PageModal<Msg>;
-  },
+  };
   pages: {
     landing?: Immutable<PageLanding.State>;
     signIn?: Immutable<PageSignIn.State>;
@@ -105,9 +105,9 @@ export interface State {
   };
 }
 
-type InnerMsg
-  = ADT<'noop'>
-  | ADT<'toggleIsNavOpen', boolean | undefined >
+type InnerMsg =
+  | ADT<'noop'>
+  | ADT<'toggleIsNavOpen', boolean | undefined>
   | ADT<'closeModal', undefined>
   | ADT<'pageLanding', PageLanding.Msg>
   | ADT<'pageSignIn', PageSignIn.Msg>
@@ -135,6 +135,6 @@ type InnerMsg
   | ADT<'pageViList', PageViList.Msg>
   | ADT<'pageMarkdown', PageMarkdown.Msg>
   | ADT<'pageNotice', PageNotice.Msg>
-  | ADT<'pageFeedback', PageFeedback.Msg>
+  | ADT<'pageFeedback', PageFeedback.Msg>;
 
 export type Msg = AppMsg<InnerMsg, Route>;

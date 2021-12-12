@@ -10,7 +10,7 @@ import { ADT } from 'shared/lib/types';
 
 export interface State {
   message: string;
-};
+}
 
 export type Msg = GlobalComponentMsg<ADT<'noop'>, Route>;
 
@@ -32,14 +32,14 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 const view: ComponentView<State, Msg> = ({ state }) => {
   return (
     <div>
-      <Row className='mb-3 pb-3'>
-        <Col xs='12'>
-          {state.message}
-        </Col>
+      <Row className="mb-3 pb-3">
+        <Col xs="12">{state.message}</Col>
       </Row>
       <Row>
-        <Col xs='12'>
-          <Link button href='/' color='primary'>Return to the Home Page</Link>
+        <Col xs="12">
+          <Link button href="/" color="primary">
+            Return to the Home Page
+          </Link>
         </Col>
       </Row>
     </div>

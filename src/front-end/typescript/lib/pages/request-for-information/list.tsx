@@ -36,35 +36,24 @@ export interface State {
   searchFilter: ShortText.State;
   table: Immutable<Table.State>;
   promptEditConfirmation?: string;
-};
+}
 
-type FormFieldKeys
-  = 'statusFilter'
-  | 'categoryFilter'
-  | 'searchFilter';
+type FormFieldKeys = 'statusFilter' | 'categoryFilter' | 'searchFilter';
 
 export type RouteParams = null;
 
-type InnerMsg
-  = ADT<'statusFilter', Select.Value>
-  | ADT<'categoryFilter', Select.Value>
-  | ADT<'searchFilter', string>
-  | ADT<'table', Table.Msg>
-  | ADT<'createRfi'>
-  | ADT<'hideCreateConfirmationPrompt'>
-  | ADT<'editRfi', string>
-  | ADT<'hideEditConfirmationPrompt'>;
+type InnerMsg = ADT<'statusFilter', Select.Value> | ADT<'categoryFilter', Select.Value> | ADT<'searchFilter', string> | ADT<'table', Table.Msg> | ADT<'createRfi'> | ADT<'hideCreateConfirmationPrompt'> | ADT<'editRfi', string> | ADT<'hideEditConfirmationPrompt'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) => {
   const { session } = shared;
-  const sessionUser = session && session.user
+  const sessionUser = session && session.user;
   const result = await readManyRfis();
   let rfis: Rfi[] = [];
   if (result.tag === 'valid') {
     // Cache status on each RFI.
-    rfis = result.value.items.map(rfi => ({
+    rfis = result.value.items.map((rfi) => ({
       ...rfi,
       status: rfiToRfiStatus(rfi)
     }));
@@ -108,7 +97,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) 
       placeholder: 'All',
       options: {
         tag: 'options',
-        value: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value }))
+        value: AVAILABLE_CATEGORIES.toJS().map((value) => ({ label: value, value }))
       }
     }),
     searchFilter: ShortText.init({
@@ -117,14 +106,18 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) 
       required: false,
       placeholder: 'Search'
     }),
-    table: immutable(await Table.init({
-      idNamespace: 'rfi-list'
-    }))
+    table: immutable(
+      await Table.init({
+        idNamespace: 'rfi-list'
+      })
+    )
   };
 };
 
 function rfiMatchesStatus(rfi: Rfi, filterStatus: RfiStatus | null): boolean {
-  if (!filterStatus) { return false; }
+  if (!filterStatus) {
+    return false;
+  }
   switch (rfi.status) {
     case RfiStatus.Expired:
       return filterStatus === RfiStatus.Closed;
@@ -149,14 +142,14 @@ function updateAndQuery<K extends FormFieldKeys>(state: Immutable<State>, key: K
   const categoryQuery = state.categoryFilter.value && state.categoryFilter.value.value;
   const rawSearchQuery = state.searchFilter.value;
   const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split(/\s+/).join('.*'), 'i') : null;
-  const rfis = state.rfis.filter(rfi => {
+  const rfis = state.rfis.filter((rfi) => {
     let match = true;
     match = match && (!statusQuery || rfiMatchesStatus(rfi, parseRfiStatus(statusQuery)));
     match = match && (!categoryQuery || rfiMatchesCategory(rfi, categoryQuery));
     match = match && (!searchQuery || rfiMatchesSearch(rfi, searchQuery));
     return match;
   });
-  return state.set('visibleRfis', rfis); ;
+  return state.set('visibleRfis', rfis);
 }
 
 const startCreateLoading: UpdateState<State> = makeStartLoading('createLoading');
@@ -173,7 +166,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'table':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'table' as const, value }),
+        mapChildMsg: (value) => ({ tag: 'table' as const, value }),
         childStatePath: ['table'],
         childUpdate: Table.update,
         childMsg: msg.value
@@ -186,10 +179,12 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           if (!state.sessionUser) {
             return state;
           } else if (state.promptCreateConfirmation || (await hasUserAcceptedTerms(state.sessionUser.id))) {
-            dispatch(newRoute({
-              tag: 'requestForInformationCreate',
-              value: null
-            }));
+            dispatch(
+              newRoute({
+                tag: 'requestForInformationCreate',
+                value: null
+              })
+            );
             return null;
           } else {
             return state.set('promptCreateConfirmation', true);
@@ -205,10 +200,12 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           if (!state.sessionUser) {
             return state;
           } else if (state.promptEditConfirmation || (await hasUserAcceptedTerms(state.sessionUser.id))) {
-            dispatch(newRoute({
-              tag: 'requestForInformationEdit',
-              value: { rfiId: msg.value }
-            }));
+            dispatch(
+              newRoute({
+                tag: 'requestForInformationEdit',
+                value: { rfiId: msg.value }
+              })
+            );
             return null;
           } else {
             return state.set('promptEditConfirmation', msg.value);
@@ -223,37 +220,28 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
-  const categoryFilterElement = get(state.sessionUser, 'type') !== UserType.ProgramStaff
-    ? null
-    : (
-        <Col xs='12' md='4'>
-          <Select.view
-            state={state.categoryFilter}
-            onChange={onChangeSelect('categoryFilter')} />
-        </Col>
-      );
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, (value) => ({ tag, value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, (value) => ({ tag, value }));
+  const categoryFilterElement =
+    get(state.sessionUser, 'type') !== UserType.ProgramStaff ? null : (
+      <Col xs="12" md="4">
+        <Select.view state={state.categoryFilter} onChange={onChangeSelect('categoryFilter')} />
+      </Col>
+    );
   return (
     <div>
       <Row>
-        <Col xs='12'>
-          <h6 className='text-secondary mb-3 d-none d-md-block'>
-            Filter By:
-          </h6>
+        <Col xs="12">
+          <h6 className="text-secondary mb-3 d-none d-md-block">Filter By:</h6>
         </Col>
       </Row>
-      <Row className='d-none d-md-flex align-items-end'>
-        <Col xs='12' md='3'>
-          <Select.view
-            state={state.statusFilter}
-            onChange={onChangeSelect('statusFilter')} />
+      <Row className="d-none d-md-flex align-items-end">
+        <Col xs="12" md="3">
+          <Select.view state={state.statusFilter} onChange={onChangeSelect('statusFilter')} />
         </Col>
         {categoryFilterElement}
-        <Col xs='12' md='4' className='ml-md-auto'>
-          <ShortText.view
-            state={state.searchFilter}
-            onChange={onChangeShortText('searchFilter')} />
+        <Col xs="12" md="4" className="ml-md-auto">
+          <ShortText.view state={state.searchFilter} onChange={onChangeShortText('searchFilter')} />
         </Col>
       </Row>
     </div>
@@ -293,7 +281,7 @@ const programStaffTableHeadCells: Table.THSpec[] = [
     }
   },
   {
-    children: (<Icon name='calendar' color='secondary' />),
+    children: <Icon name="calendar" color="secondary" />,
     tooltipText: 'Discovery Day',
     className: 'text-center',
     style: {
@@ -329,7 +317,7 @@ const nonProgramStaffTableHeadCells: Table.THSpec[] = [
     }
   },
   {
-    children: (<Icon name='calendar' color='secondary' />),
+    children: <Icon name="calendar" color="secondary" />,
     tooltipText: 'Discovery Day Session Available',
     className: 'text-center',
     style: {
@@ -350,7 +338,7 @@ function formatTableDate(date: Date): string {
 
 function programStaffTableBodyRows(rfis: Rfi[], dispatch: Dispatch<Msg>): Table.RowsSpec {
   const className = (center?: boolean, wrap?: boolean) => `align-top ${center ? 'text-center' : ''} ${wrap ? 'text-wrap' : ''}`;
-  return rfis.map(rfi => {
+  return rfis.map((rfi) => {
     const version = rfi.latestVersion;
     return [
       {
@@ -358,11 +346,15 @@ function programStaffTableBodyRows(rfis: Rfi[], dispatch: Dispatch<Msg>): Table.
         className: className()
       },
       {
-        children: (<StatusBadge status={rfi.status} />),
+        children: <StatusBadge status={rfi.status} />,
         className: className()
       },
       {
-        children: (<Link onClick={() => dispatch({ tag: 'editRfi', value: rfi._id })} className='mb-1'>{version.title}</Link>),
+        children: (
+          <Link onClick={() => dispatch({ tag: 'editRfi', value: rfi._id })} className="mb-1">
+            {version.title}
+          </Link>
+        ),
         className: className(false, true)
       },
       {
@@ -378,7 +370,7 @@ function programStaffTableBodyRows(rfis: Rfi[], dispatch: Dispatch<Msg>): Table.
         className: className()
       },
       {
-        children: version.discoveryDay ? (<Icon name='check' color='body' width={1.25} height={1.25} />) : null,
+        children: version.discoveryDay ? <Icon name="check" color="body" width={1.25} height={1.25} /> : null,
         className: className(true, false),
         tooltipText: version.discoveryDay && 'Discovery Day Session Available'
       }
@@ -388,7 +380,7 @@ function programStaffTableBodyRows(rfis: Rfi[], dispatch: Dispatch<Msg>): Table.
 
 function nonProgramStaffTableBodyRows(rfis: Rfi[]): Table.RowsSpec {
   const className = (center?: boolean, wrap?: boolean) => `align-top ${center ? 'text-center' : ''} ${wrap ? 'text-wrap' : ''}`;
-  return rfis.map(rfi => {
+  return rfis.map((rfi) => {
     const version = rfi.latestVersion;
     return [
       {
@@ -400,14 +392,16 @@ function nonProgramStaffTableBodyRows(rfis: Rfi[]): Table.RowsSpec {
         className: className()
       },
       {
-        children: (<StatusBadge status={rfi.status} />),
+        children: <StatusBadge status={rfi.status} />,
         className: className()
       },
       {
         children: (
           <div>
-            <Link route={{ tag: 'requestForInformationView', value: { rfiId: rfi._id }}}>{version.title}</Link>
-            <div className='small text-uppercase text-secondary pt-1' style={{ lineHeight: '1.25rem' }}>{version.publicSectorEntity}</div>
+            <Link route={{ tag: 'requestForInformationView', value: { rfiId: rfi._id } }}>{version.title}</Link>
+            <div className="small text-uppercase text-secondary pt-1" style={{ lineHeight: '1.25rem' }}>
+              {version.publicSectorEntity}
+            </div>
           </div>
         ),
         className: className(false, true)
@@ -417,7 +411,7 @@ function nonProgramStaffTableBodyRows(rfis: Rfi[]): Table.RowsSpec {
         className: className()
       },
       {
-        children: version.discoveryDay ? (<Icon name='check' color='body' width={1.25} height={1.25} />) : null,
+        children: version.discoveryDay ? <Icon name="check" color="body" width={1.25} height={1.25} /> : null,
         className: className(true, false),
         tooltipText: version.discoveryDay && 'Discovery Day Session Available'
       },
@@ -430,46 +424,44 @@ function nonProgramStaffTableBodyRows(rfis: Rfi[]): Table.RowsSpec {
 }
 
 const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (!state.rfis.length) { return (<div>There are currently no Requests for Information available.</div>); }
-  if (!state.visibleRfis.length) { return (<div>There are currently no Requests for Information that match the search criteria.</div>); }
+  if (!state.rfis.length) {
+    return <div>There are currently no Requests for Information available.</div>;
+  }
+  if (!state.visibleRfis.length) {
+    return <div>There are currently no Requests for Information that match the search criteria.</div>;
+  }
   const isProgramStaff = get(state.sessionUser, 'type') === UserType.ProgramStaff;
   const headCells = isProgramStaff ? programStaffTableHeadCells : nonProgramStaffTableHeadCells;
   const bodyRows = isProgramStaff ? programStaffTableBodyRows(state.visibleRfis, dispatch) : nonProgramStaffTableBodyRows(state.visibleRfis);
-  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
-  return (
-    <Table.view
-      className='text-nowrap'
-      style={{ lineHeight: '1.5rem' }}
-      headCells={headCells}
-      bodyRows={bodyRows}
-      state={state.table}
-      dispatch={dispatchTable} />
-  );
-}
+  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, (value) => ({ tag: 'table' as const, value }));
+  return <Table.view className="text-nowrap" style={{ lineHeight: '1.5rem' }} headCells={headCells} bodyRows={bodyRows} state={state.table} dispatch={dispatchTable} />;
+};
 
 const ConditionalCreateButton: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (get(state.sessionUser, 'type') !== UserType.ProgramStaff) { return null; }
+  if (get(state.sessionUser, 'type') !== UserType.ProgramStaff) {
+    return null;
+  }
   return (
-    <Col xs='12' md='auto'>
-      <Link onClick={() => dispatch({ tag: 'createRfi', value: undefined })} button color='primary'>Create an RFI</Link>
+    <Col xs="12" md="auto">
+      <Link onClick={() => dispatch({ tag: 'createRfi', value: undefined })} button color="primary">
+        Create an RFI
+      </Link>
     </Col>
   );
-}
+};
 
-const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = (props) => {
   return (
     <div>
-      <Row className='mb-5 mb-md-2 justify-content-md-between'>
-        <Col xs='12' md='auto'>
-          <h1 className='mb-3 mb-md-0'>Requests for Information</h1>
+      <Row className="mb-5 mb-md-2 justify-content-md-between">
+        <Col xs="12" md="auto">
+          <h1 className="mb-3 mb-md-0">Requests for Information</h1>
         </Col>
         <ConditionalCreateButton {...props} />
       </Row>
-      <Row className='mb-3 d-none d-md-flex'>
-        <Col xs='12' md='8'>
-          <p>
-            Click on a Request for Information's (RFI's) title in the table below to view it.
-          </p>
+      <Row className="mb-3 d-none d-md-flex">
+        <Col xs="12" md="8">
+          <p>Click on a Request for Information's (RFI's) title in the table below to view it.</p>
         </Col>
       </Row>
       <Filters {...props} />

@@ -10,10 +10,12 @@ import { ADT, Omit } from 'shared/lib/types';
 // TODO support option groups if required.
 export { Option, Value } from 'front-end/lib/views/form-field/lib/select';
 
-export const DEFAULT_SELECT_MULTI_FIELDS = [{
-  value: undefined,
-  errors: []
-}];
+export const DEFAULT_SELECT_MULTI_FIELDS = [
+  {
+    value: undefined,
+    errors: []
+  }
+];
 
 export interface State {
   options: Option[];
@@ -25,42 +27,39 @@ export interface State {
 
 export function getValues(state: Immutable<State>): Value[] {
   return FormFieldMulti.getFieldValues(state.formFieldMulti);
-};
+}
 
 export function getValuesAsStrings(state: Immutable<State>): string[] {
   // Convert undefined values into empty strings.
-  return getValues(state).map(v => v ? v.value : '');
-};
+  return getValues(state).map((v) => (v ? v.value : ''));
+}
 
 export function setValues(state: Immutable<State>, values: Array<string | undefined>): Immutable<State> {
   return state.set(
     'formFieldMulti',
-    FormFieldMulti.setFieldValues(state.formFieldMulti, values.map(v => {
-      const found: Option | undefined = find(state.options, { value: v });
-      if (state.isCreatable && !found && v) {
-        return { value: v, label: v };
-      } else {
-        return found;
-      }
-    }))
+    FormFieldMulti.setFieldValues(
+      state.formFieldMulti,
+      values.map((v) => {
+        const found: Option | undefined = find(state.options, { value: v });
+        if (state.isCreatable && !found && v) {
+          return { value: v, label: v };
+        } else {
+          return found;
+        }
+      })
+    )
   );
-};
+}
 
 export function setErrors(state: Immutable<State>, errors: string[][]): Immutable<State> {
-  return state.set(
-    'formFieldMulti',
-    FormFieldMulti.setFieldErrors(state.formFieldMulti, errors)
-  );
-};
+  return state.set('formFieldMulti', FormFieldMulti.setFieldErrors(state.formFieldMulti, errors));
+}
 
 export function isValid(state: Immutable<State>): boolean {
   return FormFieldMulti.isValid(state.formFieldMulti);
-};
+}
 
-type InnerMsg
-  = ADT<'add'>
-  | ADT<'remove', number>
-  | ADT<'change', { index: number, value: Value }>;
+type InnerMsg = ADT<'add'> | ADT<'remove', number> | ADT<'change', { index: number; value: Value }>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -70,7 +69,7 @@ export interface Params extends Omit<State, 'formFieldMulti'> {
 
 type ExtraChildProps = Pick<State, 'options' | 'placeholder' | 'isCreatable' | 'autoFocus'>;
 
-export const init: Init<Params, State> = async params => {
+export const init: Init<Params, State> = async (params) => {
   return {
     ...params,
     formFieldMulti: immutable(params.formFieldMulti)
@@ -100,7 +99,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
   }
 };
 
-const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => {
+const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = (props) => {
   const { id, className, field, onChange, extraProps, disabled = false } = props;
   const selectProps: SelectProps = {
     name: id,
@@ -113,11 +112,7 @@ const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => 
     className,
     onChange
   };
-  return (
-    <FormFieldMulti.DefaultChild childProps={props}>
-      {extraProps.isCreatable ? (<SelectCreatable {...selectProps} />) : (<Select {...selectProps} />)}
-    </FormFieldMulti.DefaultChild>
-  );
+  return <FormFieldMulti.DefaultChild childProps={props}>{extraProps.isCreatable ? <SelectCreatable {...selectProps} /> : <Select {...selectProps} />}</FormFieldMulti.DefaultChild>;
 };
 
 const AddButton: View<FormFieldMulti.AddButtonProps<void>> = FormFieldMulti.makeDefaultAddButton();
@@ -131,12 +126,14 @@ interface Props extends ComponentViewProps<State, Msg> {
 }
 
 export const view: View<Props> = ({ state, dispatch, disabled = false, labelClassName, labelWrapperClassName, formGroupClassName, className }) => {
-  const onChange = (index: number): FormFieldMulti.OnChange<Value> => value => {
-    dispatch({
-      tag: 'change',
-      value: { index, value }
-    });
-  };
+  const onChange =
+    (index: number): FormFieldMulti.OnChange<Value> =>
+    (value) => {
+      dispatch({
+        tag: 'change',
+        value: { index, value }
+      });
+    };
   const onAdd = () => dispatch({ tag: 'add', value: undefined });
   const onRemove = (index: number) => () => dispatch({ tag: 'remove', value: index });
   const formFieldProps: FormFieldMulti.Props<void, ExtraChildProps, Value> = {
@@ -158,10 +155,8 @@ export const view: View<Props> = ({ state, dispatch, disabled = false, labelClas
     formGroupClassName,
     className
   };
-  return (
-    <FormFieldMulti.view {...formFieldProps} />
-  );
-}
+  return <FormFieldMulti.view {...formFieldProps} />;
+};
 
 export const component: Component<Params, State, Msg> = {
   init,

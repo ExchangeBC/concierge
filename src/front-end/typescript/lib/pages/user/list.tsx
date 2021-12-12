@@ -30,24 +30,13 @@ export interface State {
   promptCreateConfirmation: boolean;
   promptViewConfirmation?: string;
   sessionUser?: PublicSessionUser;
-};
+}
 
-type FormFieldKeys
-  = 'userTypeFilter'
-  | 'categoryFilter'
-  | 'searchFilter';
+type FormFieldKeys = 'userTypeFilter' | 'categoryFilter' | 'searchFilter';
 
 export type RouteParams = null;
 
-type InnerMsg
-  = ADT<'userTypeFilter', Select.Value>
-  | ADT<'categoryFilter', Select.Value>
-  | ADT<'searchFilter', string>
-  | ADT<'table', Table.Msg>
-  | ADT<'createAccount'>
-  | ADT<'hideCreateConfirmationPrompt'>
-  | ADT<'viewUser', string>
-  | ADT<'hideViewConfirmationPrompt'>;
+type InnerMsg = ADT<'userTypeFilter', Select.Value> | ADT<'categoryFilter', Select.Value> | ADT<'searchFilter', string> | ADT<'table', Table.Msg> | ADT<'createAccount'> | ADT<'hideCreateConfirmationPrompt'> | ADT<'viewUser', string> | ADT<'hideViewConfirmationPrompt'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -79,7 +68,7 @@ async function makeInitState(): Promise<State> {
       placeholder: 'All',
       options: {
         tag: 'options',
-        value: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value }))
+        value: AVAILABLE_CATEGORIES.toJS().map((value) => ({ label: value, value }))
       }
     }),
     searchFilter: ShortText.init({
@@ -88,14 +77,15 @@ async function makeInitState(): Promise<State> {
       required: false,
       placeholder: 'Search'
     }),
-    table: immutable(await Table.init({
-      idNamespace: 'user-list'
-    }))
+    table: immutable(
+      await Table.init({
+        idNamespace: 'user-list'
+      })
+    )
   };
 }
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
-
   userTypes: [UserType.ProgramStaff],
 
   async success({ shared }) {
@@ -123,18 +113,19 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
   },
 
   async fail({ routeParams, dispatch }) {
-    dispatch(replaceRoute({
-      tag: 'signIn' as const,
-      value: {
-        redirectOnSuccess: router.routeToUrl({
-          tag: 'userList',
-          value: routeParams
-        })
-      }
-    }));
+    dispatch(
+      replaceRoute({
+        tag: 'signIn' as const,
+        value: {
+          redirectOnSuccess: router.routeToUrl({
+            tag: 'userList',
+            value: routeParams
+          })
+        }
+      })
+    );
     return await makeInitState();
   }
-
 });
 
 function userMatchesUserType(user: PublicUser, userType: UserType | null): boolean {
@@ -167,14 +158,14 @@ function updateAndQuery<K extends FormFieldKeys>(state: Immutable<State>, key: K
   const categoryQuery = state.categoryFilter.value && state.categoryFilter.value.value;
   const rawSearchQuery = state.searchFilter.value;
   const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split(/\s+/).join('.*'), 'i') : null;
-  const users = state.users.filter(user => {
+  const users = state.users.filter((user) => {
     let match = true;
     match = match && (!userTypeQuery || userMatchesUserType(user, parseUserType(userTypeQuery)));
     match = match && (!categoryQuery || userMatchesCategory(user, categoryQuery));
     match = match && (!searchQuery || userMatchesSearch(user, searchQuery));
     return match;
   });
-  return state.set('visibleUsers', users); ;
+  return state.set('visibleUsers', users);
 }
 
 const startCreateLoading: UpdateState<State> = makeStartLoading('createLoading');
@@ -191,7 +182,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'table':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'table' as const, value }),
+        mapChildMsg: (value) => ({ tag: 'table' as const, value }),
         childStatePath: ['table'],
         childUpdate: Table.update,
         childMsg: msg.value
@@ -204,10 +195,12 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           if (!state.sessionUser) {
             return state;
           } else if (state.promptCreateConfirmation || (await hasUserAcceptedTerms(state.sessionUser.id))) {
-            dispatch(newRoute({
-              tag: 'signUpProgramStaff',
-              value: null
-            }));
+            dispatch(
+              newRoute({
+                tag: 'signUpProgramStaff',
+                value: null
+              })
+            );
             return null;
           } else {
             return state.set('promptCreateConfirmation', true);
@@ -223,10 +216,12 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           if (!state.sessionUser) {
             return state;
           } else if (state.promptViewConfirmation || (await hasUserAcceptedTerms(state.sessionUser.id))) {
-            dispatch(newRoute({
-              tag: 'userView',
-              value: { profileUserId: msg.value }
-            }));
+            dispatch(
+              newRoute({
+                tag: 'userView',
+                value: { profileUserId: msg.value }
+              })
+            );
             return null;
           } else {
             return state.set('promptViewConfirmation', msg.value);
@@ -241,32 +236,24 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, (value) => ({ tag, value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, (value) => ({ tag, value }));
   return (
     <div>
       <Row>
-        <Col xs='12'>
-          <h6 className='text-secondary mb-3 d-none d-md-block'>
-            Filter By:
-          </h6>
+        <Col xs="12">
+          <h6 className="text-secondary mb-3 d-none d-md-block">Filter By:</h6>
         </Col>
       </Row>
-      <Row className='d-none d-md-flex align-items-end'>
-        <Col xs='12' md='3'>
-          <Select.view
-            state={state.userTypeFilter}
-            onChange={onChangeSelect('userTypeFilter')} />
+      <Row className="d-none d-md-flex align-items-end">
+        <Col xs="12" md="3">
+          <Select.view state={state.userTypeFilter} onChange={onChangeSelect('userTypeFilter')} />
         </Col>
-        <Col xs='12' md='4'>
-          <Select.view
-            state={state.categoryFilter}
-            onChange={onChangeSelect('categoryFilter')} />
+        <Col xs="12" md="4">
+          <Select.view state={state.categoryFilter} onChange={onChangeSelect('categoryFilter')} />
         </Col>
-        <Col xs='12' md='4' className='ml-md-auto'>
-          <ShortText.view
-            state={state.searchFilter}
-            onChange={onChangeShortText('searchFilter')} />
+        <Col xs="12" md="4" className="ml-md-auto">
+          <ShortText.view state={state.searchFilter} onChange={onChangeShortText('searchFilter')} />
         </Col>
       </Row>
     </div>
@@ -312,15 +299,13 @@ const tableHeadCells: Table.THSpec[] = [
 
 function tableBodyRows(users: PublicUser[], dispatch: Dispatch<Msg>): Table.RowsSpec {
   const className = (center?: boolean, wrap?: boolean) => `align-top ${center ? 'text-center' : ''} ${wrap ? 'text-wrap' : ''}`;
-  return users.map(user => {
+  return users.map((user) => {
     const entity = user.profile.type === UserType.Buyer ? user.profile.publicSectorEntity : undefined;
     const verificationStatus: VerificationStatus | undefined = get(user.profile, 'verificationStatus');
     const name = profileToName(user.profile) || FALLBACK_USER_NAME;
     return [
       {
-        children: verificationStatus
-          ? (<VerificationStatusIcon verificationStatus={verificationStatus} colored large />)
-          : null,
+        children: verificationStatus ? <VerificationStatusIcon verificationStatus={verificationStatus} colored large /> : null,
         className: className(true),
         tooltipText: verificationStatus && verificationStatusToTitleCase(verificationStatus)
       },
@@ -332,7 +317,7 @@ function tableBodyRows(users: PublicUser[], dispatch: Dispatch<Msg>): Table.Rows
         children: (
           <div>
             <Link onClick={() => dispatch({ tag: 'viewUser', value: user._id })}>{name}</Link>
-            {entity ? (<div className='small text-uppercase text-secondary'>{entity}</div>) : null}
+            {entity ? <div className="small text-uppercase text-secondary">{entity}</div> : null}
           </div>
         ),
         className: className(false, true)
@@ -342,7 +327,7 @@ function tableBodyRows(users: PublicUser[], dispatch: Dispatch<Msg>): Table.Rows
         className: className()
       },
       {
-        children: user.acceptedTermsAt ? (<Icon name='check' color='body' width={1.25} height={1.25} />) : null,
+        children: user.acceptedTermsAt ? <Icon name="check" color="body" width={1.25} height={1.25} /> : null,
         className: className(true),
         tooltipText: user.acceptedTermsAt && `${name} has accepted the Terms and Conditions.`
       }
@@ -351,34 +336,29 @@ function tableBodyRows(users: PublicUser[], dispatch: Dispatch<Msg>): Table.Rows
 }
 
 const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (!state.visibleUsers.length) { return (<div>There are no users that match the search criteria.</div>); }
-  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
-  return (
-    <Table.view
-      className='text-nowrap'
-      headCells={tableHeadCells}
-      bodyRows={tableBodyRows(state.visibleUsers, dispatch)}
-      state={state.table}
-      dispatch={dispatchTable} />
-  );
-}
+  if (!state.visibleUsers.length) {
+    return <div>There are no users that match the search criteria.</div>;
+  }
+  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, (value) => ({ tag: 'table' as const, value }));
+  return <Table.view className="text-nowrap" headCells={tableHeadCells} bodyRows={tableBodyRows(state.visibleUsers, dispatch)} state={state.table} dispatch={dispatchTable} />;
+};
 
-const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = (props) => {
   return (
     <div>
-      <Row className='mb-5 mb-md-2 justify-content-md-between'>
-        <Col xs='12' md='auto'>
-          <h1 className='mb-3 mb-md-0'>Concierge Users</h1>
+      <Row className="mb-5 mb-md-2 justify-content-md-between">
+        <Col xs="12" md="auto">
+          <h1 className="mb-3 mb-md-0">Concierge Users</h1>
         </Col>
-        <Col xs='12' md='auto'>
-          <Link onClick={() => props.dispatch({ tag: 'createAccount', value: undefined })} button color='primary'>Create a Program Staff Account</Link>
+        <Col xs="12" md="auto">
+          <Link onClick={() => props.dispatch({ tag: 'createAccount', value: undefined })} button color="primary">
+            Create a Program Staff Account
+          </Link>
         </Col>
       </Row>
-      <Row className='mb-3 d-none d-md-flex'>
-        <Col xs='12' md='8'>
-          <p>
-            Click on a user's name in the table below to view their profile.
-          </p>
+      <Row className="mb-3 d-none d-md-flex">
+        <Col xs="12" md="8">
+          <p>Click on a user's name in the table below to view their profile.</p>
         </Col>
       </Row>
       <Filters {...props} />
@@ -419,7 +399,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     } else if (state.promptViewConfirmation) {
       return {
         title: 'Review Terms and Conditions',
-        body: 'You must accept the Procurement Concierge Terms and Conditions in order to view this user\'s profile.',
+        body: "You must accept the Procurement Concierge Terms and Conditions in order to view this user's profile.",
         onCloseMsg: { tag: 'hideViewConfirmationPrompt', value: undefined },
         actions: [
           {

@@ -9,24 +9,10 @@ import { ADT } from 'shared/lib/types';
 
 type RfiId = string;
 
-export type NoticeId
-  = ADT<'notFound'>
-  | ADT<'comingSoon'>
-  | ADT<'changePassword'>
-  | ADT<'resetPassword'>
-  | ADT<'forgotPassword'>
-  | ADT<'feedbackSubmitted'>
-  | ADT<'rfiResponseSubmitted', RfiId>
-  | ADT<'rfiNonVendorResponse', RfiId>
-  | ADT<'rfiExpiredResponse', RfiId>
-  | ADT<'ddrSubmitted', RfiId>
-  | ADT<'viCreated'>
-  | ADT<'viEditedByVendor'>
-  | ADT<'viUnverifiedBuyer'>;
+export type NoticeId = ADT<'notFound'> | ADT<'comingSoon'> | ADT<'changePassword'> | ADT<'resetPassword'> | ADT<'forgotPassword'> | ADT<'feedbackSubmitted'> | ADT<'rfiResponseSubmitted', RfiId> | ADT<'rfiNonVendorResponse', RfiId> | ADT<'rfiExpiredResponse', RfiId> | ADT<'ddrSubmitted', RfiId> | ADT<'viCreated'> | ADT<'viEditedByVendor'> | ADT<'viUnverifiedBuyer'>;
 
 function noticeIdToState(noticeId: NoticeId): State {
   switch (noticeId.tag) {
-
     case 'notFound':
       return {
         title: 'Page Not Found',
@@ -74,7 +60,7 @@ function noticeIdToState(noticeId: NoticeId): State {
 
     case 'forgotPassword':
       return {
-        title: 'You\'ve Got Mail',
+        title: "You've Got Mail",
         body: 'We have sent you an email with instructions on how to reset your password.',
         button: {
           text: 'Return to the Home Page',
@@ -96,13 +82,15 @@ function noticeIdToState(noticeId: NoticeId): State {
             value: null
           }
         }
-      }
+      };
 
     case 'rfiResponseSubmitted':
       return {
         title: 'Thank You',
         body: (
-          <p>Your response to this Request for Information has been successfully submitted. You may return to the RFI's <Link route={{ tag: 'requestForInformationRespond', value: { rfiId: noticeId.value }}}>Respond</Link> page to upload additional attachments as needed before the RFI closes.</p>
+          <p>
+            Your response to this Request for Information has been successfully submitted. You may return to the RFI's <Link route={{ tag: 'requestForInformationRespond', value: { rfiId: noticeId.value } }}>Respond</Link> page to upload additional attachments as needed before the RFI closes.
+          </p>
         ),
         button: {
           text: 'View all RFIs',
@@ -119,7 +107,9 @@ function noticeIdToState(noticeId: NoticeId): State {
         body: (
           <div>
             <p>Your registration for this Request for Information's Discovery Day has been successfully submitted. In-person and/or remote attendance information will be emailed to all attendees individually based on the information you have provided.</p>
-          <p>You can return to the RFI to <Link route={{ tag: 'requestForInformationAttendDiscoveryDay', value: { rfiId: noticeId.value }}}>view and update your team's registration</Link> if required. Please note that you will not be able to add any in-person attendees less than 24 hours before the Discovery Day's scheduled time.</p>
+            <p>
+              You can return to the RFI to <Link route={{ tag: 'requestForInformationAttendDiscoveryDay', value: { rfiId: noticeId.value } }}>view and update your team's registration</Link> if required. Please note that you will not be able to add any in-person attendees less than 24 hours before the Discovery Day's scheduled time.
+            </p>
           </div>
         ),
         button: {
@@ -168,7 +158,9 @@ function noticeIdToState(noticeId: NoticeId): State {
           <div>
             <p>Your Unsolicited Proposal has been received.</p>
             <p>Please note that it may take four to six weeks for your Unsolicited Proposal to be assessed for eligibility.</p>
-            <p>Please send an email to <Link href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Link> if you have any questions.</p>
+            <p>
+              Please send an email to <Link href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Link> if you have any questions.
+            </p>
           </div>
         ),
         button: {
@@ -183,7 +175,7 @@ function noticeIdToState(noticeId: NoticeId): State {
     case 'viEditedByVendor':
       return {
         title: 'Thank You',
-        body: 'Your changes to your Unsolicited Proposal have been received. A staff member from the Procurement Concierge Program will continue to assess your Unsolicited Proposal\'s eligibility, and you will be notified once it has been assessed.',
+        body: "Your changes to your Unsolicited Proposal have been received. A staff member from the Procurement Concierge Program will continue to assess your Unsolicited Proposal's eligibility, and you will be notified once it has been assessed.",
         button: {
           text: 'View My Unsolicited Proposals',
           route: {
@@ -199,17 +191,18 @@ function noticeIdToState(noticeId: NoticeId): State {
         body: (
           <div>
             <p>You do not have permission to view Unsolicited Proposals because your account has not yet been verified by the Procurement Concierge Program's staff.</p>
-            <p>Please send an email to <Link href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Link> if you have any questions.</p>
+            <p>
+              Please send an email to <Link href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Link> if you have any questions.
+            </p>
           </div>
         )
       };
-
   }
 }
 
 export interface RouteParams {
   noticeId: NoticeId;
-};
+}
 
 export interface State {
   title: string;
@@ -217,7 +210,7 @@ export interface State {
   button?: {
     text: string;
     route: Route;
-  }
+  };
 }
 
 export type Msg = GlobalComponentMsg<null, Route>;
@@ -234,8 +227,10 @@ const ConditionalButton: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (state.button) {
     return (
       <Row>
-        <Col xs='12'>
-          <Link route={state.button.route} button color='primary'>{state.button.text}</Link>
+        <Col xs="12">
+          <Link route={state.button.route} button color="primary">
+            {state.button.text}
+          </Link>
         </Col>
       </Row>
     );
@@ -244,20 +239,18 @@ const ConditionalButton: ComponentView<State, Msg> = ({ state, dispatch }) => {
   }
 };
 
-const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = (props) => {
   const { state } = props;
   return (
     <div>
-      <Row className='mb-3'>
-        <Col xs='12' md='8'>
+      <Row className="mb-3">
+        <Col xs="12" md="8">
           <h1>{state.title}</h1>
         </Col>
       </Row>
-      <Row className='mb-3 pb-3'>
-        <Col xs='12' md='8'>
-          {typeof state.body === 'string'
-            ? (<p>{state.body}</p>)
-            : state.body}
+      <Row className="mb-3 pb-3">
+        <Col xs="12" md="8">
+          {typeof state.body === 'string' ? <p>{state.body}</p> : state.body}
         </Col>
       </Row>
       <ConditionalButton {...props} />

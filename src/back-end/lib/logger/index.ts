@@ -21,9 +21,13 @@ export interface DomainLogger {
 
 export function logWith(adapter: AdapterFunction): LogFunction {
   return (domain, msg, data = {}) => {
-    const dataMsg = reduce<object, string>(data, (acc, v, k) => {
-      return `${k}=${JSON.stringify(v)} ${acc}`;
-    }, '');
+    const dataMsg = reduce<object, string>(
+      data,
+      (acc, v, k) => {
+        return `${k}=${JSON.stringify(v)} ${acc}`;
+      },
+      ''
+    );
     adapter(domain, `${msg} ${dataMsg}`);
   };
 }

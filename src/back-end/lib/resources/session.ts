@@ -22,7 +22,6 @@ type RequiredModels = 'Session' | 'User';
 export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, Session>;
 
 export const resource: Resource = {
-
   routeNamespace: 'sessions',
 
   // Log in.
@@ -40,14 +39,16 @@ export const resource: Resource = {
       },
       async respond(request): Promise<Response<CreateResponseBody, Session>> {
         const fail = () => basicResponse(401, request.session, makeJsonResponseBody([INVALID_CREDENTIALS_ERROR_MESSAGE]));
-        if (!permissions.createSession(request.session)) { return fail(); }
+        if (!permissions.createSession(request.session)) {
+          return fail();
+        }
         const { email, password } = request.body;
         const user = await UserModel.findOne({
           $and: [
-            { email: { $eq: email }},
+            { email: { $eq: email } },
             {
               $or: [
-                { active: { $eq: true }},
+                { active: { $eq: true } },
                 {
                   'profile.type': { $in: [UserType.Vendor, UserType.Buyer] },
                   active: { $eq: false }
@@ -56,9 +57,13 @@ export const resource: Resource = {
             }
           ]
         }).exec();
-        if (!user) { return fail(); }
+        if (!user) {
+          return fail();
+        }
         const authenticated = await UserSchema.authenticate(user, password);
-        if (!authenticated) { return fail(); }
+        if (!authenticated) {
+          return fail();
+        }
         if (!user.active) {
           request.logger.debug('reactivate user');
           user.active = true;
@@ -105,9 +110,8 @@ export const resource: Resource = {
           return basicResponse(200, newSession, makeJsonResponseBody(publicSession));
         }
       }
-    }
+    };
   }
-
-}
+};
 
 export default resource;

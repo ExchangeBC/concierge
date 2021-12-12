@@ -45,7 +45,7 @@ const init: Component['init'] = async () => {
 const startLoading: UpdateState<State> = makeStartLoading('loading');
 const stopLoading: UpdateState<State> = makeStopLoading('loading');
 
-const onNext: ControllerHook = state => {
+const onNext: ControllerHook = (state) => {
   switch (state.currentStep) {
     case 'zero':
       return [state.set('currentStep', 'one')];
@@ -81,13 +81,15 @@ const onNext: ControllerHook = state => {
                 tag: 'requestForInformationList',
                 value: null
               });
-              dispatch(newRoute({
-                tag: 'termsAndConditions' as const,
-                value: {
-                  redirectOnAccept: rfiListUrl,
-                  redirectOnSkip: rfiListUrl
-                }
-              }));
+              dispatch(
+                newRoute({
+                  tag: 'termsAndConditions' as const,
+                  value: {
+                    redirectOnAccept: rfiListUrl,
+                    redirectOnSkip: rfiListUrl
+                  }
+                })
+              );
               return null;
             case 'invalid':
               return stopLoading(state)
@@ -104,7 +106,7 @@ const onNext: ControllerHook = state => {
   }
 };
 
-const onBack: ControllerHook = state => {
+const onBack: ControllerHook = (state) => {
   switch (state.currentStep) {
     case 'zero':
       return [
@@ -124,7 +126,7 @@ const onBack: ControllerHook = state => {
   }
 };
 
-const onCancel: ControllerHook = state => {
+const onCancel: ControllerHook = (state) => {
   return [
     state,
     async (state, dispatch) => {
@@ -137,7 +139,7 @@ const onCancel: ControllerHook = state => {
   ];
 };
 
-const onFail: ControllerHook = state => {
+const onFail: ControllerHook = (state) => {
   return [state];
 };
 

@@ -20,9 +20,7 @@ import { PublicLogItem } from 'shared/lib/resources/vendor-idea/log-item';
 import { ADT } from 'shared/lib/types';
 import { invalid, valid } from 'shared/lib/validators';
 
-export type TabId
-  = 'management'
-  | 'application';
+export type TabId = 'management' | 'application';
 
 export function tabIdToName(id: TabId): string {
   switch (id) {
@@ -38,19 +36,9 @@ export interface Params {
   activeTab?: TabId;
   dispatch: Dispatch<Msg>;
   sessionUser: PublicSessionUser;
-};
+}
 
-type InnerMsg
-  = ADT<'setActiveTab', TabId>
-  | ADT<'intakeForm', IntakeForm.Msg>
-  | ADT<'management', Management.Msg>
-  | ADT<'startEditing'>
-  | ADT<'cancelEditing'>
-  | ADT<'hideCancelEditingConfirmationPrompt'>
-  | ADT<'hideSubmitChangesConfirmationPrompt'>
-  | ADT<'hideCancelEntryConfirmationPrompt'>
-  | ADT<'hideSubmitEntryConfirmationPrompt'>
-  | ADT<'submitChanges'>;
+type InnerMsg = ADT<'setActiveTab', TabId> | ADT<'intakeForm', IntakeForm.Msg> | ADT<'management', Management.Msg> | ADT<'startEditing'> | ADT<'cancelEditing'> | ADT<'hideCancelEditingConfirmationPrompt'> | ADT<'hideSubmitChangesConfirmationPrompt'> | ADT<'hideCancelEntryConfirmationPrompt'> | ADT<'hideSubmitEntryConfirmationPrompt'> | ADT<'submitChanges'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -65,17 +53,17 @@ interface ValidState {
   intakeForm: Immutable<IntakeForm.State>;
   management: Immutable<Management.State>;
   vi: PublicVendorIdeaForProgramStaff;
-};
+}
 
-export type State
-  = ADT<'valid', ValidState>
-  | ADT<'invalid'>;
+export type State = ADT<'valid', ValidState> | ADT<'invalid'>;
 
 async function resetIntakeForm(existingVi: PublicVendorIdeaForProgramStaff): Promise<Immutable<IntakeForm.State>> {
-  return immutable(await IntakeForm.init({
-    isEditing: false,
-    existingVi
-  }));
+  return immutable(
+    await IntakeForm.init({
+      isEditing: false,
+      existingVi
+    })
+  );
 }
 
 async function resetManagement(viId: string, logItems: PublicLogItem[]): Promise<Immutable<Management.State>> {
@@ -84,36 +72,40 @@ async function resetManagement(viId: string, logItems: PublicLogItem[]): Promise
 
 export const init: Init<Params, State> = async ({ sessionUser, viId, dispatch, activeTab = 'management' }) => {
   if (!(await api.hasUserAcceptedTerms(sessionUser.id))) {
-    dispatch(replaceRoute({
-      tag: 'termsAndConditions',
-      value: {
-        warningId: WarningId.EditVi,
-        redirectOnAccept: router.routeToUrl({
-          tag: 'viEdit',
-          value: {
-            viId,
-            activeTab
-          }
-        }),
-        redirectOnSkip: router.routeToUrl({
-          tag: 'viList',
-          value: null
-        })
-      }
-    }));
+    dispatch(
+      replaceRoute({
+        tag: 'termsAndConditions',
+        value: {
+          warningId: WarningId.EditVi,
+          redirectOnAccept: router.routeToUrl({
+            tag: 'viEdit',
+            value: {
+              viId,
+              activeTab
+            }
+          }),
+          redirectOnSkip: router.routeToUrl({
+            tag: 'viList',
+            value: null
+          })
+        }
+      })
+    );
     return invalid(undefined);
   }
   const existingVi = await api.readOneViForProgramStaff(viId);
   if (existingVi.tag === 'invalid') {
-    dispatch(replaceRoute({
-      tag: 'notice',
-      value: {
-        noticeId: {
-          tag: 'notFound',
-          value: undefined
+    dispatch(
+      replaceRoute({
+        tag: 'notice',
+        value: {
+          noticeId: {
+            tag: 'notFound',
+            value: undefined
+          }
         }
-      }
-    }));
+      })
+    );
     return invalid(undefined);
   }
   return valid({
@@ -140,7 +132,9 @@ function setIsEditing(state: Immutable<State>, value: boolean): Immutable<State>
 }
 
 export const update: Update<State, Msg> = ({ state, msg }) => {
-  if (state.tag === 'invalid') { return [state]; }
+  if (state.tag === 'invalid') {
+    return [state];
+  }
   switch (msg.tag) {
     case 'setActiveTab':
       // Update the query string with the active tab.
@@ -155,7 +149,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'intakeForm':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'intakeForm', value }),
+        mapChildMsg: (value) => ({ tag: 'intakeForm', value }),
         childStatePath: ['value', 'intakeForm'],
         childUpdate: IntakeForm.update,
         childMsg: msg.value
@@ -171,7 +165,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
           state = state.setIn(['value', 'promptSubmitEntryConfirmation'], false);
           const [newState, newAsyncState] = updateComponentChild({
             state,
-            mapChildMsg: value => ({ tag: 'management' as const, value }),
+            mapChildMsg: (value) => ({ tag: 'management' as const, value }),
             childStatePath: ['value', 'management'],
             childUpdate: Management.update,
             childMsg: msg.value
@@ -180,15 +174,15 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
             newState,
             async (state, dispatch) => {
               if (newAsyncState) {
-                state = await newAsyncState(state, dispatch) || state;
+                state = (await newAsyncState(state, dispatch)) || state;
               }
-              if (state.tag === 'invalid') { return state; }
+              if (state.tag === 'invalid') {
+                return state;
+              }
               const viResult = await api.readOneViForProgramStaff(state.value.vi._id);
               switch (viResult.tag) {
                 case 'valid':
-                  return state
-                    .setIn(['value', 'management'], await resetManagement(state.value.vi._id, viResult.value.log))
-                    .setIn(['value', 'vi'], viResult.value);
+                  return state.setIn(['value', 'management'], await resetManagement(state.value.vi._id, viResult.value.log)).setIn(['value', 'vi'], viResult.value);
                 case 'invalid':
                   return state;
               }
@@ -204,7 +198,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       }
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'management', value }),
+        mapChildMsg: (value) => ({ tag: 'management', value }),
         childStatePath: ['value', 'management'],
         childUpdate: Management.update,
         childMsg: msg.value
@@ -212,12 +206,16 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'startEditing':
       return [
         startStartEditingLoading(state),
-        async state => {
+        async (state) => {
           state = stopStartEditingLoading(state);
-          if (state.tag === 'invalid') { return state; }
+          if (state.tag === 'invalid') {
+            return state;
+          }
           // Reset the RFI form with fresh data before editing.
           const result = await api.readOneViForProgramStaff(state.value.vi._id);
-          if (result.tag === 'invalid') { return state; }
+          if (result.tag === 'invalid') {
+            return state;
+          }
           const existingManagement = state.value.management;
           state = state
             .setIn(['value', 'vi'], result.value)
@@ -239,7 +237,9 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       return [
         setIsEditing(state, false),
         async (state) => {
-          if (state.tag === 'invalid') { return state; }
+          if (state.tag === 'invalid') {
+            return state;
+          }
           return state.setIn(['value', 'intakeForm'], await resetIntakeForm(state.value.vi));
         }
       ];
@@ -261,9 +261,13 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
         startSubmitLoading(state),
         async (state, dispatch) => {
           state = stopSubmitLoading(state);
-          if (state.tag === 'invalid') { return state; }
+          if (state.tag === 'invalid') {
+            return state;
+          }
           const fail = (state: Immutable<State>, errors: UpdateValidationErrors) => {
-            if (state.tag === 'invalid') { return state; }
+            if (state.tag === 'invalid') {
+              return state;
+            }
             return state.setIn(['value', 'intakeForm'], IntakeForm.setErrors(state.value.intakeForm, errors));
           };
           const requestBody = await makeRequestBody(state.value.intakeForm);
@@ -284,7 +288,9 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
                   break;
                 case 'invalid':
                   state = fail(state, result.value);
-                  if (window.scrollTo) { window.scrollTo(0, 0); }
+                  if (window.scrollTo) {
+                    window.scrollTo(0, 0);
+                  }
                   break;
               }
               break;
@@ -301,7 +307,9 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 export const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (state.tag === 'invalid') { return null; }
+  if (state.tag === 'invalid') {
+    return null;
+  }
   const submit = () => dispatch({ tag: 'submitChanges', value: undefined });
   const startEditing = () => dispatch({ tag: 'startEditing', value: undefined });
   const cancelEditing = () => dispatch({ tag: 'cancelEditing', value: undefined });
@@ -311,20 +319,27 @@ export const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) =>
   const isDisabled = isLoading || !IntakeForm.isValid(state.value.intakeForm);
   const isEditingApplication = state.value.intakeForm.isEditing;
   const isApplicationTab = state.value.activeTab === 'application';
-  const ViewVendorProfile: View<{ className?: string }> = ({ className }) => (<Link button newTab route={{ tag: 'userView', value: { profileUserId: state.value.vi.createdBy._id }}} color='info' className={className}>View Vendor Profile</Link>);
+  const ViewVendorProfile: View<{ className?: string }> = ({ className }) => (
+    <Link button newTab route={{ tag: 'userView', value: { profileUserId: state.value.vi.createdBy._id } }} color="info" className={className}>
+      View Vendor Profile
+    </Link>
+  );
   if (isApplicationTab) {
     return (
       <FixedBar>
-        <LoadingButton color='primary' onClick={isEditingApplication ? submit : startEditing} loading={isEditingApplication ? isSubmitLoading : isStartEditingLoading} disabled={isDisabled} className='text-nowrap'>
+        <LoadingButton color="primary" onClick={isEditingApplication ? submit : startEditing} loading={isEditingApplication ? isSubmitLoading : isStartEditingLoading} disabled={isDisabled} className="text-nowrap">
           {isEditingApplication ? 'Submit Changes' : 'Edit Application'}
         </LoadingButton>
-        <ViewVendorProfile className='mx-3' />
-        {isEditingApplication
-          ? (<Link onClick={cancelEditing} color='secondary' disabled={isLoading}>Cancel</Link>)
-          : null}
+        <ViewVendorProfile className="mx-3" />
+        {isEditingApplication ? (
+          <Link onClick={cancelEditing} color="secondary" disabled={isLoading}>
+            Cancel
+          </Link>
+        ) : null}
       </FixedBar>
     );
-  } else { // Management tab.
+  } else {
+    // Management tab.
     return (
       <FixedBar>
         <ViewVendorProfile />
@@ -338,7 +353,9 @@ interface TabLinkProps extends ComponentViewProps<State, Msg> {
 }
 
 const TabLink: View<TabLinkProps> = ({ id, state, dispatch }) => {
-  if (state.tag === 'invalid') { return null; }
+  if (state.tag === 'invalid') {
+    return null;
+  }
   const isActive = id === state.value.activeTab;
   let isValid = true;
   switch (id) {
@@ -356,49 +373,49 @@ const TabLink: View<TabLinkProps> = ({ id, state, dispatch }) => {
   );
 };
 
-export const view: ComponentView<State, Msg> = props => {
+export const view: ComponentView<State, Msg> = (props) => {
   const { state, dispatch } = props;
-  if (state.tag === 'invalid') { return null; }
+  if (state.tag === 'invalid') {
+    return null;
+  }
   const { vi } = state.value;
-  const dispatchIntakeForm: Dispatch<IntakeForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'intakeForm' as const, value }));
-  const dispatchManagement: Dispatch<Management.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'management' as const, value }));
+  const dispatchIntakeForm: Dispatch<IntakeForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'intakeForm' as const, value }));
+  const dispatchManagement: Dispatch<Management.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'management' as const, value }));
   return (
     <div>
       <Row>
-        <Col xs='12' md='10'>
-          <h3 className='d-flex flex-column-reverse flex-md-row align-items-start align-items-md-center flex-wrap'>
-            Unsolicited Proposal (UP) 
-            <LogItemTypeBadge
-              logItemType={vi.latestStatus}
-              className='d-block d-md-inline mb-2 mb-md-0 ml-md-3 font-size-base' />
+        <Col xs="12" md="10">
+          <h3 className="d-flex flex-column-reverse flex-md-row align-items-start align-items-md-center flex-wrap">
+            Unsolicited Proposal (UP)
+            <LogItemTypeBadge logItemType={vi.latestStatus} className="d-block d-md-inline mb-2 mb-md-0 ml-md-3 font-size-base" />
           </h3>
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='10'>
+        <Col xs="12" md="10">
           <h1>{vi.latestVersion.description.title}</h1>
         </Col>
       </Row>
-      <Row className='mb-5'>
-        <Col xs='12'>
-          <p className='text-secondary small'>
-            <SubmittedDate date={vi.createdAt} vendor={vi.createdBy} className='d-block d-md-inline' />
-            <span className='px-3 d-none d-md-inline'>|</span>
-            <UpdatedDate date={vi.latestVersion.createdAt} className='d-block d-md-inline' />
+      <Row className="mb-5">
+        <Col xs="12">
+          <p className="text-secondary small">
+            <SubmittedDate date={vi.createdAt} vendor={vi.createdBy} className="d-block d-md-inline" />
+            <span className="px-3 d-none d-md-inline">|</span>
+            <UpdatedDate date={vi.latestVersion.createdAt} className="d-block d-md-inline" />
           </p>
         </Col>
       </Row>
-      <div className='d-flex mb-5' style={{ overflowX: 'auto' }}>
-        <Nav className='flex-grow-1 flex-nowrap' tabs>
-          <TabLink id='management' {...props} />
-          <TabLink id='application' {...props} />
+      <div className="d-flex mb-5" style={{ overflowX: 'auto' }}>
+        <Nav className="flex-grow-1 flex-nowrap" tabs>
+          <TabLink id="management" {...props} />
+          <TabLink id="application" {...props} />
         </Nav>
       </div>
       <TabContent activeTab={state.value.activeTab}>
-        <TabPane tabId='management'>
+        <TabPane tabId="management">
           <Management.view state={state.value.management} dispatch={dispatchManagement} />
         </TabPane>
-        <TabPane tabId='application'>
+        <TabPane tabId="application">
           <IntakeForm.view state={state.value.intakeForm} dispatch={dispatchIntakeForm} />
         </TabPane>
       </TabContent>
@@ -406,7 +423,7 @@ export const view: ComponentView<State, Msg> = props => {
   );
 };
 
-export const getMetadata: PageGetMetadata<State> = state => {
+export const getMetadata: PageGetMetadata<State> = (state) => {
   if (state.tag === 'valid') {
     return makePageMetadata(`${state.value.vi.latestVersion.description.title} — Unsolicited Proposal`);
   } else {
@@ -414,7 +431,7 @@ export const getMetadata: PageGetMetadata<State> = state => {
   }
 };
 
-export const getBreadcrumbs: PageGetBreadcrumbs<State, Msg> = state => {
+export const getBreadcrumbs: PageGetBreadcrumbs<State, Msg> = (state) => {
   return [
     {
       text: 'Unsolicited Proposals',
@@ -429,8 +446,10 @@ export const getBreadcrumbs: PageGetBreadcrumbs<State, Msg> = state => {
   ];
 };
 
-export const getModal: PageGetModal<State, Msg> = state => {
-  if (state.tag === 'invalid') { return null; }
+export const getModal: PageGetModal<State, Msg> = (state) => {
+  if (state.tag === 'invalid') {
+    return null;
+  }
   if (state.value.promptSubmitChangesConfirmation) {
     return {
       title: 'Submit Changes to Application?',

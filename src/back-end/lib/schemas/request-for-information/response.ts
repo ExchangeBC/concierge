@@ -1,4 +1,3 @@
-import { Session } from 'back-end/lib/app/types';
 import { dateSchema, userIdSchema } from 'back-end/lib/schemas';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as UserSchema from 'back-end/lib/schemas/user';
@@ -13,9 +12,9 @@ export interface Data {
   attachments: mongoose.Types.ObjectId[];
 }
 
-export async function makePublicRfiResponse(UserModel: UserSchema.Model, FileModel: FileSchema.Model, rfiResponse: Data, session: Session): Promise<PublicRfiResponse> {
+export async function makePublicRfiResponse(UserModel: UserSchema.Model, FileModel: FileSchema.Model, rfiResponse: Data): Promise<PublicRfiResponse> {
   const createdBy = await UserSchema.findPublicUserByIdUnsafely(UserModel, rfiResponse.createdBy);
-  const attachments = await Promise.all(rfiResponse.attachments.map(fileId => FileSchema.findPublicFileByIdUnsafely(FileModel, fileId)));
+  const attachments = await Promise.all(rfiResponse.attachments.map((fileId) => FileSchema.findPublicFileByIdUnsafely(FileModel, fileId)));
   return {
     _id: rfiResponse._id.toString(),
     createdAt: rfiResponse.createdAt,

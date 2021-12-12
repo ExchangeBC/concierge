@@ -14,18 +14,9 @@ export interface State {
   positionTitle: ShortText.State;
 }
 
-type FormFieldKeys
-  = 'firstName'
-  | 'lastName'
-  | 'positionTitle';
+type FormFieldKeys = 'firstName' | 'lastName' | 'positionTitle';
 
-export type InnerMsg
-  = ADT<'onChangeFirstName', string>
-  | ADT<'onChangeLastName', string>
-  | ADT<'onChangePositionTitle', string>
-  | ADT<'validateFirstName'>
-  | ADT<'validateLastName'>
-  | ADT<'validatePositionTitle'>;
+export type InnerMsg = ADT<'onChangeFirstName', string> | ADT<'onChangeLastName', string> | ADT<'onChangePositionTitle', string> | ADT<'validateFirstName'> | ADT<'validateLastName'> | ADT<'validatePositionTitle'>;
 
 export type Msg = StepMsg<InnerMsg>;
 
@@ -95,31 +86,21 @@ const view: ComponentView<State, Msg> = makeView({
   title: `${userTypeToTitleCase(UserType.ProgramStaff)} Information`,
   stepIndicator: 'Step 2 of 2',
   view({ state, dispatch }) {
-    const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+    const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, (value) => ({ tag, value }));
     const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
     return (
       <div>
         <Row>
-          <Col xs='12' md='4'>
-            <ShortText.view
-              state={state.firstName}
-              onChangeDebounced={onChangeDebounced('validateFirstName')}
-              onChange={onChangeShortText('onChangeFirstName')}
-              autoFocus />
+          <Col xs="12" md="4">
+            <ShortText.view state={state.firstName} onChangeDebounced={onChangeDebounced('validateFirstName')} onChange={onChangeShortText('onChangeFirstName')} autoFocus />
           </Col>
-          <Col xs='12' md='4'>
-            <ShortText.view
-              state={state.lastName}
-              onChangeDebounced={onChangeDebounced('validateLastName')}
-              onChange={onChangeShortText('onChangeLastName')} />
+          <Col xs="12" md="4">
+            <ShortText.view state={state.lastName} onChangeDebounced={onChangeDebounced('validateLastName')} onChange={onChangeShortText('onChangeLastName')} />
           </Col>
         </Row>
         <Row>
-          <Col xs='12' md='4'>
-            <ShortText.view
-              state={state.positionTitle}
-              onChangeDebounced={onChangeDebounced('validatePositionTitle')}
-              onChange={onChangeShortText('onChangePositionTitle')} />
+          <Col xs="12" md="4">
+            <ShortText.view state={state.positionTitle} onChangeDebounced={onChangeDebounced('validatePositionTitle')} onChange={onChangeShortText('onChangePositionTitle')} />
           </Col>
         </Row>
       </div>
@@ -143,8 +124,5 @@ export const component: StepComponent<Params, State, InnerMsg> = {
 export default component;
 
 export function setErrors(state: Immutable<State>, errors: CreateValidationErrors): Immutable<State> {
-  return state
-    .setIn(['firstName', 'errors'], get(errors.profile, 'firstName', []))
-    .setIn(['lastName', 'errors'], get(errors.profile, 'lastName', []))
-    .setIn(['postitionTitle', 'errors'], get(errors.profile, 'postitionTitle', []));
+  return state.setIn(['firstName', 'errors'], get(errors.profile, 'firstName', [])).setIn(['lastName', 'errors'], get(errors.profile, 'lastName', [])).setIn(['postitionTitle', 'errors'], get(errors.profile, 'postitionTitle', []));
 }

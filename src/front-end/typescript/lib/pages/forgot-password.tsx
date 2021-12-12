@@ -17,10 +17,7 @@ export interface State {
   email: ShortText.State;
 }
 
-type InnerMsg
-  = ADT<'onChangeEmail', string>
-  | ADT<'validateEmail'>
-  | ADT<'submit'>;
+type InnerMsg = ADT<'onChangeEmail', string> | ADT<'validateEmail'> | ADT<'submit'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -38,19 +35,19 @@ const initState: State = {
 };
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedOut({
-
   async success() {
     return initState;
   },
 
   async fail({ dispatch }) {
-    dispatch(replaceRoute({
-      tag: 'requestForInformationList' as 'requestForInformationList',
-      value: null
-    }));
+    dispatch(
+      replaceRoute({
+        tag: 'requestForInformationList' as 'requestForInformationList',
+        value: null
+      })
+    );
     return initState;
   }
-
 });
 
 function startLoading(state: Immutable<State>): Immutable<State> {
@@ -72,15 +69,17 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           // Always redirect user to the confirmation page,
           // so we don't give away any information about which users
           // have accounts and which ones don't.
-          dispatch(newRoute({
-            tag: 'notice' as 'notice',
-            value: {
-              noticeId: {
-                tag: 'forgotPassword' as 'forgotPassword',
-                value: undefined
+          dispatch(
+            newRoute({
+              tag: 'notice' as 'notice',
+              value: {
+                noticeId: {
+                  tag: 'forgotPassword' as 'forgotPassword',
+                  value: undefined
+                }
               }
-            }
-          }));
+            })
+          );
           return null;
         }
       ];
@@ -98,43 +97,39 @@ function isValid(state: State): boolean {
   return providedRequiredFields && !isInvalid(state);
 }
 
-const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = (props) => {
   const { state, dispatch } = props;
-  const onChange = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChange = (tag: any) => ShortText.makeOnChange(dispatch, (value) => ({ tag, value }));
   const isLoading = state.loading > 0;
   const isDisabled = isLoading || !isValid(state);
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
     <div>
       <Row>
-        <Col xs='12'>
+        <Col xs="12">
           <h1>Forgotten Your Password?</h1>
         </Col>
       </Row>
-      <Row className='mb-3'>
-        <Col xs='12' md='8'>
-          <p>
-            Enter your email address below and we'll email you instructions on how to reset your password.
-          </p>
+      <Row className="mb-3">
+        <Col xs="12" md="8">
+          <p>Enter your email address below and we'll email you instructions on how to reset your password.</p>
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='6' lg='5'>
-          <Row className='mb-3 pb-3'>
-            <Col xs='12'>
-              <ShortText.view
-                state={state.email}
-                onChange={onChange('onChangeEmail')}
-                onChangeDebounced={() => dispatch({ tag: 'validateEmail', value: undefined })}
-                onEnter={submit} />
+        <Col xs="12" md="6" lg="5">
+          <Row className="mb-3 pb-3">
+            <Col xs="12">
+              <ShortText.view state={state.email} onChange={onChange('onChangeEmail')} onChangeDebounced={() => dispatch({ tag: 'validateEmail', value: undefined })} onEnter={submit} />
             </Col>
           </Row>
           <Row>
-            <Col xs='12'>
-              <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled}>
+            <Col xs="12">
+              <LoadingButton color="primary" onClick={submit} loading={isLoading} disabled={isDisabled}>
                 Reset Password
               </LoadingButton>
-              <Link route={{ tag: 'landing', value: null }} color='secondary' className='ml-3'>Cancel</Link>
+              <Link route={{ tag: 'landing', value: null }} color="secondary" className="ml-3">
+                Cancel
+              </Link>
             </Col>
           </Row>
         </Col>

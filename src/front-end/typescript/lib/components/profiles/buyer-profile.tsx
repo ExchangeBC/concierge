@@ -12,10 +12,12 @@ import { ADT, BuyerProfile, UserType, userTypeToTitleCase, VerificationStatus } 
 import { ValidOrInvalid } from 'shared/lib/validators';
 import { BuyerProfileValidationErrors, validateBuyerProfile } from 'shared/lib/validators/buyer-profile';
 
-const DEFAULT_SELECT_MULTI_FIELDS = [{
-  value: undefined,
-  errors: []
-}];
+const DEFAULT_SELECT_MULTI_FIELDS = [
+  {
+    value: undefined,
+    errors: []
+  }
+];
 
 export type ValidationErrors = BuyerProfileValidationErrors;
 
@@ -32,13 +34,7 @@ export interface State {
   verificationStatus: VerificationStatus;
 }
 
-type FormFieldKeys
-  = 'firstName'
-  | 'lastName'
-  | 'positionTitle'
-  | 'publicSectorEntity'
-  | 'branch'
-  | 'contactCity';
+type FormFieldKeys = 'firstName' | 'lastName' | 'positionTitle' | 'publicSectorEntity' | 'branch' | 'contactCity';
 
 export function getValues(state: Immutable<State>): BuyerProfile {
   return {
@@ -71,38 +67,35 @@ export function setValues(state: Immutable<State>, profile: BuyerProfile): Immut
 }
 
 export function setErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
-  return state
-    .set('validationErrors', errors)
-    // Don't show validation errors for empty required fields.
-    .setIn(['firstName', 'errors'], state.firstName.value ? errors.firstName || [] : [])
-    // All other fields are optional.
-    .setIn(['lastName', 'errors'], state.lastName.value ? errors.lastName || [] : [])
-    .setIn(['positionTitle', 'errors'], state.positionTitle.value ? errors.positionTitle || [] : [])
-    .setIn(['publicSectorEntity', 'errors'], state.publicSectorEntity.value ? errors.publicSectorEntity || [] : [])
-    .setIn(['branch', 'errors'], errors.branch || [])
-    .setIn(['contactCity', 'errors'], errors.contactCity || [])
-    .set('industrySectors', SelectMulti.setErrors(state.industrySectors, errors.industrySectors || []))
-    .set('categories', SelectMulti.setErrors(state.categories, errors.categories || []));
+  return (
+    state
+      .set('validationErrors', errors)
+      // Don't show validation errors for empty required fields.
+      .setIn(['firstName', 'errors'], state.firstName.value ? errors.firstName || [] : [])
+      // All other fields are optional.
+      .setIn(['lastName', 'errors'], state.lastName.value ? errors.lastName || [] : [])
+      .setIn(['positionTitle', 'errors'], state.positionTitle.value ? errors.positionTitle || [] : [])
+      .setIn(['publicSectorEntity', 'errors'], state.publicSectorEntity.value ? errors.publicSectorEntity || [] : [])
+      .setIn(['branch', 'errors'], errors.branch || [])
+      .setIn(['contactCity', 'errors'], errors.contactCity || [])
+      .set('industrySectors', SelectMulti.setErrors(state.industrySectors, errors.industrySectors || []))
+      .set('categories', SelectMulti.setErrors(state.categories, errors.categories || []))
+  );
 }
 
 export function isValid(state: Immutable<State>): boolean {
   const providedRequiredFields = !!(state.firstName.value && state.lastName.value && state.positionTitle.value && state.publicSectorEntity.value);
-  const noValidationErrors = reduce(state.validationErrors, (acc: boolean, v: string[] | string[][] | undefined, k: string) => {
-    return acc && (!v || !v.length);
-  }, true);
+  const noValidationErrors = reduce(
+    state.validationErrors,
+    (acc: boolean, v: string[] | string[][] | undefined, k: string) => {
+      return acc && (!v || !v.length);
+    },
+    true
+  );
   return providedRequiredFields && noValidationErrors;
 }
 
-export type Msg
-  = ADT<'firstName', string>
-  | ADT<'lastName', string>
-  | ADT<'positionTitle', string>
-  | ADT<'publicSectorEntity', string>
-  | ADT<'branch', string>
-  | ADT<'contactCity', string>
-  | ADT<'industrySectors', SelectMulti.Msg>
-  | ADT<'categories', SelectMulti.Msg>
-  | ADT<'validate'>;
+export type Msg = ADT<'firstName', string> | ADT<'lastName', string> | ADT<'positionTitle', string> | ADT<'publicSectorEntity', string> | ADT<'branch', string> | ADT<'contactCity', string> | ADT<'industrySectors', SelectMulti.Msg> | ADT<'categories', SelectMulti.Msg> | ADT<'validate'>;
 
 export type Params = ProfileParams<BuyerProfile>;
 
@@ -151,30 +144,34 @@ export const init: Init<Params, State> = async ({ profile }) => {
       label: 'City',
       placeholder: 'City'
     }),
-    industrySectors: immutable(await SelectMulti.init({
-      options: AVAILABLE_INDUSTRY_SECTORS.toJS().map(value => ({ label: value, value })),
-      placeholder: 'Select Industry Sector',
-      isCreatable: true,
-      formFieldMulti: {
-        idNamespace: 'buyer-industry-sectors',
-        label: 'Industry Sector(s)',
-        required: true,
-        minFields: 1,
-        fields: DEFAULT_SELECT_MULTI_FIELDS
-      }
-    })),
-    categories: immutable(await SelectMulti.init({
-      options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value })),
-      placeholder: 'Select an Area of Interest',
-      isCreatable: true,
-      formFieldMulti: {
-        idNamespace: 'buyer-categories',
-        label: 'Area(s) of Interest',
-        required: true,
-        minFields: 1,
-        fields: DEFAULT_SELECT_MULTI_FIELDS
-      }
-    })),
+    industrySectors: immutable(
+      await SelectMulti.init({
+        options: AVAILABLE_INDUSTRY_SECTORS.toJS().map((value) => ({ label: value, value })),
+        placeholder: 'Select Industry Sector',
+        isCreatable: true,
+        formFieldMulti: {
+          idNamespace: 'buyer-industry-sectors',
+          label: 'Industry Sector(s)',
+          required: true,
+          minFields: 1,
+          fields: DEFAULT_SELECT_MULTI_FIELDS
+        }
+      })
+    ),
+    categories: immutable(
+      await SelectMulti.init({
+        options: AVAILABLE_CATEGORIES.toJS().map((value) => ({ label: value, value })),
+        placeholder: 'Select an Area of Interest',
+        isCreatable: true,
+        formFieldMulti: {
+          idNamespace: 'buyer-categories',
+          label: 'Area(s) of Interest',
+          required: true,
+          minFields: 1,
+          fields: DEFAULT_SELECT_MULTI_FIELDS
+        }
+      })
+    ),
     verificationStatus: VerificationStatus.Unverified
   };
   if (!profile) {
@@ -201,7 +198,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'industrySectors':
       state = updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'industrySectors', value }),
+        mapChildMsg: (value) => ({ tag: 'industrySectors', value }),
         childStatePath: ['industrySectors'],
         childUpdate: SelectMulti.update,
         childMsg: msg.value
@@ -210,7 +207,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'categories':
       state = updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'categories', value }),
+        mapChildMsg: (value) => ({ tag: 'categories', value }),
         childStatePath: ['categories'],
         childUpdate: SelectMulti.update,
         childMsg: msg.value
@@ -244,59 +241,35 @@ function persistValidations(state: Immutable<State>, validation: ValidOrInvalid<
 }
 
 export const BuyerInformation: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, (value) => ({ tag, value }));
   const validate = () => dispatch({ tag: 'validate', value: undefined });
   return (
-    <div className='mt-4'>
+    <div className="mt-4">
       <FormSectionHeading text={`${userTypeToTitleCase(UserType.Buyer)} Information`} />
       <Row>
-        <Col xs='12' md='6'>
-          <ShortText.view
-            state={state.firstName}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('firstName')} />
+        <Col xs="12" md="6">
+          <ShortText.view state={state.firstName} disabled={disabled} onChangeDebounced={validate} onChange={onChangeShortText('firstName')} />
         </Col>
-        <Col xs='12' md='6'>
-          <ShortText.view
-            state={state.lastName}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('lastName')} />
+        <Col xs="12" md="6">
+          <ShortText.view state={state.lastName} disabled={disabled} onChangeDebounced={validate} onChange={onChangeShortText('lastName')} />
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='6'>
-          <ShortText.view
-            state={state.positionTitle}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('positionTitle')} />
+        <Col xs="12" md="6">
+          <ShortText.view state={state.positionTitle} disabled={disabled} onChangeDebounced={validate} onChange={onChangeShortText('positionTitle')} />
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='6'>
-          <ShortText.view
-            state={state.publicSectorEntity}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('publicSectorEntity')} />
+        <Col xs="12" md="6">
+          <ShortText.view state={state.publicSectorEntity} disabled={disabled} onChangeDebounced={validate} onChange={onChangeShortText('publicSectorEntity')} />
         </Col>
-        <Col xs='12' md='6'>
-          <ShortText.view
-            state={state.branch}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('branch')} />
+        <Col xs="12" md="6">
+          <ShortText.view state={state.branch} disabled={disabled} onChangeDebounced={validate} onChange={onChangeShortText('branch')} />
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='6'>
-          <ShortText.view
-            state={state.contactCity}
-            disabled={disabled}
-            onChangeDebounced={validate}
-            onChange={onChangeShortText('contactCity')} />
+        <Col xs="12" md="6">
+          <ShortText.view state={state.contactCity} disabled={disabled} onChangeDebounced={validate} onChange={onChangeShortText('contactCity')} />
         </Col>
       </Row>
     </div>
@@ -304,28 +277,28 @@ export const BuyerInformation: ProfileView<State, Msg> = ({ state, dispatch, dis
 };
 
 export const IndustrySectors: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
-  const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'industrySectors' as 'industrySectors', value }));
+  const dispatchIndustrySectors: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'industrySectors' as 'industrySectors', value }));
   return (
-    <Row className='mt-4'>
-      <Col xs='12' md='10'>
-        <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} disabled={disabled} labelClassName='h3' labelWrapperClassName='mb-3' />
+    <Row className="mt-4">
+      <Col xs="12" md="10">
+        <SelectMulti.view state={state.industrySectors} dispatch={dispatchIndustrySectors} disabled={disabled} labelClassName="h3" labelWrapperClassName="mb-3" />
       </Col>
     </Row>
   );
 };
 
 export const Categories: ProfileView<State, Msg> = ({ state, dispatch, disabled = false }) => {
-  const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'categories' as 'categories', value }));
+  const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'categories' as 'categories', value }));
   return (
-    <Row className='mt-4'>
-      <Col xs='12' md='10'>
-        <SelectMulti.view state={state.categories} dispatch={dispatchCategories} disabled={disabled} labelClassName='h3' labelWrapperClassName='mb-3' />
+    <Row className="mt-4">
+      <Col xs="12" md="10">
+        <SelectMulti.view state={state.categories} dispatch={dispatchCategories} disabled={disabled} labelClassName="h3" labelWrapperClassName="mb-3" />
       </Col>
     </Row>
   );
 };
 
-export const view: ProfileView<State, Msg> = props => {
+export const view: ProfileView<State, Msg> = (props) => {
   return (
     <div>
       <BuyerInformation {...props} />

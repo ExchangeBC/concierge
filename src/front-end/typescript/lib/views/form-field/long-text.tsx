@@ -41,32 +41,22 @@ export function init(params: Params): State {
 }
 
 export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (value: Value) => Msg): FormField.OnChange<Value> {
-  return value => {
+  return (value) => {
     dispatch(fn(value));
   };
 }
 
 function makeOnKeyUp(onEnter?: OnEnter): KeyboardEventHandler<HTMLTextAreaElement> {
-  return event => {
-    if (event.key === 'Enter' && onEnter) { onEnter(); }
+  return (event) => {
+    if (event.key === 'Enter' && onEnter) {
+      onEnter();
+    }
   };
-};
+}
 
-const Child: View<FormField.ChildProps<State, ExtraProps, Value>> = props => {
+const Child: View<FormField.ChildProps<State, ExtraProps, Value>> = (props) => {
   const { state, className, onChange, extraProps, disabled } = props;
-  return (
-    <TextArea.View
-      id={state.id}
-      value={state.value}
-      placeholder={state.placeholder}
-      className={`${className} form-control`}
-      disabled={disabled}
-      style={extraProps && extraProps.style}
-      onChange={event => onChange(event.currentTarget.value)}
-      onChangeDebounced={extraProps && extraProps.onChangeDebounced}
-      onKeyUp={extraProps && extraProps.onKeyUp}
-      autoFocus={extraProps && extraProps.autoFocus} />
-  );
+  return <TextArea.View id={state.id} value={state.value} placeholder={state.placeholder} className={`${className} form-control`} disabled={disabled} style={extraProps && extraProps.style} onChange={(event) => onChange(event.currentTarget.value)} onChangeDebounced={extraProps && extraProps.onChangeDebounced} onKeyUp={extraProps && extraProps.onKeyUp} autoFocus={extraProps && extraProps.autoFocus} />;
 };
 
 export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter, toggleHelp, style, disabled = false, autoFocus, className }) => {
@@ -76,14 +66,5 @@ export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter,
     style,
     autoFocus
   };
-  return (
-    <FormField.view
-      Child={Child}
-      state={state}
-      onChange={onChange}
-      toggleHelp={toggleHelp}
-      extraProps={extraProps}
-      disabled={disabled}
-      className={className} />
-  );
+  return <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={extraProps} disabled={disabled} className={className} />;
 };

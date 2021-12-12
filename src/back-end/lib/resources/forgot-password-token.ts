@@ -18,7 +18,6 @@ type RequiredModels = 'ForgotPasswordToken' | 'Session' | 'User';
 export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, UpdateRequestBody, Session>;
 
 export const resource: Resource = {
-
   routeNamespace: 'forgot-password-tokens',
 
   create(Models) {
@@ -40,7 +39,9 @@ export const resource: Resource = {
         const user = await UserModel.findOne({ email: request.body.email, active: true }).exec();
         // We respond with a 201 so we don't give away any information about
         // which users do and don't have accounts.
-        if (!user) { return respond(201); }
+        if (!user) {
+          return respond(201);
+        }
         const userId = user._id;
         const forgotPasswordToken = new ForgotPasswordTokenModel({
           createdAt: Date.now(),
@@ -113,7 +114,6 @@ export const resource: Resource = {
       }
     };
   }
-
-}
+};
 
 export default resource;

@@ -16,7 +16,7 @@ dotenv.config({
   path: resolve(REPOSITORY_ROOT_DIR, '.env')
 });
 
-function get(name: string , fallback: string): string {
+function get(name: string, fallback: string): string {
   return process.env[name] || fallback;
 }
 
@@ -28,14 +28,14 @@ function getMongoUrl(): string | null {
   const user = get('MONGODB_USER', '');
   const password = get('MONGODB_PASSWORD', '');
   const databaseName = get('MONGODB_DATABASE_NAME', '');
-  const replicaSetName = get('MONGODB_REPLICA_NAME', '')
+  const replicaSetName = get('MONGODB_REPLICA_NAME', '');
   // Support OpenShift's environment variables.
   if (host && port && user && password && databaseName) {
     const mongoUrl = `mongodb://${user}:${password}@${host}:${port}/${databaseName}`;
     if (replicaSetName) {
-      return `${mongoUrl}?replicaSet=${replicaSetName}`
+      return `${mongoUrl}?replicaSet=${replicaSetName}`;
     } else {
-      return mongoUrl
+      return mongoUrl;
     }
   } else {
     // Return standard MONGO_URL as fallback.
@@ -137,10 +137,7 @@ export function getConfigErrors(): string[] {
   }
 
   if (!MONGO_URL) {
-    errors = errors.concat([
-      'MONGO* variables must be a properly specified.',
-      'Either specify MONGO_URL, or specify the MONGODB_SERVICE_HOST, MONGODB_SERVICE_PORT, MONGODB_USER, MONGODB_PASSWORD, MONGODB_DATABASE_NAME environment variables.'
-    ]);
+    errors = errors.concat(['MONGO* variables must be a properly specified.', 'Either specify MONGO_URL, or specify the MONGODB_SERVICE_HOST, MONGODB_SERVICE_PORT, MONGODB_USER, MONGODB_PASSWORD, MONGODB_DATABASE_NAME environment variables.']);
   }
 
   if (!TOKEN_SECRET) {
@@ -182,17 +179,11 @@ export function getConfigErrors(): string[] {
   }
 
   if (ENV === 'production' && (!productionMailerConfigOptions.host || !isPositiveInteger(productionMailerConfigOptions.port))) {
-    errors = errors.concat([
-      'MAILER_* variables must be properly specified for production.',
-      'MAILER_HOST and MAILER_PORT (positive integer) must all be specified.'
-    ]);
+    errors = errors.concat(['MAILER_* variables must be properly specified for production.', 'MAILER_HOST and MAILER_PORT (positive integer) must all be specified.']);
   }
 
   if (ENV === 'development' && (!developmentMailerConfigOptions.auth.user || !developmentMailerConfigOptions.auth.pass)) {
-    errors = errors.concat([
-      'MAILER_* variables must be properly specified for development.',
-      'MAILER_GMAIL_USER and MAILER_GMAIL_PASS must both be specified.'
-    ]);
+    errors = errors.concat(['MAILER_* variables must be properly specified for development.', 'MAILER_GMAIL_USER and MAILER_GMAIL_PASS must both be specified.']);
   }
 
   if (!MAILER_FROM || !MAILER_FROM.match(/^[^<>@]+<[^@]+@[^@]+\.[^@]+>$/)) {

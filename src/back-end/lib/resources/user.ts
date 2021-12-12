@@ -71,7 +71,7 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, body: UpdateRe
     const correctPassword = await UserSchema.authenticate(user, currentPassword);
     const validatedNewPassword = await validatePassword(newPassword);
     if (correctPassword && validatedNewPassword.tag === 'valid') {
-      user.passwordHash = validatedNewPassword.value
+      user.passwordHash = validatedNewPassword.value;
     } else {
       return invalid({
         currentPassword: correctPassword ? [] : ['Please enter your correct password.'],
@@ -119,7 +119,7 @@ async function validateUpdateRequestBody(Model: UserSchema.Model, body: UpdateRe
         }
         if (validatedProfile.value.type !== user.profile.type) {
           return invalid({
-            profile: ['You cannot change your user\'s profile type.']
+            profile: ["You cannot change your user's profile type."]
           });
         }
         user.profile = validatedProfile.value;
@@ -143,7 +143,6 @@ type RequiredModels = 'User' | 'Session';
 export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, UpdateRequestBody, Session>;
 
 const resource: Resource = {
-
   routeNamespace: 'users',
 
   create(Models) {
@@ -166,9 +165,13 @@ const resource: Resource = {
       },
       async respond(request): Promise<Response<CreateResponseBody, Session>> {
         if (!(await permissions.createUser(UserModel, request.session, request.body.profile.type))) {
-          return basicResponse(401, request.session, makeJsonResponseBody({
-            permissions: [permissions.ERROR_MESSAGE]
-          }));
+          return basicResponse(
+            401,
+            request.session,
+            makeJsonResponseBody({
+              permissions: [permissions.ERROR_MESSAGE]
+            })
+          );
         }
         const createdBy = get(request.session.user, 'id');
         const validatedBody = await validateCreateRequestBody(UserModel, request.body, createdBy);
@@ -225,16 +228,17 @@ const resource: Resource = {
         if (!permissions.readManyUsers(request.session)) {
           return basicResponse(401, request.session, makeJsonResponseBody(null));
         }
-        const users = await UserModel
-          .find({ active: true })
-          .sort({ email: 1 })
-          .exec();
-        return basicResponse(200, request.session, makeJsonResponseBody({
-          total: users.length,
-          offset: 0,
-          count: users.length,
-          items: users.map(user => UserSchema.makePublicUser(user))
-        }));
+        const users = await UserModel.find({ active: true }).sort({ email: 1 }).exec();
+        return basicResponse(
+          200,
+          request.session,
+          makeJsonResponseBody({
+            total: users.length,
+            offset: 0,
+            count: users.length,
+            items: users.map((user) => UserSchema.makePublicUser(user))
+          })
+        );
       }
     };
   },
@@ -256,9 +260,13 @@ const resource: Resource = {
       },
       async respond(request): Promise<Response<UpdateResponseBody, Session>> {
         if (!(await permissions.updateUser(UserModel, request.session, request.body.id))) {
-          return basicResponse(401, request.session, makeJsonResponseBody({
-            permissions: [permissions.ERROR_MESSAGE]
-          }));
+          return basicResponse(
+            401,
+            request.session,
+            makeJsonResponseBody({
+              permissions: [permissions.ERROR_MESSAGE]
+            })
+          );
         }
         const validatedBody = await validateUpdateRequestBody(UserModel, request.body, request.session);
         switch (validatedBody.tag) {

@@ -1,7 +1,7 @@
 import { UpdateState } from 'front-end/lib';
 import router from 'front-end/lib/app/router';
 import { Route } from 'front-end/lib/app/types';
-import { Dispatch, GlobalComponentMsg, Immutable, UpdateReturnValue } from 'front-end/lib/framework';
+import { GlobalComponentMsg, Immutable, UpdateReturnValue } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import * as RfiForm from 'front-end/lib/pages/request-for-information/components/form';
 import { formatDateAndTime } from 'shared/lib';
@@ -58,9 +58,11 @@ export function createAndShowPreview<State, InnerMsg>(params: CreateAndShowPrevi
   const { state, startLoading, stopLoading, getRfiForm, setRfiForm } = params;
   return [
     startLoading(state),
-    async (state: Immutable<State>, dispatch: Dispatch<GlobalComponentMsg<InnerMsg, Route>>) => {
+    async (state: Immutable<State>) => {
       const rfiForm = getRfiForm(state);
-      if (!rfiForm) { return null; }
+      if (!rfiForm) {
+        return null;
+      }
       const fail = (state: Immutable<State>, errors: RfiResource.CreateValidationErrors) => {
         state = stopLoading(state);
         return setRfiForm(state, RfiForm.setErrors(rfiForm, errors));
@@ -71,12 +73,14 @@ export function createAndShowPreview<State, InnerMsg>(params: CreateAndShowPrevi
           const result = await api.createRfiPreview(requestBody.value);
           switch (result.tag) {
             case 'valid':
-              window.open(router.routeToUrl({
-                tag: 'requestForInformationPreview',
-                value: {
-                  rfiId: result.value._id
-                }
-              }));
+              window.open(
+                router.routeToUrl({
+                  tag: 'requestForInformationPreview',
+                  value: {
+                    rfiId: result.value._id
+                  }
+                })
+              );
               state = stopLoading(state);
               break;
             case 'invalid':

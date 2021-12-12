@@ -19,20 +19,11 @@ export interface RouteParams {
   rfiId: string;
 }
 
-export type InnerMsg
-  = ADT<'handlePageInitError'>
-  | ADT<'onChangeAttachments', FileMulti.Msg>
-  | ADT<'hideSubmitConfirmationPrompt'>
-  | ADT<'submit'>;
+export type InnerMsg = ADT<'handlePageInitError'> | ADT<'onChangeAttachments', FileMulti.Msg> | ADT<'hideSubmitConfirmationPrompt'> | ADT<'submit'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
-type PageInitError
-  = ADT<'notSignedIn', PublicRfi>
-  | ADT<'notVendor', PublicRfi>
-  | ADT<'notAcceptedTerms', PublicRfi>
-  | ADT<'expiredRfi', PublicRfi>
-  | ADT<'invalidRfi'>;
+type PageInitError = ADT<'notSignedIn', PublicRfi> | ADT<'notVendor', PublicRfi> | ADT<'notAcceptedTerms', PublicRfi> | ADT<'expiredRfi', PublicRfi> | ADT<'invalidRfi'>;
 
 interface ValidState {
   rfi: PublicRfi;
@@ -45,7 +36,7 @@ export interface State {
   promptSubmitConfirmation: boolean;
   init: ValidOrInvalid<ValidState, PageInitError>;
   handledPageInitError: boolean;
-};
+}
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParams }) => {
   const { rfiId } = routeParams;
@@ -105,14 +96,16 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
         init: valid({
           rfi,
           user,
-          attachments: immutable(await FileMulti.init({
-            formFieldMulti: {
-              idNamespace: 'rfi-categories',
-              label: 'Attachments',
-              required: false,
-              fields: []
-            }
-          }))
+          attachments: immutable(
+            await FileMulti.init({
+              formFieldMulti: {
+                idNamespace: 'rfi-categories',
+                label: 'Attachments',
+                required: false,
+                fields: []
+              }
+            })
+          )
         })
       };
     case 'invalid':
@@ -155,70 +148,84 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [
         state.set('handledPageInitError', true),
         async (state, dispatch) => {
-          if (state.init.tag === 'valid') { return null; }
+          if (state.init.tag === 'valid') {
+            return null;
+          }
           // Handle cases where the user should not be able to respond to this RFI.
           const error = state.init.value;
           switch (error.tag) {
             case 'notSignedIn':
-              dispatch(replaceRoute({
-                tag: 'signIn' as const,
-                value: {
-                  redirectOnSuccess: respondToRfiUrl(error.value)
-                }
-              }));
+              dispatch(
+                replaceRoute({
+                  tag: 'signIn' as const,
+                  value: {
+                    redirectOnSuccess: respondToRfiUrl(error.value)
+                  }
+                })
+              );
               return null;
             case 'notVendor':
-              dispatch(replaceRoute({
-                tag: 'notice' as const,
-                value: {
-                  noticeId: {
-                    tag: 'rfiNonVendorResponse' as const,
-                    value: error.value._id
+              dispatch(
+                replaceRoute({
+                  tag: 'notice' as const,
+                  value: {
+                    noticeId: {
+                      tag: 'rfiNonVendorResponse' as const,
+                      value: error.value._id
+                    }
                   }
-                }
-              }));
+                })
+              );
               return null;
             case 'notAcceptedTerms':
               const rfi = error.value;
-              dispatch(replaceRoute({
-                tag: 'termsAndConditions' as const,
-                value: {
-                  warningId: WarningId.RfiResponse,
-                  redirectOnAccept: respondToRfiUrl(rfi),
-                  redirectOnSkip: viewRfiUrl(rfi)
-                }
-              }));
+              dispatch(
+                replaceRoute({
+                  tag: 'termsAndConditions' as const,
+                  value: {
+                    warningId: WarningId.RfiResponse,
+                    redirectOnAccept: respondToRfiUrl(rfi),
+                    redirectOnSkip: viewRfiUrl(rfi)
+                  }
+                })
+              );
               return null;
             case 'expiredRfi':
-              dispatch(replaceRoute({
-                tag: 'notice' as const,
-                value: {
-                  noticeId: {
-                    tag: 'rfiExpiredResponse' as const,
-                    value: error.value._id
+              dispatch(
+                replaceRoute({
+                  tag: 'notice' as const,
+                  value: {
+                    noticeId: {
+                      tag: 'rfiExpiredResponse' as const,
+                      value: error.value._id
+                    }
                   }
-                }
-              }));
+                })
+              );
               return null;
             case 'invalidRfi':
-              dispatch(replaceRoute({
-                tag: 'notice' as const,
-                value: {
-                  noticeId: {
-                    tag: 'notFound' as const,
-                    value: undefined
+              dispatch(
+                replaceRoute({
+                  tag: 'notice' as const,
+                  value: {
+                    noticeId: {
+                      tag: 'notFound' as const,
+                      value: undefined
+                    }
                   }
-                }
-              }));
+                })
+              );
               return null;
           }
         }
       ];
     case 'onChangeAttachments':
-      if (state.init.tag === 'invalid') { return [state]; }
+      if (state.init.tag === 'invalid') {
+        return [state];
+      }
       state = updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'onChangeAttachments', value }),
+        mapChildMsg: (value) => ({ tag: 'onChangeAttachments', value }),
         childStatePath: ['init', 'value', 'attachments'],
         childUpdate: FileMulti.update,
         childMsg: msg.value
@@ -227,7 +234,9 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'hideSubmitConfirmationPrompt':
       return [state.set('promptSubmitConfirmation', false)];
     case 'submit':
-      if (state.init.tag === 'invalid') { return [state]; }
+      if (state.init.tag === 'invalid') {
+        return [state];
+      }
       if (!state.promptSubmitConfirmation) {
         return [state.set('promptSubmitConfirmation', true)];
       } else {
@@ -236,31 +245,38 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [
         startLoading(state),
         async (state, dispatch) => {
-          if (state.init.tag === 'invalid') { return null; }
+          if (state.init.tag === 'invalid') {
+            return null;
+          }
           const { rfi, attachments } = state.init.value;
           const fail = (state: Immutable<State>, errors: string[][]) => {
-            return stopLoading(state)
-              .setIn(['init', 'value', 'attachments'], FileMulti.setErrors(attachments, errors));
+            return stopLoading(state).setIn(['init', 'value', 'attachments'], FileMulti.setErrors(attachments, errors));
           };
           const uploadedFiles = await api.uploadFiles(FileMulti.getValues(attachments), {
             tag: 'userType',
             value: [UserType.ProgramStaff]
           });
-          if (uploadedFiles.tag === 'invalid') { return fail(state, uploadedFiles.value); }
+          if (uploadedFiles.tag === 'invalid') {
+            return fail(state, uploadedFiles.value);
+          }
           const result = await api.createRfiResponse({
             rfiId: rfi._id,
             attachments: uploadedFiles.value
           });
-          if (result.tag === 'invalid') { return fail(state, result.value.attachments || []); }
-          dispatch(newRoute({
-            tag: 'notice' as const,
-            value: {
-              noticeId: {
-                tag: 'rfiResponseSubmitted' as const,
-                value: rfi._id
+          if (result.tag === 'invalid') {
+            return fail(state, result.value.attachments || []);
+          }
+          dispatch(
+            newRoute({
+              tag: 'notice' as const,
+              value: {
+                noticeId: {
+                  tag: 'rfiResponseSubmitted' as const,
+                  value: rfi._id
+                }
               }
-            }
-          }));
+            })
+          );
           return null;
         }
       ];
@@ -283,15 +299,11 @@ interface AttachmentsProps {
 }
 
 const Attachments: View<AttachmentsProps> = ({ attachments, dispatch }) => {
-  const dispatchAttachments: Dispatch<FileMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeAttachments' as const, value }));
+  const dispatchAttachments: Dispatch<FileMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'onChangeAttachments' as const, value }));
   return (
     <Row>
-      <Col xs='12' md='6'>
-        <FileMulti.view
-          state={attachments}
-          dispatch={dispatchAttachments}
-          labelClassName='h3'
-          labelWrapperClassName='mb-4' />
+      <Col xs="12" md="6">
+        <FileMulti.view state={attachments} dispatch={dispatchAttachments} labelClassName="h3" labelWrapperClassName="mb-4" />
       </Col>
     </Row>
   );
@@ -308,10 +320,10 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
     <FixedBar>
-      <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled} className='text-nowrap'>
+      <LoadingButton color="primary" onClick={submit} loading={isLoading} disabled={isDisabled} className="text-nowrap">
         Submit Response
       </LoadingButton>
-      <Link route={viewRfiRoute(rfi)} color='secondary' className='text-nowrap mx-3'>
+      <Link route={viewRfiRoute(rfi)} color="secondary" className="text-nowrap mx-3">
         Cancel
       </Link>
     </FixedBar>
@@ -332,26 +344,22 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const version = rfi.latestVersion;
   return (
     <div>
-      <Row className='mb-5'>
-        <Col xs='12' className='d-flex flex-column'>
+      <Row className="mb-5">
+        <Col xs="12" className="d-flex flex-column">
           <h1>Respond to RFI Number: {version.rfiNumber}</h1>
           <h3>{version.title}</h3>
-          <p className='mt-2'>
-            Please submit your response to this Request for Information by following the instructions defined
-            under the "Responses" heading in its <a href={router.routeToUrl(viewRfiRoute(rfi))}>description</a>.
-            In addition to the required documents, you can also include an (optional) cover letter
-            summarising your response and describing the attachments you will be uploading.
+          <p className="mt-2">
+            Please submit your response to this Request for Information by following the instructions defined under the "Responses" heading in its <a href={router.routeToUrl(viewRfiRoute(rfi))}>description</a>. In addition to the required documents, you can also include an (optional) cover letter summarising your response and describing the attachments you will be uploading.
           </p>
-          <p>
-            While you will not be able to edit your response after you have submitted it,
-            you can return to this page to upload additional attachments as needed before the RFI closes.
-          </p>
+          <p>While you will not be able to edit your response after you have submitted it, you can return to this page to upload additional attachments as needed before the RFI closes.</p>
         </Col>
       </Row>
       <Attachments attachments={attachments} dispatch={dispatch} />
-      {!atLeastOneAttachmentAdded(attachments)
-        ? (<Row><Col xs='12'>Please add at least one attachment.</Col></Row>)
-        : null}
+      {!atLeastOneAttachmentAdded(attachments) ? (
+        <Row>
+          <Col xs="12">Please add at least one attachment.</Col>
+        </Row>
+      ) : null}
     </div>
   );
 };
@@ -366,7 +374,9 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     return makePageMetadata(`Respond — ${state.init.tag === 'valid' ? state.init.value.rfi.latestVersion.rfiNumber : 'RFI'}`);
   },
   getBreadcrumbs(state) {
-    if (state.init.tag === 'invalid') { return []; }
+    if (state.init.tag === 'invalid') {
+      return [];
+    }
     return [
       {
         text: 'RFIs',
@@ -390,7 +400,9 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     ];
   },
   getModal(state) {
-    if (!state.promptSubmitConfirmation) { return null; }
+    if (!state.promptSubmitConfirmation) {
+      return null;
+    }
     return {
       title: 'Submit Response to RFI?',
       body: 'You will not be able to edit your response once it has been submitted. However, you can return to this page to upload additional attachments as needed before the RFI closes.',

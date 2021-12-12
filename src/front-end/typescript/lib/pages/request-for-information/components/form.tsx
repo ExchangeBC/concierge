@@ -17,33 +17,29 @@ export type TabId = 'details' | 'discoveryDay' | 'responses';
 export function tabIdToName(id: TabId): string {
   switch (id) {
     case 'details':
-      return DetailsForm.TAB_NAME
+      return DetailsForm.TAB_NAME;
     case 'discoveryDay':
-      return DiscoveryDayForm.TAB_NAME
+      return DiscoveryDayForm.TAB_NAME;
     case 'responses':
       return Responses.TAB_NAME;
   }
 }
 
 export interface Params {
-  formType: 'create' | 'edit',
+  formType: 'create' | 'edit';
   existingRfi?: PublicRfi;
   activeTab?: TabId;
   rfiResponses?: PublicRfiResponse[];
 }
 
-export type Msg
-  = ADT<'setActiveTab', TabId>
-  | ADT<'details', DetailsForm.Msg>
-  | ADT<'discoveryDay', DiscoveryDayForm.Msg>
-  | ADT<'responses', Responses.Msg>;
+export type Msg = ADT<'setActiveTab', TabId> | ADT<'details', DetailsForm.Msg> | ADT<'discoveryDay', DiscoveryDayForm.Msg> | ADT<'responses', Responses.Msg>;
 
 export interface State {
   activeTab: TabId;
   details: Immutable<DetailsForm.State>;
   discoveryDay: Immutable<DiscoveryDayForm.State>;
   responses?: Immutable<Responses.State>;
-};
+}
 
 export interface Values extends Omit<RfiResource.CreateRequestBody, 'attachments'> {
   attachments: FileMulti.Value[];
@@ -69,23 +65,28 @@ export const init: Init<Params, State> = async ({ formType, existingRfi, activeT
   activeTab = !showResponses && activeTab === 'responses' ? 'details' : activeTab;
   return {
     activeTab: activeTab || 'details',
-    details: immutable(await DetailsForm.init({
-      isEditing,
-      existingRfi
-    })),
-    discoveryDay: immutable(await DiscoveryDayForm.init({
-      showToggle: isCreateForm || !existingDiscoveryDay,
-      existingDiscoveryDay,
-      discoveryDayResponses: isEditForm
-        ? existingRfi && existingDiscoveryDay && existingRfi.discoveryDayResponses
+    details: immutable(
+      await DetailsForm.init({
+        isEditing,
+        existingRfi
+      })
+    ),
+    discoveryDay: immutable(
+      await DiscoveryDayForm.init({
+        showToggle: isCreateForm || !existingDiscoveryDay,
+        existingDiscoveryDay,
+        discoveryDayResponses: isEditForm ? existingRfi && existingDiscoveryDay && existingRfi.discoveryDayResponses : undefined
+      })
+    ),
+    responses:
+      showResponses && existingRfi && rfiResponses
+        ? immutable(
+            await Responses.init({
+              rfi: existingRfi,
+              responses: rfiResponses
+            })
+          )
         : undefined
-    })),
-    responses: showResponses && existingRfi && rfiResponses
-      ? immutable(await Responses.init({
-          rfi: existingRfi,
-          responses: rfiResponses
-        }))
-      : undefined
   };
 };
 
@@ -96,7 +97,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'details':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'details', value }),
+        mapChildMsg: (value) => ({ tag: 'details', value }),
         childStatePath: ['details'],
         childUpdate: DetailsForm.update,
         childMsg: msg.value
@@ -104,7 +105,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'discoveryDay':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'discoveryDay', value }),
+        mapChildMsg: (value) => ({ tag: 'discoveryDay', value }),
         childStatePath: ['discoveryDay'],
         childUpdate: DiscoveryDayForm.update,
         childMsg: msg.value
@@ -112,7 +113,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'responses':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'responses', value }),
+        mapChildMsg: (value) => ({ tag: 'responses', value }),
         childStatePath: ['responses'],
         childUpdate: Responses.update,
         childMsg: msg.value
@@ -121,9 +122,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 export function setErrors(state: Immutable<State>, errors: RfiResource.CreateValidationErrors): Immutable<State> {
-  return state
-    .set('details', DetailsForm.setErrors(state.details, errors))
-    .set('discoveryDay', DiscoveryDayForm.setErrors(state.discoveryDay, errors.discoveryDay || {}));
+  return state.set('details', DetailsForm.setErrors(state.details, errors)).set('discoveryDay', DiscoveryDayForm.setErrors(state.discoveryDay, errors.discoveryDay || {}));
 }
 
 export function isValid(state: State): boolean {
@@ -153,32 +152,32 @@ const TabLink: View<TabLinkProps> = ({ id, state, dispatch }) => {
   );
 };
 
-export const view: ComponentView<State, Msg> = props => {
+export const view: ComponentView<State, Msg> = (props) => {
   const { state, dispatch } = props;
-  const dispatchDetails: Dispatch<DetailsForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'details' as const, value }));
-  const dispatchDiscoveryDay: Dispatch<DiscoveryDayForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'discoveryDay' as const, value }));
-  const dispatchResponses: Dispatch<Responses.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'responses' as const, value }));
+  const dispatchDetails: Dispatch<DetailsForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'details' as const, value }));
+  const dispatchDiscoveryDay: Dispatch<DiscoveryDayForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'discoveryDay' as const, value }));
+  const dispatchResponses: Dispatch<Responses.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'responses' as const, value }));
   return (
     <div>
-      <div className='d-flex mb-5' style={{ overflowX: 'auto' }}>
-        <Nav className='flex-grow-1 flex-nowrap' tabs>
-          <TabLink id='details' {...props} />
-          <TabLink id='discoveryDay' {...props} />
-          {state.responses ? (<TabLink id='responses' {...props} />) : null}
+      <div className="d-flex mb-5" style={{ overflowX: 'auto' }}>
+        <Nav className="flex-grow-1 flex-nowrap" tabs>
+          <TabLink id="details" {...props} />
+          <TabLink id="discoveryDay" {...props} />
+          {state.responses ? <TabLink id="responses" {...props} /> : null}
         </Nav>
       </div>
       <TabContent activeTab={state.activeTab}>
-        <TabPane tabId='details'>
+        <TabPane tabId="details">
           <DetailsForm.view state={state.details} dispatch={dispatchDetails} />
         </TabPane>
-        <TabPane tabId='discoveryDay'>
+        <TabPane tabId="discoveryDay">
           <DiscoveryDayForm.view state={state.discoveryDay} dispatch={dispatchDiscoveryDay} />
         </TabPane>
-        {state.responses
-          ? (<TabPane tabId='responses'>
-              <Responses.view state={state.responses} dispatch={dispatchResponses} />
-            </TabPane>)
-          : null}
+        {state.responses ? (
+          <TabPane tabId="responses">
+            <Responses.view state={state.responses} dispatch={dispatchResponses} />
+          </TabPane>
+        ) : null}
       </TabContent>
     </div>
   );

@@ -5,9 +5,8 @@ import { set } from 'lodash';
 
 const element = document.getElementById('main') || document.body;
 const debug = NODE_ENV === 'development';
-start(app, element, debug)
-  .then(stateManager => {
-    if (debug) {
-      set(window, 'stateManager', stateManager);
-    }
-  });
+start(app, element, debug).then((stateManager) => {
+  if (debug) {
+    set(window, 'stateManager', stateManager);
+  }
+});

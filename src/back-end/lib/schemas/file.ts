@@ -59,7 +59,9 @@ export const schema: mongoose.Schema = new mongoose.Schema({
 
 export function hashFile(originalName: string, filePath: string, authLevel: AuthLevel<UserType>, createdBy: mongoose.Types.ObjectId, now?: Date): Promise<string> {
   return new Promise((resolve, reject) => {
-    if (!existsSync(filePath)) { return reject(new Error('file does not exist')); }
+    if (!existsSync(filePath)) {
+      return reject(new Error('file does not exist'));
+    }
     const hash = shajs('sha1');
     hash.update(originalName);
     hash.update(JSON.stringify(authLevel));
@@ -68,9 +70,9 @@ export function hashFile(originalName: string, filePath: string, authLevel: Auth
       hash.update(now.valueOf().toString());
     }
     const stream = createReadStream(filePath);
-    stream.on('data', data => hash.update(data));
+    stream.on('data', (data) => hash.update(data));
     stream.on('end', () => resolve(hash.digest('base64')));
-    stream.on('error', err => reject(err));
+    stream.on('error', (err) => reject(err));
   });
 }
 
@@ -84,11 +86,7 @@ export async function findFileByIdOrAlias(FileModel: Model, idOrAlias: string): 
   if (validatedId.tag === 'valid') {
     file = await FileModel.findById(validatedId.value);
   } else {
-    const result = await FileModel
-      .find({ alias: idOrAlias })
-      .sort({ createdAt: 'descending' })
-      .limit(1)
-      .exec();
+    const result = await FileModel.find({ alias: idOrAlias }).sort({ createdAt: 'descending' }).limit(1).exec();
     if (result.length) {
       file = result[0];
     }

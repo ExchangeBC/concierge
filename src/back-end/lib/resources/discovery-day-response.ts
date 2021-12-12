@@ -30,7 +30,9 @@ type ReadManyResponseBody = JsonResponseBody<PaginatedList<PublicDiscoveryDayRes
 async function findDiscoveryDayResponse(UserModel: UserSchema.Model, rfi: RfiSchema.Data, vendor: mongoose.Types.ObjectId | string): Promise<RfiSchema.DiscoveryDayResponse | null> {
   const responses = await RfiSchema.getDiscoveryDayResponses(UserModel, rfi);
   for await (const ddr of responses) {
-    if (ddr.vendor.toString() === vendor.toString()) { return ddr; }
+    if (ddr.vendor.toString() === vendor.toString()) {
+      return ddr;
+    }
   }
   return null;
 }
@@ -40,7 +42,6 @@ type RequiredModels = 'Rfi' | 'User';
 export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, UpdateRequestBody, Session>;
 
 export const resource: Resource = {
-
   routeNamespace: 'discoveryDayResponses',
 
   create(Models) {
@@ -59,7 +60,7 @@ export const resource: Resource = {
         if (!(await permissions.createDiscoveryDayResponse(UserModel, request.session, request.body.vendorId))) {
           return respond(401, {
             permissions: [permissions.ERROR_MESSAGE]
-          })
+          });
         }
         // Validate the RFI ID and session user ID.
         const validatedRfi = await validateRfiId(RfiModel, request.body.rfiId, [RfiStatus.Open, RfiStatus.Closed], true);
@@ -129,7 +130,7 @@ export const resource: Resource = {
             attendees: ddr.attendees
           });
         }
-        const publicDdr = await RfiSchema.makePublicDiscoveryDayResponse(UserModel, ddr)
+        const publicDdr = await RfiSchema.makePublicDiscoveryDayResponse(UserModel, ddr);
         return respond(201, publicDdr);
       }
     };
@@ -158,12 +159,16 @@ export const resource: Resource = {
         }
         const rfi = validatedRfi.value;
         const publicDdrs = await RfiSchema.getPublicDiscoveryDayResponses(UserModel, rfi);
-        return basicResponse(200, request.session, makeJsonResponseBody({
-          total: publicDdrs.length,
-          count: publicDdrs.length,
-          offset: 0,
-          items: publicDdrs
-        }));
+        return basicResponse(
+          200,
+          request.session,
+          makeJsonResponseBody({
+            total: publicDdrs.length,
+            count: publicDdrs.length,
+            offset: 0,
+            items: publicDdrs
+          })
+        );
       }
     };
   },
@@ -223,7 +228,7 @@ export const resource: Resource = {
         if (validatedVendor.tag === 'invalid' || !(await permissions.updateDiscoveryDayResponse(UserModel, request.session, validatedVendor.value._id))) {
           return respond(401, {
             permissions: [permissions.ERROR_MESSAGE]
-          })
+          });
         }
         const vendor = validatedVendor.value;
         // Get the RFI.
@@ -255,7 +260,7 @@ export const resource: Resource = {
           });
         }
         let updatedDdr: RfiSchema.DiscoveryDayResponse | undefined;
-        rfi.discoveryDayResponses = rfi.discoveryDayResponses.map(ddr => {
+        rfi.discoveryDayResponses = rfi.discoveryDayResponses.map((ddr) => {
           if (ddr.vendor.toString() !== vendor._id.toString()) {
             return ddr;
           } else {
@@ -268,9 +273,13 @@ export const resource: Resource = {
           }
         });
         if (!existingDdr || !updatedDdr) {
-          return basicResponse(404, request.session, makeJsonResponseBody({
-            permissions: ['You have not responded to this Discovery Day Session.']
-          }));
+          return basicResponse(
+            404,
+            request.session,
+            makeJsonResponseBody({
+              permissions: ['You have not responded to this Discovery Day Session.']
+            })
+          );
         }
         await rfi.save();
         const existingAttendees = existingDdr.attendees;
@@ -310,7 +319,7 @@ export const resource: Resource = {
           mailer.createDdrToAttendees({ rfi, vendor, attendees: attendeeDiff.created });
           mailer.updateDdrToAttendees({ rfi, vendor, attendees: attendeeDiff.updated });
         }
-        const publicDdr = await RfiSchema.makePublicDiscoveryDayResponse(UserModel, updatedDdr)
+        const publicDdr = await RfiSchema.makePublicDiscoveryDayResponse(UserModel, updatedDdr);
         return respond(200, publicDdr);
       }
     };
@@ -350,7 +359,7 @@ export const resource: Resource = {
         }
         let deletedDdr: RfiSchema.DiscoveryDayResponse | undefined;
         const oldResponses = rfi.discoveryDayResponses;
-        rfi.discoveryDayResponses = oldResponses.filter(ddr => {
+        rfi.discoveryDayResponses = oldResponses.filter((ddr) => {
           if (ddr.vendor.toString() === vendor._id.toString()) {
             deletedDdr = ddr;
             return false;
@@ -398,7 +407,6 @@ export const resource: Resource = {
       }
     };
   }
-
-}
+};
 
 export default resource;

@@ -92,7 +92,7 @@ export async function updateUser(UserModel: UserSchema.Model, session: Session, 
   if (isOwnAccount(session, updateeId)) {
     return true;
   } else {
-    return (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
+    return await isProgramStaffAndHasAcceptedTerms(UserModel, session);
   }
 }
 
@@ -123,8 +123,7 @@ export function createForgotPasswordToken(session: Session): boolean {
 // Files.
 
 export async function createFile(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session))
-      || (await isVendorAndHasAcceptedTerms(UserModel, session));
+  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session)) || (await isVendorAndHasAcceptedTerms(UserModel, session));
 }
 
 export function readOneFile(session: Session, fileAuthLevel: AuthLevel<UserType>, createdBy?: string): boolean {
@@ -140,7 +139,7 @@ export function readOneFileBlob(session: Session, fileAuthLevel: AuthLevel<UserT
 // RFIs.
 
 export async function createRfi(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
+  return await isProgramStaffAndHasAcceptedTerms(UserModel, session);
 }
 
 export function readOneRfi(): boolean {
@@ -152,7 +151,7 @@ export function readManyRfis(): boolean {
 }
 
 export async function updateRfi(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
+  return await isProgramStaffAndHasAcceptedTerms(UserModel, session);
 }
 
 // Discovery Day Responses.
@@ -162,7 +161,7 @@ export async function createDiscoveryDayResponse(UserModel: UserSchema.Model, se
 }
 
 export async function readManyDiscoveryDayResponses(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
+  return await isProgramStaffAndHasAcceptedTerms(UserModel, session);
 }
 
 export async function readOneDiscoveryDayResponse(UserModel: UserSchema.Model, session: Session, vendorId: string): Promise<boolean> {
@@ -184,34 +183,29 @@ export function createRfiResponse(session: Session): boolean {
 }
 
 export async function readManyRfiResponses(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
+  return await isProgramStaffAndHasAcceptedTerms(UserModel, session);
 }
 
 // Vendor Ideas.
 
 export async function createVendorIdea(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  return (await isVendorAndHasAcceptedTerms(UserModel, session));
+  return await isVendorAndHasAcceptedTerms(UserModel, session);
 }
 
 export async function readOneVendorIdea(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session))
-      || (await isVendorAndHasAcceptedTerms(UserModel, session))
-      || (await isVerifiedBuyerAndHasAcceptedTerms(UserModel, session));
+  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session)) || (await isVendorAndHasAcceptedTerms(UserModel, session)) || (await isVerifiedBuyerAndHasAcceptedTerms(UserModel, session));
 }
 
 export async function readManyVendorIdeas(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  return isProgramStaff(session)
-      || isVendor(session)
-      || (await isVerifiedBuyerAndHasAcceptedTerms(UserModel, session));
+  return isProgramStaff(session) || isVendor(session) || (await isVerifiedBuyerAndHasAcceptedTerms(UserModel, session));
 }
 
 export async function updateVendorIdea(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session))
-      || (await isVendorAndHasAcceptedTerms(UserModel, session));
+  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session)) || (await isVendorAndHasAcceptedTerms(UserModel, session));
 }
 
 // Vendor Idea Log Items.
 
 export async function createVendorIdeaLogItem(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session));
+  return await isProgramStaffAndHasAcceptedTerms(UserModel, session);
 }

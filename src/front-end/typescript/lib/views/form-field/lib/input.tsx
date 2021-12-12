@@ -27,7 +27,6 @@ export interface Props {
 }
 
 export class View extends React.Component<Props> {
-
   private ref: HTMLInputElement | null;
   private selectionStart: number | null;
   private selectionEnd: number | null;
@@ -48,19 +47,7 @@ export class View extends React.Component<Props> {
   }
 
   public render() {
-    const {
-      id,
-      value = '',
-      placeholder = '',
-      className = '',
-      disabled = false,
-      autoFocus = false,
-      min = '',
-      max = '',
-      onChange,
-      onChangeDebounced,
-      onKeyUp
-    } = this.props;
+    const { id, value = '', placeholder = '', className = '', disabled = false, autoFocus = false, min = '', max = '', onChange, onChangeDebounced, onKeyUp } = this.props;
     // Override the input type to text for emails to support selectionStart selection state.
     const inputType = this.props.type === 'email' ? 'text' : this.props.type;
     // Manage this.onChangeDebounced.
@@ -100,12 +87,15 @@ export class View extends React.Component<Props> {
         className={className}
         onChange={this.onChange.bind(this, onChange)}
         onKeyUp={onKeyUp}
-        ref={ref => { this.ref = ref; }} />
+        ref={(ref) => {
+          this.ref = ref;
+        }}
+      />
     );
   }
 
   public shouldComponentUpdate(nextProps: Props) {
-    const shouldUpdate = this.value !== (nextProps.value || '') || this.className !== (nextProps.className || '') || (this.disabled !== !!nextProps.disabled);
+    const shouldUpdate = this.value !== (nextProps.value || '') || this.className !== (nextProps.className || '') || this.disabled !== !!nextProps.disabled;
     return shouldUpdate;
   }
 
@@ -119,6 +109,8 @@ export class View extends React.Component<Props> {
     this.selectionStart = event.target.selectionStart;
     this.selectionEnd = event.target.selectionEnd;
     onChange(event);
-    if (this.onChangeDebounced) { this.onChangeDebounced(); }
+    if (this.onChangeDebounced) {
+      this.onChangeDebounced();
+    }
   }
 }

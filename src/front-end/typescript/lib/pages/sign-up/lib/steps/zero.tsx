@@ -10,9 +10,7 @@ export interface State {
   accountInformation: Immutable<AccountInformation.State>;
 }
 
-export type InnerMsg
-  = ADT<'noop'>
-  | ADT<'accountInformation', AccountInformation.Msg>;
+export type InnerMsg = ADT<'noop'> | ADT<'accountInformation', AccountInformation.Msg>;
 
 export type Msg = StepMsg<InnerMsg>;
 
@@ -29,7 +27,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'accountInformation':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'accountInformation' as const, value }),
+        mapChildMsg: (value) => ({ tag: 'accountInformation' as const, value }),
         childStatePath: ['accountInformation'],
         childUpdate: AccountInformation.update,
         childMsg: msg.value
@@ -48,10 +46,10 @@ function view(params: MakeComponentParams): ComponentView<State, Msg> {
     title: `Create a ${userTypeToTitleCase(params.userType)} Account`,
     stepIndicator: params.stepIndicator,
     view({ state, dispatch }) {
-      const dispatchAccountInformation: Dispatch<AccountInformation.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'accountInformation' as const, value }));
+      const dispatchAccountInformation: Dispatch<AccountInformation.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'accountInformation' as const, value }));
       return (
         <Row>
-          <Col xs='12' md='4'>
+          <Col xs="12" md="4">
             <AccountInformation.view state={state.accountInformation} dispatch={dispatchAccountInformation} />
           </Col>
         </Row>
@@ -62,8 +60,8 @@ function view(params: MakeComponentParams): ComponentView<State, Msg> {
 
 export interface MakeComponentParams {
   userType: UserType;
-  stepIndicator: string
-  backLabel?: string
+  stepIndicator: string;
+  backLabel?: string;
 }
 
 export function makeComponent(params: MakeComponentParams): StepComponent<Params, State, InnerMsg> {

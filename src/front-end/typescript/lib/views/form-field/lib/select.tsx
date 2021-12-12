@@ -15,9 +15,7 @@ export interface OptionGroup<Value = string> {
   options: Array<Option<Value>>;
 }
 
-export type Options
-  = ADT<'options', Option[]>
-  | ADT<'optionGroups', OptionGroup[]>;
+export type Options = ADT<'options', Option[]> | ADT<'optionGroups', OptionGroup[]>;
 
 export type Value = Option | undefined | null;
 
@@ -34,7 +32,7 @@ export interface Props {
   onChange: OnChange<Value>;
 }
 
-export const view: View<Props> = props => {
+export const view: View<Props> = (props) => {
   const { options, formatGroupLabel, disabled = false, className = '', onChange } = props;
   const selectProps: SelectProps<Value> = {
     ...props,
@@ -95,7 +93,7 @@ export const view: View<Props> = props => {
       }
     }
   };
-  return (<Select {...selectProps} />);
+  return <Select {...selectProps} />;
 };
 
 export default view;

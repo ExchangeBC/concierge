@@ -22,19 +22,7 @@ export interface RouteParams {
   rfiId: string;
 }
 
-export type InnerMsg
-  = ADT<'attendees', Attendees.Msg>
-  | ADT<'startEditing'>
-  | ADT<'cancelEditing'>
-  | ADT<'cancelCreating'>
-  | ADT<'cancelRegistration'>
-  | ADT<'hideCancelRegistrationPrompt'>
-  | ADT<'hideSubmitCreatePrompt'>
-  | ADT<'hideSubmitEditPrompt'>
-  | ADT<'hideCancelCreatePrompt'>
-  | ADT<'hideCancelEditPrompt'>
-  | ADT<'submitCreate'>
-  | ADT<'submitEdit'>;
+export type InnerMsg = ADT<'attendees', Attendees.Msg> | ADT<'startEditing'> | ADT<'cancelEditing'> | ADT<'cancelCreating'> | ADT<'cancelRegistration'> | ADT<'hideCancelRegistrationPrompt'> | ADT<'hideSubmitCreatePrompt'> | ADT<'hideSubmitEditPrompt'> | ADT<'hideCancelCreatePrompt'> | ADT<'hideCancelEditPrompt'> | ADT<'submitCreate'> | ADT<'submitEdit'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -64,31 +52,37 @@ interface ValidState {
   // cancelled their registration successfully.
   ddr: DdrResource.PublicDiscoveryDayResponse | null;
   attendees: Immutable<Attendees.State>;
-};
+}
 
 type InvalidState = null;
 
 export type State = ValidOrInvalid<Immutable<ValidState>, InvalidState>;
 
 async function resetAttendees(discoveryDay: PublicDiscoveryDay, vendor: PublicUser, ddr: DdrResource.PublicDiscoveryDayResponse | null): Promise<Immutable<Attendees.State>> {
-  return immutable(await Attendees.init({
-    occurringAt: discoveryDay.occurringAt,
-    groups: [{
-      attendees: ddr
-        ? ddr.attendees
-        : [{
-            name: vendor.profile.type === UserType.Vendor
-              ? vendor.profile.contactName
-              : '',
-            email: vendor.email,
-            remote: false
-          }]
-    }]
-  }));
+  return immutable(
+    await Attendees.init({
+      occurringAt: discoveryDay.occurringAt,
+      groups: [
+        {
+          attendees: ddr
+            ? ddr.attendees
+            : [
+                {
+                  name: vendor.profile.type === UserType.Vendor ? vendor.profile.contactName : '',
+                  email: vendor.email,
+                  remote: false
+                }
+              ]
+        }
+      ]
+    })
+  );
 }
 
 async function resetState(state: Immutable<State>, ddr: DdrResource.PublicDiscoveryDayResponse | null): Promise<Immutable<State>> {
-  if (state.tag === 'invalid') { return state; }
+  if (state.tag === 'invalid') {
+    return state;
+  }
   return state
     .setIn(['value', 'isEditing'], !ddr)
     .setIn(['value', 'ddr'], ddr)
@@ -96,7 +90,6 @@ async function resetState(state: Immutable<State>, ddr: DdrResource.PublicDiscov
 }
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
-
   userTypes: [UserType.Vendor],
 
   async success({ routeParams, shared, dispatch }) {
@@ -131,54 +124,67 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
       return fail(termsAndConditionsRoute);
     }
     const rfiResult = await api.readOneRfi(rfiId);
-    if (rfiResult.tag === 'invalid') { return fail(notFoundRoute); }
+    if (rfiResult.tag === 'invalid') {
+      return fail(notFoundRoute);
+    }
     const rfi = rfiResult.value;
     const rfiStatus = rfiToRfiStatus(rfi);
-    if (rfiStatus !== RfiStatus.Open) { return fail(notFoundRoute); }
-    if (!rfi.latestVersion.discoveryDay) { return fail(notFoundRoute); }
+    if (rfiStatus !== RfiStatus.Open) {
+      return fail(notFoundRoute);
+    }
+    if (!rfi.latestVersion.discoveryDay) {
+      return fail(notFoundRoute);
+    }
     const discoveryDay = rfi.latestVersion.discoveryDay;
-    if (discoveryDayHasPassed(discoveryDay.occurringAt)) { return fail(notFoundRoute); }
+    if (discoveryDayHasPassed(discoveryDay.occurringAt)) {
+      return fail(notFoundRoute);
+    }
     const ddrResult = await api.readOneDdr(sessionUser.id, rfi._id);
     const ddr = ddrResult.tag === 'valid' ? ddrResult.value : null;
-    return valid(immutable({
-      isEditing: !ddr,
-      submitLoading: 0,
-      cancelRegistrationLoading: 0,
-      promptCancelRegistration: false,
-      promptSubmitCreate: false,
-      promptSubmitEdit: false,
-      promptCancelCreate: false,
-      promptCancelEdit: false,
-      vendor: userResult.value,
-      rfi,
-      discoveryDay,
-      ddr,
-      attendees: await resetAttendees(discoveryDay, userResult.value, ddr)
-    }));
+    return valid(
+      immutable({
+        isEditing: !ddr,
+        submitLoading: 0,
+        cancelRegistrationLoading: 0,
+        promptCancelRegistration: false,
+        promptSubmitCreate: false,
+        promptSubmitEdit: false,
+        promptCancelCreate: false,
+        promptCancelEdit: false,
+        vendor: userResult.value,
+        rfi,
+        discoveryDay,
+        ddr,
+        attendees: await resetAttendees(discoveryDay, userResult.value, ddr)
+      })
+    );
   },
 
   async fail({ routeParams, dispatch, shared }) {
     if (shared.session && shared.session.user) {
-      dispatch(newRoute({
-        tag: 'requestForInformationView',
-        value: {
-          rfiId: routeParams.rfiId
-        }
-      }));
+      dispatch(
+        newRoute({
+          tag: 'requestForInformationView',
+          value: {
+            rfiId: routeParams.rfiId
+          }
+        })
+      );
     } else {
-      dispatch(newRoute({
-        tag: 'signIn',
-        value: {
-          redirectOnSuccess: router.routeToUrl({
-            tag: 'requestForInformationAttendDiscoveryDay',
-            value: routeParams
-          })
-        }
-      }));
+      dispatch(
+        newRoute({
+          tag: 'signIn',
+          value: {
+            redirectOnSuccess: router.routeToUrl({
+              tag: 'requestForInformationAttendDiscoveryDay',
+              value: routeParams
+            })
+          }
+        })
+      );
     }
     return invalid(null);
   }
-
 });
 
 const startSubmitLoading: UpdateState<ValidState> = makeStartLoading('submitLoading');
@@ -187,13 +193,14 @@ const startCancelRegistrationLoading: UpdateState<ValidState> = makeStartLoading
 const stopCancelRegistrationLoading: UpdateState<ValidState> = makeStopLoading('cancelRegistrationLoading');
 
 const update: Update<State, Msg> = ({ state, msg }) => {
-  if (state.tag === 'invalid') { return [state]; }
+  if (state.tag === 'invalid') {
+    return [state];
+  }
   switch (msg.tag) {
-
     case 'attendees':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'attendees', value }),
+        mapChildMsg: (value) => ({ tag: 'attendees', value }),
         childStatePath: ['value', 'attendees'],
         childUpdate: Attendees.update,
         childMsg: msg.value
@@ -210,8 +217,10 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       }
       return [
         state.setIn(['value', 'isEditing'], false),
-        async state => {
-          if (state.tag === 'invalid') { return state; }
+        async (state) => {
+          if (state.tag === 'invalid') {
+            return state;
+          }
           return await resetState(state, state.value.ddr);
         }
       ];
@@ -225,41 +234,35 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [
         state,
         async (state, dispatch) => {
-          if (state.tag === 'invalid') { return state; }
-          dispatch(newRoute({
-            tag: 'requestForInformationView',
-            value: {
-              rfiId: state.value.rfi._id
-            }
-          }));
+          if (state.tag === 'invalid') {
+            return state;
+          }
+          dispatch(
+            newRoute({
+              tag: 'requestForInformationView',
+              value: {
+                rfiId: state.value.rfi._id
+              }
+            })
+          );
           return state;
         }
       ];
 
     case 'hideCancelRegistrationPrompt':
-      return [
-        state.setIn(['value', 'promptCancelRegistration'], false)
-      ];
+      return [state.setIn(['value', 'promptCancelRegistration'], false)];
 
     case 'hideSubmitCreatePrompt':
-      return [
-        state.setIn(['value', 'promptSubmitCreate'], false)
-      ];
+      return [state.setIn(['value', 'promptSubmitCreate'], false)];
 
     case 'hideSubmitEditPrompt':
-      return [
-        state.setIn(['value', 'promptSubmitEdit'], false)
-      ];
+      return [state.setIn(['value', 'promptSubmitEdit'], false)];
 
     case 'hideCancelEditPrompt':
-      return [
-        state.setIn(['value', 'promptCancelEdit'], false)
-      ];
+      return [state.setIn(['value', 'promptCancelEdit'], false)];
 
     case 'hideCancelCreatePrompt':
-      return [
-        state.setIn(['value', 'promptCancelCreate'], false)
-      ];
+      return [state.setIn(['value', 'promptCancelCreate'], false)];
 
     case 'cancelRegistration':
       if (!state.value.promptCancelRegistration) {
@@ -269,8 +272,10 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       }
       return [
         state.set('value', startCancelRegistrationLoading(state.value)),
-        async state => {
-          if (state.tag === 'invalid') { return state; }
+        async (state) => {
+          if (state.tag === 'invalid') {
+            return state;
+          }
           state = state.set('value', stopCancelRegistrationLoading(state.value));
           const result = await api.deleteDdr(state.value.vendor._id, state.value.rfi._id);
           switch (result.tag) {
@@ -291,7 +296,9 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return [
         state.set('value', startSubmitLoading(state.value)),
         async (state, dispatch) => {
-          if (state.tag === 'invalid') { return state; }
+          if (state.tag === 'invalid') {
+            return state;
+          }
           const result = await api.createDdr({
             rfiId: state.value.rfi._id,
             vendorId: state.value.vendor._id,
@@ -299,20 +306,21 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           });
           switch (result.tag) {
             case 'valid':
-              dispatch(newRoute({
-                tag: 'notice',
-                value: {
-                  noticeId: {
-                    tag: 'ddrSubmitted',
-                    value: state.value.rfi._id
+              dispatch(
+                newRoute({
+                  tag: 'notice',
+                  value: {
+                    noticeId: {
+                      tag: 'ddrSubmitted',
+                      value: state.value.rfi._id
+                    }
                   }
-                }
-              }));
+                })
+              );
               return state;
             case 'invalid':
               state = state.set('value', stopSubmitLoading(state.value));
-              return state
-                .setIn(['value', 'attendees'], Attendees.setErrors(state.value.attendees, [result.value.attendees || []]));
+              return state.setIn(['value', 'attendees'], Attendees.setErrors(state.value.attendees, [result.value.attendees || []]));
           }
         }
       ];
@@ -325,16 +333,17 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       }
       return [
         state.set('value', startSubmitLoading(state.value)),
-        async state => {
-          if (state.tag === 'invalid') { return state; }
+        async (state) => {
+          if (state.tag === 'invalid') {
+            return state;
+          }
           state = state.set('value', stopSubmitLoading(state.value));
           const result = await api.updateDdr(state.value.vendor._id, state.value.rfi._id, state.value.attendees.groups[0].attendees);
           switch (result.tag) {
             case 'valid':
               return await resetState(state, result.value);
             case 'invalid':
-            return state
-              .setIn(['value', 'attendees'], Attendees.setErrors(state.value.attendees, [result.value.attendees || []]));
+              return state.setIn(['value', 'attendees'], Attendees.setErrors(state.value.attendees, [result.value.attendees || []]));
           }
         }
       ];
@@ -345,7 +354,9 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (state.tag === 'invalid') { return null; }
+  if (state.tag === 'invalid') {
+    return null;
+  }
   const { rfi, ddr, isEditing, submitLoading, cancelRegistrationLoading } = state.value;
   const isSubmitLoading = submitLoading > 0;
   const isCancelRegistrationLoading = cancelRegistrationLoading > 0;
@@ -360,10 +371,10 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (!ddr) {
     return (
       <FixedBar>
-        <LoadingButton color='primary' onClick={submitCreate} loading={isSubmitLoading} disabled={isDisabled} className='text-nowrap'>
+        <LoadingButton color="primary" onClick={submitCreate} loading={isSubmitLoading} disabled={isDisabled} className="text-nowrap">
           Submit Registration
         </LoadingButton>
-        <Link onClick={cancelCreating} color='secondary' className='text-nowrap mx-3'>
+        <Link onClick={cancelCreating} color="secondary" className="text-nowrap mx-3">
           Cancel
         </Link>
       </FixedBar>
@@ -372,10 +383,10 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
     if (isEditing) {
       return (
         <FixedBar>
-          <LoadingButton color='primary' onClick={submitEdit} loading={isSubmitLoading} disabled={isDisabled} className='text-nowrap'>
+          <LoadingButton color="primary" onClick={submitEdit} loading={isSubmitLoading} disabled={isDisabled} className="text-nowrap">
             Submit Changes
           </LoadingButton>
-          <Link onClick={cancelEditing} color='secondary' className='text-nowrap mx-3'>
+          <Link onClick={cancelEditing} color="secondary" className="text-nowrap mx-3">
             Cancel
           </Link>
         </FixedBar>
@@ -383,13 +394,13 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
     } else {
       return (
         <FixedBar>
-          <Link button color='primary' onClick={startEditing} disabled={isLoading} className='text-nowrap'>
+          <Link button color="primary" onClick={startEditing} disabled={isLoading} className="text-nowrap">
             Edit Registration
           </Link>
-          <LoadingButton color='danger' onClick={cancelRegistration} loading={isCancelRegistrationLoading} disabled={isLoading} className='text-nowrap mx-3'>
+          <LoadingButton color="danger" onClick={cancelRegistration} loading={isCancelRegistrationLoading} disabled={isLoading} className="text-nowrap mx-3">
             Cancel Registration
           </LoadingButton>
-          <Link route={{ tag: 'requestForInformationView', value: { rfiId: rfi._id }}} color='secondary' className='text-nowrap'>
+          <Link route={{ tag: 'requestForInformationView', value: { rfiId: rfi._id } }} color="secondary" className="text-nowrap">
             Cancel
           </Link>
         </FixedBar>
@@ -398,36 +409,38 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   }
 };
 
-const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = (props) => {
   const { state, dispatch } = props;
-  if (state.tag === 'invalid') { return null; }
+  if (state.tag === 'invalid') {
+    return null;
+  }
   const { attendees, rfi, isEditing } = state.value;
   const version = rfi.latestVersion;
-  const dispatchAttendees: Dispatch<Attendees.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'attendees' as const, value }));
+  const dispatchAttendees: Dispatch<Attendees.Msg> = mapComponentDispatch(dispatch, (value) => ({ tag: 'attendees' as const, value }));
   return (
     <div>
-      <Row className='mb-5'>
-        <Col xs='12' className='d-flex flex-column'>
+      <Row className="mb-5">
+        <Col xs="12" className="d-flex flex-column">
           <h1>Discovery Day Session Registration</h1>
-          <h3>{version.rfiNumber}: {version.title}</h3>
+          <h3>
+            {version.rfiNumber}: {version.title}
+          </h3>
         </Col>
       </Row>
       <Row>
-        <Col xs='12'>
+        <Col xs="12">
           <h2>Session Information</h2>
         </Col>
       </Row>
       <DiscoveryDayInfo discoveryDay={state.value.discoveryDay} />
-      <Row className='mt-5 pb-3'>
-        <Col xs='12' className='d-flex flex-column'>
+      <Row className="mt-5 pb-3">
+        <Col xs="12" className="d-flex flex-column">
           <h2>Attendee(s)</h2>
-          <p>
-            Please complete the following form to register one of more of your company's representatives to attend this RFI's Discovery Day session. If you are not personally attending, please clear your name and email from the list of attendees, and add the information of your colleague(s) that will be.
-          </p>
+          <p>Please complete the following form to register one of more of your company's representatives to attend this RFI's Discovery Day session. If you are not personally attending, please clear your name and email from the list of attendees, and add the information of your colleague(s) that will be.</p>
         </Col>
       </Row>
       <Row>
-        <Col xs='12'>
+        <Col xs="12">
           <Attendees.view state={attendees} dispatch={dispatchAttendees} disabled={!isEditing} />
         </Col>
       </Row>
@@ -446,7 +459,9 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     return makePageMetadata(title);
   },
   getBreadcrumbs(state) {
-    if (state.tag === 'invalid') { return []; }
+    if (state.tag === 'invalid') {
+      return [];
+    }
     return [
       {
         text: 'RFIs',
@@ -470,7 +485,9 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     ];
   },
   getModal(state) {
-    if (state.tag === 'invalid') { return null; }
+    if (state.tag === 'invalid') {
+      return null;
+    }
     if (state.value.promptCancelRegistration) {
       return {
         title: 'Cancel Discovery Day Session Registration?',
@@ -508,7 +525,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
             msg: { tag: 'hideSubmitCreatePrompt', value: undefined }
           }
         ]
-      }
+      };
     } else if (state.value.promptSubmitEdit) {
       return {
         title: 'Submit Changes to Registration?',
@@ -527,7 +544,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
             msg: { tag: 'hideSubmitEditPrompt', value: undefined }
           }
         ]
-      }
+      };
     } else if (state.value.promptCancelCreate) {
       return {
         title: 'Cancel Discovery Day Session Registration?',
@@ -546,7 +563,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
             msg: { tag: 'hideCancelCreatePrompt', value: undefined }
           }
         ]
-      }
+      };
     } else if (state.value.promptCancelEdit) {
       return {
         title: 'Cancel editing?',
@@ -565,7 +582,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
             msg: { tag: 'hideCancelEditPrompt', value: undefined }
           }
         ]
-      }
+      };
     } else {
       return null;
     }

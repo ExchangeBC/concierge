@@ -38,8 +38,8 @@ export type State = FormField.State<Value, ChildState>;
 
 export type Params = FormField.Params<Value>;
 
-type InnerChildMsg
-  = ADT<'onChangeTextArea', Snapshot>
+type InnerChildMsg =
+  | ADT<'onChangeTextArea', Snapshot>
   | ADT<'onChangeSelection', [number, number]> // [selectionStart, selectionEnd]
   | ADT<'controlUndo'>
   | ADT<'controlRedo'>
@@ -55,7 +55,7 @@ type InnerChildMsg
 
 export type Msg = FormField.Msg<InnerChildMsg>;
 
-const childInit: Init<FormField.ChildParams<Value>, ChildState> = async params => ({
+const childInit: Init<FormField.ChildParams<Value>, ChildState> = async (params) => ({
   ...params,
   currentStackEntry: null,
   undo: emptyStack(),
@@ -66,7 +66,7 @@ const childInit: Init<FormField.ChildParams<Value>, ChildState> = async params =
 });
 
 const startLoading: UpdateState<ChildState> = makeStartLoading('loading');
-const stopLoading: UpdateState<ChildState>  = makeStopLoading('loading');
+const stopLoading: UpdateState<ChildState> = makeStopLoading('loading');
 
 interface InsertParams {
   separateLine?: boolean;
@@ -87,11 +87,7 @@ function insert(state: Immutable<ChildState>, params: InsertParams): UpdateRetur
   }
   state = pushStack(state, 'undo', getStackEntry(state));
   state = resetRedoStack(state);
-  state = setSnapshot(state, [
-    `${prefix}${body}${suffix}`,
-    prefix.length,
-    prefix.length + body.length
-  ]);
+  state = setSnapshot(state, [`${prefix}${body}${suffix}`, prefix.length, prefix.length + body.length]);
   return [
     state,
     async (state, dispatch) => {
@@ -103,18 +99,11 @@ function insert(state: Immutable<ChildState>, params: InsertParams): UpdateRetur
 }
 
 function getSnapshot(state: Immutable<ChildState>): Snapshot {
-  return [
-    state.value,
-    state.selectionStart,
-    state.selectionEnd
-  ];
+  return [state.value, state.selectionStart, state.selectionEnd];
 }
 
 function setSnapshot(state: Immutable<ChildState>, snapshot: Snapshot): Immutable<ChildState> {
-  return state
-    .set('value', snapshot[0])
-    .set('selectionStart', snapshot[1])
-    .set('selectionEnd', snapshot[2]);
+  return state.set('value', snapshot[0]).set('selectionStart', snapshot[1]).set('selectionEnd', snapshot[2]);
 }
 
 function getStackEntry(state: Immutable<ChildState>): StackEntry {
@@ -122,21 +111,18 @@ function getStackEntry(state: Immutable<ChildState>): StackEntry {
 }
 
 function setStackEntry(state: Immutable<ChildState>, entry: StackEntry): Immutable<ChildState> {
-  return setSnapshot(state, entry.value)
-    .set('currentStackEntry', entry);
+  return setSnapshot(state, entry.value).set('currentStackEntry', entry);
 }
 
 function resetRedoStack(state: Immutable<ChildState>): Immutable<ChildState> {
-  return state
-    .set('redo', emptyStack())
-    .set('currentStackEntry', null);
+  return state.set('redo', emptyStack()).set('currentStackEntry', null);
 }
 
 const MAX_STACK_ENTRIES = 50;
 const STACK_BATCH_SIZE = 5;
 
 function pushStack(state: Immutable<ChildState>, k: 'undo' | 'redo', entry: StackEntry): Immutable<ChildState> {
-  return state.update(k, stack => {
+  return state.update(k, (stack) => {
     const addAsNewest = () => [entry, ...stack.slice(0, MAX_STACK_ENTRIES - 1)];
     // If stack is smaller than batch size, or are adding a batch, simply add the entry.
     if (stack.length < STACK_BATCH_SIZE || entry.tag === 'batch') {
@@ -159,12 +145,11 @@ function pushStack(state: Immutable<ChildState>, k: 'undo' | 'redo', entry: Stac
 
 function popStack(state: Immutable<ChildState>, k: 'undo' | 'redo'): [StackEntry | undefined, Immutable<ChildState>] {
   const stack = state.get(k);
-  if (!stack.length) { return [undefined, state]; }
+  if (!stack.length) {
+    return [undefined, state];
+  }
   const [entry, ...rest] = stack;
-  return [
-    entry,
-    state.set(k, rest)
-  ];
+  return [entry, state.set(k, rest)];
 }
 
 const childUpdate: Update<ChildState, FormField.ChildMsg<InnerChildMsg>> = ({ state, msg }) => {
@@ -174,14 +159,13 @@ const childUpdate: Update<ChildState, FormField.ChildMsg<InnerChildMsg>> = ({ st
       state = resetRedoStack(state);
       return [setSnapshot(state, msg.value)];
     case 'onChangeSelection':
-      return [state
-        .set('selectionStart', msg.value[0])
-        .set('selectionEnd', msg.value[1])
-      ];
+      return [state.set('selectionStart', msg.value[0]).set('selectionEnd', msg.value[1])];
     case 'controlUndo': {
       let entry;
       [entry, state] = popStack(state, 'undo');
-      if (!entry) { return [state]; }
+      if (!entry) {
+        return [state];
+      }
       state = pushStack(state, 'redo', getStackEntry(state));
       state = setStackEntry(state, entry);
       return [state];
@@ -189,42 +173,44 @@ const childUpdate: Update<ChildState, FormField.ChildMsg<InnerChildMsg>> = ({ st
     case 'controlRedo': {
       let entry;
       [entry, state] = popStack(state, 'redo');
-      if (!entry) { return [state]; }
+      if (!entry) {
+        return [state];
+      }
       state = pushStack(state, 'undo', getStackEntry(state));
       state = setStackEntry(state, entry);
       return [state];
     }
     case 'controlH1':
       return insert(state, {
-        text: selectedText => `# ${selectedText}`,
+        text: (selectedText) => `# ${selectedText}`,
         separateLine: true
       });
     case 'controlH2':
       return insert(state, {
-        text: selectedText => `## ${selectedText}`,
+        text: (selectedText) => `## ${selectedText}`,
         separateLine: true
       });
     case 'controlH3':
       return insert(state, {
-        text: selectedText => `### ${selectedText}`,
+        text: (selectedText) => `### ${selectedText}`,
         separateLine: true
       });
     case 'controlBold':
       return insert(state, {
-        text: selectedText => `**${selectedText}**`
+        text: (selectedText) => `**${selectedText}**`
       });
     case 'controlItalics':
       return insert(state, {
-        text: selectedText => `*${selectedText}*`
+        text: (selectedText) => `*${selectedText}*`
       });
     case 'controlOrderedList':
       return insert(state, {
-        text: selectedText => `1. ${selectedText}`,
+        text: (selectedText) => `1. ${selectedText}`,
         separateLine: true
       });
     case 'controlUnorderedList':
       return insert(state, {
-        text: selectedText => `- ${selectedText}`,
+        text: (selectedText) => `- ${selectedText}`,
         separateLine: true
       });
     case 'controlImage':
@@ -236,7 +222,9 @@ const childUpdate: Update<ChildState, FormField.ChildMsg<InnerChildMsg>> = ({ st
             name: msg.value.name,
             file: msg.value
           });
-          if (file.tag === 'invalid') { return state; }
+          if (file.tag === 'invalid') {
+            return state;
+          }
           const result = insert(state, {
             text: () => `![${msg.value.name}](/api/fileBlobs/${file.value._id})`
           });
@@ -252,7 +240,9 @@ const childUpdate: Update<ChildState, FormField.ChildMsg<InnerChildMsg>> = ({ st
         state,
         async () => {
           const el = document.getElementById(state.id);
-          if (el) { el.focus(); }
+          if (el) {
+            el.focus();
+          }
           return null;
         }
       ];
@@ -273,7 +263,7 @@ interface ControlIconProps {
 
 const ControlIcon: View<ControlIconProps> = ({ name, disabled, onClick, children, width = 1.25, height = 1.25, className = '' }) => {
   return (
-    <Link color='secondary' className={`${className} d-flex justify-content-center align-items-center position-relative`} disabled={disabled} onClick={onClick} style={{ cursor: 'default', lineHeight: 0, pointerEvents: disabled ? 'none' : undefined }}>
+    <Link color="secondary" className={`${className} d-flex justify-content-center align-items-center position-relative`} disabled={disabled} onClick={onClick} style={{ cursor: 'default', lineHeight: 0, pointerEvents: disabled ? 'none' : undefined }}>
       <Icon name={name} width={width} height={height} />
       {children ? children : ''}
     </Link>
@@ -281,109 +271,57 @@ const ControlIcon: View<ControlIconProps> = ({ name, disabled, onClick, children
 };
 
 const ControlSeparator: View<{}> = () => {
-  return (<div className='mr-3 border-left h-100'></div>);
+  return <div className="mr-3 border-left h-100"></div>;
 };
 
 const Controls: FormField.ChildView<Value, ChildState, InnerChildMsg> = ({ state, dispatch, disabled = false }) => {
   const isLoading = state.loading > 0;
   const isDisabled = disabled || isLoading;
   const onSelectFile = (event: ChangeEvent<HTMLInputElement>) => {
-    if (isDisabled) { return; }
+    if (isDisabled) {
+      return;
+    }
     const file = event.currentTarget.files && event.currentTarget.files[0];
     if (file) {
       dispatch({ tag: 'controlImage', value: file });
     }
   };
   return (
-    <div className='bg-light flex-grow-0 flex-shrink-0 d-flex flex-nowrap align-items-center px-3 py-2 form-control border-0'>
-      <ControlIcon
-        name='undo'
-        width={0.9}
-        height={0.9}
-        disabled={isDisabled || isStackEmpty(state.undo)}
-        className='mr-2'
-        onClick={() => dispatch({ tag: 'controlUndo', value: undefined })} />
-      <ControlIcon
-        name='redo'
-        width={0.9}
-        height={0.9}
-        disabled={isDisabled || isStackEmpty(state.redo)}
-        className='mr-3'
-        onClick={() => dispatch({ tag: 'controlRedo', value: undefined })} />
+    <div className="bg-light flex-grow-0 flex-shrink-0 d-flex flex-nowrap align-items-center px-3 py-2 form-control border-0">
+      <ControlIcon name="undo" width={0.9} height={0.9} disabled={isDisabled || isStackEmpty(state.undo)} className="mr-2" onClick={() => dispatch({ tag: 'controlUndo', value: undefined })} />
+      <ControlIcon name="redo" width={0.9} height={0.9} disabled={isDisabled || isStackEmpty(state.redo)} className="mr-3" onClick={() => dispatch({ tag: 'controlRedo', value: undefined })} />
       <ControlSeparator />
-      <ControlIcon
-        name='h1'
-        disabled={isDisabled}
-        className='mr-2'
-        onClick={() => dispatch({ tag: 'controlH1', value: undefined })} />
-      <ControlIcon
-        name='h2'
-        disabled={isDisabled}
-        className='mr-2'
-        onClick={() => dispatch({ tag: 'controlH2', value: undefined })} />
-      <ControlIcon
-        name='h3'
-        disabled={isDisabled}
-        className='mr-3'
-        onClick={() => dispatch({ tag: 'controlH3', value: undefined })} />
+      <ControlIcon name="h1" disabled={isDisabled} className="mr-2" onClick={() => dispatch({ tag: 'controlH1', value: undefined })} />
+      <ControlIcon name="h2" disabled={isDisabled} className="mr-2" onClick={() => dispatch({ tag: 'controlH2', value: undefined })} />
+      <ControlIcon name="h3" disabled={isDisabled} className="mr-3" onClick={() => dispatch({ tag: 'controlH3', value: undefined })} />
       <ControlSeparator />
-      <ControlIcon
-        name='bold'
-        disabled={isDisabled}
-        width={0.9}
-        height={0.9}
-        className='mr-2'
-        onClick={() => dispatch({ tag: 'controlBold', value: undefined })} />
-      <ControlIcon
-        name='italics'
-        width={0.9}
-        height={0.9}
-        disabled={isDisabled}
-        className='mr-3'
-        onClick={() => dispatch({ tag: 'controlItalics', value: undefined })} />
+      <ControlIcon name="bold" disabled={isDisabled} width={0.9} height={0.9} className="mr-2" onClick={() => dispatch({ tag: 'controlBold', value: undefined })} />
+      <ControlIcon name="italics" width={0.9} height={0.9} disabled={isDisabled} className="mr-3" onClick={() => dispatch({ tag: 'controlItalics', value: undefined })} />
       <ControlSeparator />
-      <ControlIcon
-        name='unordered-list'
-        width={1}
-        height={1}
-        disabled={isDisabled}
-        className='mr-2'
-        onClick={() => dispatch({ tag: 'controlUnorderedList', value: undefined })} />
-      <ControlIcon
-        name='ordered-list'
-        width={1}
-        height={1}
-        disabled={isDisabled}
-        className='mr-3'
-        onClick={() => dispatch({ tag: 'controlOrderedList', value: undefined })} />
+      <ControlIcon name="unordered-list" width={1} height={1} disabled={isDisabled} className="mr-2" onClick={() => dispatch({ tag: 'controlUnorderedList', value: undefined })} />
+      <ControlIcon name="ordered-list" width={1} height={1} disabled={isDisabled} className="mr-3" onClick={() => dispatch({ tag: 'controlOrderedList', value: undefined })} />
       <ControlSeparator />
-      <ControlIcon name='image' disabled={isDisabled} width={1.1} height={1.1}>
-        <input
-          type='file'
-          className='position-absolute w-100 h-100'
-          style={{ top: '0px', left: '0px', opacity: 0 }}
-          value=''
-          onChange={onSelectFile} />
+      <ControlIcon name="image" disabled={isDisabled} width={1.1} height={1.1}>
+        <input type="file" className="position-absolute w-100 h-100" style={{ top: '0px', left: '0px', opacity: 0 }} value="" onChange={onSelectFile} />
       </ControlIcon>
-      <div className='ml-auto d-flex flex-nowrap align-items-center'>
-        <Spinner
-          size='xs'
-          color='secondary'
-          className={`o-50 ${isLoading ? '' : 'd-none'}`} />
-        <Link newTab href={MARKDOWN_HELP_URL} color='primary' className='d-flex justify-content-center align-items-center ml-2' style={{ lineHeight: 0 }}>
-          <Icon name='markdown' />
+      <div className="ml-auto d-flex flex-nowrap align-items-center">
+        <Spinner size="xs" color="secondary" className={`o-50 ${isLoading ? '' : 'd-none'}`} />
+        <Link newTab href={MARKDOWN_HELP_URL} color="primary" className="d-flex justify-content-center align-items-center ml-2" style={{ lineHeight: 0 }}>
+          <Icon name="markdown" />
         </Link>
       </div>
     </div>
   );
 };
 
-const ChildView: FormField.ChildView<Value, ChildState, InnerChildMsg> = props => {
+const ChildView: FormField.ChildView<Value, ChildState, InnerChildMsg> = (props) => {
   const { state, dispatch, placeholder, className = '', validityClassName, disabled = false } = props;
   const isLoading = state.loading > 0;
   const isDisabled = disabled || isLoading;
   const onChangeSelection = (target: EventTarget & HTMLTextAreaElement) => {
-    if (isDisabled) { return; }
+    if (isDisabled) {
+      return;
+    }
     const start = target.selectionStart;
     const end = target.selectionEnd;
     if (start !== state.selectionStart || end !== state.selectionEnd) {
@@ -403,25 +341,25 @@ const ChildView: FormField.ChildView<Value, ChildState, InnerChildMsg> = props =
           borderTopLeftRadius: 0,
           borderTopRightRadius: 0
         }}
-        ref={ref => {
+        ref={(ref) => {
           const start = state.selectionStart;
           const end = state.selectionEnd;
           if (ref) {
-            if (ref.selectionStart !== start) { ref.selectionStart = start; }
-            if (ref.selectionEnd !== end) { ref.selectionEnd = end; }
+            if (ref.selectionStart !== start) {
+              ref.selectionStart = start;
+            }
+            if (ref.selectionEnd !== end) {
+              ref.selectionEnd = end;
+            }
           }
         }}
-        onChange={e => {
+        onChange={(e) => {
           const value = e.currentTarget.value;
-          dispatch({ tag: 'onChangeTextArea', value: [
-            value,
-            e.currentTarget.selectionStart,
-            e.currentTarget.selectionEnd
-          ]});
+          dispatch({ tag: 'onChangeTextArea', value: [value, e.currentTarget.selectionStart, e.currentTarget.selectionEnd] });
           // Let the parent form field component know that the value has been updated.
           props.onChange(value);
         }}
-        onKeyDown={e => {
+        onKeyDown={(e) => {
           const isModifier = e.ctrlKey || e.metaKey;
           const isUndo = isModifier && !e.shiftKey && e.keyCode === 90; //Ctrl-Z or Cmd-Z
           const isRedo = isModifier && ((e.shiftKey && e.keyCode === 90) || e.keyCode === 89); //Ctrl-Shift-Z, Cmd-Shift-Z, Ctrl-Y or Cmd-Y
@@ -435,8 +373,8 @@ const ChildView: FormField.ChildView<Value, ChildState, InnerChildMsg> = props =
             run({ tag: 'controlRedo', value: undefined });
           }
         }}
-        onSelect={e => onChangeSelection(e.currentTarget)}>
-      </textarea>
+        onSelect={(e) => onChangeSelection(e.currentTarget)}
+      ></textarea>
     </div>
   );
 };

@@ -36,7 +36,7 @@ export interface UpdateChildParams<ParentState, ParentMsg, ChildState, ChildMsg>
   childStatePath: string[];
   childUpdate: Update<ChildState, ChildMsg>;
   childMsg: ChildMsg;
-  mapChildMsg(msg: ChildMsg): ParentMsg,
+  mapChildMsg(msg: ChildMsg): ParentMsg;
 }
 
 export type ViewElement<Props = any> = null | ReactElement<Props>;
@@ -65,7 +65,7 @@ export interface Component<Params, State, Msg, Props extends ComponentViewProps<
 }
 
 export function mapComponentDispatch<ParentMsg, ChildMsg>(dispatch: Dispatch<ParentMsg>, fn: (childMsg: ChildMsg) => ParentMsg): Dispatch<ChildMsg> {
-  return childMsg => {
+  return (childMsg) => {
     return dispatch(fn(childMsg));
   };
 }
@@ -74,7 +74,9 @@ export function updateComponentChild<PS, PM, CS, CM>(params: UpdateChildParams<P
   const { childStatePath, childUpdate, childMsg, mapChildMsg } = params;
   let { state } = params;
   const childState = state.getIn(childStatePath);
-  if (!childState) { return [state]; }
+  if (!childState) {
+    return [state];
+  }
   const [newChildState, newAsyncChildState] = childUpdate({
     state: childState,
     msg: childMsg
@@ -85,14 +87,13 @@ export function updateComponentChild<PS, PM, CS, CM>(params: UpdateChildParams<P
     asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<PM>) => {
       const mappedDispatch = mapComponentDispatch(dispatch, mapChildMsg);
       const newChildState = await newAsyncChildState(state.getIn(childStatePath), mappedDispatch);
-      if (!newChildState) { return null; }
+      if (!newChildState) {
+        return null;
+      }
       return state.setIn(childStatePath, newChildState);
-    }
+    };
   }
-  return [
-    state,
-    asyncStateUpdate
-  ];
+  return [state, asyncStateUpdate];
 }
 
 // Global Components.
@@ -135,11 +136,7 @@ export function replaceRoute<Route>(route: Route): ReplaceRouteMsg<Route> {
   };
 }
 
-export type GlobalMsg<Route>
-  = NewRouteMsg<Route>
-  | ReplaceRouteMsg<Route>
-  | NewUrlMsg
-  | ReplaceUrlMsg;
+export type GlobalMsg<Route> = NewRouteMsg<Route> | ReplaceRouteMsg<Route> | NewUrlMsg | ReplaceUrlMsg;
 
 export type GlobalComponentMsg<Msg, Route> = Msg | GlobalMsg<Route>;
 
@@ -153,7 +150,7 @@ export function mapGlobalComponentMsg<MsgA, MsgB, Route>(msg: GlobalComponentMsg
 }
 
 export function mapGlobalComponentDispatch<ParentMsg, ChildMsg, Route>(dispatch: Dispatch<GlobalComponentMsg<ParentMsg, Route>>, fn: (childMsg: GlobalComponentMsg<ChildMsg, Route>) => GlobalComponentMsg<ParentMsg, Route>): Dispatch<GlobalComponentMsg<ChildMsg, Route>> {
-  return childMsg => {
+  return (childMsg) => {
     const mappedMsg = mapGlobalComponentMsg(childMsg, fn);
     return dispatch(mappedMsg);
   };
@@ -163,7 +160,9 @@ export function updateGlobalComponentChild<PS, PM, CS, CM, Route>(params: Update
   const { childStatePath, childUpdate, childMsg, mapChildMsg } = params;
   let { state } = params;
   const childState = state.getIn(childStatePath);
-  if (!childState) { return [state]; }
+  if (!childState) {
+    return [state];
+  }
   const [newChildState, newAsyncChildState] = childUpdate({
     state: childState,
     msg: childMsg
@@ -174,14 +173,13 @@ export function updateGlobalComponentChild<PS, PM, CS, CM, Route>(params: Update
     asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<GlobalComponentMsg<PM, Route>>) => {
       const mappedDispatch = mapGlobalComponentDispatch(dispatch, mapChildMsg);
       const newChildState = await newAsyncChildState(state.getIn(childStatePath), mappedDispatch);
-      if (!newChildState) { return null; }
+      if (!newChildState) {
+        return null;
+      }
       return state.setIn(childStatePath, newChildState);
-    }
+    };
   }
-  return [
-    state,
-    asyncStateUpdate
-  ];
+  return [state, asyncStateUpdate];
 }
 
 // Page components.
@@ -230,7 +228,7 @@ export function emptyPageBreadcrumbs<Msg>(): PageBreadcrumbs<Msg> {
 }
 
 export function mapPageBreadcrumbsMsg<MsgA, MsgB, Route>(breadcrumbs: PageBreadcrumbs<GlobalComponentMsg<MsgA, Route>>, mapMsg: (msgA: GlobalComponentMsg<MsgA, Route>) => GlobalComponentMsg<MsgB, Route>): PageBreadcrumbs<GlobalComponentMsg<MsgB, Route>> {
-  return breadcrumbs.map(b => ({
+  return breadcrumbs.map((b) => ({
     text: b.text,
     onClickMsg: b.onClickMsg && mapGlobalComponentMsg(b.onClickMsg, mapMsg)
   }));
@@ -251,11 +249,13 @@ export interface PageModal<Msg> {
 }
 
 export function mapPageModalMsg<MsgA, MsgB, Route>(modal: PageModal<GlobalComponentMsg<MsgA, Route>> | null, mapMsg: (msgA: GlobalComponentMsg<MsgA, Route>) => GlobalComponentMsg<MsgB, Route>): PageModal<GlobalComponentMsg<MsgB, Route>> | null {
-  if (!modal) { return null; }
+  if (!modal) {
+    return null;
+  }
   return {
     ...modal,
     onCloseMsg: mapGlobalComponentMsg(modal.onCloseMsg, mapMsg),
-    actions: modal.actions.map(action => {
+    actions: modal.actions.map((action) => {
       return {
         ...action,
         msg: mapGlobalComponentMsg(action.msg, mapMsg)
@@ -321,19 +321,20 @@ export function startRouter<State, Msg, Route>(router: Router<Route>, stateManag
   });
   // Bind all routes for pushState.
   router.routes.forEach(({ path, makeRoute }) => {
-    page(path, ctx => {
+    page(path, (ctx) => {
       // Do nothing if a hash is present in the path
       // only if it isn't the initial load.
-      if (!ctx.init && ctx.hash) { return; }
+      if (!ctx.init && ctx.hash) {
+        return;
+      }
       const parsedRoute = makeRoute({
         params: get(ctx, 'params', {}),
         query: get(ctx, 'query', {})
       });
-      return stateManager
-        .dispatch({
-          tag: '@incomingRoute',
-          value: parsedRoute
-        });
+      return stateManager.dispatch({
+        tag: '@incomingRoute',
+        value: parsedRoute
+      });
     });
   });
   // Start the router.
@@ -357,7 +358,7 @@ export interface AppComponent<State, Msg, Route> extends Component<null, State, 
 }
 
 export function mapAppDispatch<ParentMsg, ChildMsg, Route>(dispatch: Dispatch<AppMsg<ParentMsg, Route>>, fn: (childMsg: GlobalComponentMsg<ChildMsg, Route>) => AppMsg<ParentMsg, Route>): Dispatch<GlobalComponentMsg<ChildMsg, Route>> {
-  return childMsg => {
+  return (childMsg) => {
     const mappedMsg = mapGlobalComponentMsg(childMsg, fn);
     return dispatch(mappedMsg);
   };
@@ -382,11 +383,13 @@ export interface InitAppChildPageParams<ParentState, ParentMsg, ChildRouteParams
  */
 
 export async function initAppChildPage<ParentState, ParentMsg, ChildRouteParams, ChildState, ChildMsg, SharedState, Route>(params: InitAppChildPageParams<ParentState, AppMsg<ParentMsg, Route>, ChildRouteParams, ChildState, GlobalComponentMsg<ChildMsg, Route>, SharedState>): Promise<Immutable<ParentState>> {
-  const childState = immutable(await params.childInit({
-    routeParams: params.childRouteParams,
-    shared: params.getSharedState(params.state),
-    dispatch: mapAppDispatch(params.dispatch, params.mapChildMsg)
-  }));
+  const childState = immutable(
+    await params.childInit({
+      routeParams: params.childRouteParams,
+      shared: params.getSharedState(params.state),
+      dispatch: mapAppDispatch(params.dispatch, params.mapChildMsg)
+    })
+  );
   setPageMetadata(params.childGetMetadata(childState));
   const childModal = params.childGetModal(childState);
   const parentModal = mapPageModalMsg(childModal, params.mapChildMsg);
@@ -403,7 +406,9 @@ export function updateAppChild<PS, PM, CS, CM, Route>(params: UpdateChildParams<
   const { childStatePath, childUpdate, childMsg, mapChildMsg } = params;
   let { state } = params;
   const childState = state.getIn(childStatePath);
-  if (!childState) { return [state]; }
+  if (!childState) {
+    return [state];
+  }
   const [newChildState, newAsyncChildState] = childUpdate({
     state: childState,
     msg: childMsg
@@ -414,14 +419,13 @@ export function updateAppChild<PS, PM, CS, CM, Route>(params: UpdateChildParams<
     asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<AppMsg<PM, Route>>) => {
       const mappedDispatch = mapAppDispatch(dispatch, mapChildMsg);
       const newChildState = await newAsyncChildState(state.getIn(childStatePath), mappedDispatch);
-      if (!newChildState) { return null; }
+      if (!newChildState) {
+        return null;
+      }
       return state.setIn(childStatePath, newChildState);
-    }
+    };
   }
-  return [
-    state,
-    asyncStateUpdate
-  ];
+  return [state, asyncStateUpdate];
 }
 
 export interface UpdateChildPageParams<PS, PM, CS, CM> extends UpdateChildParams<PS, PM, CS, CM> {
@@ -442,7 +446,7 @@ export function updateAppChildPage<PS, PM, CS, CM, Route>(params: UpdateChildPag
     const metadata = params.childGetMetadata(pageState);
     setPageMetadata(metadata);
   };
-  const setModal = (parentState: Immutable<PS>): Immutable<PS>  => {
+  const setModal = (parentState: Immutable<PS>): Immutable<PS> => {
     const pageState = parentState.getIn(params.childStatePath);
     const childModal = params.childGetModal(pageState);
     const parentModal = mapPageModalMsg(childModal, params.mapChildMsg);
@@ -454,15 +458,14 @@ export function updateAppChildPage<PS, PM, CS, CM, Route>(params: UpdateChildPag
   if (newAsyncState) {
     asyncStateUpdate = async (state: Immutable<PS>, dispatch: Dispatch<AppMsg<PM, Route>>) => {
       const newState = await newAsyncState(state, dispatch);
-      if (!newState) { return null; }
+      if (!newState) {
+        return null;
+      }
       setMetadata(newState);
       return setModal(newState);
     };
   }
-  return [
-    newStateWithModal,
-    asyncStateUpdate
-  ];
+  return [newStateWithModal, asyncStateUpdate];
 }
 
 // State Manager.
@@ -497,17 +500,17 @@ export async function start<State, Msg extends ADT<any, any>, Route>(app: AppCom
   // Set up subscription state.
   const stateSubscriptions: Array<StateSubscription<State, AppMsg<Msg, Route>>> = [];
   const msgSubscriptions: Array<MsgSubscription<AppMsg<Msg, Route>>> = [];
-  const stateSubscribe: StateSubscribe<State, AppMsg<Msg, Route>> = fn => (stateSubscriptions.push(fn) && true) || false;
-  const stateUnsubscribe: StateUnsubscribe<State, AppMsg<Msg, Route>> = fn => (remove(stateSubscriptions, a => a === fn) && true) || false;
-  const msgSubscribe: MsgSubscribe<AppMsg<Msg, Route>> = fn => (msgSubscriptions.push(fn) && true) || false;
-  const msgUnsubscribe: MsgUnsubscribe<AppMsg<Msg, Route>> = fn => (remove(msgSubscriptions, a => a === fn) && true) || false;
+  const stateSubscribe: StateSubscribe<State, AppMsg<Msg, Route>> = (fn) => (stateSubscriptions.push(fn) && true) || false;
+  const stateUnsubscribe: StateUnsubscribe<State, AppMsg<Msg, Route>> = (fn) => (remove(stateSubscriptions, (a) => a === fn) && true) || false;
+  const msgSubscribe: MsgSubscribe<AppMsg<Msg, Route>> = (fn) => (msgSubscriptions.push(fn) && true) || false;
+  const msgUnsubscribe: MsgUnsubscribe<AppMsg<Msg, Route>> = (fn) => (remove(msgSubscriptions, (a) => a === fn) && true) || false;
   // Set up state accessor function.
   const getState = () => state;
   // Initialize state mutation promise chain.
   // i.e. Mutate state sequentially in a single thread.
   let promise = Promise.resolve();
   // Set up dispatch function to queue state mutations.
-  const dispatch: Dispatch<AppMsg<Msg, Route>> = msg => {
+  const dispatch: Dispatch<AppMsg<Msg, Route>> = (msg) => {
     // Synchronous state changes should happen outside a promise chain
     // in the main thread. Otherwise real-time UI changes don't happen
     // (e.g. form input) causing a bad UX.
@@ -533,17 +536,20 @@ export async function start<State, Msg extends ADT<any, any>, Route>(app: AppCom
     // a promise chain.
     if (promiseState) {
       promise = promise
-        .then((): Promise<Immutable<State> | null> => new Promise((resolve, reject) => {
-          // We want to run async state updates after
-          // the current "tick" to ensure all
-          // sync updates are processed first.
-          setTimeout(() => {
-            promiseState(state, dispatch)
-              .then(newState => resolve(newState))
-              .catch(reject);
-          }, 0);
-        }))
-        .then(newState => {
+        .then(
+          (): Promise<Immutable<State> | null> =>
+            new Promise((resolve, reject) => {
+              // We want to run async state updates after
+              // the current "tick" to ensure all
+              // sync updates are processed first.
+              setTimeout(() => {
+                promiseState(state, dispatch)
+                  .then((newState) => resolve(newState))
+                  .catch(reject);
+              }, 0);
+            })
+        )
+        .then((newState) => {
           // Update state with its asynchronous change.
           if (newState) {
             state = newState;
@@ -555,23 +561,24 @@ export async function start<State, Msg extends ADT<any, any>, Route>(app: AppCom
   };
   // Render the view whenever state changes.
   const render = (state: Immutable<State>, dispatch: Dispatch<AppMsg<Msg, Route>>): void => {
-    ReactDom.render(
-      <app.view state={state} dispatch={dispatch} />,
-      element
-    );
+    ReactDom.render(<app.view state={state} dispatch={dispatch} />, element);
   };
   stateSubscribe(render);
   // Set up function to notify msg subscriptions.
   function notifyMsgSubscriptions(msg: AppMsg<Msg, Route>): void {
-    msgSubscriptions.forEach(fn => fn(msg));
+    msgSubscriptions.forEach((fn) => fn(msg));
     // tslint:disable:next-line no-console
-    if (debug) { console.log('msg dispatched', msg); }
+    if (debug) {
+      console.log('msg dispatched', msg);
+    }
   }
   // Set up function to notify state subscriptions.
   function notifyStateSubscriptions(): void {
-    stateSubscriptions.forEach(fn => fn(state, dispatch));
+    stateSubscriptions.forEach((fn) => fn(state, dispatch));
     // tslint:disable:next-line no-console
-    if (debug) { console.log('state updated', state.toJSON()); }
+    if (debug) {
+      console.log('state updated', state.toJSON());
+    }
   }
   // Trigger state initialization notification.
   notifyStateSubscriptions();
@@ -588,4 +595,4 @@ export async function start<State, Msg extends ADT<any, any>, Route>(app: AppCom
   startRouter(app.router, stateManager);
   // Return StateManager.
   return stateManager;
-};
+}

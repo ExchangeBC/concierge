@@ -19,7 +19,7 @@ export function accessControl<RouteParams, PageState, PageMsg>(allowed: boolean,
 }
 
 export function isSignedOut<RouteParams, PageState, PageMsg>(params: AccessControlParams<RouteParams, PageState, GlobalComponentMsg<PageMsg, Route>>): PageInit<RouteParams, SharedState, PageState, GlobalComponentMsg<PageMsg, Route>> {
-  return async initParams => {
+  return async (initParams) => {
     const { shared } = initParams;
     const allowed = !shared.session || !shared.session.user;
     return await accessControl(allowed, params)(initParams);
@@ -27,7 +27,7 @@ export function isSignedOut<RouteParams, PageState, PageMsg>(params: AccessContr
 }
 
 export function isSignedIn<RouteParams, PageState, PageMsg>(params: AccessControlParams<RouteParams, PageState, GlobalComponentMsg<PageMsg, Route>, SharedStateWithGuaranteedSessionUser>): PageInit<RouteParams, SharedState, PageState, GlobalComponentMsg<PageMsg, Route>> {
-  return async initParams => {
+  return async (initParams) => {
     const { shared } = initParams;
     if (shared.session && shared.session.user) {
       return await params.success({
@@ -48,7 +48,7 @@ interface IsUserTypeParams<RouteParams, PageState, PageMsg> extends AccessContro
 }
 
 export function isUserType<RouteParams, PageState, PageMsg>(params: IsUserTypeParams<RouteParams, PageState, GlobalComponentMsg<PageMsg, Route>>): PageInit<RouteParams, SharedState, PageState, GlobalComponentMsg<PageMsg, Route>> {
-  return async initParams => {
+  return async (initParams) => {
     const { shared } = initParams;
     if (shared.session && shared.session.user && includes(params.userTypes, shared.session.user.type)) {
       return await params.success({

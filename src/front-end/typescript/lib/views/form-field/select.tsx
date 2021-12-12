@@ -64,12 +64,12 @@ export function init(params: InitParams): State {
 }
 
 export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (value: Value) => Msg): FormField.OnChange<Value> {
-  return value => {
+  return (value) => {
     dispatch(fn(value));
   };
 }
 
-const Child: View<ChildProps> = props => {
+const Child: View<ChildProps> = (props) => {
   const { state, disabled, className, onChange, extraProps } = props;
   const selectProps: SelectProps = {
     name: state.id,
@@ -82,17 +82,9 @@ const Child: View<ChildProps> = props => {
     onChange,
     formatGroupLabel: extraProps.formatGroupLabel
   };
-  return extraProps.isCreatable ? (<SelectCreatable {...selectProps} />) : (<Select {...selectProps} />);
+  return extraProps.isCreatable ? <SelectCreatable {...selectProps} /> : <Select {...selectProps} />;
 };
 
 export const view: View<Props> = ({ state, onChange, toggleHelp, disabled, formatGroupLabel }) => {
-  return (
-    <FormField.view
-      Child={Child}
-      state={state}
-      onChange={onChange}
-      toggleHelp={toggleHelp}
-      extraProps={{ isCreatable: state.isCreatable, formatGroupLabel }}
-      disabled={disabled} />
-  );
+  return <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={{ isCreatable: state.isCreatable, formatGroupLabel }} disabled={disabled} />;
 };

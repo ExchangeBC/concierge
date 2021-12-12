@@ -34,23 +34,16 @@ export interface ValidationErrors {
 
 export function setErrors(state: Immutable<State>, errors: ValidationErrors): Immutable<State> {
   return state
-    .updateIn(['email', 'errors'], v => errors.email || v)
-    .updateIn(['password', 'errors'], v => errors.password || v)
-    .updateIn(['confirmPassword', 'errors'], v => errors.confirmPassword || v);
-
+    .updateIn(['email', 'errors'], (v) => errors.email || v)
+    .updateIn(['password', 'errors'], (v) => errors.password || v)
+    .updateIn(['confirmPassword', 'errors'], (v) => errors.confirmPassword || v);
 }
 
 export function isValid(state: Immutable<State>): boolean {
   return !!(!state.email.errors.length && !state.password.errors.length && !state.confirmPassword.errors.length && state.email.value && state.password.value && state.confirmPassword.value);
 }
 
-export type Msg
-  = ADT<'onChangeEmail', string>
-  | ADT<'onChangePassword', string>
-  | ADT<'onChangeConfirmPassword', string>
-  | ADT<'validateEmail'>
-  | ADT<'validatePassword'>
-  | ADT<'validateConfirmPassword'>;
+export type Msg = ADT<'onChangeEmail', string> | ADT<'onChangePassword', string> | ADT<'onChangeConfirmPassword', string> | ADT<'validateEmail'> | ADT<'validatePassword'> | ADT<'validateConfirmPassword'>;
 
 export type Params = null | {
   userType: UserType;
@@ -99,39 +92,29 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'validatePassword':
       return [validateField(state, 'password', validatePassword)];
     case 'validateConfirmPassword':
-      return [validateField(state, 'confirmPassword', v => validateConfirmPassword(state.password.value, v))];
+      return [validateField(state, 'confirmPassword', (v) => validateConfirmPassword(state.password.value, v))];
     default:
       return [state];
   }
 };
 
 export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const onChange = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChange = (tag: any) => ShortText.makeOnChange(dispatch, (value) => ({ tag, value }));
   return (
     <div>
       <Row>
-        <Col xs='12'>
-          <ShortText.view
-            state={state.email}
-            onChangeDebounced={() => dispatch({ tag: 'validateEmail', value: undefined })}
-            onChange={onChange('onChangeEmail')}
-            autoFocus />
+        <Col xs="12">
+          <ShortText.view state={state.email} onChangeDebounced={() => dispatch({ tag: 'validateEmail', value: undefined })} onChange={onChange('onChangeEmail')} autoFocus />
         </Col>
       </Row>
       <Row>
-        <Col xs='12'>
-          <ShortText.view
-            state={state.password}
-            onChangeDebounced={() => dispatch({ tag: 'validatePassword', value: undefined })}
-            onChange={onChange('onChangePassword')} />
+        <Col xs="12">
+          <ShortText.view state={state.password} onChangeDebounced={() => dispatch({ tag: 'validatePassword', value: undefined })} onChange={onChange('onChangePassword')} />
         </Col>
       </Row>
       <Row>
-        <Col xs='12'>
-          <ShortText.view
-            state={state.confirmPassword}
-            onChangeDebounced={() => dispatch({ tag: 'validateConfirmPassword', value: undefined })}
-            onChange={onChange('onChangeConfirmPassword')} />
+        <Col xs="12">
+          <ShortText.view state={state.confirmPassword} onChangeDebounced={() => dispatch({ tag: 'validateConfirmPassword', value: undefined })} onChange={onChange('onChangeConfirmPassword')} />
         </Col>
       </Row>
     </div>

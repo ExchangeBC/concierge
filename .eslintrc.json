@@ -1,0 +1,48 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
+  "plugins": ["@typescript-eslint"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 13,
+    "sourceType": "module"
+  },
+  "rules": {
+    "quotes": [
+      "error",
+      "single",
+      {
+        "avoidEscape": true
+      }
+    ],
+    "comment-format": "off",
+    "comma-dangle": ["error", "never"],
+    "object-literal-sort-keys": "off",
+    "arrow-parens": "off",
+    "interface-name": ["off", "always-prefix"],
+    "semicolon": "off",
+    "max-line-length": "off",
+    "object-literal-key-quotes": "off",
+    "no-shadowed-variable": "off",
+    "no-case-declarations": "off",
+    "no-ex-assign": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/indent": [
+      "error",
+      2,
+      {
+        "offsetTernaryExpressions": true,
+        "SwitchCase": 1,
+        "ignoredNodes": ["JSXElement *", "TSTypeParameterInstantiation"]
+      }
+    ]
+  }
+}

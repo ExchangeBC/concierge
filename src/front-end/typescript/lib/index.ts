@@ -3,7 +3,7 @@ import { Immutable, PageMetadata } from 'front-end/lib/framework';
 export type UpdateState<State> = (state: Immutable<State>) => Immutable<State>;
 
 export function makeStartLoading<State, Key extends keyof State>(key: Key): UpdateState<State> {
-  return state => {
+  return (state) => {
     const value = state[key];
     if (typeof value === 'number') {
       // Need to setIn to circumvent type system's lack of support
@@ -16,7 +16,7 @@ export function makeStartLoading<State, Key extends keyof State>(key: Key): Upda
 }
 
 export function makeStartLoadingIn<State>(keys: string[]): UpdateState<State> {
-  return state => {
+  return (state) => {
     const value = state.getIn(keys);
     if (typeof value === 'number') {
       // Need to setIn to circumvent type system's lack of support
@@ -29,7 +29,7 @@ export function makeStartLoadingIn<State>(keys: string[]): UpdateState<State> {
 }
 
 export function makeStopLoading<State, Key extends keyof State>(key: Key): UpdateState<State> {
-  return state => {
+  return (state) => {
     const value = state.get(key);
     if (typeof value === 'number') {
       // Need to setIn to circumvent type system's lack of support
@@ -42,7 +42,7 @@ export function makeStopLoading<State, Key extends keyof State>(key: Key): Updat
 }
 
 export function makeStopLoadingIn<State>(keys: string[]): UpdateState<State> {
-  return state => {
+  return (state) => {
     const value = state.getIn(keys);
     if (typeof value === 'number') {
       // Need to setIn to circumvent type system's lack of support

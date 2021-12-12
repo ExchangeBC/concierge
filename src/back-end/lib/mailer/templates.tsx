@@ -13,9 +13,7 @@ type StyleClasses = Record<string, CSSProperties>;
 
 type CSSProperty = keyof CSSProperties;
 
-type StyleUnit
-  = 'px'
-  | 'rem';
+type StyleUnit = 'px' | 'rem';
 
 type StyleLevel = 0 | 1 | 2 | 3 | 4 | 5;
 
@@ -23,7 +21,7 @@ const STYLE_LEVELS: StyleLevel[] = [0, 1, 2, 3, 4, 5];
 
 type StyleLevelUtilities = {
   [level in StyleLevel]: CSSProperties;
-}
+};
 
 export const styles = (() => {
   const spacer = 16;
@@ -34,15 +32,22 @@ export const styles = (() => {
   const styleScale = (property: string, n: number, unit: StyleUnit = 'px') => style(property, units(scale(n), unit));
   const level = (l: StyleLevel) => {
     switch (l) {
-      case 0: return 0;
-      case 1: return 0.25;
-      case 2: return 0.5;
-      case 3: return 1;
-      case 4: return 2;
-      case 5: return 3;
+      case 0:
+        return 0;
+      case 1:
+        return 0.25;
+      case 2:
+        return 0.5;
+      case 3:
+        return 1;
+      case 4:
+        return 2;
+      case 5:
+        return 3;
     }
   };
-  const levelUtilties = (name: string, property: CSSProperty): StyleLevelUtilities => {
+
+  const levelUtilities = (property: CSSProperty): StyleLevelUtilities => {
     return STYLE_LEVELS.reduce((acc, l) => {
       acc[l] = styleScale(property, level(l));
       return acc;
@@ -59,16 +64,16 @@ export const styles = (() => {
     }
   };
   const utilities: StyleUtilities = {
-    p: levelUtilties('p', 'padding'),
-    pt: levelUtilties('pt', 'paddingTop'),
-    pr: levelUtilties('pr', 'paddingRight'),
-    pb: levelUtilties('pb', 'paddingBottom'),
-    pl: levelUtilties('pl', 'paddingLeft'),
-    m: levelUtilties('m', 'margin'),
-    mt: levelUtilties('mt', 'marginTop'),
-    mr: levelUtilties('mr', 'marginRight'),
-    mb: levelUtilties('mb', 'marginBottom'),
-    ml: levelUtilties('ml', 'marginLeft'),
+    p: levelUtilities('padding'),
+    pt: levelUtilities('paddingTop'),
+    pr: levelUtilities('paddingRight'),
+    pb: levelUtilities('paddingBottom'),
+    pl: levelUtilities('paddingLeft'),
+    m: levelUtilities('margin'),
+    mt: levelUtilities('marginTop'),
+    mr: levelUtilities('marginRight'),
+    mb: levelUtilities('marginBottom'),
+    ml: levelUtilities('marginLeft'),
     text: {
       left: { textAlign: 'left' },
       right: { textAlign: 'right' },
@@ -208,7 +213,7 @@ export interface LinkProps {
 
 export const Link: View<LinkProps> = ({ text, url }) => {
   return (
-    <a href={url} target='_blank' style={styles.classes.link}>
+    <a href={url} target="_blank" style={styles.classes.link}>
       {text}
     </a>
   );
@@ -217,7 +222,7 @@ export const Link: View<LinkProps> = ({ text, url }) => {
 const CallToAction: View<LinkProps> = ({ text, url }) => {
   return (
     <Row style={styles.utilities.text.center}>
-      <a href={url} target='_blank' style={styles.classes.button}>
+      <a href={url} target="_blank" style={styles.classes.button}>
         {text}
       </a>
     </Row>
@@ -230,10 +235,12 @@ interface LinkListProps {
 }
 
 const LinkList: View<LinkListProps> = ({ title, links }) => {
-  if (!links.length) { return null; }
+  if (!links.length) {
+    return null;
+  }
   return (
     <Row style={styles.utilities.text.center}>
-      {title ? (<div style={styles.classes.linkListTitle}>{title}</div>) : null}
+      {title ? <div style={styles.classes.linkListTitle}>{title}</div> : null}
       <Fragment>
         {links.map((link, i) => (
           <div key={`link-list-link-${i}`} style={styles.classes.linkListLink}>
@@ -267,9 +274,11 @@ export interface DescriptionListProps {
 const DescriptionList: View<DescriptionListProps> = ({ title, items }) => {
   return (
     <Row style={styles.utilities.text.center}>
-      {title ? (<div style={styles.classes.descriptionListTitle}>{title}</div>) : null}
+      {title ? <div style={styles.classes.descriptionListTitle}>{title}</div> : null}
       <Fragment>
-        {items.map((item, i) => (<DescriptionItem key={`dl-di-${i}`} {...item} />))}
+        {items.map((item, i) => (
+          <DescriptionItem key={`dl-di-${i}`} {...item} />
+        ))}
       </Fragment>
     </Row>
   );
@@ -278,23 +287,17 @@ const DescriptionList: View<DescriptionListProps> = ({ title, items }) => {
 type Template<Props> = (props: Props) => string;
 
 function makeTemplate<Props>(Template: View<Props>): Template<Props> {
-  return props => renderToStaticMarkup((<Template {...props} />));
+  return (props) => renderToStaticMarkup(<Template {...props} />);
 }
 
 const Container: View<WithChildren> = ({ children }) => {
-  return (
-    <table style={styles.classes.table}>
-      {children}
-    </table>
-  );
+  return <table style={styles.classes.table}>{children}</table>;
 };
 
 const Row: View<WithChildren & Partial<WithStyle>> = ({ children, style = {} }) => {
   return (
     <tr>
-      <td style={{ ...styles.classes.row, ...style }}>
-        {children}
-      </td>
+      <td style={{ ...styles.classes.row, ...style }}>{children}</td>
     </tr>
   );
 };
@@ -310,22 +313,18 @@ const Layout: View<LayoutProps> = ({ title, description, children }) => {
   return (
     <html style={styles.classes.body}>
       <head>
-        <meta charSet='utf8' />
+        <meta charSet="utf8" />
       </head>
       <body style={styles.classes.body}>
         <Container>
           <Row>
-            <a href={makeUrl('')} target='_blank' style={styles.classes.logoBackground}>
-              <img src={makeUrl('images/logo.svg')} alt='Procurement Concierge Program Logo' style={styles.classes.logo} />
+            <a href={makeUrl('')} target="_blank" style={styles.classes.logoBackground}>
+              <img src={makeUrl('images/logo.svg')} alt="Procurement Concierge Program Logo" style={styles.classes.logo} />
             </a>
           </Row>
-          <Row style={styles.classes.title}>
-            {title}
-          </Row>
-          {description ? (<Row style={styles.classes.description}>{description}</Row>) : null}
-          <Fragment>
-            {children}
-          </Fragment>
+          <Row style={styles.classes.title}>{title}</Row>
+          {description ? <Row style={styles.classes.description}>{description}</Row> : null}
+          <Fragment>{children}</Fragment>
         </Container>
       </body>
     </html>
@@ -342,23 +341,13 @@ export interface SimpleProps extends TemplateBaseProps {
   callToAction?: LinkProps;
 }
 
-const Simple: View<SimpleProps> = props => {
+const Simple: View<SimpleProps> = (props) => {
   const { linkLists, descriptionLists, callToAction } = props;
   return (
     <Layout {...props}>
-      <Fragment>
-        {linkLists
-          ? linkLists.map((list, i) => (<LinkList key={`link-list-${i}`} {...list} />))
-          : null}
-      </Fragment>
-      <Fragment>
-        {descriptionLists
-          ? descriptionLists.map((list, i) => (<DescriptionList key={`description-list-${i}`} {...list} />))
-          : null}
-      </Fragment>
-      {callToAction
-        ? (<CallToAction {...callToAction} />)
-        : null}
+      <Fragment>{linkLists ? linkLists.map((list, i) => <LinkList key={`link-list-${i}`} {...list} />) : null}</Fragment>
+      <Fragment>{descriptionLists ? descriptionLists.map((list, i) => <DescriptionList key={`description-list-${i}`} {...list} />) : null}</Fragment>
+      {callToAction ? <CallToAction {...callToAction} /> : null}
     </Layout>
   );
 };
@@ -377,28 +366,31 @@ export interface RfiResponseReceivedProps {
     name: string;
     id: string;
   };
-  attachments: Array<{ name: string, id: string }>;
+  attachments: Array<{ name: string; id: string }>;
 }
 
 const RfiResponseReceived: View<RfiResponseReceivedProps> = ({ rfi, vendor, attachments }) => {
   const vendorUrl = makeUrl(`users/${vendor.id}`);
   const rfiUrl = makeUrl(`requests-for-information/${rfi.id}`);
-  const VendorLink = () => (<Link url={vendorUrl} text={vendor.name} />);
-  const RfiLink = () => (<Link url={rfiUrl} text={`${rfi.rfiNumber}: ${rfi.title}`} />);
-  const attachmentLinks = attachments.map(({ name, id }) => ({ text: name, url: makeUrl(`api/fileBlobs/${id}`) }));
+  const VendorLink = () => <Link url={vendorUrl} text={vendor.name} />;
+  const RfiLink = () => <Link url={rfiUrl} text={`${rfi.rfiNumber}: ${rfi.title}`} />;
+  const attachmentLinks = attachments.map(({ name, id }) => ({
+    text: name,
+    url: makeUrl(`api/fileBlobs/${id}`)
+  }));
   const description = (
     <div>
-      <p>A response has been submitted by <VendorLink /> to <RfiLink />.</p>
-      <p>Please note that you will only be able to view this Vendor's profile and download their response's attachments if you have already signed into your Program Staff account in the Procurement Concierge web application. <Link text='Click here to sign in' url={makeUrl('sign-in')} />.</p>
+      <p>
+        A response has been submitted by <VendorLink /> to <RfiLink />.
+      </p>
+      <p>
+        Please note that you will only be able to view this Vendor's profile and download their response's attachments if you have already signed into your Program Staff account in the Procurement Concierge web application. <Link text="Click here to sign in" url={makeUrl('sign-in')} />.
+      </p>
     </div>
   );
   return (
-    <Layout title='RFI Response Received' description={description}>
-      {attachments.length
-        ? <LinkList
-            links={attachmentLinks}
-            title='Attachments' />
-        : null}
+    <Layout title="RFI Response Received" description={description}>
+      {attachments.length ? <LinkList links={attachmentLinks} title="Attachments" /> : null}
     </Layout>
   );
 };
@@ -419,9 +411,11 @@ const Feedback: View<FeedbackProps> = ({ userType, rating, text }) => {
     descriptionItems.unshift({ name: 'User Type', value: userTypeToTitleCase(userType) });
   }
   return (
-    <Layout title='Feedback Received'>
+    <Layout title="Feedback Received">
       <DescriptionList items={descriptionItems} />
-      <Row><div style={styles.utilities.font.lg}>{text}</div></Row>
+      <Row>
+        <div style={styles.utilities.font.lg}>{text}</div>
+      </Row>
     </Layout>
   );
 };
@@ -438,15 +432,27 @@ const BuyerStatusUpdated: View<BuyerStatusUpdatedProps> = ({ verificationStatus 
   const description = (() => {
     switch (verificationStatus) {
       case VerificationStatus.Verified:
-        return (<span>Your {userTypeToTitleCase(UserType.Buyer)} account has been <b>verified</b>. If you have agreed to the <Link text='Terms & Conditions' url={makeUrl('terms-and-conditions')} />, you will be able to access all of the Procurement Concierge Program's features.</span>);
+        return (
+          <span>
+            Your {userTypeToTitleCase(UserType.Buyer)} account has been <b>verified</b>. If you have agreed to the <Link text="Terms & Conditions" url={makeUrl('terms-and-conditions')} />, you will be able to access all of the Procurement Concierge Program's features.
+          </span>
+        );
       case VerificationStatus.Declined:
-        return (<span>Your {userTypeToTitleCase(UserType.Buyer)} account has been <b>declined</b>. If you have any questions, please email {CONTACT_EMAIL}.</span>);
+        return (
+          <span>
+            Your {userTypeToTitleCase(UserType.Buyer)} account has been <b>declined</b>. If you have any questions, please email {CONTACT_EMAIL}.
+          </span>
+        );
       case VerificationStatus.UnderReview:
       case VerificationStatus.Unverified:
-        return (<span>Your {userTypeToTitleCase(UserType.Buyer)} account is now "<b>{verificationStatusToTitleCase(verificationStatus)}</b>". If you have any questions, please email {CONTACT_EMAIL}.</span>);
+        return (
+          <span>
+            Your {userTypeToTitleCase(UserType.Buyer)} account is now "<b>{verificationStatusToTitleCase(verificationStatus)}</b>". If you have any questions, please email {CONTACT_EMAIL}.
+          </span>
+        );
     }
   })();
-  return (<Simple title='Account Status Updated' description={description} />);
+  return <Simple title="Account Status Updated" description={description} />;
 };
 
 export const buyerStatusUpdated: Template<BuyerStatusUpdatedProps> = makeTemplate(BuyerStatusUpdated);
@@ -461,12 +467,10 @@ const DeactivateUser: View<DeactivateUserProps> = ({ userType }) => {
   const description = (
     <div>
       <p>Your Procurement Concierge Program account has been deactivated. You no longer have access to the program's web application.</p>
-      {userType !== UserType.ProgramStaff
-        ? (<p>If you would like to return to the Procurement Concierge Program's web application, you can reactivate your account at any time by logging in with your email and password.</p>)
-        : null}
+      {userType !== UserType.ProgramStaff ? <p>If you would like to return to the Procurement Concierge Program's web application, you can reactivate your account at any time by logging in with your email and password.</p> : null}
     </div>
   );
-  return (<Simple title='Your Account has been Deactivated' description={description} />);
+  return <Simple title="Your Account has been Deactivated" description={description} />;
 };
 
 export const deactivateUser: Template<DeactivateUserProps> = makeTemplate(DeactivateUser);

@@ -17,13 +17,7 @@ import { ADT, UserType } from 'shared/lib/types';
 
 export type RouteParams = null;
 
-export type InnerMsg
-  = ADT<'rfiForm', RfiForm.Msg>
-  | ADT<'preview'>
-  | ADT<'hideCancelConfirmationPrompt'>
-  | ADT<'showCancelConfirmationPrompt'>
-  | ADT<'hidePublishConfirmationPrompt'>
-  | ADT<'publish'>;
+export type InnerMsg = ADT<'rfiForm', RfiForm.Msg> | ADT<'preview'> | ADT<'hideCancelConfirmationPrompt'> | ADT<'showCancelConfirmationPrompt'> | ADT<'hidePublishConfirmationPrompt'> | ADT<'publish'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -33,8 +27,8 @@ export interface State {
   hasTriedPublishing: boolean;
   promptCancelConfirmation: boolean;
   promptPublishConfirmation: boolean;
-  rfiForm: Immutable<RfiForm.State>
-};
+  rfiForm: Immutable<RfiForm.State>;
+}
 
 async function makeInitState(): Promise<State> {
   return {
@@ -43,62 +37,66 @@ async function makeInitState(): Promise<State> {
     hasTriedPublishing: false,
     promptCancelConfirmation: false,
     promptPublishConfirmation: false,
-    rfiForm: immutable(await RfiForm.init({
-      formType: 'create'
-    }))
+    rfiForm: immutable(
+      await RfiForm.init({
+        formType: 'create'
+      })
+    )
   };
 }
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
-
   userTypes: [UserType.ProgramStaff],
   async success({ shared, dispatch }) {
     const user = await api.readOneUser(shared.sessionUser.id);
     if (user.tag === 'valid' && !user.value.acceptedTermsAt) {
-      dispatch(replaceRoute({
-        tag: 'termsAndConditions' as const,
-        value: {
-          warningId: WarningId.CreateRfi,
-          redirectOnAccept: router.routeToUrl({
-            tag: 'requestForInformationCreate',
-            value: null
-          }),
-          redirectOnSkip: router.routeToUrl({
-            tag: 'requestForInformationList',
-            value: null
-          })
-        }
-      }));
+      dispatch(
+        replaceRoute({
+          tag: 'termsAndConditions' as const,
+          value: {
+            warningId: WarningId.CreateRfi,
+            redirectOnAccept: router.routeToUrl({
+              tag: 'requestForInformationCreate',
+              value: null
+            }),
+            redirectOnSkip: router.routeToUrl({
+              tag: 'requestForInformationList',
+              value: null
+            })
+          }
+        })
+      );
     }
     return await makeInitState();
   },
 
   async fail({ routeParams, dispatch }) {
-    dispatch(replaceRoute({
-      tag: 'signIn' as const,
-      value: {
-        redirectOnSuccess: router.routeToUrl({
-          tag: 'requestForInformationCreate',
-          value: routeParams
-        })
-      }
-    }));
+    dispatch(
+      replaceRoute({
+        tag: 'signIn' as const,
+        value: {
+          redirectOnSuccess: router.routeToUrl({
+            tag: 'requestForInformationCreate',
+            value: routeParams
+          })
+        }
+      })
+    );
     return await makeInitState();
   }
-
 });
 
 const startPreviewLoading: UpdateState<State> = makeStartLoading('previewLoading');
-const stopPreviewLoading: UpdateState<State>  = makeStopLoading('previewLoading');
+const stopPreviewLoading: UpdateState<State> = makeStopLoading('previewLoading');
 const startPublishLoading: UpdateState<State> = makeStartLoading('publishLoading');
-const stopPublishLoading: UpdateState<State>  = makeStopLoading('publishLoading');
+const stopPublishLoading: UpdateState<State> = makeStopLoading('publishLoading');
 
 const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
     case 'rfiForm':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'rfiForm', value }),
+        mapChildMsg: (value) => ({ tag: 'rfiForm', value }),
         childStatePath: ['rfiForm'],
         childUpdate: RfiForm.update,
         childMsg: msg.value
@@ -141,16 +139,20 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               const result = await api.createRfi(requestBody.value);
               switch (result.tag) {
                 case 'valid':
-                  dispatch(newRoute({
-                    tag: 'requestForInformationEdit' as const,
-                    value: {
-                      rfiId: result.value._id
-                    }
-                  }));
+                  dispatch(
+                    newRoute({
+                      tag: 'requestForInformationEdit' as const,
+                      value: {
+                        rfiId: result.value._id
+                      }
+                    })
+                  );
                   return null;
                 case 'invalid':
                   state = fail(state, result.value);
-                  if (window.scrollTo) { window.scrollTo(0, 0); }
+                  if (window.scrollTo) {
+                    window.scrollTo(0, 0);
+                  }
                   break;
               }
               break;
@@ -176,28 +178,30 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isDisabled = isLoading || !RfiForm.isValid(state.rfiForm);
   return (
     <FixedBar>
-      <LoadingButton color='primary' onClick={publish} loading={isPublishLoading} disabled={isDisabled} className='text-nowrap'>
+      <LoadingButton color="primary" onClick={publish} loading={isPublishLoading} disabled={isDisabled} className="text-nowrap">
         Publish RFI
       </LoadingButton>
-      <LoadingButton color='info'  onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className='mx-3 text-nowrap'>
+      <LoadingButton color="info" onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className="mx-3 text-nowrap">
         Preview RFI
       </LoadingButton>
-      <Link onClick={showCancelConfirmationPrompt} color='secondary' disabled={isLoading}>Cancel</Link>
+      <Link onClick={showCancelConfirmationPrompt} color="secondary" disabled={isLoading}>
+        Cancel
+      </Link>
     </FixedBar>
   );
 };
 
 const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const dispatchRfiForm: Dispatch<RfiForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'rfiForm' as const, value }));
+  const dispatchRfiForm: Dispatch<RfiForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'rfiForm' as const, value }));
   return (
-    <div className='mb-5 flex-grow-1'>
+    <div className="mb-5 flex-grow-1">
       <Row>
-        <Col xs='12' md='10'>
+        <Col xs="12" md="10">
           <h1>Create a Request for Information (RFI)</h1>
         </Col>
       </Row>
-      <Row className='mb-4'>
-        <Col xs='12' md='10'>
+      <Row className="mb-4">
+        <Col xs="12" md="10">
           <p>Use this form to create a Request for Information (RFI) for a program or business area. Please ensure that all information is complete and accurate before publishing.</p>
         </Col>
       </Row>
@@ -214,9 +218,7 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getAlerts(state) {
     return {
       ...emptyPageAlerts(),
-      errors: state.hasTriedPublishing && !RfiForm.isValid(state.rfiForm)
-        ? [RfiForm.ERROR_MESSAGE]
-        : []
+      errors: state.hasTriedPublishing && !RfiForm.isValid(state.rfiForm) ? [RfiForm.ERROR_MESSAGE] : []
     };
   },
   getMetadata() {

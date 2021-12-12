@@ -14,7 +14,6 @@ function oneLine(prefix: string, msg: string, prefixColor: Chalk): string {
 }
 
 export const console: Adapter = {
-
   info(prefix, msg) {
     process.stdout.write(oneLine(prefix, msg, chalk.green));
   },
@@ -30,5 +29,4 @@ export const console: Adapter = {
   debug(prefix, msg) {
     process.stdout.write(oneLine(prefix, msg, chalk.blue));
   }
-
 };

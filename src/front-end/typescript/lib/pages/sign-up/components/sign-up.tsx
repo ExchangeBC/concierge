@@ -20,10 +20,7 @@ export interface State<ProfileState> {
   profile: Immutable<ProfileState>;
 }
 
-type InnerMsg<ProfileMsg>
-  = ADT<'accountInformation', AccountInformation.Msg>
-  | ADT<'profile', ProfileMsg>
-  | ADT<'createAccount'>;
+type InnerMsg<ProfileMsg> = ADT<'accountInformation', AccountInformation.Msg> | ADT<'profile', ProfileMsg> | ADT<'createAccount'>;
 
 export type Msg<ProfileMsg> = GlobalComponentMsg<InnerMsg<ProfileMsg>, Route>;
 
@@ -37,19 +34,19 @@ const rfiListRoute: Route = {
 };
 
 function init<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): PageInit<RouteParams, SharedState, State<PS>, Msg<PM>> {
-
   async function makeInitState(): Promise<State<PS>> {
     return {
       loading: 0,
-      accountInformation: immutable(await AccountInformation.init({
-        userType: Profile.userType
-      })),
+      accountInformation: immutable(
+        await AccountInformation.init({
+          userType: Profile.userType
+        })
+      ),
       profile: immutable(await Profile.init({}))
     };
   }
 
   const accessControlParams: AccessControlParams<RouteParams, State<PS>, Msg<PM>, SharedStateWithGuaranteedSessionUser | SharedState> = {
-
     async success({ routeParams }) {
       const { accountInformation } = routeParams;
       const initState = await makeInitState();
@@ -63,7 +60,6 @@ function init<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
       dispatch(replaceRoute(rfiListRoute));
       return await makeInitState();
     }
-
   };
 
   if (Profile.userType === UserType.ProgramStaff) {
@@ -71,22 +67,24 @@ function init<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P
       ...accessControlParams,
       userTypes: [UserType.ProgramStaff],
       async fail({ routeParams, dispatch }) {
-        dispatch(replaceRoute({
-          tag: 'signIn' as const,
-          value: {
-            redirectOnSuccess: router.routeToUrl({
-              tag: 'signUpProgramStaff',
-              value: null
-            })
-          }
-        }));
+        dispatch(
+          replaceRoute({
+            tag: 'signIn' as const,
+            value: {
+              redirectOnSuccess: router.routeToUrl({
+                tag: 'signUpProgramStaff',
+                value: null
+              })
+            }
+          })
+        );
         return await makeInitState();
       }
     });
   } else {
     return isSignedOut(accessControlParams);
   }
-};
+}
 
 function startLoading<PS>(state: Immutable<State<PS>>): Immutable<State<PS>> {
   return state.set('loading', state.loading + 1);
@@ -102,7 +100,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
       case 'accountInformation':
         return updateComponentChild({
           state,
-          mapChildMsg: value => ({ tag: 'accountInformation' as const, value }),
+          mapChildMsg: (value) => ({ tag: 'accountInformation' as const, value }),
           childStatePath: ['accountInformation'],
           childUpdate: AccountInformation.update,
           childMsg: msg.value
@@ -132,23 +130,27 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
               case 'valid':
                 // Redirect Program Staff to the created user's profile.
                 if (result.value.profile.type === UserType.ProgramStaff) {
-                  dispatch(newRoute({
-                    tag: 'userView' as const,
-                    value: {
-                      profileUserId: result.value._id
-                    }
-                  }));
+                  dispatch(
+                    newRoute({
+                      tag: 'userView' as const,
+                      value: {
+                        profileUserId: result.value._id
+                      }
+                    })
+                  );
                 } else {
                   // All other users who are creating their own accounts,
                   // should be prompted to accept the terms and conditions.
                   const rfiListUrl = router.routeToUrl(rfiListRoute);
-                  dispatch(newRoute({
-                    tag: 'termsAndConditions' as const,
-                    value: {
-                      redirectOnAccept: rfiListUrl,
-                      redirectOnSkip: rfiListUrl
-                    }
-                  }));
+                  dispatch(
+                    newRoute({
+                      tag: 'termsAndConditions' as const,
+                      value: {
+                        redirectOnAccept: rfiListUrl,
+                        redirectOnSkip: rfiListUrl
+                      }
+                    })
+                  );
                 }
                 return null;
               case 'invalid':
@@ -156,8 +158,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
                 if (profileErrors && !isArray(profileErrors)) {
                   state = state.set('profile', Profile.setErrors(state.profile, profileErrors));
                 }
-                return stopLoading(state)
-                  .set('accountInformation', AccountInformation.setErrors(state.accountInformation, result.value));
+                return stopLoading(state).set('accountInformation', AccountInformation.setErrors(state.accountInformation, result.value));
             }
           }
         ];
@@ -165,7 +166,7 @@ export function update<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
         return [state];
     }
   };
-};
+}
 
 function isInvalid<PS, PM, P extends ProfileType>(state: State<PS>, Profile: ProfileComponent<PS, PM, P>): boolean {
   return !AccountInformation.isValid(state.accountInformation) || !Profile.isValid(state.profile);
@@ -183,18 +184,11 @@ function Subtitle(props: { userType: UserType }) {
     case UserType.Vendor:
       return (
         <p>
-          Create an account to gain access to all features of the Concierge. Already have an account?{' '}
-          <a href='/sign-in'>
-            Sign in here.
-          </a>
+          Create an account to gain access to all features of the Concierge. Already have an account? <a href="/sign-in">Sign in here.</a>
         </p>
       );
     case UserType.ProgramStaff:
-      return (
-        <p>
-          Create another Program Staff account to manage the Concierge.
-        </p>
-      );
+      return <p>Create another Program Staff account to manage the Concierge.</p>;
   }
 }
 
@@ -207,10 +201,12 @@ function viewBottomBar<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
     const cancelRoute: Route = isProgramStaff ? { tag: 'userList' as const, value: null } : { tag: 'landing' as const, value: null };
     return (
       <FixedBar>
-        <LoadingButton color='primary' onClick={createAccount} loading={isLoading} disabled={isDisabled}>
+        <LoadingButton color="primary" onClick={createAccount} loading={isLoading} disabled={isDisabled}>
           Create Account
         </LoadingButton>
-        <Link route={cancelRoute} color='secondary' disabled={isLoading} className='mx-3'>Cancel</Link>
+        <Link route={cancelRoute} color="secondary" disabled={isLoading} className="mx-3">
+          Cancel
+        </Link>
       </FixedBar>
     );
   };
@@ -218,33 +214,33 @@ function viewBottomBar<PS, PM, P extends ProfileType>(Profile: ProfileComponent<
 
 function view<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): ComponentView<State<PS>, Msg<PM>> {
   return ({ state, dispatch }) => {
-    const dispatchAccountInformation: Dispatch<AccountInformation.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'accountInformation' as const, value }));
-    const dispatchProfile: Dispatch<PM> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, value => ({ tag: 'profile' as const, value }));
+    const dispatchAccountInformation: Dispatch<AccountInformation.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, (value) => ({ tag: 'accountInformation' as const, value }));
+    const dispatchProfile: Dispatch<PM> = mapComponentDispatch(dispatch as Dispatch<Msg<PM>>, (value) => ({ tag: 'profile' as const, value }));
     return (
       <div>
         <Row>
-          <Col xs='12'>
+          <Col xs="12">
             <h1>Create a {userTypeToTitleCase(Profile.userType)} Account</h1>
           </Col>
         </Row>
         <Row>
-          <Col xs='12' md='8'>
+          <Col xs="12" md="8">
             <Subtitle userType={Profile.userType} />
           </Col>
         </Row>
-        <Row className='mt-3 no-gutters'>
-          <Col xs='12' md='4'>
+        <Row className="mt-3 no-gutters">
+          <Col xs="12" md="4">
             <AccountInformation.view state={state.accountInformation} dispatch={dispatchAccountInformation} />
           </Col>
-          <Col md='1' className='vertical-line'></Col>
-          <Col xs='12' md='7'>
+          <Col md="1" className="vertical-line"></Col>
+          <Col xs="12" md="7">
             <Profile.view state={state.profile} dispatch={dispatchProfile} />
           </Col>
         </Row>
       </div>
     );
   };
-};
+}
 
 export function component<PS, PM, P extends ProfileType>(Profile: ProfileComponent<PS, PM, P>): PageComponent<RouteParams, SharedState, State<PS>, Msg<PM>> {
   return {
@@ -259,4 +255,4 @@ export function component<PS, PM, P extends ProfileType>(Profile: ProfileCompone
     getBreadcrumbs: emptyPageBreadcrumbs,
     getModal: noPageModal
   };
-};
+}

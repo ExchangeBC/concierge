@@ -11,10 +11,7 @@ import { ADT, UserType } from 'shared/lib/types';
 
 export type RouteParams = null;
 
-export type InnerMsg
-  = ADT<'vendor', VendorList.Msg>
-  | ADT<'programStaff', ProgramStaffList.Msg>
-  | ADT<'buyer', BuyerList.Msg>;
+export type InnerMsg = ADT<'vendor', VendorList.Msg> | ADT<'programStaff', ProgramStaffList.Msg> | ADT<'buyer', BuyerList.Msg>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -22,10 +19,9 @@ export interface State {
   vendor?: Immutable<VendorList.State>;
   programStaff?: Immutable<ProgramStaffList.State>;
   buyer?: Immutable<BuyerList.State>;
-};
+}
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedIn({
-
   async success({ shared, dispatch }) {
     const { sessionUser } = shared;
     switch (sessionUser.type) {
@@ -35,27 +31,30 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedIn({
         return { programStaff: immutable(await ProgramStaffList.init({ sessionUser })) };
       case UserType.Buyer:
         return {
-          buyer: immutable(await BuyerList.init({
-            sessionUser,
-            dispatch: mapGlobalComponentDispatch(dispatch, value => ({ tag: 'buyer' as const, value }))
-          }))
+          buyer: immutable(
+            await BuyerList.init({
+              sessionUser,
+              dispatch: mapGlobalComponentDispatch(dispatch, (value) => ({ tag: 'buyer' as const, value }))
+            })
+          )
         };
     }
   },
 
   async fail({ routeParams, shared, dispatch }) {
-    dispatch(replaceRoute({
-      tag: 'signIn' as const,
-      value: {
-        redirectOnSuccess: router.routeToUrl({
-          tag: 'viList',
-          value: null
-        })
-      }
-    }));
+    dispatch(
+      replaceRoute({
+        tag: 'signIn' as const,
+        value: {
+          redirectOnSuccess: router.routeToUrl({
+            tag: 'viList',
+            value: null
+          })
+        }
+      })
+    );
     return {};
   }
-
 });
 
 const update: Update<State, Msg> = ({ state, msg }) => {
@@ -63,7 +62,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'vendor':
       return updateGlobalComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'vendor', value }),
+        mapChildMsg: (value) => ({ tag: 'vendor', value }),
         childStatePath: ['vendor'],
         childUpdate: VendorList.update,
         childMsg: msg.value
@@ -71,7 +70,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'programStaff':
       return updateGlobalComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'programStaff', value }),
+        mapChildMsg: (value) => ({ tag: 'programStaff', value }),
         childStatePath: ['programStaff'],
         childUpdate: ProgramStaffList.update,
         childMsg: msg.value
@@ -79,7 +78,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'buyer':
       return updateGlobalComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'buyer', value }),
+        mapChildMsg: (value) => ({ tag: 'buyer', value }),
         childStatePath: ['buyer'],
         childUpdate: BuyerList.update,
         childMsg: msg.value
@@ -91,14 +90,14 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 
 const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (state.vendor) {
-    const dispatchVendor: Dispatch<VendorList.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'vendor' as const, value }));
-    return (<VendorList.view state={state.vendor} dispatch={dispatchVendor} />);
+    const dispatchVendor: Dispatch<VendorList.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'vendor' as const, value }));
+    return <VendorList.view state={state.vendor} dispatch={dispatchVendor} />;
   } else if (state.programStaff) {
-    const dispatchProgramStaff: Dispatch<ProgramStaffList.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'programStaff' as const, value }));
-    return (<ProgramStaffList.view state={state.programStaff} dispatch={dispatchProgramStaff} />);
+    const dispatchProgramStaff: Dispatch<ProgramStaffList.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'programStaff' as const, value }));
+    return <ProgramStaffList.view state={state.programStaff} dispatch={dispatchProgramStaff} />;
   } else if (state.buyer) {
-    const dispatchBuyer: Dispatch<BuyerList.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'buyer' as const, value }));
-    return (<BuyerList.view state={state.buyer} dispatch={dispatchBuyer} />);
+    const dispatchBuyer: Dispatch<BuyerList.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'buyer' as const, value }));
+    return <BuyerList.view state={state.buyer} dispatch={dispatchBuyer} />;
   } else {
     return null;
   }
@@ -121,9 +120,9 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   getBreadcrumbs: emptyPageBreadcrumbs,
   getModal(state) {
     if (state.vendor) {
-      return mapPageModalMsg(VendorList.getModal(state.vendor), value => ({ tag: 'vendor', value }));
+      return mapPageModalMsg(VendorList.getModal(state.vendor), (value) => ({ tag: 'vendor', value }));
     } else if (state.programStaff) {
-      return mapPageModalMsg(ProgramStaffList.getModal(state.programStaff), value => ({ tag: 'programStaff', value }));
+      return mapPageModalMsg(ProgramStaffList.getModal(state.programStaff), (value) => ({ tag: 'programStaff', value }));
     } else {
       return null;
     }

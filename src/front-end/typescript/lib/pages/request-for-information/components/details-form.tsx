@@ -35,11 +35,10 @@ export interface Params {
   existingRfi?: PublicRfi;
 }
 
-type HelpFieldName
-  = 'addenda';
+type HelpFieldName = 'addenda';
 
-export type Msg
-  = ADT<'onChangeRfiNumber', string>
+export type Msg =
+  | ADT<'onChangeRfiNumber', string>
   | ADT<'onChangeTitle', string>
   | ADT<'onChangePublicSectorEntity', string>
   | ADT<'onChangeDescription', RichMarkdownEditor.Msg>
@@ -59,15 +58,7 @@ export type Msg
   | ADT<'validateGracePeriodDays'>
   | ADT<'toggleHelp', HelpFieldName>;
 
-type FormFieldKeys
-  = 'rfiNumber'
-  | 'title'
-  | 'publicSectorEntity'
-  | 'closingDate'
-  | 'closingTime'
-  | 'gracePeriodDays'
-  | 'buyerContact'
-  | 'programStaffContact';
+type FormFieldKeys = 'rfiNumber' | 'title' | 'publicSectorEntity' | 'closingDate' | 'closingTime' | 'gracePeriodDays' | 'buyerContact' | 'programStaffContact';
 
 export interface State {
   loading: number;
@@ -86,7 +77,7 @@ export interface State {
   categories: Immutable<SelectMulti.State>;
   attachments: Immutable<FileMulti.State>;
   addenda: Immutable<LongTextMulti.State>;
-};
+}
 
 export interface Values extends Omit<RfiResource.CreateRequestBody, 'attachments' | 'discoveryDay'> {
   attachments: FileMulti.Value[];
@@ -124,9 +115,9 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
     const predicate = (userType: UserType): ((user: PublicUser) => boolean) => {
       switch (userType) {
         case UserType.Buyer:
-          return user => user.profile.type === userType && user.active && !!user.acceptedTermsAt && user.profile.verificationStatus === VerificationStatus.Verified;
+          return (user) => user.profile.type === userType && user.active && !!user.acceptedTermsAt && user.profile.verificationStatus === VerificationStatus.Verified;
         case UserType.ProgramStaff:
-          return user => user.profile.type === userType && user.active && !!user.acceptedTermsAt;
+          return (user) => user.profile.type === userType && user.active && !!user.acceptedTermsAt;
         case UserType.Vendor:
           return () => false;
       }
@@ -144,20 +135,18 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
   const rawClosingAt = getRfiString('closingAt');
   const closingDateValue = rawClosingAt ? rawFormatDate(new Date(rawClosingAt), 'YYYY-MM-DD', false) : '';
   const closingTimeValue = rawClosingAt ? rawFormatDate(new Date(rawClosingAt), 'HH:mm', false) : DEFAULT_CLOSING_TIME;
-  const existingCategoryFields = get(existingRfi, ['latestVersion', 'categories'], [])
-    .map((value: string, index: number): FormFieldMulti.Field<SelectMulti.Value> => {
-      return {
-        value: { label: value, value },
-        errors: []
-      };
-    });
-  const existingAddenda = get(existingRfi, ['latestVersion', 'addenda'], [])
-    .map((value: Addendum, index: number) => {
-      return {
-        value: LongTextMulti.makeExistingValue(value.description),
-        errors: []
-      };
-    });
+  const existingCategoryFields = get(existingRfi, ['latestVersion', 'categories'], []).map((value: string, index: number): FormFieldMulti.Field<SelectMulti.Value> => {
+    return {
+      value: { label: value, value },
+      errors: []
+    };
+  });
+  const existingAddenda = get(existingRfi, ['latestVersion', 'addenda'], []).map((value: Addendum, index: number) => {
+    return {
+      value: LongTextMulti.makeExistingValue(value.description),
+      errors: []
+    };
+  });
   const existingBuyerContact = get(existingRfi, ['latestVersion', 'buyerContact'], undefined);
   const existingProgramStaffContactId = get(existingRfi, ['latestVersion', 'programStaffContact', '_id'], undefined);
   const existingProgramStaffContact: PublicUser | undefined = find<PublicUser>(programStaff, { _id: existingProgramStaffContactId });
@@ -191,12 +180,14 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
       placeholder: 'Public Sector Entity',
       value: getRfiString('publicSectorEntity')
     }),
-    description: immutable(await RichMarkdownEditor.init({
-      id: 'rfi-description',
-      value: getRfiString('description'),
-      errors: [],
-      validate: validateDescription
-    })),
+    description: immutable(
+      await RichMarkdownEditor.init({
+        id: 'rfi-description',
+        value: getRfiString('description'),
+        errors: [],
+        validate: validateDescription
+      })
+    ),
     closingDate: DateTime.init({
       id: 'rfi-closing-date',
       type: 'date',
@@ -242,55 +233,64 @@ export const init: Init<Params, State> = async ({ isEditing, existingRfi }) => {
         value: programStaff.map(userToOption)
       }
     }),
-    categories: immutable(await SelectMulti.init({
-      options: AVAILABLE_CATEGORIES.toJS().map(value => ({ label: value, value })),
-      placeholder: 'Select Commodity Code',
-      formFieldMulti: {
-        idNamespace: 'rfi-categories',
-        label: 'Commodity Code(s)',
-        required: true,
-        minFields: 1,
-        fields: existingCategoryFields.length ? existingCategoryFields : [{
-          value: undefined,
-          errors: []
-        }]
-      }
-    })),
-    attachments: immutable(await FileMulti.init({
-      formFieldMulti: {
-        idNamespace: 'rfi-attachments',
-        label: 'Attachments (Optional)',
-        required: false,
-        fields: get(existingRfi, ['latestVersion', 'attachments'], [])
-          .map((attachment: FileResource.PublicFile) => {
+    categories: immutable(
+      await SelectMulti.init({
+        options: AVAILABLE_CATEGORIES.toJS().map((value) => ({ label: value, value })),
+        placeholder: 'Select Commodity Code',
+        formFieldMulti: {
+          idNamespace: 'rfi-categories',
+          label: 'Commodity Code(s)',
+          required: true,
+          minFields: 1,
+          fields: existingCategoryFields.length
+            ? existingCategoryFields
+            : [
+                {
+                  value: undefined,
+                  errors: []
+                }
+              ]
+        }
+      })
+    ),
+    attachments: immutable(
+      await FileMulti.init({
+        formFieldMulti: {
+          idNamespace: 'rfi-attachments',
+          label: 'Attachments (Optional)',
+          required: false,
+          fields: get(existingRfi, ['latestVersion', 'attachments'], []).map((attachment: FileResource.PublicFile) => {
             return {
               value: FileMulti.makeExistingValue(attachment),
               errors: []
             };
           })
-      }
-    })),
-    addenda: immutable(await LongTextMulti.init({
-      addButtonText: 'Add Addendum',
-      field: {
-        label: 'Addendum',
-        placeholder: addendaHelpText,
-        textAreaStyle: {
-          height: '120px'
         }
-      },
-      formFieldMulti: {
-        idNamespace: 'rfi-addenda',
-        label: 'Addenda (Optional)',
-        required: false,
-        reverseFieldOrderInView: true,
-        fields: existingAddenda,
-        help: {
-          text: addendaHelpText,
-          show: false
+      })
+    ),
+    addenda: immutable(
+      await LongTextMulti.init({
+        addButtonText: 'Add Addendum',
+        field: {
+          label: 'Addendum',
+          placeholder: addendaHelpText,
+          textAreaStyle: {
+            height: '120px'
+          }
+        },
+        formFieldMulti: {
+          idNamespace: 'rfi-addenda',
+          label: 'Addenda (Optional)',
+          required: false,
+          reverseFieldOrderInView: true,
+          fields: existingAddenda,
+          help: {
+            text: addendaHelpText,
+            show: false
+          }
         }
-      }
-    }))
+      })
+    )
   };
 };
 
@@ -305,7 +305,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'onChangeDescription':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'onChangeDescription', value }),
+        mapChildMsg: (value) => ({ tag: 'onChangeDescription', value }),
         childStatePath: ['description'],
         childUpdate: RichMarkdownEditor.update,
         childMsg: msg.value
@@ -332,7 +332,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'onChangeCategories':
       state = updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'onChangeCategories', value }),
+        mapChildMsg: (value) => ({ tag: 'onChangeCategories', value }),
         childStatePath: ['categories'],
         childUpdate: SelectMulti.update,
         childMsg: msg.value
@@ -343,7 +343,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'onChangeAttachments':
       state = updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'onChangeAttachments', value }),
+        mapChildMsg: (value) => ({ tag: 'onChangeAttachments', value }),
         childStatePath: ['attachments'],
         childUpdate: FileMulti.update,
         childMsg: msg.value
@@ -355,7 +355,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'onChangeAddenda':
       state = updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'onChangeAddenda', value }),
+        mapChildMsg: (value) => ({ tag: 'onChangeAddenda', value }),
         childStatePath: ['addenda'],
         childUpdate: LongTextMulti.update,
         childMsg: msg.value
@@ -376,12 +376,14 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'validateGracePeriodDays':
       return [validateValue(state, 'gracePeriodDays', validateGracePeriodDays)];
     case 'toggleHelp':
-      return [(() => {
-        switch (msg.value) {
-          case 'addenda':
-            return state.setIn(['addenda', 'help', 'show'], !state.getIn(['addenda', 'help', 'show']));
-        }
-      })()];
+      return [
+        (() => {
+          switch (msg.value) {
+            case 'addenda':
+              return state.setIn(['addenda', 'help', 'show'], !state.getIn(['addenda', 'help', 'show']));
+          }
+        })()
+      ];
     default:
       return [state];
   }
@@ -393,7 +395,7 @@ function updateValue<K extends FormFieldKeys>(state: Immutable<State>, key: K, v
 
 function validateClosingDateAndTime(state: Immutable<State>): Immutable<State> {
   state = validateValue(state, 'closingDate', validateClosingDate);
-  return validateValue(state, 'closingTime', v => validateClosingTime(v, state.closingDate.value));
+  return validateValue(state, 'closingTime', (v) => validateClosingTime(v, state.closingDate.value));
 }
 
 function validateBuyerContact(raw: Select.Value): Validation<Select.Value> {
@@ -419,42 +421,19 @@ export function setErrors(state: Immutable<State>, errors: RfiResource.CreateVal
     .setIn(['publicSectorEntity', 'errors'], errors.publicSectorEntity || [])
     .setIn(['buyerContact', 'errors'], errors.buyerContact || [])
     .setIn(['programStaffContact', 'errors'], errors.programStaffContact || [])
-    .update('description', desc => FormField.setErrors(desc, errors.description || []))
+    .update('description', (desc) => FormField.setErrors(desc, errors.description || []))
     .set('categories', SelectMulti.setErrors(state.categories, errors.categories || []))
     .set('addenda', LongTextMulti.setErrors(state.addenda, errors.addenda || []))
     .set('attachments', FileMulti.setErrors(state.attachments, errors.attachments || []));
 }
 
 export function hasProvidedRequiredFields(state: State): boolean {
-  const {
-    rfiNumber,
-    title,
-    publicSectorEntity,
-    description,
-    closingDate,
-    closingTime,
-    gracePeriodDays,
-    buyerContact,
-    programStaffContact
-  } = state;
+  const { rfiNumber, title, publicSectorEntity, description, closingDate, closingTime, gracePeriodDays, buyerContact, programStaffContact } = state;
   return !!(rfiNumber.value && title.value && publicSectorEntity.value && FormField.getValue(description) && closingDate.value && closingTime.value && gracePeriodDays.value !== undefined && buyerContact.value && programStaffContact.value);
 }
 
 export function hasValidationErrors(state: State): boolean {
-  const {
-    rfiNumber,
-    title,
-    publicSectorEntity,
-    description,
-    closingDate,
-    closingTime,
-    gracePeriodDays,
-    buyerContact,
-    programStaffContact,
-    categories,
-    attachments,
-    addenda
-  } = state;
+  const { rfiNumber, title, publicSectorEntity, description, closingDate, closingTime, gracePeriodDays, buyerContact, programStaffContact, categories, attachments, addenda } = state;
   const errors = !!(rfiNumber.errors.length || title.errors.length || publicSectorEntity.errors.length || closingDate.errors.length || closingTime.errors.length || gracePeriodDays.errors.length || buyerContact.errors.length || programStaffContact.errors.length);
   return errors || !FormField.isValid(description) || !SelectMulti.isValid(categories) || !FileMulti.isValid(attachments) || !LongTextMulti.isValid(addenda);
 }
@@ -465,91 +444,55 @@ export function isValid(state: State): boolean {
 
 const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isDisabled = !state.isEditing;
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
-  const onChangeNumberInput = (tag: any) => NumberInput.makeOnChange(dispatch, value => ({ tag, value }));
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, (value) => ({ tag, value }));
+  const onChangeNumberInput = (tag: any) => NumberInput.makeOnChange(dispatch, (value) => ({ tag, value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, (value) => ({ tag, value }));
   const onChangeDebounced = (tag: any) => () => dispatch({ tag, value: undefined });
-  const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeCategories' as const, value }));
+  const dispatchCategories: Dispatch<SelectMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'onChangeCategories' as const, value }));
   return (
-    <div className='mb-4'>
+    <div className="mb-4">
       <Row>
-        <Col xs='12'>
-          <FormSectionHeading text='Details' />
+        <Col xs="12">
+          <FormSectionHeading text="Details" />
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='5' lg='4'>
-          <ShortText.view
-            state={state.rfiNumber}
-            disabled={isDisabled}
-            onChangeDebounced={onChangeDebounced('validateRfiNumber')}
-            onChange={onChangeShortText('onChangeRfiNumber')}
-            autoFocus />
+        <Col xs="12" md="5" lg="4">
+          <ShortText.view state={state.rfiNumber} disabled={isDisabled} onChangeDebounced={onChangeDebounced('validateRfiNumber')} onChange={onChangeShortText('onChangeRfiNumber')} autoFocus />
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='10'>
-          <ShortText.view
-            state={state.title}
-            disabled={isDisabled}
-            onChangeDebounced={onChangeDebounced('validateTitle')}
-            onChange={onChangeShortText('onChangeTitle')} />
+        <Col xs="12" md="10">
+          <ShortText.view state={state.title} disabled={isDisabled} onChangeDebounced={onChangeDebounced('validateTitle')} onChange={onChangeShortText('onChangeTitle')} />
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='4'>
-          <Select.view
-            state={state.buyerContact}
-            disabled={isDisabled}
-            onChange={onChangeSelect('onChangeBuyerContact')} />
+        <Col xs="12" md="4">
+          <Select.view state={state.buyerContact} disabled={isDisabled} onChange={onChangeSelect('onChangeBuyerContact')} />
         </Col>
-        <Col xs='12' md='6'>
-          <ShortText.view
-            state={state.publicSectorEntity}
-            disabled={isDisabled}
-            onChangeDebounced={onChangeDebounced('validatePublicSectorEntity')}
-            onChange={onChangeShortText('onChangePublicSectorEntity')} />
+        <Col xs="12" md="6">
+          <ShortText.view state={state.publicSectorEntity} disabled={isDisabled} onChangeDebounced={onChangeDebounced('validatePublicSectorEntity')} onChange={onChangeShortText('onChangePublicSectorEntity')} />
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='4'>
-          <Select.view
-            state={state.programStaffContact}
-            disabled={isDisabled}
-            onChange={onChangeSelect('onChangeProgramStaffContact')} />
+        <Col xs="12" md="4">
+          <Select.view state={state.programStaffContact} disabled={isDisabled} onChange={onChangeSelect('onChangeProgramStaffContact')} />
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='8' lg='7'>
-          <SelectMulti.view
-            state={state.categories}
-            dispatch={dispatchCategories}
-            disabled={isDisabled} />
+        <Col xs="12" md="8" lg="7">
+          <SelectMulti.view state={state.categories} dispatch={dispatchCategories} disabled={isDisabled} />
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='3'>
-          <DateTime.view
-            state={state.closingDate}
-            disabled={isDisabled}
-            onChangeDebounced={onChangeDebounced('validateClosingDate')}
-            onChange={onChangeShortText('onChangeClosingDate')} />
+        <Col xs="12" md="3">
+          <DateTime.view state={state.closingDate} disabled={isDisabled} onChangeDebounced={onChangeDebounced('validateClosingDate')} onChange={onChangeShortText('onChangeClosingDate')} />
         </Col>
-        <Col xs='12' md='3' lg='2'>
-          <DateTime.view
-            state={state.closingTime}
-            disabled={isDisabled}
-            onChangeDebounced={onChangeDebounced('validateClosingTime')}
-            onChange={onChangeShortText('onChangeClosingTime')} />
+        <Col xs="12" md="3" lg="2">
+          <DateTime.view state={state.closingTime} disabled={isDisabled} onChangeDebounced={onChangeDebounced('validateClosingTime')} onChange={onChangeShortText('onChangeClosingTime')} />
         </Col>
-        <Col xs='12' md='4'>
-          <NumberInput.view
-            state={state.gracePeriodDays}
-            disabled={isDisabled}
-            onChangeDebounced={onChangeDebounced('validateGracePeriodDays')}
-            onChange={onChangeNumberInput('onChangeGracePeriodDays')}
-            addon={{ type: 'append', text: 'Days' }}
-          />
+        <Col xs="12" md="4">
+          <NumberInput.view state={state.gracePeriodDays} disabled={isDisabled} onChangeDebounced={onChangeDebounced('validateGracePeriodDays')} onChange={onChangeNumberInput('onChangeGracePeriodDays')} addon={{ type: 'append', text: 'Days' }} />
         </Col>
       </Row>
     </div>
@@ -558,26 +501,25 @@ const Details: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isDisabled = !state.isEditing;
-  const dispatchDescription: Dispatch<RichMarkdownEditor.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeDescription' as const, value }));
+  const dispatchDescription: Dispatch<RichMarkdownEditor.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'onChangeDescription' as const, value }));
   return (
-    <div className='mb-4'>
+    <div className="mb-4">
       <Row>
-        <Col xs='12'>
-          <FormSectionHeading text='Description'>
-            <p className='mb-0'>Use <Link href={MARKDOWN_HELP_URL} newTab>Markdown</Link> to describe the RFI.</p>
+        <Col xs="12">
+          <FormSectionHeading text="Description">
+            <p className="mb-0">
+              Use{' '}
+              <Link href={MARKDOWN_HELP_URL} newTab>
+                Markdown
+              </Link>{' '}
+              to describe the RFI.
+            </p>
           </FormSectionHeading>
         </Col>
       </Row>
-      <Row className='mb-3'>
-        <Col xs='12'>
-          <RichMarkdownEditor.view
-            state={state.description}
-            dispatch={dispatchDescription}
-            disabled={isDisabled}
-            required
-            label='RFI Description'
-            help={'Suggested sections for this RFI\'s description: \n(1) Business Requirement(s) or Issue(s); \n(2) Brief Ministry Overview; \n(3) Objectives of this RFI; \n(4) Ministry Obligations; and \n(5) Response Instructions.'}
-            style={{ height: '50vh', minHeight: '400px' }} />
+      <Row className="mb-3">
+        <Col xs="12">
+          <RichMarkdownEditor.view state={state.description} dispatch={dispatchDescription} disabled={isDisabled} required label="RFI Description" help={"Suggested sections for this RFI's description: \n(1) Business Requirement(s) or Issue(s); \n(2) Brief Ministry Overview; \n(3) Objectives of this RFI; \n(4) Ministry Obligations; and \n(5) Response Instructions."} style={{ height: '50vh', minHeight: '400px' }} />
         </Col>
       </Row>
     </div>
@@ -586,17 +528,12 @@ const Description: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 const Attachments: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isDisabled = !state.isEditing;
-  const dispatchAttachments: Dispatch<FileMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeAttachments' as const, value }));
+  const dispatchAttachments: Dispatch<FileMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'onChangeAttachments' as const, value }));
   return (
-    <div className='pb-4 border-bottom mb-5'>
-      <Row className='mb-3'>
-        <Col xs='12' md='7' lg='6'>
-          <FileMulti.view
-            state={state.attachments}
-            dispatch={dispatchAttachments}
-            disabled={isDisabled}
-            labelClassName='h3'
-            labelWrapperClassName='mb-4' />
+    <div className="pb-4 border-bottom mb-5">
+      <Row className="mb-3">
+        <Col xs="12" md="7" lg="6">
+          <FileMulti.view state={state.attachments} dispatch={dispatchAttachments} disabled={isDisabled} labelClassName="h3" labelWrapperClassName="mb-4" />
         </Col>
       </Row>
     </div>
@@ -605,24 +542,19 @@ const Attachments: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 const Addenda: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isDisabled = !state.isEditing;
-  const dispatchAddenda: Dispatch<LongTextMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'onChangeAddenda' as const, value }));
+  const dispatchAddenda: Dispatch<LongTextMulti.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'onChangeAddenda' as const, value }));
   return (
-    <div className='mb-4'>
+    <div className="mb-4">
       <Row>
-        <Col xs='12'>
-          <LongTextMulti.view
-            state={state.addenda}
-            dispatch={dispatchAddenda}
-            disabled={isDisabled}
-            labelClassName='h3'
-            labelWrapperClassName='mb-4' />
+        <Col xs="12">
+          <LongTextMulti.view state={state.addenda} dispatch={dispatchAddenda} disabled={isDisabled} labelClassName="h3" labelWrapperClassName="mb-4" />
         </Col>
       </Row>
     </div>
   );
 };
 
-export const view: ComponentView<State, Msg> = props => {
+export const view: ComponentView<State, Msg> = (props) => {
   return (
     <div>
       <Details {...props} />

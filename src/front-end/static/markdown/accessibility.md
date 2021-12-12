@@ -16,4 +16,4 @@ The B.C. government is committed to decreasing barriers and increasing accessibi
 
 - Web & Online Accessibility: [WebmanagerOnLineChannelOffice@gov.bc.ca](mailto:WebmanagerOnLineChannelOffice@gov.bc.ca)
 - Accessibility 2024: [Accessibility@gov.bc.ca](mailto:Accessibility@gov.bc.ca)
-- Procurement Concierge Program: [Procurement.Concierge@gov.bc.ca](mailto:Procurement.Concierge@gov.bc.ca) 
+- Procurement Concierge Program: [Procurement.Concierge@gov.bc.ca](mailto:Procurement.Concierge@gov.bc.ca)

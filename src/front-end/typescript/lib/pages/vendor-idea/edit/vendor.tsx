@@ -20,15 +20,9 @@ import { invalid, valid } from 'shared/lib/validators';
 export interface Params {
   viId: string;
   dispatch: Dispatch<Msg>;
-};
+}
 
-type InnerMsg
-  = ADT<'intakeForm', IntakeForm.Msg>
-  | ADT<'startEditing'>
-  | ADT<'cancelEditing'>
-  | ADT<'hideCancelConfirmationPrompt'>
-  | ADT<'hideSubmitConfirmationPrompt'>
-  | ADT<'submit'>;
+type InnerMsg = ADT<'intakeForm', IntakeForm.Msg> | ADT<'startEditing'> | ADT<'cancelEditing'> | ADT<'hideCancelConfirmationPrompt'> | ADT<'hideSubmitConfirmationPrompt'> | ADT<'submit'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -39,31 +33,33 @@ interface ValidState {
   promptSubmitConfirmation: boolean;
   intakeForm: Immutable<IntakeForm.State>;
   vi: PublicVendorIdeaForVendors;
-};
+}
 
-export type State
-  = ADT<'valid', ValidState>
-  | ADT<'invalid'>;
+export type State = ADT<'valid', ValidState> | ADT<'invalid'>;
 
 async function resetIntakeForm(existingVi: PublicVendorIdeaForVendors): Promise<Immutable<IntakeForm.State>> {
-  return immutable(await IntakeForm.init({
-    isEditing: false,
-    existingVi
-  }));
+  return immutable(
+    await IntakeForm.init({
+      isEditing: false,
+      existingVi
+    })
+  );
 }
 
 export const init: Init<Params, State> = async ({ viId, dispatch }) => {
   const existingVi = await api.readOneViForVendors(viId);
   if (existingVi.tag === 'invalid') {
-    dispatch(replaceRoute({
-      tag: 'notice',
-      value: {
-        noticeId: {
-          tag: 'notFound',
-          value: undefined
+    dispatch(
+      replaceRoute({
+        tag: 'notice',
+        value: {
+          noticeId: {
+            tag: 'notFound',
+            value: undefined
+          }
         }
-      }
-    }));
+      })
+    );
     return invalid(undefined);
   }
   return valid({
@@ -86,12 +82,14 @@ function setIsEditing(state: Immutable<State>, value: boolean): Immutable<State>
 }
 
 export const update: Update<State, Msg> = ({ state, msg }) => {
-  if (state.tag === 'invalid') { return [state]; }
+  if (state.tag === 'invalid') {
+    return [state];
+  }
   switch (msg.tag) {
     case 'intakeForm':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'intakeForm', value }),
+        mapChildMsg: (value) => ({ tag: 'intakeForm', value }),
         childStatePath: ['value', 'intakeForm'],
         childUpdate: IntakeForm.update,
         childMsg: msg.value
@@ -99,15 +97,17 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'startEditing':
       return [
         startStartEditingLoading(state),
-        async state => {
+        async (state) => {
           state = stopStartEditingLoading(state);
-          if (state.tag === 'invalid') { return state; }
+          if (state.tag === 'invalid') {
+            return state;
+          }
           // Reset the RFI form with fresh data before editing.
           const result = await api.readOneViForVendors(state.value.vi._id);
-          if (result.tag === 'invalid') { return state; }
-          state = state
-            .setIn(['value', 'vi'], result.value)
-            .setIn(['value', 'intakeForm'], await resetIntakeForm(result.value));
+          if (result.tag === 'invalid') {
+            return state;
+          }
+          state = state.setIn(['value', 'vi'], result.value).setIn(['value', 'intakeForm'], await resetIntakeForm(result.value));
           return setIsEditing(state, true);
         }
       ];
@@ -120,7 +120,9 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       return [
         setIsEditing(state, false),
         async (state) => {
-          if (state.tag === 'invalid') { return state; }
+          if (state.tag === 'invalid') {
+            return state;
+          }
           return state.setIn(['value', 'intakeForm'], await resetIntakeForm(state.value.vi));
         }
       ];
@@ -138,9 +140,13 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
         startSubmitLoading(state),
         async (state, dispatch) => {
           state = stopSubmitLoading(state);
-          if (state.tag === 'invalid') { return state; }
+          if (state.tag === 'invalid') {
+            return state;
+          }
           const fail = (state: Immutable<State>, errors: UpdateValidationErrors) => {
-            if (state.tag === 'invalid') { return state; }
+            if (state.tag === 'invalid') {
+              return state;
+            }
             return state.setIn(['value', 'intakeForm'], IntakeForm.setErrors(state.value.intakeForm, errors));
           };
           const requestBody = await makeRequestBody(state.value.intakeForm);
@@ -149,22 +155,24 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
               const result = await api.updateViForVendors(requestBody.value, state.value.vi._id);
               switch (result.tag) {
                 case 'valid':
-                  state = state
-                    .setIn(['value', 'intakeForm'], await resetIntakeForm(result.value))
-                    .setIn(['value', 'vi'], result.value);
-                  dispatch(newRoute({
-                    tag: 'notice',
-                    value: {
-                      noticeId: {
-                        tag: 'viEditedByVendor',
-                        value: undefined
+                  state = state.setIn(['value', 'intakeForm'], await resetIntakeForm(result.value)).setIn(['value', 'vi'], result.value);
+                  dispatch(
+                    newRoute({
+                      tag: 'notice',
+                      value: {
+                        noticeId: {
+                          tag: 'viEditedByVendor',
+                          value: undefined
+                        }
                       }
-                    }
-                  }));
+                    })
+                  );
                   break;
                 case 'invalid':
                   state = fail(state, result.value);
-                  if (window.scrollTo) { window.scrollTo(0, 0); }
+                  if (window.scrollTo) {
+                    window.scrollTo(0, 0);
+                  }
                   break;
               }
               break;
@@ -181,8 +189,12 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 export const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (state.tag === 'invalid') { return null; }
-  if (state.value.vi.latestStatus !== LogItemType.EditsRequired) { return null; }
+  if (state.tag === 'invalid') {
+    return null;
+  }
+  if (state.value.vi.latestStatus !== LogItemType.EditsRequired) {
+    return null;
+  }
   const submit = () => dispatch({ tag: 'submit', value: undefined });
   const startEditing = () => dispatch({ tag: 'startEditing', value: undefined });
   const cancelEditing = () => dispatch({ tag: 'cancelEditing', value: undefined });
@@ -193,16 +205,18 @@ export const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) =>
   if (state.value.intakeForm.isEditing) {
     return (
       <FixedBar>
-        <LoadingButton color='primary' onClick={submit} loading={isSubmitLoading} disabled={isDisabled} className='text-nowrap'>
+        <LoadingButton color="primary" onClick={submit} loading={isSubmitLoading} disabled={isDisabled} className="text-nowrap">
           Submit Changes
         </LoadingButton>
-        <Link onClick={cancelEditing} color='secondary' disabled={isLoading} className='px-3'>Cancel</Link>
+        <Link onClick={cancelEditing} color="secondary" disabled={isLoading} className="px-3">
+          Cancel
+        </Link>
       </FixedBar>
     );
   } else {
     return (
       <FixedBar>
-        <LoadingButton color='primary' onClick={startEditing} loading={isStartEditingLoading} disabled={isDisabled} className='text-nowrap'>
+        <LoadingButton color="primary" onClick={startEditing} loading={isStartEditingLoading} disabled={isDisabled} className="text-nowrap">
           Edit Application
         </LoadingButton>
       </FixedBar>
@@ -211,40 +225,40 @@ export const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) =>
 };
 
 export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (state.tag === 'invalid') { return null; }
+  if (state.tag === 'invalid') {
+    return null;
+  }
   const { intakeForm, vi } = state.value;
-  const dispatchIntakeForm: Dispatch<IntakeForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'intakeForm' as const, value }));
+  const dispatchIntakeForm: Dispatch<IntakeForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'intakeForm' as const, value }));
   return (
     <div>
       <Row>
-        <Col xs='12' md='10'>
-          <h3 className='d-flex flex-column-reverse flex-md-row align-items-start align-items-md-center flex-wrap'>
-            Unsolicited Proposal (UP) 
-            <LogItemTypeBadge
-              logItemType={vi.latestStatus}
-              className='d-block d-md-inline mb-2 mb-md-0 ml-md-3 font-size-base' />
+        <Col xs="12" md="10">
+          <h3 className="d-flex flex-column-reverse flex-md-row align-items-start align-items-md-center flex-wrap">
+            Unsolicited Proposal (UP)
+            <LogItemTypeBadge logItemType={vi.latestStatus} className="d-block d-md-inline mb-2 mb-md-0 ml-md-3 font-size-base" />
           </h3>
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='10'>
+        <Col xs="12" md="10">
           <h1>{vi.latestVersion.description.title}</h1>
         </Col>
       </Row>
-      <Row className='mb-3'>
-        <Col xs='12'>
-          <p className='text-secondary small'>
-            <SubmittedDate date={vi.createdAt} className='d-block d-md-inline' />
-            <span className='px-3 d-none d-md-inline'>|</span>
-            <UpdatedDate date={vi.latestVersion.createdAt} className='d-block d-md-inline' />
+      <Row className="mb-3">
+        <Col xs="12">
+          <p className="text-secondary small">
+            <SubmittedDate date={vi.createdAt} className="d-block d-md-inline" />
+            <span className="px-3 d-none d-md-inline">|</span>
+            <UpdatedDate date={vi.latestVersion.createdAt} className="d-block d-md-inline" />
           </p>
         </Col>
       </Row>
-      <Row className='mb-5'>
-        <Col xs='12' md='9' lg='8'>
-          <div className='d-flex align-items-top flex-nowrap'>
-            <Icon name='info-circle' color='info' width={0.9} height={0.9} className='mr-2 flex-shrink-0 mt-1' />
-            <div className='font-italic small'>Please note that it may take up to four weeks to review and process your application. A member of the Procurement Concierge Program will be in touch with you shortly.</div>
+      <Row className="mb-5">
+        <Col xs="12" md="9" lg="8">
+          <div className="d-flex align-items-top flex-nowrap">
+            <Icon name="info-circle" color="info" width={0.9} height={0.9} className="mr-2 flex-shrink-0 mt-1" />
+            <div className="font-italic small">Please note that it may take up to four weeks to review and process your application. A member of the Procurement Concierge Program will be in touch with you shortly.</div>
           </div>
         </Col>
       </Row>
@@ -253,7 +267,7 @@ export const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   );
 };
 
-export const getMetadata: PageGetMetadata<State> = state => {
+export const getMetadata: PageGetMetadata<State> = (state) => {
   if (state.tag === 'valid') {
     return makePageMetadata(`${state.value.vi.latestVersion.description.title} — Unsolicited Proposal`);
   } else {
@@ -261,7 +275,7 @@ export const getMetadata: PageGetMetadata<State> = state => {
   }
 };
 
-export const getBreadcrumbs: PageGetBreadcrumbs<State, Msg> = state => {
+export const getBreadcrumbs: PageGetBreadcrumbs<State, Msg> = (state) => {
   return [
     {
       text: 'My Unsolicited Proposals',
@@ -276,12 +290,14 @@ export const getBreadcrumbs: PageGetBreadcrumbs<State, Msg> = state => {
   ];
 };
 
-export const getModal: PageGetModal<State, Msg> = state => {
-  if (state.tag === 'invalid') { return null; }
+export const getModal: PageGetModal<State, Msg> = (state) => {
+  if (state.tag === 'invalid') {
+    return null;
+  }
   if (state.value.promptSubmitConfirmation) {
     return {
       title: 'Submit Changes to Application?',
-      body: 'Please ensure all information provided is accurate. You will not be able to make additional changes to your application once it has been submitted unless requested by the program\'s staff.',
+      body: "Please ensure all information provided is accurate. You will not be able to make additional changes to your application once it has been submitted unless requested by the program's staff.",
       onCloseMsg: { tag: 'hideSubmitConfirmationPrompt', value: undefined },
       actions: [
         {

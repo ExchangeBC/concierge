@@ -45,25 +45,15 @@ export interface State {
   searchFilter: ShortText.State;
   table: Immutable<Table.State>;
   alerts: PageAlerts;
-};
+}
 
-type FormFieldKeys
-  = 'statusFilter'
-  | 'searchFilter';
+type FormFieldKeys = 'statusFilter' | 'searchFilter';
 
 export interface Params {
   sessionUser: PublicSessionUser;
 }
 
-type InnerMsg
-  = ADT<'statusFilter', Select.Value>
-  | ADT<'searchFilter', string>
-  | ADT<'table', Table.Msg>
-  | ADT<'uploadTemplate', File>
-  | ADT<'editVi', string>
-  | ADT<'hideEditConfirmationPrompt'>
-  | ADT<'hideUploadTemplateTermsConfirmationPrompt'>
-  | ADT<'hideUploadTemplateConfirmationPrompt'>;
+type InnerMsg = ADT<'statusFilter', Select.Value> | ADT<'searchFilter', string> | ADT<'table', Table.Msg> | ADT<'uploadTemplate', File> | ADT<'editVi', string> | ADT<'hideEditConfirmationPrompt'> | ADT<'hideUploadTemplateTermsConfirmationPrompt'> | ADT<'hideUploadTemplateConfirmationPrompt'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -72,7 +62,7 @@ export const init: Init<Params, State> = async ({ sessionUser }) => {
   let vis: VendorIdea[] = [];
   if (visResult.tag === 'valid') {
     vis = visResult.value.items
-      .map(vi => ({ ...vi, createdByName: profileToName(vi.createdBy.profile) }))
+      .map((vi) => ({ ...vi, createdByName: profileToName(vi.createdBy.profile) }))
       // Sort vendor ideas by date submitted.
       .sort((a, b) => {
         return compareDates(a.createdAt, b.createdAt) * -1;
@@ -101,15 +91,19 @@ export const init: Init<Params, State> = async ({ sessionUser }) => {
       required: false,
       placeholder: 'Search'
     }),
-    table: immutable(await Table.init({
-      idNamespace: 'rfi-list'
-    })),
+    table: immutable(
+      await Table.init({
+        idNamespace: 'rfi-list'
+      })
+    ),
     alerts: emptyPageAlerts()
   };
 };
 
 function viMatchesStatus(vi: VendorIdea, filterStatus: LogItemType | null): boolean {
-  if (!filterStatus) { return false; }
+  if (!filterStatus) {
+    return false;
+  }
   return vi.latestStatus === filterStatus;
 }
 
@@ -124,17 +118,17 @@ function updateAndQuery<K extends FormFieldKeys>(state: Immutable<State>, key: K
   const statusQuery = state.statusFilter.value && state.statusFilter.value.value;
   const rawSearchQuery = state.searchFilter.value;
   const searchQuery = rawSearchQuery ? new RegExp(state.searchFilter.value.split(/\s+/).join('.*'), 'i') : null;
-  const vis = state.vis.filter(vi => {
+  const vis = state.vis.filter((vi) => {
     let match = true;
     match = match && (!statusQuery || viMatchesStatus(vi, parseLogItemType(statusQuery)));
     match = match && (!searchQuery || viMatchesSearch(vi, searchQuery));
     return match;
   });
-  return state.set('visibleVis', vis); ;
+  return state.set('visibleVis', vis);
 }
 
 const startUploadTemplateLoading: UpdateState<State> = makeStartLoading('uploadTemplateLoading');
-const stopUploadTemplateLoading: UpdateState<State>  = makeStopLoading('uploadTemplateLoading');
+const stopUploadTemplateLoading: UpdateState<State> = makeStopLoading('uploadTemplateLoading');
 
 export const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
@@ -145,7 +139,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'table':
       return updateComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'table' as const, value }),
+        mapChildMsg: (value) => ({ tag: 'table' as const, value }),
         childStatePath: ['table'],
         childUpdate: Table.update,
         childMsg: msg.value
@@ -153,7 +147,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
     case 'uploadTemplate':
       return [
         startUploadTemplateLoading(state),
-        async state => {
+        async (state) => {
           if (!state.promptUploadTemplateTermsConfirmation && !(await hasUserAcceptedTerms(state.sessionUser.id))) {
             return stopUploadTemplateLoading(state).set('promptUploadTemplateTermsConfirmation', true);
           } else if (!state.promptUploadTemplateConfirmation) {
@@ -170,21 +164,15 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
           });
           switch (result.tag) {
             case 'valid':
-              return state
-                .set('templateFile', result.value)
-                .set('alerts', {
-                  ...emptyPageAlerts(),
-                  info: [`"${result.value.originalName}" was successfully uploaded.`]
-                });
+              return state.set('templateFile', result.value).set('alerts', {
+                ...emptyPageAlerts(),
+                info: [`"${result.value.originalName}" was successfully uploaded.`]
+              });
             case 'invalid':
-              return state
-                .set('alerts', {
-                  ...emptyPageAlerts(),
-                  errors: [
-                    'The application template could not be uploaded:',
-                    ...result.value
-                  ]
-                });
+              return state.set('alerts', {
+                ...emptyPageAlerts(),
+                errors: ['The application template could not be uploaded:', ...result.value]
+              });
           }
         }
       ];
@@ -193,10 +181,12 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
         state,
         async (state, dispatch) => {
           if (state.promptEditConfirmation || (await hasUserAcceptedTerms(state.sessionUser.id))) {
-            dispatch(newRoute({
-              tag: 'viEdit',
-              value: { viId: msg.value }
-            }));
+            dispatch(
+              newRoute({
+                tag: 'viEdit',
+                value: { viId: msg.value }
+              })
+            );
             return null;
           } else {
             return state.set('promptEditConfirmation', msg.value);
@@ -215,28 +205,21 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
 };
 
 const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, value => ({ tag, value }));
-  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChangeSelect = (tag: any) => Select.makeOnChange(dispatch, (value) => ({ tag, value }));
+  const onChangeShortText = (tag: any) => ShortText.makeOnChange(dispatch, (value) => ({ tag, value }));
   return (
     <div>
       <Row>
-        <Col xs='12'>
-          <h3 className='mb-3'>
-            Submission(s)
-          </h3>
+        <Col xs="12">
+          <h3 className="mb-3">Submission(s)</h3>
         </Col>
       </Row>
-      <Row className='d-none d-md-flex align-items-end'>
-        <Col xs='12' md='5' lg='4'>
-          <Select.view
-            state={state.statusFilter}
-            formatGroupLabel={LogItemTypeSelectGroupLabel}
-            onChange={onChangeSelect('statusFilter')} />
+      <Row className="d-none d-md-flex align-items-end">
+        <Col xs="12" md="5" lg="4">
+          <Select.view state={state.statusFilter} formatGroupLabel={LogItemTypeSelectGroupLabel} onChange={onChangeSelect('statusFilter')} />
         </Col>
-        <Col xs='12' md='4' className='ml-md-auto'>
-          <ShortText.view
-            state={state.searchFilter}
-            onChange={onChangeShortText('searchFilter')} />
+        <Col xs="12" md="4" className="ml-md-auto">
+          <ShortText.view state={state.searchFilter} onChange={onChangeShortText('searchFilter')} />
         </Col>
       </Row>
     </div>
@@ -273,21 +256,23 @@ const tableHeadCells: Table.THSpec[] = [
 
 function tableBodyRows(vis: VendorIdea[], dispatch: Dispatch<Msg>): Table.RowsSpec {
   const className = (center?: boolean, wrap?: boolean) => `align-top ${center ? 'text-center' : ''} ${wrap ? 'text-wrap' : ''}`;
-  return vis.map(vi => {
+  return vis.map((vi) => {
     const latestStatusCopy = logItemTypeToCopy(vi.latestStatus);
     return [
       {
-        children: (<LogItemTypeBadge logItemType={vi.latestStatus} />),
+        children: <LogItemTypeBadge logItemType={vi.latestStatus} />,
         className: className(),
         tooltipText: latestStatusCopy.tag === 'badgeAndLabel' ? latestStatusCopy.value[2] : undefined
       },
       {
         children: (
           <div>
-            <Link onClick={() => dispatch({ tag: 'editVi', value: vi._id })} className='mb-1'>
+            <Link onClick={() => dispatch({ tag: 'editVi', value: vi._id })} className="mb-1">
               {vi.latestVersion.description.title}
             </Link>
-            <div className='small text-uppercase text-secondary pt-1' style={{ lineHeight: '1.25rem' }}>{vi.createdByName}</div>
+            <div className="small text-uppercase text-secondary pt-1" style={{ lineHeight: '1.25rem' }}>
+              {vi.createdByName}
+            </div>
           </div>
         ),
         className: className(false, true)
@@ -305,62 +290,62 @@ function tableBodyRows(vis: VendorIdea[], dispatch: Dispatch<Msg>): Table.RowsSp
 }
 
 const ConditionalTable: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (!state.vis.length) { return (<div>There are currently no Unsolicited Proposals available.</div>); }
-  if (!state.visibleVis.length) { return (<div>There are no Unsolicited Proposals that match the search criteria.</div>); }
-  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, value => ({ tag: 'table' as const, value }));
-  return (
-    <Table.view
-      className='text-nowrap'
-      style={{ lineHeight: '1.5rem' }}
-      headCells={tableHeadCells}
-      bodyRows={tableBodyRows(state.visibleVis, dispatch)}
-      state={state.table}
-      dispatch={dispatchTable} />
-  );
-}
+  if (!state.vis.length) {
+    return <div>There are currently no Unsolicited Proposals available.</div>;
+  }
+  if (!state.visibleVis.length) {
+    return <div>There are no Unsolicited Proposals that match the search criteria.</div>;
+  }
+  const dispatchTable: Dispatch<Table.Msg> = mapComponentDispatch(dispatch, (value) => ({ tag: 'table' as const, value }));
+  return <Table.view className="text-nowrap" style={{ lineHeight: '1.5rem' }} headCells={tableHeadCells} bodyRows={tableBodyRows(state.visibleVis, dispatch)} state={state.table} dispatch={dispatchTable} />;
+};
 
-export const view: ComponentView<State, Msg> = props => {
+export const view: ComponentView<State, Msg> = (props) => {
   const { state, dispatch } = props;
   const uploadTemplate = (value: File) => dispatch({ tag: 'uploadTemplate', value });
   const isUploadTemplateLoading = state.uploadTemplateLoading > 0;
   return (
     <div>
-      <Row className='mb-5'>
-        <Col xs='12' md='9' lg='8'>
+      <Row className="mb-5">
+        <Col xs="12" md="9" lg="8">
           <h1>Unsolicited Proposals (UP)</h1>
         </Col>
       </Row>
-      <Row className='mb-5'>
-        <Col xs='12' md='9' lg='8'>
-          <div className='mb-3 d-flex flex-column flex-md-row align-items-start align-items-md-center'>
-            <h3 className='mb-0 mr-md-3 mb-3 mb-md-0'>Application Template</h3>
-            <div className='d-flex align-items-center flex-nowrap'>
-              <FileMulti.AddButton onAdd={uploadTemplate} text='Upload New Template' />
-              {isUploadTemplateLoading ? (<Spinner size='sm' color='muted' className='ml-3' />) : null}
+      <Row className="mb-5">
+        <Col xs="12" md="9" lg="8">
+          <div className="mb-3 d-flex flex-column flex-md-row align-items-start align-items-md-center">
+            <h3 className="mb-0 mr-md-3 mb-3 mb-md-0">Application Template</h3>
+            <div className="d-flex align-items-center flex-nowrap">
+              <FileMulti.AddButton onAdd={uploadTemplate} text="Upload New Template" />
+              {isUploadTemplateLoading ? <Spinner size="sm" color="muted" className="ml-3" /> : null}
             </div>
           </div>
-          {state.templateFile
-            ? (<div>
-                <div className='d-flex align-items-start mb-3'>
-                  <Icon name='paperclip' color='secondary' className='mr-2 mt-1 flex-shrink-0' width={1.1} height={1.1} />
-                  <Link download href={VI_APPLICATION_DOWNLOAD_URL}>{state.templateFile.originalName}</Link>
-                </div>
-                <div className='text-secondary small'>Uploaded: {formatDateAndTime(state.templateFile.createdAt, true)}</div>
-              </div>)
-            : (<div>An application template has not yet been uploaded.</div>)}
+          {state.templateFile ? (
+            <div>
+              <div className="d-flex align-items-start mb-3">
+                <Icon name="paperclip" color="secondary" className="mr-2 mt-1 flex-shrink-0" width={1.1} height={1.1} />
+                <Link download href={VI_APPLICATION_DOWNLOAD_URL}>
+                  {state.templateFile.originalName}
+                </Link>
+              </div>
+              <div className="text-secondary small">Uploaded: {formatDateAndTime(state.templateFile.createdAt, true)}</div>
+            </div>
+          ) : (
+            <div>An application template has not yet been uploaded.</div>
+          )}
         </Col>
       </Row>
-      {state.vis.length ? (<Filters {...props} />) : null}
+      {state.vis.length ? <Filters {...props} /> : null}
       <ConditionalTable {...props} />
     </div>
   );
 };
 
-export const getAlerts: PageGetAlerts<State> = state => {
+export const getAlerts: PageGetAlerts<State> = (state) => {
   return state.alerts;
 };
 
-export const getModal: PageGetModal<State, Msg> = state => {
+export const getModal: PageGetModal<State, Msg> = (state) => {
   if (state.promptEditConfirmation) {
     return {
       title: 'Review Terms and Conditions',

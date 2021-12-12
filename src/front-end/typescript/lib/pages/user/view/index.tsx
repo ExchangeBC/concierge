@@ -27,12 +27,9 @@ export interface State {
   buyer?: Immutable<BuyerProfile.State>;
   vendor?: Immutable<VendorProfile.State>;
   programStaff?: Immutable<ProgramStaffProfile.State>;
-};
+}
 
-type InnerMsg
-  = ADT<'buyer', BuyerProfile.Msg>
-  | ADT<'vendor', VendorProfile.Msg>
-  | ADT<'programStaff', ProgramStaffProfile.Msg>;
+type InnerMsg = ADT<'buyer', BuyerProfile.Msg> | ADT<'vendor', VendorProfile.Msg> | ADT<'programStaff', ProgramStaffProfile.Msg>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -43,36 +40,41 @@ async function userToState(profileUser: PublicUser, viewerUser?: ViewerUser): Pr
         errors: [],
         profileUser,
         viewerUser,
-        buyer: immutable(await BuyerProfile.init({
-          profileUser,
-          viewerUser
-        }))
+        buyer: immutable(
+          await BuyerProfile.init({
+            profileUser,
+            viewerUser
+          })
+        )
       };
     case UserType.Vendor:
       return {
         errors: [],
         profileUser,
         viewerUser,
-        vendor: immutable(await VendorProfile.init({
-          profileUser,
-          viewerUser
-        }))
+        vendor: immutable(
+          await VendorProfile.init({
+            profileUser,
+            viewerUser
+          })
+        )
       };
     case UserType.ProgramStaff:
       return {
         errors: [],
         profileUser,
         viewerUser,
-        programStaff: immutable(await ProgramStaffProfile.init({
-          profileUser,
-          viewerUser
-        }))
+        programStaff: immutable(
+          await ProgramStaffProfile.init({
+            profileUser,
+            viewerUser
+          })
+        )
       };
   }
 }
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedIn({
-
   async success({ routeParams, dispatch, shared }) {
     const { profileUserId } = routeParams;
     const viewerUser = shared.sessionUser;
@@ -80,20 +82,22 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedIn({
     switch (result.tag) {
       case 'valid':
         if (viewerUser && viewerUser.type === UserType.ProgramStaff && viewerUser.id !== result.value._id && !(await api.hasUserAcceptedTerms(viewerUser.id))) {
-          dispatch(replaceRoute({
-            tag: 'termsAndConditions' as const,
-            value: {
-              warningId: WarningId.UserViewAsProgramStaff,
-              redirectOnAccept: router.routeToUrl({
-                tag: 'userView',
-                value: routeParams
-              }),
-              redirectOnSkip: router.routeToUrl({
-                tag: 'userList',
-                value: null
-              })
-            }
-          }));
+          dispatch(
+            replaceRoute({
+              tag: 'termsAndConditions' as const,
+              value: {
+                warningId: WarningId.UserViewAsProgramStaff,
+                redirectOnAccept: router.routeToUrl({
+                  tag: 'userView',
+                  value: routeParams
+                }),
+                redirectOnSkip: router.routeToUrl({
+                  tag: 'userList',
+                  value: null
+                })
+              }
+            })
+          );
           return {
             errors: [ERROR_MESSAGE],
             viewerUser
@@ -110,28 +114,28 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedIn({
   },
 
   async fail({ routeParams, dispatch }) {
-    dispatch(replaceRoute({
-      tag: 'signIn' as 'signIn',
-      value: {
-        redirectOnSuccess: router.routeToUrl({
-          tag: 'userView',
-          value: routeParams
-        })
-      }
-    }));
+    dispatch(
+      replaceRoute({
+        tag: 'signIn' as 'signIn',
+        value: {
+          redirectOnSuccess: router.routeToUrl({
+            tag: 'userView',
+            value: routeParams
+          })
+        }
+      })
+    );
     // Use Buyer as an arbitrary choice for the first argument.
     return { errors: [] };
   }
-
 });
 
 const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
-
     case 'buyer':
       return updateGlobalComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'buyer' as 'buyer', value }),
+        mapChildMsg: (value) => ({ tag: 'buyer' as 'buyer', value }),
         childStatePath: ['buyer'],
         childUpdate: BuyerProfile.update,
         childMsg: msg.value
@@ -140,7 +144,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'vendor':
       return updateGlobalComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'vendor' as 'vendor', value }),
+        mapChildMsg: (value) => ({ tag: 'vendor' as 'vendor', value }),
         childStatePath: ['vendor'],
         childUpdate: VendorProfile.update,
         childMsg: msg.value
@@ -149,7 +153,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'programStaff':
       return updateGlobalComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'programStaff' as 'programStaff', value }),
+        mapChildMsg: (value) => ({ tag: 'programStaff' as 'programStaff', value }),
         childStatePath: ['programStaff'],
         childUpdate: ProgramStaffProfile.update,
         childMsg: msg.value
@@ -171,7 +175,7 @@ function ViewProfile<ProfileState, ProfileMsg>(props: ViewProfileProps<ProfileSt
   const { dispatch, profileState, mapProfileMsg, View } = props;
   if (profileState !== undefined) {
     const dispatchProfile: Dispatch<GlobalComponentMsg<ProfileMsg, Route>> = mapGlobalComponentDispatch(dispatch, mapProfileMsg);
-    return (<View dispatch={dispatchProfile} state={profileState} />);
+    return <View dispatch={dispatchProfile} state={profileState} />;
   } else {
     return null;
   }
@@ -181,29 +185,11 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (state.errors.length) {
     return null;
   } else if (state.buyer) {
-    return (
-      <ViewProfile
-        dispatch={dispatch}
-        profileState={state.buyer}
-        mapProfileMsg={value => ({ tag: 'buyer', value })}
-        View={BuyerProfile.view} />
-    );
+    return <ViewProfile dispatch={dispatch} profileState={state.buyer} mapProfileMsg={(value) => ({ tag: 'buyer', value })} View={BuyerProfile.view} />;
   } else if (state.vendor) {
-    return (
-      <ViewProfile
-        dispatch={dispatch}
-        profileState={state.vendor}
-        mapProfileMsg={value => ({ tag: 'vendor', value })}
-        View={VendorProfile.view} />
-    );
+    return <ViewProfile dispatch={dispatch} profileState={state.vendor} mapProfileMsg={(value) => ({ tag: 'vendor', value })} View={VendorProfile.view} />;
   } else if (state.programStaff) {
-    return (
-      <ViewProfile
-        dispatch={dispatch}
-        profileState={state.programStaff}
-        mapProfileMsg={value => ({ tag: 'programStaff', value })}
-        View={ProgramStaffProfile.view} />
-    );
+    return <ViewProfile dispatch={dispatch} profileState={state.programStaff} mapProfileMsg={(value) => ({ tag: 'programStaff', value })} View={ProgramStaffProfile.view} />;
   } else {
     return null;
   }
@@ -253,17 +239,17 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   },
   getModal(state) {
     if (state.buyer) {
-      return mapPageModalMsg(BuyerProfile.getModal(state.buyer), value => ({
+      return mapPageModalMsg(BuyerProfile.getModal(state.buyer), (value) => ({
         tag: 'buyer',
         value
       }));
     } else if (state.vendor) {
-      return mapPageModalMsg(VendorProfile.getModal(state.vendor), value => ({
+      return mapPageModalMsg(VendorProfile.getModal(state.vendor), (value) => ({
         tag: 'vendor',
         value
       }));
     } else if (state.programStaff) {
-      return mapPageModalMsg(ProgramStaffProfile.getModal(state.programStaff), value => ({
+      return mapPageModalMsg(ProgramStaffProfile.getModal(state.programStaff), (value) => ({
         tag: 'programStaff',
         value
       }));

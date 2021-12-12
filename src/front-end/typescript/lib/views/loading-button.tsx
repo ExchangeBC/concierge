@@ -17,13 +17,13 @@ export interface Props {
 
 const Children: View<Props> = ({ loading, children, spinnerColor = 'light' }) => {
   if (loading) {
-    return (<Spinner color={spinnerColor} size='sm' />);
+    return <Spinner color={spinnerColor} size="sm" />;
   } else {
-    return (<div>{children || ''}</div>);
+    return <div>{children || ''}</div>;
   }
 };
 
-const LoadingButton: View<Props> = props => {
+const LoadingButton: View<Props> = (props) => {
   const className = `${props.className || ''} text-nowrap`;
   return (
     <Button color={props.color} size={props.size || 'md'} onClick={props.onClick || noop} disabled={props.disabled} className={className}>

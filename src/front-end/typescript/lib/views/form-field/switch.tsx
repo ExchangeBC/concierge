@@ -28,35 +28,16 @@ export function init(params: InitParams): State {
 }
 
 export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (value: Value) => Msg): FormField.OnChange<Value> {
-  return value => {
+  return (value) => {
     dispatch(fn(value));
   };
 }
 
-const Child: View<ChildProps> = props => {
+const Child: View<ChildProps> = (props) => {
   const { state, disabled, onChange, className } = props;
-  return (
-    <CustomInput
-      id={state.id}
-      name={state.id}
-      checked={state.value}
-      disabled={disabled}
-      type='checkbox'
-      label={state.inlineLabel}
-      className={className}
-      onChange={event => onChange(event.currentTarget.checked)} />
-  );
+  return <CustomInput id={state.id} name={state.id} checked={state.value} disabled={disabled} type="checkbox" label={state.inlineLabel} className={className} onChange={(event) => onChange(event.currentTarget.checked)} />;
 };
 
 export const view: View<Props> = ({ state, onChange, toggleHelp, labelClassName, disabled = false }) => {
-  return (
-    <FormField.view
-      Child={Child}
-      state={state}
-      onChange={onChange}
-      toggleHelp={toggleHelp}
-      extraProps={null}
-      disabled={disabled}
-      labelClassName={labelClassName} />
-  );
+  return <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={null} disabled={disabled} labelClassName={labelClassName} />;
 };

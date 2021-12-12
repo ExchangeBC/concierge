@@ -26,9 +26,7 @@ async function start() {
   const Models = app.createModels();
   const router = app.createRouter({
     Models,
-    basicAuth: BASIC_AUTH_USERNAME && BASIC_AUTH_PASSWORD_HASH
-      ? { username: BASIC_AUTH_USERNAME, passwordHash: BASIC_AUTH_PASSWORD_HASH }
-      : undefined
+    basicAuth: BASIC_AUTH_USERNAME && BASIC_AUTH_PASSWORD_HASH ? { username: BASIC_AUTH_USERNAME, passwordHash: BASIC_AUTH_PASSWORD_HASH } : undefined
   });
   // Bind the server to a port and listen for incoming connections.
   // Need to lock-in Session type here.
@@ -37,7 +35,7 @@ async function start() {
   adapter({
     router,
     sessionIdToSession: SessionSchema.sessionIdToSession(SessionModel),
-    sessionToSessionId: SessionSchema.sessionToSessionId(SessionModel),
+    sessionToSessionId: SessionSchema.sessionToSessionId(),
     host: SERVER_HOST,
     port: SERVER_PORT,
     maxMultipartFilesSize: MAX_MULTIPART_FILES_SIZE,
@@ -51,8 +49,7 @@ async function start() {
   logger.info('server started', { host: SERVER_HOST, port: String(SERVER_PORT) });
 }
 
-start()
-  .catch(error => {
-    logger.error('app startup failed', makeErrorResponseBody(error).value);
-    process.exit(1);
-  });
+start().catch((error) => {
+  logger.error('app startup failed', makeErrorResponseBody(error).value);
+  process.exit(1);
+});

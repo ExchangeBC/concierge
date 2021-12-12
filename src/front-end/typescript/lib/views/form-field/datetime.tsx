@@ -37,32 +37,22 @@ export function init(params: Params): State {
 }
 
 export function makeOnChange<Msg>(dispatch: Dispatch<Msg>, fn: (value: Value) => Msg): FormField.OnChange<Value> {
-  return value => {
+  return (value) => {
     dispatch(fn(value));
   };
 }
 
 function makeOnKeyUp(onEnter?: OnEnter): KeyboardEventHandler<HTMLInputElement> {
-  return event => {
-    if (event.key === 'Enter' && onEnter) { onEnter(); }
+  return (event) => {
+    if (event.key === 'Enter' && onEnter) {
+      onEnter();
+    }
   };
-};
+}
 
-const Child: View<FormField.ChildProps<State, ExtraProps, Value>> = props => {
+const Child: View<FormField.ChildProps<State, ExtraProps, Value>> = (props) => {
   const { state, disabled, className, onChange, extraProps } = props;
-  return (
-    <Input.View
-      id={state.id}
-      type={state.type}
-      value={state.value}
-      className={`${className} form-control`}
-      disabled={disabled}
-      min={state.min}
-      max={state.max}
-      onChange={event => onChange(event.currentTarget.value)}
-      onChangeDebounced={extraProps.onChangeDebounced}
-      onKeyUp={extraProps.onKeyUp} />
-  );
+  return <Input.View id={state.id} type={state.type} value={state.value} className={`${className} form-control`} disabled={disabled} min={state.min} max={state.max} onChange={(event) => onChange(event.currentTarget.value)} onChangeDebounced={extraProps.onChangeDebounced} onKeyUp={extraProps.onKeyUp} />;
 };
 
 export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter, toggleHelp, disabled = false }) => {
@@ -70,7 +60,5 @@ export const view: View<Props> = ({ state, onChange, onChangeDebounced, onEnter,
     onKeyUp: makeOnKeyUp(onEnter),
     onChangeDebounced
   };
-  return (
-    <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={extraProps} disabled={disabled} />
-  );
+  return <FormField.view Child={Child} state={state} onChange={onChange} toggleHelp={toggleHelp} extraProps={extraProps} disabled={disabled} />;
 };

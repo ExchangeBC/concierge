@@ -76,7 +76,7 @@ export function parseWarningId(raw: string): WarningId | null {
     case WarningId.UploadViApplicationTemplate:
       return WarningId.UploadViApplicationTemplate;
     default:
-      return null
+      return null;
   }
 }
 
@@ -89,14 +89,13 @@ export interface State {
   acceptedTermsAt?: Date;
   redirectOnAccept?: string;
   redirectOnSkip?: string;
-};
+}
 
 export interface RouteParams extends Pick<State, 'redirectOnAccept' | 'redirectOnSkip'> {
   warningId?: WarningId;
 }
 
-type InnerMsg
-  = ADT<'acceptTerms'>;
+type InnerMsg = ADT<'acceptTerms'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -109,13 +108,12 @@ const initState: State = {
 };
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedIn({
-
   async success({ routeParams, shared }) {
     const { redirectOnAccept, redirectOnSkip, warningId } = routeParams;
     const userId = shared.sessionUser.id;
     const result = await api.readOneUser(userId);
     const acceptedTermsAt = result.tag === 'valid' ? result.value.acceptedTermsAt : undefined;
-    const errors = result.tag === 'invalid' ? ['An error occurred while loading this page. Please refresh the page and try again.'] : []
+    const errors = result.tag === 'invalid' ? ['An error occurred while loading this page. Please refresh the page and try again.'] : [];
     return {
       ...initState,
       errors,
@@ -129,28 +127,33 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedIn({
   },
 
   async fail({ dispatch }) {
-    dispatch(replaceRoute({
-      tag: 'requestForInformationList' as 'requestForInformationList',
-      value: null
-    }));
+    dispatch(
+      replaceRoute({
+        tag: 'requestForInformationList' as 'requestForInformationList',
+        value: null
+      })
+    );
     return initState;
   }
-
 });
 
 const startLoading: UpdateState<State> = makeStartLoading('loading');
 const stopLoading: UpdateState<State> = makeStopLoading('loading');
 
 function getRedirectUrl(state: Immutable<State>, skip: boolean): string {
-  if (state.redirectOnAccept && !skip) { return state.redirectOnAccept; }
-  if (state.redirectOnSkip && skip) { return state.redirectOnSkip; }
+  if (state.redirectOnAccept && !skip) {
+    return state.redirectOnAccept;
+  }
+  if (state.redirectOnSkip && skip) {
+    return state.redirectOnSkip;
+  }
   return router.routeToUrl({
     tag: 'userView',
     value: {
       profileUserId: state.userId
     }
   });
-};
+}
 
 const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
@@ -181,16 +184,14 @@ function isValid(state: State): boolean {
   return !state.errors.length;
 }
 
-const viewBottomBar: ComponentView<State, Msg> = props => {
+const viewBottomBar: ComponentView<State, Msg> = (props) => {
   const { state, dispatch } = props;
   if (state.acceptedTermsAt) {
     return (
       <FixedBar>
-        <p className='text-align-right mb-0'>
-          {formatTermsAndConditionsAgreementDate(state.acceptedTermsAt)}
-        </p>
-        <Link route={{ tag: 'userView', value: { profileUserId: state.userId } }} className='mr-auto d-none d-md-flex align-items-center' color='secondary'>
-          <Icon name='chevron-left' color='secondary' />
+        <p className="text-align-right mb-0">{formatTermsAndConditionsAgreementDate(state.acceptedTermsAt)}</p>
+        <Link route={{ tag: 'userView', value: { profileUserId: state.userId } }} className="mr-auto d-none d-md-flex align-items-center" color="secondary">
+          <Icon name="chevron-left" color="secondary" />
           My Profile
         </Link>
       </FixedBar>
@@ -205,7 +206,7 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
         <LoadingButton color={isDisabled ? 'secondary' : 'primary'} onClick={acceptTerms} loading={isLoading} disabled={isDisabled}>
           I Accept
         </LoadingButton>
-        <Link href={getRedirectUrl(state, true)} color='secondary' className='mx-3'>
+        <Link href={getRedirectUrl(state, true)} color="secondary" className="mx-3">
           {state.warnings.length ? 'Cancel' : 'Skip'}
         </Link>
       </FixedBar>
@@ -213,17 +214,17 @@ const viewBottomBar: ComponentView<State, Msg> = props => {
   }
 };
 
-const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = (props) => {
   const { state } = props;
   return (
-    <Container className='mb-5 flex-grow-1'>
-      <Row className='mb-3'>
-        <Col xs='12'>
+    <Container className="mb-5 flex-grow-1">
+      <Row className="mb-3">
+        <Col xs="12">
           <h1>Concierge Web App Terms and Conditions</h1>
         </Col>
       </Row>
       <Row>
-        <Col xs='12'>
+        <Col xs="12">
           <Markdown source={state.markdownSource} />
         </Col>
       </Row>

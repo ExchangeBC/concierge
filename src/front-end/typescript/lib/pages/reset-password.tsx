@@ -22,12 +22,7 @@ export interface State {
   confirmNewPassword: ShortText.State;
 }
 
-type InnerMsg
-  = ADT<'onChangeNewPassword', string>
-  | ADT<'onChangeConfirmNewPassword', string>
-  | ADT<'validateNewPassword'>
-  | ADT<'validateConfirmNewPassword'>
-  | ADT<'submit'>;
+type InnerMsg = ADT<'onChangeNewPassword', string> | ADT<'onChangeConfirmNewPassword', string> | ADT<'validateNewPassword'> | ADT<'validateConfirmNewPassword'> | ADT<'submit'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -77,7 +72,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'validateNewPassword':
       return [validateField(state, 'newPassword', validatePassword)];
     case 'validateConfirmNewPassword':
-      return [validateField(state, 'confirmNewPassword', v => validateConfirmPassword(state.newPassword.value, v))];
+      return [validateField(state, 'confirmNewPassword', (v) => validateConfirmPassword(state.newPassword.value, v))];
     case 'submit':
       state = startLoading(state);
       return [
@@ -90,15 +85,17 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           });
           switch (result.tag) {
             case 'valid':
-              dispatch(newRoute({
-                tag: 'notice' as 'notice',
-                value: {
-                  noticeId: {
-                    tag: 'resetPassword' as 'resetPassword',
-                    value: undefined
+              dispatch(
+                newRoute({
+                  tag: 'notice' as 'notice',
+                  value: {
+                    noticeId: {
+                      tag: 'resetPassword' as 'resetPassword',
+                      value: undefined
+                    }
                   }
-                }
-              }));
+                })
+              );
               return null;
             case 'invalid':
               return stopLoading(state)
@@ -108,7 +105,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
         }
       ];
     default:
-return [state];
+      return [state];
   }
 };
 
@@ -121,53 +118,44 @@ function isValid(state: State): boolean {
   return providedRequiredFields && !isInvalid(state);
 }
 
-const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = (props) => {
   const { state, dispatch } = props;
-  const onChange = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChange = (tag: any) => ShortText.makeOnChange(dispatch, (value) => ({ tag, value }));
   const isLoading = state.loading > 0;
   const isDisabled = isLoading || !isValid(state);
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
     <div>
       <Row>
-        <Col xs='12'>
+        <Col xs="12">
           <h1>Reset Password</h1>
         </Col>
       </Row>
-      <Row className='mb-3'>
-        <Col xs='12' md='8'>
-          <p>
-            Please enter a new password below to regain access to your account.
-          </p>
+      <Row className="mb-3">
+        <Col xs="12" md="8">
+          <p>Please enter a new password below to regain access to your account.</p>
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='6' lg='5'>
+        <Col xs="12" md="6" lg="5">
           <Row>
-            <Col xs='12'>
-              <ShortText.view
-                state={state.newPassword}
-                onChange={onChange('onChangeNewPassword')}
-                onChangeDebounced={() => dispatch({ tag: 'validateNewPassword', value: undefined })}
-                onEnter={submit}
-                autoFocus />
+            <Col xs="12">
+              <ShortText.view state={state.newPassword} onChange={onChange('onChangeNewPassword')} onChangeDebounced={() => dispatch({ tag: 'validateNewPassword', value: undefined })} onEnter={submit} autoFocus />
             </Col>
           </Row>
-          <Row className='mb-3 pb-3'>
-            <Col xs='12'>
-              <ShortText.view
-                state={state.confirmNewPassword}
-                onChange={onChange('onChangeConfirmNewPassword')}
-                onChangeDebounced={() => dispatch({ tag: 'validateConfirmNewPassword', value: undefined })}
-                onEnter={submit} />
+          <Row className="mb-3 pb-3">
+            <Col xs="12">
+              <ShortText.view state={state.confirmNewPassword} onChange={onChange('onChangeConfirmNewPassword')} onChangeDebounced={() => dispatch({ tag: 'validateConfirmNewPassword', value: undefined })} onEnter={submit} />
             </Col>
           </Row>
           <Row>
-            <Col xs='12'>
-              <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled}>
+            <Col xs="12">
+              <LoadingButton color="primary" onClick={submit} loading={isLoading} disabled={isDisabled}>
                 Reset Password
               </LoadingButton>
-              <Link route={{ tag: 'landing', value: null }} color='secondary' className='ml-3'>Cancel</Link>
+              <Link route={{ tag: 'landing', value: null }} color="secondary" className="ml-3">
+                Cancel
+              </Link>
             </Col>
           </Row>
         </Col>

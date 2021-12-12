@@ -11,21 +11,18 @@ import { ADT, UserType } from 'shared/lib/types';
 export interface RouteParams {
   viId: string;
   activeTab?: ProgramStaffEdit.TabId;
-};
+}
 
-export type InnerMsg
-  = ADT<'vendor', VendorEdit.Msg>
-  | ADT<'programStaff', ProgramStaffEdit.Msg>;
+export type InnerMsg = ADT<'vendor', VendorEdit.Msg> | ADT<'programStaff', ProgramStaffEdit.Msg>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export interface State {
   vendor?: Immutable<VendorEdit.State>;
   programStaff?: Immutable<ProgramStaffEdit.State>;
-};
+}
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
-
   userTypes: [UserType.Vendor, UserType.ProgramStaff],
 
   async success({ shared, routeParams, dispatch }) {
@@ -33,10 +30,10 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
     const { viId, activeTab } = routeParams;
     switch (sessionUser.type) {
       case UserType.Vendor:
-        const dispatchVendor: Dispatch<VendorEdit.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'vendor' as const, value }));
+        const dispatchVendor: Dispatch<VendorEdit.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'vendor' as const, value }));
         return { vendor: immutable(await VendorEdit.init({ viId, dispatch: dispatchVendor })) };
       case UserType.ProgramStaff:
-        const dispatchProgramStaff: Dispatch<ProgramStaffEdit.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'programStaff' as const, value }));
+        const dispatchProgramStaff: Dispatch<ProgramStaffEdit.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'programStaff' as const, value }));
         return { programStaff: immutable(await ProgramStaffEdit.init({ viId, activeTab, dispatch: dispatchProgramStaff, sessionUser })) };
       default:
         return {};
@@ -45,26 +42,30 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
 
   async fail({ routeParams, shared, dispatch }) {
     if (!shared.session || !shared.session.user) {
-      dispatch(replaceRoute({
-        tag: 'signIn' as const,
-        value: {
-          redirectOnSuccess: router.routeToUrl({
-            tag: 'viEdit',
-            value: routeParams
-          })
-        }
-      }));
-    } else { // is buyer.
-      dispatch(replaceRoute({
-        tag: 'viView' as const,
-        value: {
-          viId: routeParams.viId
-        }
-      }));
+      dispatch(
+        replaceRoute({
+          tag: 'signIn' as const,
+          value: {
+            redirectOnSuccess: router.routeToUrl({
+              tag: 'viEdit',
+              value: routeParams
+            })
+          }
+        })
+      );
+    } else {
+      // is buyer.
+      dispatch(
+        replaceRoute({
+          tag: 'viView' as const,
+          value: {
+            viId: routeParams.viId
+          }
+        })
+      );
     }
     return {};
   }
-
 });
 
 const update: Update<State, Msg> = ({ state, msg }) => {
@@ -72,7 +73,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'vendor':
       return updateGlobalComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'vendor', value }),
+        mapChildMsg: (value) => ({ tag: 'vendor', value }),
         childStatePath: ['vendor'],
         childUpdate: VendorEdit.update,
         childMsg: msg.value
@@ -80,7 +81,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
     case 'programStaff':
       return updateGlobalComponentChild({
         state,
-        mapChildMsg: value => ({ tag: 'programStaff', value }),
+        mapChildMsg: (value) => ({ tag: 'programStaff', value }),
         childStatePath: ['programStaff'],
         childUpdate: ProgramStaffEdit.update,
         childMsg: msg.value
@@ -92,11 +93,11 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 
 const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
   if (state.vendor) {
-    const dispatchVendor: Dispatch<VendorEdit.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'vendor' as const, value }));
-    return (<VendorEdit.view state={state.vendor} dispatch={dispatchVendor} />);
+    const dispatchVendor: Dispatch<VendorEdit.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'vendor' as const, value }));
+    return <VendorEdit.view state={state.vendor} dispatch={dispatchVendor} />;
   } else if (state.programStaff) {
-    const dispatchProgramStaff: Dispatch<ProgramStaffEdit.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'programStaff' as const, value }));
-    return (<ProgramStaffEdit.view state={state.programStaff} dispatch={dispatchProgramStaff} />);
+    const dispatchProgramStaff: Dispatch<ProgramStaffEdit.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'programStaff' as const, value }));
+    return <ProgramStaffEdit.view state={state.programStaff} dispatch={dispatchProgramStaff} />;
   } else {
     return null;
   }
@@ -108,11 +109,11 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   view,
   viewBottomBar({ state, dispatch }) {
     if (state.vendor) {
-      const dispatchVendor: Dispatch<VendorEdit.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'vendor' as const, value }));
-      return (<VendorEdit.viewBottomBar state={state.vendor} dispatch={dispatchVendor} />);
+      const dispatchVendor: Dispatch<VendorEdit.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'vendor' as const, value }));
+      return <VendorEdit.viewBottomBar state={state.vendor} dispatch={dispatchVendor} />;
     } else if (state.programStaff) {
-      const dispatchProgramStaff: Dispatch<ProgramStaffEdit.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, value => ({ tag: 'programStaff' as const, value }));
-      return (<ProgramStaffEdit.viewBottomBar state={state.programStaff} dispatch={dispatchProgramStaff} />);
+      const dispatchProgramStaff: Dispatch<ProgramStaffEdit.Msg> = mapGlobalComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'programStaff' as const, value }));
+      return <ProgramStaffEdit.viewBottomBar state={state.programStaff} dispatch={dispatchProgramStaff} />;
     } else {
       return null;
     }
@@ -129,18 +130,18 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
   },
   getBreadcrumbs(state) {
     if (state.vendor) {
-      return mapPageBreadcrumbsMsg(VendorEdit.getBreadcrumbs(state.vendor), value => ({ tag: 'vendor', value }));
+      return mapPageBreadcrumbsMsg(VendorEdit.getBreadcrumbs(state.vendor), (value) => ({ tag: 'vendor', value }));
     } else if (state.programStaff) {
-      return mapPageBreadcrumbsMsg(ProgramStaffEdit.getBreadcrumbs(state.programStaff), value => ({ tag: 'programStaff', value }));
+      return mapPageBreadcrumbsMsg(ProgramStaffEdit.getBreadcrumbs(state.programStaff), (value) => ({ tag: 'programStaff', value }));
     } else {
       return [];
     }
   },
   getModal(state) {
     if (state.vendor) {
-      return mapPageModalMsg(VendorEdit.getModal(state.vendor), value => ({ tag: 'vendor', value }));
+      return mapPageModalMsg(VendorEdit.getModal(state.vendor), (value) => ({ tag: 'vendor', value }));
     } else if (state.programStaff) {
-      return mapPageModalMsg(ProgramStaffEdit.getModal(state.programStaff), value => ({ tag: 'programStaff', value }));
+      return mapPageModalMsg(ProgramStaffEdit.getModal(state.programStaff), (value) => ({ tag: 'programStaff', value }));
     } else {
       return null;
     }

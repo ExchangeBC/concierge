@@ -11,13 +11,17 @@ interface ViewAlertProps {
 }
 
 const ViewAlert: View<ViewAlertProps> = ({ messages, color, className }) => {
-  if (!messages.length) { return null; }
+  if (!messages.length) {
+    return null;
+  }
   return (
     <Alert color={color} className={className} fade={false}>
-      {messages.map((text, i)  => (<div key={`alert-${color}-${i}`}>{text}</div>))}
+      {messages.map((text, i) => (
+        <div key={`alert-${color}-${i}`}>{text}</div>
+      ))}
     </Alert>
   );
-}
+};
 
 interface ViewAlertsProps {
   alerts: PageAlerts;
@@ -27,10 +31,10 @@ const ViewAlerts: View<ViewAlertsProps> = ({ alerts }) => {
   const { info, warnings, errors } = alerts;
   return (
     <Row>
-      <Col xs='12'>
-        <ViewAlert messages={info} color='info' />
-        <ViewAlert messages={warnings} color='warning' />
-        <ViewAlert messages={errors} color='danger' className='mb-0' />
+      <Col xs="12">
+        <ViewAlert messages={info} color="info" />
+        <ViewAlert messages={warnings} color="warning" />
+        <ViewAlert messages={errors} color="danger" className="mb-0" />
       </Col>
     </Row>
   );
@@ -43,16 +47,20 @@ interface ViewBreadcrumbsProps<PageMsg> {
 
 function ViewBreadcrumbs<PageMsg>(props: ViewBreadcrumbsProps<PageMsg>): ReactElement<ViewBreadcrumbsProps<PageMsg>> | null {
   const { dispatchPage, breadcrumbs } = props;
-  if (!breadcrumbs.length) { return null; }
+  if (!breadcrumbs.length) {
+    return null;
+  }
   return (
-    <Breadcrumb className='d-none d-md-block' listClassName='bg-transparent px-0'>
+    <Breadcrumb className="d-none d-md-block" listClassName="bg-transparent px-0">
       {breadcrumbs.map(({ text, onClickMsg }, i) => {
         const onClick = () => {
-          if (onClickMsg) { dispatchPage(onClickMsg); }
+          if (onClickMsg) {
+            dispatchPage(onClickMsg);
+          }
         };
         return (
           <BreadcrumbItem key={`breadcrumb-${i}`} active={i === breadcrumbs.length - 1}>
-            {onClickMsg ? (<Link onClick={onClick}>{text}</Link>) : text}
+            {onClickMsg ? <Link onClick={onClick}>{text}</Link> : text}
           </BreadcrumbItem>
         );
       })}
@@ -66,11 +74,7 @@ function ViewAlertsAndBreadcrumbs<PageMsg>(props: ViewAlertsAndBreadcrumbsProps<
   const { dispatchPage, alerts, breadcrumbs } = props;
   const hasAlerts = alerts.info.length || alerts.warnings.length || alerts.errors.length;
   const hasBreadcrumbs = !!breadcrumbs.length;
-  let className = hasBreadcrumbs
-    ? 'pt-md-3'
-    : hasAlerts
-    ? 'pt-5'
-    : '';
+  let className = hasBreadcrumbs ? 'pt-md-3' : hasAlerts ? 'pt-5' : '';
   className = `${className} ${hasBreadcrumbs && hasAlerts ? 'pt-5' : ''} ${hasBreadcrumbs ? 'mb-md-n4' : ''} ${hasAlerts ? 'mb-n4' : ''}`;
   return (
     <Container className={className}>
@@ -78,7 +82,7 @@ function ViewAlertsAndBreadcrumbs<PageMsg>(props: ViewAlertsAndBreadcrumbsProps<
       <ViewAlerts alerts={alerts} />
     </Container>
   );
-};
+}
 
 export interface Props<PageState, PageMsg> {
   dispatch: Dispatch<AppMsg<Msg, Route>>;
@@ -92,15 +96,17 @@ export function view<PageState, PageMsg>(props: Props<PageState, PageMsg>) {
   // pageState is undefined, so redirect to 404 page.
   // This shouldn't happen.
   if (!pageState) {
-    dispatch(newRoute({
-      tag: 'notice' as 'notice',
-      value: {
-        noticeId: {
-          tag: 'notFound' as 'notFound',
-          value: undefined
+    dispatch(
+      newRoute({
+        tag: 'notice' as 'notice',
+        value: {
+          noticeId: {
+            tag: 'notFound' as 'notFound',
+            value: undefined
+          }
         }
-      }
-    }));
+      })
+    );
     return null;
   }
   // pageState is defined, render page.
@@ -122,7 +128,7 @@ export function view<PageState, PageMsg>(props: Props<PageState, PageMsg>) {
   // Handle full width pages.
   if (fullWidth) {
     return (
-      <div className='d-flex flex-column flex-grow-1 page-container'>
+      <div className="d-flex flex-column flex-grow-1 page-container">
         <ViewAlertsAndBreadcrumbs {...viewAlertsAndBreadcrumbsProps} />
         <div className={containerClassName}>
           <component.view {...viewProps} />
@@ -133,7 +139,7 @@ export function view<PageState, PageMsg>(props: Props<PageState, PageMsg>) {
   }
   // Handle pages within a container.
   return (
-    <div className='d-flex flex-column flex-grow-1 page-container'>
+    <div className="d-flex flex-column flex-grow-1 page-container">
       <ViewAlertsAndBreadcrumbs {...viewAlertsAndBreadcrumbsProps} />
       <div className={containerClassName}>
         <Container>

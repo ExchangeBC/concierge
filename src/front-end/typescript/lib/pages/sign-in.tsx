@@ -21,18 +21,13 @@ export interface State {
   password: ShortText.State;
 }
 
-type InnerMsg
-  = ADT<'onChangeEmail', string>
-  | ADT<'onChangePassword', string>
-  | ADT<'validateEmail'>
-  | ADT<'validatePassword'>
-  | ADT<'submit'>;
+type InnerMsg = ADT<'onChangeEmail', string> | ADT<'onChangePassword', string> | ADT<'validateEmail'> | ADT<'validatePassword'> | ADT<'submit'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export interface RouteParams {
   redirectOnSuccess?: string;
-};
+}
 
 const initState: State = {
   loading: 0,
@@ -54,27 +49,27 @@ const initState: State = {
 };
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedOut({
-
   async success({ routeParams }) {
     const { redirectOnSuccess } = routeParams;
     return {
       ...initState,
       redirectOnSuccess
-    }
+    };
   },
 
   async fail({ routeParams, dispatch, shared }) {
     if (routeParams.redirectOnSuccess && shared.session && shared.session.user) {
       dispatch(replaceUrl(routeParams.redirectOnSuccess));
     } else {
-      dispatch(replaceRoute({
-        tag: 'requestForInformationList' as const,
-        value: null
-      }));
+      dispatch(
+        replaceRoute({
+          tag: 'requestForInformationList' as const,
+          value: null
+        })
+      );
     }
     return initState;
   }
-
 });
 
 const startLoading: UpdateState<State> = makeStartLoading('loading');
@@ -107,10 +102,12 @@ const update: Update<State, Msg> = ({ state, msg }) => {
               if (state.redirectOnSuccess) {
                 dispatch(replaceUrl(state.redirectOnSuccess));
               } else {
-                dispatch(replaceRoute({
-                  tag: 'requestForInformationList' as const,
-                  value: null
-                }));
+                dispatch(
+                  replaceRoute({
+                    tag: 'requestForInformationList' as const,
+                    value: null
+                  })
+                );
               }
               return null;
             case 'invalid':
@@ -132,59 +129,53 @@ function isValid(state: State): boolean {
   return providedRequiredFields && !isInvalid(state);
 }
 
-const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = (props) => {
   const { state, dispatch } = props;
-  const onChange = (tag: any) => ShortText.makeOnChange(dispatch, value => ({ tag, value }));
+  const onChange = (tag: any) => ShortText.makeOnChange(dispatch, (value) => ({ tag, value }));
   const isLoading = state.loading > 0;
   const isDisabled = isLoading || !isValid(state);
   const submit = () => !isDisabled && dispatch({ tag: 'submit', value: undefined });
   return (
     <div>
       <Row>
-        <Col xs='12'>
+        <Col xs="12">
           <h1>Sign In</h1>
         </Col>
       </Row>
-      <Row className='mb-3'>
-        <Col xs='12' md='8'>
+      <Row className="mb-3">
+        <Col xs="12" md="8">
           <p>
-            Welcome back to the Concierge. If you don't already have an account,{' '}
-            <Link route={{ tag: 'signUp', value: null }}>sign up here</Link>.
+            Welcome back to the Concierge. If you don't already have an account, <Link route={{ tag: 'signUp', value: null }}>sign up here</Link>.
           </p>
         </Col>
       </Row>
       <Row>
-        <Col xs='12' md='6' lg='5'>
+        <Col xs="12" md="6" lg="5">
           <Row>
-            <Col xs='12'>
-              <ShortText.view
-                state={state.email}
-                onChange={onChange('onChangeEmail')}
-                onChangeDebounced={() => dispatch({ tag: 'validateEmail', value: undefined })}
-                onEnter={submit}
-                autoFocus />
+            <Col xs="12">
+              <ShortText.view state={state.email} onChange={onChange('onChangeEmail')} onChangeDebounced={() => dispatch({ tag: 'validateEmail', value: undefined })} onEnter={submit} autoFocus />
             </Col>
           </Row>
           <Row>
-            <Col xs='12'>
-              <ShortText.view
-                state={state.password}
-                onChange={onChange('onChangePassword')}
-                onChangeDebounced={() => dispatch({ tag: 'validatePassword', value: undefined })}
-                onEnter={submit} />
+            <Col xs="12">
+              <ShortText.view state={state.password} onChange={onChange('onChangePassword')} onChangeDebounced={() => dispatch({ tag: 'validatePassword', value: undefined })} onEnter={submit} />
             </Col>
           </Row>
-          <Row className='mb-3 pb-3'>
-            <Col xs='12'>
-              <Link route={{ tag: 'forgotPassword', value: null }} color='secondary'>Forgotten your password?</Link>
+          <Row className="mb-3 pb-3">
+            <Col xs="12">
+              <Link route={{ tag: 'forgotPassword', value: null }} color="secondary">
+                Forgotten your password?
+              </Link>
             </Col>
           </Row>
           <Row>
-            <Col xs='12'>
-              <LoadingButton color='primary' onClick={submit} loading={isLoading} disabled={isDisabled}>
+            <Col xs="12">
+              <LoadingButton color="primary" onClick={submit} loading={isLoading} disabled={isDisabled}>
                 Sign In
               </LoadingButton>
-              <Link route={{ tag: 'landing', value: null }} color='secondary' className='ml-3'>Cancel</Link>
+              <Link route={{ tag: 'landing', value: null }} color="secondary" className="ml-3">
+                Cancel
+              </Link>
             </Col>
           </Row>
         </Col>

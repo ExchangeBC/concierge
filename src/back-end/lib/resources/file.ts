@@ -22,7 +22,6 @@ type RequiredModels = 'File' | 'User';
 export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, SupportedRequestBodies, null, Session>;
 
 export const resource: Resource = {
-
   routeNamespace: 'files',
 
   create(Models) {
@@ -111,7 +110,6 @@ export const resource: Resource = {
       }
     };
   }
-
-}
+};
 
 export default resource;

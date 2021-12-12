@@ -16,23 +16,26 @@ export interface SendParams {
 }
 
 export function send(params: SendParams): Promise<void> {
-  return new Promise((resolve, reject) => {
-    transport.sendMail({
-      ...params,
-      from: MAILER_FROM,
-      text: fromString(params.html, { wordwrap: 130 })
-    }, error => {
-      if (error) {
-        // Do not reject promise, only log the error.
-        logger.error('Unable to send email', {
-          errorMessage: error.message,
-          errorStack: error.stack,
-          to: params.to,
-          bcc: params.bcc,
-          subject: params.subject
-        });
+  return new Promise((resolve) => {
+    transport.sendMail(
+      {
+        ...params,
+        from: MAILER_FROM,
+        text: fromString(params.html, { wordwrap: 130 })
+      },
+      (error) => {
+        if (error) {
+          // Do not reject promise, only log the error.
+          logger.error('Unable to send email', {
+            errorMessage: error.message,
+            errorStack: error.stack,
+            to: params.to,
+            bcc: params.bcc,
+            subject: params.subject
+          });
+        }
+        resolve();
       }
-      resolve();
-    });
+    );
   });
 }

@@ -17,7 +17,6 @@ export type Msg = PageRequestForInformationView.Msg;
  */
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
-
   userTypes: [UserType.ProgramStaff],
 
   async success(params) {
@@ -29,18 +28,19 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
 
   async fail(params) {
     const { routeParams, dispatch } = params;
-    dispatch(replaceRoute({
-      tag: 'signIn' as 'signIn',
-      value: {
-        redirectOnSuccess: router.routeToUrl({
-          tag: 'requestForInformationPreview',
-          value: routeParams
-        })
-      }
-    }));
+    dispatch(
+      replaceRoute({
+        tag: 'signIn',
+        value: {
+          redirectOnSuccess: router.routeToUrl({
+            tag: 'requestForInformationPreview',
+            value: routeParams
+          })
+        }
+      })
+    );
     return await PageRequestForInformationView.component.init(params);
   }
-
 });
 
 export const component = {

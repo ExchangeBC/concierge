@@ -28,13 +28,7 @@ export async function hashToken(userId: mongoose.Types.ObjectId): Promise<string
 }
 
 export async function deleteToken(Model: Model, token: string): Promise<void> {
-  try {
-    await Model
-      .findOneAndDelete({ token })
-      .exec();
-  } catch (error) {
-    throw error;
-  }
+  await Model.findOneAndDelete({ token }).exec();
 }
 
 export async function authenticateToken(token: string, userId: mongoose.Types.ObjectId): Promise<boolean> {

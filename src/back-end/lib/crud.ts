@@ -1,13 +1,13 @@
 import { Handler, namespaceRoute, Route, Router } from 'back-end/lib/server';
 import { HttpMethod } from 'shared/lib/types';
 
- /**
-  * This type allows a resource to indicate which Models it needs at the type level.
-  * Then, when creating routers for each resource, we provide it an object containing
-  * all of the mongoose Models we have. If that object doesn't contain a `Model` that is
-  * defined by any resource's `RequiredModels` type parameter, we will see a compile-time
-  * error.
-  */
+/**
+ * This type allows a resource to indicate which Models it needs at the type level.
+ * Then, when creating routers for each resource, we provide it an object containing
+ * all of the mongoose Models we have. If that object doesn't contain a `Model` that is
+ * defined by any resource's `RequiredModels` type parameter, we will see a compile-time
+ * error.
+ */
 
 export type Models<AvailableModels, RequiredModels extends keyof AvailableModels> = Pick<AvailableModels, RequiredModels>;
 
@@ -112,15 +112,25 @@ export function makeDeleteRoute<SupportedRequestBodies, SupportedResponseBodies,
 }
 
 export function makeRouter<SupportedRequestBodies, SupportedResponseBodies, AvailableModels, RequiredModels extends keyof AvailableModels, CReqB, UReqB, Session>(resource: Resource<SupportedRequestBodies, SupportedResponseBodies, AvailableModels, RequiredModels, CReqB, UReqB, Session>): (models: Models<AvailableModels, RequiredModels>) => Router<SupportedRequestBodies, SupportedResponseBodies, Session> {
-  return Models => {
+  return (Models) => {
     // We do not destructure `delete` because it conflicts with a TypeScript keyword.
     const { create, readOne, readMany, update } = resource;
     const routes = [];
-    if (create) { routes.push(makeCreateRoute(Models, create)); }
-    if (readOne) { routes.push(makeReadOneRoute(Models, readOne)); }
-    if (readMany) { routes.push(makeReadManyRoute(Models, readMany)); }
-    if (update) { routes.push(makeUpdateRoute(Models, update)); }
-    if (resource.delete) { routes.push(makeDeleteRoute(Models, resource.delete)); }
-    return routes.map(route => namespaceRoute(resource.routeNamespace, route));
+    if (create) {
+      routes.push(makeCreateRoute(Models, create));
+    }
+    if (readOne) {
+      routes.push(makeReadOneRoute(Models, readOne));
+    }
+    if (readMany) {
+      routes.push(makeReadManyRoute(Models, readMany));
+    }
+    if (update) {
+      routes.push(makeUpdateRoute(Models, update));
+    }
+    if (resource.delete) {
+      routes.push(makeDeleteRoute(Models, resource.delete));
+    }
+    return routes.map((route) => namespaceRoute(resource.routeNamespace, route));
   };
 }

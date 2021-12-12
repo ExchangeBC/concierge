@@ -7,10 +7,7 @@ import { CSSProperties, default as React } from 'react';
 import { Label } from 'reactstrap';
 import { ADT, Omit } from 'shared/lib/types';
 
-export type Value
-  = ADT<'new', string>
-  | ADT<'existing', string>
-  | ADT<'deleted'>;
+export type Value = ADT<'new', string> | ADT<'existing', string> | ADT<'deleted'>;
 
 export function makeNewValue(value: string): ADT<'new', string> {
   return {
@@ -45,35 +42,25 @@ export interface State {
 
 export function getValues(state: Immutable<State>): Value[] {
   return FormFieldMulti.getFieldValues(state.formFieldMulti);
-};
+}
 
 export function getValuesAsStrings(state: Immutable<State>, deletedString: string): string[] {
-  return getValues(state).map(value => value.tag === 'deleted' ? deletedString : value.value);
+  return getValues(state).map((value) => (value.tag === 'deleted' ? deletedString : value.value));
 }
 
 export function setValues(state: Immutable<State>, values: Value[]): Immutable<State> {
-  return state.set(
-    'formFieldMulti',
-    FormFieldMulti.setFieldValues(state.formFieldMulti, values)
-  );
-};
+  return state.set('formFieldMulti', FormFieldMulti.setFieldValues(state.formFieldMulti, values));
+}
 
 export function setErrors(state: Immutable<State>, errors: string[][]): Immutable<State> {
-  return state.set(
-    'formFieldMulti',
-    FormFieldMulti.setFieldErrors(state.formFieldMulti, errors)
-  );
-};
+  return state.set('formFieldMulti', FormFieldMulti.setFieldErrors(state.formFieldMulti, errors));
+}
 
 export function isValid(state: Immutable<State>): boolean {
   return FormFieldMulti.isValid(state.formFieldMulti);
-};
+}
 
-type InnerMsg
-  = ADT<'add'>
-  | ADT<'remove', number>
-  | ADT<'change', { index: number, value: Value }>
-  | ADT<'toggleHelp'>;
+type InnerMsg = ADT<'add'> | ADT<'remove', number> | ADT<'change', { index: number; value: Value }> | ADT<'toggleHelp'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -83,7 +70,7 @@ export interface Params extends Omit<State, 'formFieldMulti'> {
 
 type ExtraChildProps = Pick<State, 'field'>;
 
-export const init: Init<Params, State> = async params => {
+export const init: Init<Params, State> = async (params) => {
   return {
     ...params,
     formFieldMulti: immutable(params.formFieldMulti)
@@ -112,7 +99,7 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
           // Do nothing with 'deleted' fields.
           // In practice this "shouldn't" happen.
           case 'deleted':
-            return field
+            return field;
         }
       });
       const removeFields: Array<FormFieldMulti.Field<Value>> = compact(processedFields);
@@ -141,11 +128,11 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
   }
 };
 
-const ConditionalLabel: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => {
+const ConditionalLabel: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = (props) => {
   const text = props.extraProps.field.label;
   if (text) {
     return (
-      <Label className='mb-2 w-100 d-flex justify-content-between align-items-center'>
+      <Label className="mb-2 w-100 d-flex justify-content-between align-items-center">
         {text}
         <FormFieldMulti.ConditionalRemoveButton {...props} />
       </Label>
@@ -155,9 +142,11 @@ const ConditionalLabel: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> 
   }
 };
 
-const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => {
+const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = (props) => {
   const { id, extraProps, className, field, onChange, disabled = false } = props;
-  if (field.value.tag === 'deleted') { return null; }
+  if (field.value.tag === 'deleted') {
+    return null;
+  }
   const value: string = field.value.value;
   return (
     <div>
@@ -169,10 +158,14 @@ const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => 
         placeholder={extraProps.field.placeholder}
         disabled={disabled}
         style={extraProps.field.textAreaStyle}
-        onChange={event => field.value.tag !== 'deleted' && onChange({
-          ...field.value,
-          value: event.currentTarget.value
-        })} />
+        onChange={(event) =>
+          field.value.tag !== 'deleted' &&
+          onChange({
+            ...field.value,
+            value: event.currentTarget.value
+          })
+        }
+      />
     </div>
   );
 };
@@ -185,12 +178,14 @@ interface Props extends ComponentViewProps<State, Msg> {
 
 export const view: View<Props> = ({ state, dispatch, disabled = false, labelClassName, labelWrapperClassName }) => {
   const AddButton: View<FormFieldMulti.AddButtonProps<void>> = FormFieldMulti.makeDefaultAddButton(state.addButtonText);
-  const onChange = (index: number): FormFieldMulti.OnChange<Value> => value => {
-    dispatch({
-      tag: 'change',
-      value: { index, value }
-    });
-  };
+  const onChange =
+    (index: number): FormFieldMulti.OnChange<Value> =>
+    (value) => {
+      dispatch({
+        tag: 'change',
+        value: { index, value }
+      });
+    };
   const onAdd = () => dispatch({ tag: 'add', value: undefined });
   const onRemove = (index: number) => () => dispatch({ tag: 'remove', value: index });
   const formFieldProps: FormFieldMulti.Props<void, ExtraChildProps, Value> = {
@@ -209,10 +204,8 @@ export const view: View<Props> = ({ state, dispatch, disabled = false, labelClas
     labelClassName,
     labelWrapperClassName
   };
-  return (
-    <FormFieldMulti.view {...formFieldProps} />
-  );
-}
+  return <FormFieldMulti.view {...formFieldProps} />;
+};
 
 export const component: Component<Params, State, Msg> = {
   init,

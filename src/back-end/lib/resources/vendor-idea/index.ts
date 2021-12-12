@@ -64,7 +64,7 @@ async function validateCreateRequestBody(UserModel: UserSchema.Model, FileModel:
     return valid({
       createdAt: new Date(),
       createdBy: (validatedCreatedBy.value as InstanceType<UserSchema.Model>)._id,
-      attachments: (validatedAttachments.value as Array<InstanceType<FileSchema.Model>>).map(file => file._id),
+      attachments: (validatedAttachments.value as Array<InstanceType<FileSchema.Model>>).map((file) => file._id),
       eligibility: validatedEligibility.value,
       contact: validatedContact.value,
       description: validatedDescription.value
@@ -90,7 +90,7 @@ async function validateUpdateRequestBody(UserModel: UserSchema.Model, FileModel:
     return valid({
       createdAt: new Date(),
       createdBy: (validatedCreatedBy.value as InstanceType<UserSchema.Model>)._id,
-      attachments: (validatedAttachments.value as Array<InstanceType<FileSchema.Model>>).map(file => file._id),
+      attachments: (validatedAttachments.value as Array<InstanceType<FileSchema.Model>>).map((file) => file._id),
       eligibility: validatedEligibility.value,
       contact: validatedContact.value,
       description: validatedDescription.value
@@ -107,7 +107,6 @@ async function validateUpdateRequestBody(UserModel: UserSchema.Model, FileModel:
 }
 
 const resource: Resource = {
-
   routeNamespace: 'unsolicitedProposals',
 
   create(Models) {
@@ -135,12 +134,14 @@ const resource: Resource = {
           createdAt: version.createdAt,
           createdBy: version.createdBy,
           versions: [version],
-          log: [{
-            createdAt: version.createdAt,
-            type: LogItemType.ApplicationSubmitted,
-            note: 'The vendor submitted this application.',
-            attachments: []
-          }]
+          log: [
+            {
+              createdAt: version.createdAt,
+              type: LogItemType.ApplicationSubmitted,
+              note: 'The vendor submitted this application.',
+              attachments: []
+            }
+          ]
         });
         await vendorIdea.save();
         const user = await UserModel.findById(version.createdBy);
@@ -178,7 +179,7 @@ const resource: Resource = {
               // Only return vendor idea if its a vendor's own idea
               // or if a buyer has accepted the terms and is verified.
               const isVendorsOwnIdea = publicVendorIdea.userType === UserType.Vendor && publicVendorIdea.createdBy._id === request.session.user.id.toString();
-              if (isVendorsOwnIdea || await validateUserId(UserModel, request.session.user.id, [UserType.Buyer], true, true)) {
+              if (isVendorsOwnIdea || (await validateUserId(UserModel, request.session.user.id, [UserType.Buyer], true, true))) {
                 return basicResponse(200, request.session, makeJsonResponseBody(publicVendorIdea));
               }
               return basicResponse(404, request.session, makeJsonResponseBody(['Not Found']));
@@ -214,12 +215,16 @@ const resource: Resource = {
               items.push(await ViSchema.makePublicVendorIdeaSlim(UserModel, idea, request.session.user.type));
             }
           }
-          return basicResponse(200, request.session, makeJsonResponseBody({
-            total: items.length,
-            offset: 0,
-            count: items.length,
-            items
-          }));
+          return basicResponse(
+            200,
+            request.session,
+            makeJsonResponseBody({
+              total: items.length,
+              offset: 0,
+              count: items.length,
+              items
+            })
+          );
         } catch (error) {
           error = makeErrorResponseBody(error);
           request.logger.error('Unable to read many vendor ideas.', error.value);
@@ -287,7 +292,6 @@ const resource: Resource = {
       }
     };
   }
-
 };
 
 export default resource;

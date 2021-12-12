@@ -15,7 +15,6 @@ type RequiredModels = 'Feedback';
 export type Resource = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, null, Session>;
 
 export const resource: Resource = {
-
   routeNamespace: 'feedback',
 
   create(Models) {
@@ -25,7 +24,7 @@ export const resource: Resource = {
         return {
           rating: getString(request.body.value, 'rating'),
           text: getString(request.body.value, 'text')
-        }
+        };
       },
       async respond(request): Promise<Response<CreateResponseBody, Session>> {
         const respond = (code: number, body: PublicFeedback | CreateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
@@ -64,8 +63,8 @@ export const resource: Resource = {
 
         return respond(201, FeedbackSchema.makePublicFeedback(feedback));
       }
-    }
+    };
   }
-}
+};
 
 export default resource;

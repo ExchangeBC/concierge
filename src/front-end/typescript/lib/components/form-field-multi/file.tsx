@@ -20,9 +20,7 @@ export interface NewFile {
   size: number;
 }
 
-export type Value
-  = ADT<'existing', PublicFile>
-  | ADT<'new', NewFile>;
+export type Value = ADT<'existing', PublicFile> | ADT<'new', NewFile>;
 
 export function makeExistingValue(value: PublicFile): ADT<'existing', PublicFile> {
   return {
@@ -51,7 +49,7 @@ function getFileExtension(name: string) {
 
 export function getValues(state: Immutable<State>): Value[] {
   const values = FormFieldMulti.getFieldValues(state.formFieldMulti);
-  return values.map(value => {
+  return values.map((value) => {
     if (value.tag === 'new') {
       const { file, name } = value.value;
       const originalExtension = getFileExtension(file.name);
@@ -66,31 +64,21 @@ export function getValues(state: Immutable<State>): Value[] {
       return value;
     }
   });
-};
+}
 
 export function setValues(state: Immutable<State>, values: Value[]): Immutable<State> {
-  return state.set(
-    'formFieldMulti',
-    FormFieldMulti.setFieldValues(state.formFieldMulti, values)
-  );
-};
+  return state.set('formFieldMulti', FormFieldMulti.setFieldValues(state.formFieldMulti, values));
+}
 
 export function setErrors(state: Immutable<State>, errors: string[][]): Immutable<State> {
-  return state.set(
-    'formFieldMulti',
-    FormFieldMulti.setFieldErrors(state.formFieldMulti, errors)
-  );
-};
+  return state.set('formFieldMulti', FormFieldMulti.setFieldErrors(state.formFieldMulti, errors));
+}
 
 export function isValid(state: Immutable<State>): boolean {
   return FormFieldMulti.isValid(state.formFieldMulti);
-};
+}
 
-type InnerMsg
-  = ADT<'add', File>
-  | ADT<'remove', number>
-  | ADT<'change', { index: number, value: Value }>
-  | ADT<'validate', number>;
+type InnerMsg = ADT<'add', File> | ADT<'remove', number> | ADT<'change', { index: number; value: Value }> | ADT<'validate', number>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -98,17 +86,21 @@ export interface Params extends Omit<State, 'formFieldMulti'> {
   formFieldMulti: FormFieldMulti.State<Value>;
 }
 
-export const init: Init<Params, State> = async params => {
+export const init: Init<Params, State> = async (params) => {
   return {
     formFieldMulti: immutable(params.formFieldMulti)
   };
 };
 
 function validateValue(value: Value): Validation<Value> {
-  if (value.tag === 'existing') { return valid(value); }
+  if (value.tag === 'existing') {
+    return valid(value);
+  }
   let errors: string[] = [];
   const validatedName = validateFileName(value.value.name || value.value.file.name);
-  if (validatedName.tag === 'invalid') { errors = errors.concat(validatedName.value); }
+  if (validatedName.tag === 'invalid') {
+    errors = errors.concat(validatedName.value);
+  }
   if (value.value.size > MAX_MULTIPART_FILES_SIZE) {
     errors.push(`Please remove this file, and select one less than ${bytesToMegabytes(MAX_MULTIPART_FILES_SIZE)} MB in size.`);
   }
@@ -127,7 +119,9 @@ export const update: Update<State, Msg> = ({ state, msg }) => {
       });
       const validatedValue = validateValue(value);
       let errors: string[] = [];
-      if (validatedValue.tag === 'invalid') { errors = validatedValue.value; }
+      if (validatedValue.tag === 'invalid') {
+        errors = validatedValue.value;
+      }
       let addFields = state.formFieldMulti.fields;
       addFields = addFields.concat(FormFieldMulti.makeField(value, errors));
       return [state.setIn(['formFieldMulti', 'fields'], addFields)];
@@ -163,38 +157,38 @@ interface ExtraChildProps {
   onChangeDebounced(index: number): void;
 }
 
-const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = props => {
+const Child: View<FormFieldMulti.ChildProps<ExtraChildProps, Value>> = (props) => {
   const { id, index, className, field, onChange, extraProps, disabled = false } = props;
   const value = field.value.tag === 'new' ? field.value.value.name : field.value.value.originalName;
   const placeholder = field.value.tag === 'new' ? field.value.value.file.name : field.value.value.originalName;
   return (
-    <div className='d-flex align-items-center'>
+    <div className="d-flex align-items-center">
       <Input.View
         id={id}
-        type='text'
+        type="text"
         className={`${className} form-control`}
         value={value}
         placeholder={placeholder}
         disabled={field.value.tag === 'existing' || disabled}
-        onChange={event => field.value.tag === 'new' && onChange({
-          tag: 'new',
-          value: {
-            ...field.value.value,
-            name: event.currentTarget.value
-          }
-        })}
-        onChangeDebounced={() => extraProps && extraProps.onChangeDebounced(index)} />
-      {field.value.tag === 'existing'
-        ? (<Link download href={makeFileBlobPath(field.value.value._id)} className='d-flex align-items-center'>
-            <Icon
-              name='download'
-              width={1}
-              height={1}
-              className='ml-3 flex-shrink-0' />
-          </Link>)
-        : null}
-        <FormFieldMulti.ConditionalRemoveButton {...props} />
-        {field.value.tag !== 'existing' ? (<div className='ml-3 flex-shrink-0' style={{ width: '1rem', height: '1rem' }}></div>) : null}
+        onChange={(event) =>
+          field.value.tag === 'new' &&
+          onChange({
+            tag: 'new',
+            value: {
+              ...field.value.value,
+              name: event.currentTarget.value
+            }
+          })
+        }
+        onChangeDebounced={() => extraProps && extraProps.onChangeDebounced(index)}
+      />
+      {field.value.tag === 'existing' ? (
+        <Link download href={makeFileBlobPath(field.value.value._id)} className="d-flex align-items-center">
+          <Icon name="download" width={1} height={1} className="ml-3 flex-shrink-0" />
+        </Link>
+      ) : null}
+      <FormFieldMulti.ConditionalRemoveButton {...props} />
+      {field.value.tag !== 'existing' ? <div className="ml-3 flex-shrink-0" style={{ width: '1rem', height: '1rem' }}></div> : null}
     </div>
   );
 };
@@ -210,14 +204,9 @@ export function AddButton(props: FormFieldMulti.AddButtonProps<File>) {
   // selected file, which breaks selecting the same file twice
   // in a row.
   return (
-    <div className='position-relative'>
-      <input
-        type='file'
-        className='position-absolute w-100 h-100'
-        style={{ top: '0px', left: '0px', opacity: 0 }}
-        value=''
-        onChange={onChange} />
-      <Button color='info' size='sm'>
+    <div className="position-relative">
+      <input type="file" className="position-absolute w-100 h-100" style={{ top: '0px', left: '0px', opacity: 0 }} value="" onChange={onChange} />
+      <Button color="info" size="sm">
         {props.text || 'Add Attachment'}
       </Button>
     </div>
@@ -233,12 +222,14 @@ interface Props extends ComponentViewProps<State, Msg> {
 }
 
 export const view: View<Props> = ({ state, dispatch, disabled = false, labelClassName, labelWrapperClassName, formGroupClassName, className }) => {
-  const onChange = (index: number): FormFieldMulti.OnChange<Value> => value => {
-    dispatch({
-      tag: 'change',
-      value: { index, value }
-    });
-  };
+  const onChange =
+    (index: number): FormFieldMulti.OnChange<Value> =>
+    (value) => {
+      dispatch({
+        tag: 'change',
+        value: { index, value }
+      });
+    };
   const onAdd = (file: File) => dispatch({ tag: 'add', value: file });
   const onRemove = (index: number) => () => dispatch({ tag: 'remove', value: index });
   const formFieldProps: FormFieldMulti.Props<File, ExtraChildProps, Value> = {
@@ -262,10 +253,8 @@ export const view: View<Props> = ({ state, dispatch, disabled = false, labelClas
     formGroupClassName,
     className
   };
-  return (
-    <FormFieldMulti.view {...formFieldProps} />
-  );
-}
+  return <FormFieldMulti.view {...formFieldProps} />;
+};
 
 export const component: Component<Params, State, Msg> = {
   init,

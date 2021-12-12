@@ -26,11 +26,9 @@ type VendorIdea = PublicVendorIdeaForBuyers;
 
 interface ValidState {
   vi: VendorIdea;
-};
+}
 
-export type State
-  = ADT<'valid', ValidState>
-  | ADT<'invalid'>;
+export type State = ADT<'valid', ValidState> | ADT<'invalid'>;
 
 export interface RouteParams {
   viId: string;
@@ -39,13 +37,13 @@ export interface RouteParams {
 export type Msg = GlobalComponentMsg<ADT<'noop'>, Route>;
 
 export const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
-
   userTypes: [UserType.Buyer],
 
   async success({ routeParams, shared, dispatch }) {
     const userResult = await readOneUser(shared.sessionUser.id);
     if (userResult.tag === 'invalid') {
-        dispatch(replaceRoute({
+      dispatch(
+        replaceRoute({
           tag: 'notice',
           value: {
             noticeId: {
@@ -53,12 +51,14 @@ export const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
               value: undefined
             }
           }
-        }));
-        return invalid(undefined);
-      }
+        })
+      );
+      return invalid(undefined);
+    }
     const user = userResult.value;
     if (!user.acceptedTermsAt) {
-        dispatch(replaceRoute({
+      dispatch(
+        replaceRoute({
           tag: 'termsAndConditions',
           value: {
             warningId: WarningId.ViewVisAsBuyer,
@@ -71,11 +71,13 @@ export const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
               value: null
             })
           }
-        }));
-        return invalid(undefined);
-      }
+        })
+      );
+      return invalid(undefined);
+    }
     if (user.profile.type !== UserType.Buyer || user.profile.verificationStatus !== VerificationStatus.Verified) {
-        dispatch(replaceRoute({
+      dispatch(
+        replaceRoute({
           tag: 'notice',
           value: {
             noticeId: {
@@ -83,12 +85,14 @@ export const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
               value: undefined
             }
           }
-        }));
-        return invalid(undefined);
-      }
+        })
+      );
+      return invalid(undefined);
+    }
     const result = await readOneViForBuyers(routeParams.viId);
     if (result.tag === 'invalid') {
-        dispatch(replaceRoute({
+      dispatch(
+        replaceRoute({
           tag: 'notice',
           value: {
             noticeId: {
@@ -96,9 +100,10 @@ export const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
               value: undefined
             }
           }
-        }));
-        return invalid(undefined);
-      }
+        })
+      );
+      return invalid(undefined);
+    }
     return valid({
       vi: result.value
     });
@@ -106,31 +111,37 @@ export const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
 
   async fail({ routeParams, shared, dispatch }) {
     if (!shared.session || !shared.session.user) {
-      dispatch(replaceRoute({
-        tag: 'signIn' as const,
-        value: {
-          redirectOnSuccess: router.routeToUrl({
-            tag: 'viView',
-            value: routeParams
-          })
-        }
-      }));
+      dispatch(
+        replaceRoute({
+          tag: 'signIn' as const,
+          value: {
+            redirectOnSuccess: router.routeToUrl({
+              tag: 'viView',
+              value: routeParams
+            })
+          }
+        })
+      );
     } else if (shared.session.user.type === UserType.ProgramStaff) {
-      dispatch(replaceRoute({
-        tag: 'viEdit',
-        value: {
-          viId: routeParams.viId
-        }
-      }));
-    } else { // Vendor
-      dispatch(replaceRoute({
-        tag: 'viList',
-        value: null
-      }));
+      dispatch(
+        replaceRoute({
+          tag: 'viEdit',
+          value: {
+            viId: routeParams.viId
+          }
+        })
+      );
+    } else {
+      // Vendor
+      dispatch(
+        replaceRoute({
+          tag: 'viList',
+          value: null
+        })
+      );
     }
     return invalid(undefined);
   }
-
 });
 
 export const update: Update<State, Msg> = ({ state, msg }) => {
@@ -144,99 +155,103 @@ interface DetailProps {
 }
 
 const Detail: View<DetailProps> = ({ title, values, titleColWidthMd }) => {
-  values = values.map((v, i) => (<div key={`${title}-${i}`}>{v}</div>));
+  values = values.map((v, i) => <div key={`${title}-${i}`}>{v}</div>);
   return (
-    <Row className='align-items-start mb-3'>
-      <Col xs='12' md={titleColWidthMd} className='font-weight-bold text-secondary text-center text-md-right'>{title}</Col>
-      <Col xs='12' md={12 - titleColWidthMd} className='text-center text-md-left'>{values}</Col>
+    <Row className="align-items-start mb-3">
+      <Col xs="12" md={titleColWidthMd} className="font-weight-bold text-secondary text-center text-md-right">
+        {title}
+      </Col>
+      <Col xs="12" md={12 - titleColWidthMd} className="text-center text-md-left">
+        {values}
+      </Col>
     </Row>
   );
 };
 
 const Details: View<{ vi: VendorIdea }> = ({ vi }) => {
   const { attachments, description } = vi.latestVersion;
-  const attachmentsValues = attachments.length
-    ? [(<a href={`#${ATTACHMENTS_ID}`}>View Attachments</a>)]
-    : ['No attachments'];
+  const attachmentsValues = attachments.length ? [<a href={`#${ATTACHMENTS_ID}`}>View Attachments</a>] : ['No attachments'];
   return (
     <Row>
-      <Col xs='12' md='7'>
-        <Detail title='Industry Sector(s)' values={description.industrySectors} titleColWidthMd={4} />
-        <Detail title='Commodity Code(s)' values={description.categories} titleColWidthMd={4} />
+      <Col xs="12" md="7">
+        <Detail title="Industry Sector(s)" values={description.industrySectors} titleColWidthMd={4} />
+        <Detail title="Commodity Code(s)" values={description.categories} titleColWidthMd={4} />
       </Col>
-      <Col xs='12' md='5'>
-        <Detail title='Attachments' values={attachmentsValues} titleColWidthMd={5} />
+      <Col xs="12" md="5">
+        <Detail title="Attachments" values={attachmentsValues} titleColWidthMd={5} />
       </Col>
     </Row>
   );
-}
+};
 
-const Summary: View<{ title: string, summary: string }> = ({ title, summary }) => {
+const Summary: View<{ title: string; summary: string }> = ({ title, summary }) => {
   return (
-    <div className='mt-5 pt-5 border-top'>
+    <div className="mt-5 pt-5 border-top">
       <Row>
-        <Col xs='12'>
-          <FormSectionHeading text='Summary' />
+        <Col xs="12">
+          <FormSectionHeading text="Summary" />
           <p style={{ whiteSpace: 'pre-line' }}>{summary}</p>
-          <p className='font-weight-bold'>
+          <p className="font-weight-bold">
             If you are interested in this Unsolicited Proposal, please contact the Procurement Concierge Program's staff at <Link href={expressInterestHref(title)}>{CONTACT_EMAIL}</Link>.
           </p>
         </Col>
       </Row>
     </div>
   );
-}
+};
 
 const Attachments: View<{ files: FileResource.PublicFile[] }> = ({ files }) => {
-  if (!files.length) { return null; }
+  if (!files.length) {
+    return null;
+  }
   const children = files.map((file, i) => {
     return (
-      <div className='d-flex align-items-start mb-3' key={`view-vi-attachment-${i}`}>
-        <Icon name='paperclip' color='secondary' className='mr-2 mt-1 flex-shrink-0' width={1.1} height={1.1} />
-        <Link href={makeFileBlobPath(file._id)} className='d-block' download>
+      <div className="d-flex align-items-start mb-3" key={`view-vi-attachment-${i}`}>
+        <Icon name="paperclip" color="secondary" className="mr-2 mt-1 flex-shrink-0" width={1.1} height={1.1} />
+        <Link href={makeFileBlobPath(file._id)} className="d-block" download>
           {file.originalName}
         </Link>
       </div>
     );
   });
   return (
-    <div className='pt-5 mt-5 border-top' id={ATTACHMENTS_ID}>
-      <FormSectionHeading text='Attachments' />
+    <div className="pt-5 mt-5 border-top" id={ATTACHMENTS_ID}>
+      <FormSectionHeading text="Attachments" />
       <Row>
-        <Col xs='12'>
-          {children}
-        </Col>
+        <Col xs="12">{children}</Col>
       </Row>
     </div>
   );
-}
+};
 
 const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
-  if (state.tag !== 'valid') { return null; }
+  if (state.tag !== 'valid') {
+    return null;
+  }
   return (
     <FixedBar>
-      <Link href={expressInterestHref(state.value.vi.latestVersion.description.title)} button color='primary' className='text-nowrap'>
+      <Link href={expressInterestHref(state.value.vi.latestVersion.description.title)} button color="primary" className="text-nowrap">
         Express Interest
       </Link>
-      <div className='text-secondary font-weight-bold d-none d-md-block mr-auto'>I want to...</div>
+      <div className="text-secondary font-weight-bold d-none d-md-block mr-auto">I want to...</div>
     </FixedBar>
   );
 };
 
-const view: ComponentView<State, Msg> = props => {
+const view: ComponentView<State, Msg> = (props) => {
   const { state } = props;
-  if (state.tag !== 'valid') { return null; }
+  if (state.tag !== 'valid') {
+    return null;
+  }
   const vi = state.value.vi;
   const { attachments, description } = vi.latestVersion;
   return (
     <div>
-      <Row className='mb-5'>
-        <Col xs='12' className='d-flex flex-column text-center align-items-center'>
-          <h1 className='h4'>Unsolicited Proposal (UP)</h1>
-          <h2 className='h1'>{description.title}</h2>
-          <div className='text-secondary small'>
-            Published on {formatDate(vi.createdAt)}
-          </div>
+      <Row className="mb-5">
+        <Col xs="12" className="d-flex flex-column text-center align-items-center">
+          <h1 className="h4">Unsolicited Proposal (UP)</h1>
+          <h2 className="h1">{description.title}</h2>
+          <div className="text-secondary small">Published on {formatDate(vi.createdAt)}</div>
         </Col>
       </Row>
       <Details vi={vi} />
@@ -260,7 +275,9 @@ export const component: PageComponent<RouteParams, SharedState, State, Msg> = {
     }
   },
   getBreadcrumbs(state) {
-    if (state.tag !== 'valid') { return []; }
+    if (state.tag !== 'valid') {
+      return [];
+    }
     return [
       {
         text: 'Unsolicited Proposals',
