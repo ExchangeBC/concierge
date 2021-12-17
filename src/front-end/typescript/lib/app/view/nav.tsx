@@ -93,11 +93,15 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
               Requests for Information
             </Link>
           </NavItem>
-          <NavItem>
-            <Link nav route={viListRoute} className={linkClassName(isVendorIdeaListRoute)} onClick={onClick}>
-              My Unsolicited Proposals
-            </Link>
-          </NavItem>
+          {showVendorIdeas ? (
+            <NavItem>
+              <Link nav route={viListRoute} className={linkClassName(isVendorIdeaListRoute)} onClick={onClick}>
+                My Unsolicited Proposals
+              </Link>
+            </NavItem>
+          ) : (
+            <div />
+          )}
           <NavItem>
             <Link nav route={myProfileRoute} className={linkClassName(isMyProfileRoute)} onClick={onClick}>
               My Profile
