@@ -11,12 +11,13 @@ interface Props {
   activeRoute: Route;
   session?: Session;
   toggleIsOpen(open?: boolean): void;
+  showVendorIdeas: boolean;
 }
 
 const activeClass = (active: boolean) => (active ? 'font-weight-bold o-100' : '');
 const linkClassName = (isActive: boolean) => `o-75 ${activeClass(isActive)} text-white px-0 px-md-3`;
 
-const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, session, toggleIsOpen, className = '' }) => {
+const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, session, toggleIsOpen, className = '', showVendorIdeas }) => {
   const isMyProfileRoute = activeRoute.tag === 'userView' && activeRoute.value.profileUserId === get(session, ['user', 'id']);
   const isUserListRoute = activeRoute.tag === 'userList';
   const isRequestForInformationListRoute = activeRoute.tag === 'requestForInformationList';
@@ -63,11 +64,15 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
               Requests for Information
             </Link>
           </NavItem>
-          <NavItem>
-            <Link nav route={viListRoute} className={linkClassName(isVendorIdeaListRoute)} onClick={onClick}>
-              Unsolicited Proposals
-            </Link>
-          </NavItem>
+          {showVendorIdeas ? (
+            <NavItem>
+              <Link nav route={viListRoute} className={linkClassName(isVendorIdeaListRoute)} onClick={onClick}>
+                Unsolicited Proposals
+              </Link>
+            </NavItem>
+          ) : (
+            <div />
+          )}
           <NavItem>
             <Link nav route={myProfileRoute} className={linkClassName(isMyProfileRoute)} onClick={onClick}>
               My Profile
@@ -113,11 +118,15 @@ const ContextualLinks: View<Props & { className?: string }> = ({ activeRoute, se
               Requests for Information
             </Link>
           </NavItem>
-          <NavItem>
-            <Link nav route={viListRoute} className={linkClassName(isVendorIdeaListRoute)} onClick={onClick}>
-              Unsolicited Proposals
-            </Link>
-          </NavItem>
+          {showVendorIdeas ? (
+            <NavItem>
+              <Link nav route={viListRoute} className={linkClassName(isVendorIdeaListRoute)} onClick={onClick}>
+                Unsolicited Proposals
+              </Link>
+            </NavItem>
+          ) : (
+            <div />
+          )}
           <NavItem>
             <Link nav route={userListRoute} className={linkClassName(isUserListRoute)} onClick={onClick}>
               Users

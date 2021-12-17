@@ -18,6 +18,7 @@ import ViLogItemResource from 'back-end/lib/resources/vendor-idea/log-item';
 import AdminRouter from 'back-end/lib/routers/admin';
 import FrontEndRouter from 'back-end/lib/routers/front-end';
 import StatusRouter from 'back-end/lib/routers/status';
+import FeatureFlagRouter from 'back-end/lib/routers/feature-flag';
 import * as FeedbackSchema from 'back-end/lib/schemas/feedback';
 import * as FileSchema from 'back-end/lib/schemas/file';
 import * as ForgotPasswordTokenSchema from 'back-end/lib/schemas/forgot-password-token';
@@ -106,6 +107,9 @@ export function createRouter(params: CreateRouterParams): Router<SupportedReques
       })
     );
   }
+
+  // Add the feature flag router so the front-end can query for feature flags
+  allRoutes = FeatureFlagRouter.concat(allRoutes);
 
   // Add the status router.
   // This should not be behind basic auth.

@@ -1,7 +1,9 @@
 import { State } from 'front-end/lib/app/types';
 import { Init } from 'front-end/lib/framework';
+import { getFeatureFlags } from 'front-end/lib/http/api';
 
 const init: Init<null, State> = async () => {
+  const featureFlags = await getFeatureFlags();
   return {
     ready: false,
     isNavOpen: false,
@@ -19,6 +21,7 @@ const init: Init<null, State> = async () => {
         actions: []
       }
     },
+    featureFlags,
     pages: {}
   };
 };

@@ -60,7 +60,7 @@ const NotificationGroup: View<NotificationGroupProps> = ({ title, emails }) => {
   );
 };
 
-async function makeEmailNotificationReference(): Promise<View<{}>> {
+async function makeEmailNotificationReference(): Promise<View<Record<string, never>>> {
   const notifications: NotificationGroupProps[] = [
     { title: 'Create User', emails: await mailer.createUserT(mocks.email) },
     {
@@ -355,7 +355,7 @@ function makeRouter(): Router<any, HtmlResponseBody, any> {
       method: HttpMethod.Get,
       path: '/email-notification-reference',
       handler: {
-        async transformRequest(request) {
+        async transformRequest() {
           return null;
         },
         async respond(request): Promise<Response<HtmlResponseBody, unknown>> {

@@ -101,6 +101,18 @@ export const MAILER_ROOT_URL = get('MAILER_ROOT_URL', 'https://procurementconcie
 
 export const CONTACT_EMAIL = get('CONTACT_EMAIL', '');
 
+/** BEGIN Feature Flags **/
+
+// Set to 'false' to enable Vendor Idea features
+export const HIDE_VENDOR_IDEAS = get('HIDE_VENDOR_IDEAS', 'true') === 'true';
+
+// List of user emails to explicity allow to see Vendor Ideas
+export const FORCE_SHOW_VENDOR_IDEAS = get('FORCE_SHOW_VENDOR_IDEAS', '')
+  .split(';')
+  .map((s) => s.trim());
+
+/** END Feature Flags **/
+
 function isPositiveInteger(n: number): boolean {
   return !isNaN(n) && !!n && n >= 0 && Math.abs(n % 1) === 0;
 }

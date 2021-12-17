@@ -142,16 +142,16 @@ const ViewActiveRoute: ComponentView<State, Msg> = ({ state, dispatch }) => {
       return <ViewPage dispatch={dispatch} pageState={state.pages.requestForInformationList} mapPageMsg={(value) => ({ tag: 'pageRequestForInformationList', value })} component={PageRequestForInformationList.component} />;
 
     case 'viCreate':
-      return <ViewPage dispatch={dispatch} pageState={state.pages.viCreate} mapPageMsg={(value) => ({ tag: 'pageViCreate', value })} component={PageViCreate.component} />;
+      return state.featureFlags.vendorIdeasEnabled ? <ViewPage dispatch={dispatch} pageState={state.pages.viCreate} mapPageMsg={(value) => ({ tag: 'pageViCreate', value })} component={PageViCreate.component} /> : <div />;
 
     case 'viEdit':
-      return <ViewPage dispatch={dispatch} pageState={state.pages.viEdit} mapPageMsg={(value) => ({ tag: 'pageViEdit', value })} component={PageViEdit.component} />;
+      return state.featureFlags.vendorIdeasEnabled ? <ViewPage dispatch={dispatch} pageState={state.pages.viEdit} mapPageMsg={(value) => ({ tag: 'pageViEdit', value })} component={PageViEdit.component} /> : <div />;
 
     case 'viView':
-      return <ViewPage dispatch={dispatch} pageState={state.pages.viView} mapPageMsg={(value) => ({ tag: 'pageViView', value })} component={PageViView.component} />;
+      return state.featureFlags.vendorIdeasEnabled ? <ViewPage dispatch={dispatch} pageState={state.pages.viView} mapPageMsg={(value) => ({ tag: 'pageViView', value })} component={PageViView.component} /> : <div />;
 
     case 'viList':
-      return <ViewPage dispatch={dispatch} pageState={state.pages.viList} mapPageMsg={(value) => ({ tag: 'pageViList', value })} component={PageViList.component} />;
+      return state.featureFlags.vendorIdeasEnabled ? <ViewPage dispatch={dispatch} pageState={state.pages.viList} mapPageMsg={(value) => ({ tag: 'pageViList', value })} component={PageViList.component} /> : <div />;
 
     case 'markdown':
       return <ViewPage dispatch={dispatch} pageState={state.pages.markdown} mapPageMsg={(value) => ({ tag: 'pageMarkdown', value })} component={PageMarkdown.component} />;
@@ -161,7 +161,7 @@ const ViewActiveRoute: ComponentView<State, Msg> = ({ state, dispatch }) => {
   }
 };
 
-const TestEnvironmentBanner: View<{}> = () => (
+const TestEnvironmentBanner: View<Record<string, never>> = () => (
   <a href={`https://${LIVE_SITE_DOMAIN}`} className="bg-danger text-white text-center p-2">
     You are in a test environment. Click here to go to the live site.
   </a>
@@ -176,10 +176,11 @@ const view: ComponentView<State, Msg> = ({ state, dispatch }) => {
     return null;
   } else {
     const toggleIsNavOpen = (value?: boolean) => dispatch({ tag: 'toggleIsNavOpen', value });
+    const showVendorIdeas = state.featureFlags.vendorIdeasEnabled;
     return (
       <div className={`route-${state.activeRoute.tag} ${state.transitionLoading > 0 ? 'in-transition' : ''} app d-flex flex-column`} style={{ minHeight: '100vh' }}>
         {isLiveSite() ? null : <TestEnvironmentBanner />}
-        <Nav session={state.shared.session} activeRoute={state.activeRoute} isOpen={state.isNavOpen} toggleIsOpen={toggleIsNavOpen} />
+        <Nav session={state.shared.session} activeRoute={state.activeRoute} isOpen={state.isNavOpen} toggleIsOpen={toggleIsNavOpen} showVendorIdeas={showVendorIdeas} />
         <ViewActiveRoute state={state} dispatch={dispatch} />
         <Footer />
         <ViewModal dispatch={dispatch} modal={state.modal} />

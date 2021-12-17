@@ -27,7 +27,7 @@ import * as PageViEdit from 'front-end/lib/pages/vendor-idea/edit';
 import * as PageViList from 'front-end/lib/pages/vendor-idea/list';
 import * as PageViView from 'front-end/lib/pages/vendor-idea/view';
 import { PublicSession } from 'shared/lib/resources/session';
-import { ADT } from 'shared/lib/types';
+import { ADT, FeatureFlags } from 'shared/lib/types';
 
 export type Session = PublicSession;
 
@@ -74,6 +74,7 @@ export interface State {
     open: boolean;
     content: PageModal<Msg>;
   };
+  featureFlags: FeatureFlags;
   pages: {
     landing?: Immutable<PageLanding.State>;
     signIn?: Immutable<PageSignIn.State>;

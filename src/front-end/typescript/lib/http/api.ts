@@ -1,5 +1,5 @@
 import * as FileMulti from 'front-end/lib/components/form-field-multi/file';
-import { prefixRequest } from 'front-end/lib/http';
+import { prefixRequest, request } from 'front-end/lib/http';
 import shajs from 'sha.js';
 import * as DdrResource from 'shared/lib/resources/discovery-day-response';
 import * as FeedbackResource from 'shared/lib/resources/feedback';
@@ -11,10 +11,10 @@ import * as SessionResource from 'shared/lib/resources/session';
 import * as UserResource from 'shared/lib/resources/user';
 import * as ViResource from 'shared/lib/resources/vendor-idea';
 import * as LogItemResource from 'shared/lib/resources/vendor-idea/log-item';
-import { AuthLevel, HttpMethod, Omit, PaginatedList, UserType } from 'shared/lib/types';
+import { AuthLevel, HttpMethod, Omit, PaginatedList, UserType, FeatureFlags, defaultFeatureFlags } from 'shared/lib/types';
 import { ArrayValidation, invalid, valid, validateArrayAsync, ValidOrInvalid } from 'shared/lib/validators';
 
-const request = prefixRequest('api');
+const apiRequest = prefixRequest('api');
 
 // Use this function to hash passwords before sending them to the server.
 // It's important not to send plaintext passwords to the back-end.
@@ -39,7 +39,7 @@ function rawUserToPublicUser(raw: RawUser): UserResource.PublicUser {
 
 export async function createUser(user: UserResource.CreateRequestBody): Promise<ValidOrInvalid<UserResource.PublicUser, UserResource.CreateValidationErrors>> {
   user.password = hashPassword(user.password);
-  const response = await request(HttpMethod.Post, 'users', user);
+  const response = await apiRequest(HttpMethod.Post, 'users', user);
   switch (response.status) {
     case 201:
       const rawUser = response.data as RawUser;
@@ -54,7 +54,7 @@ export async function createUser(user: UserResource.CreateRequestBody): Promise<
 export async function updateUser(user: UserResource.UpdateRequestBody): Promise<ValidOrInvalid<UserResource.PublicUser, UserResource.UpdateValidationErrors>> {
   user.currentPassword = user.currentPassword ? hashPassword(user.currentPassword) : undefined;
   user.newPassword = user.newPassword ? hashPassword(user.newPassword) : undefined;
-  const response = await request(HttpMethod.Put, `users/${user.id}`, user);
+  const response = await apiRequest(HttpMethod.Put, `users/${user.id}`, user);
   switch (response.status) {
     case 200:
       const rawUser = response.data as RawUser;
@@ -71,7 +71,7 @@ export type RawReadManyUserResponseBody = PaginatedList<RawUser>;
 export type ReadManyUserResponseBody = PaginatedList<UserResource.PublicUser>;
 
 export async function readManyUsers(): Promise<ValidOrInvalid<ReadManyUserResponseBody, null>> {
-  const response = await request(HttpMethod.Get, 'users');
+  const response = await apiRequest(HttpMethod.Get, 'users');
   switch (response.status) {
     case 200:
       const rawResponseBody = response.data as RawReadManyUserResponseBody;
@@ -86,7 +86,7 @@ export async function readManyUsers(): Promise<ValidOrInvalid<ReadManyUserRespon
 }
 
 export async function readOneUser(userId: string): Promise<ValidOrInvalid<UserResource.PublicUser, null>> {
-  const response = await request(HttpMethod.Get, `users/${userId}`);
+  const response = await apiRequest(HttpMethod.Get, `users/${userId}`);
   switch (response.status) {
     case 200:
       const rawUser = response.data as RawUser;
@@ -105,7 +105,7 @@ export async function hasUserAcceptedTerms(userId: string): Promise<boolean> {
 }
 
 export async function deleteUser(userId: string): Promise<ValidOrInvalid<null, null>> {
-  await request(HttpMethod.Delete, `users/${userId}`);
+  await apiRequest(HttpMethod.Delete, `users/${userId}`);
   return valid(null);
 }
 
@@ -124,7 +124,7 @@ function rawSessionToSession(raw: RawSession): SessionResource.PublicSession {
 
 export async function createSession(body: SessionResource.CreateRequestBody): Promise<ValidOrInvalid<SessionResource.PublicSession, string[]>> {
   body.password = hashPassword(body.password);
-  const response = await request(HttpMethod.Post, 'sessions', body);
+  const response = await apiRequest(HttpMethod.Post, 'sessions', body);
   switch (response.status) {
     case 201:
       const rawSession = response.data as RawSession;
@@ -138,7 +138,7 @@ export async function createSession(body: SessionResource.CreateRequestBody): Pr
 
 function withCurrentSession(method: HttpMethod): () => Promise<ValidOrInvalid<SessionResource.PublicSession, null>> {
   return async () => {
-    const response = await request(method, 'sessions/current');
+    const response = await apiRequest(method, 'sessions/current');
     switch (response.status) {
       case 200:
         const rawSession = response.data as RawSession;
@@ -165,7 +165,7 @@ function rawFeedbackToFeedback(raw: RawFeedback): FeedbackResource.PublicFeedbac
 }
 
 export async function createFeedback(body: FeedbackResource.CreateRequestBody): Promise<ValidOrInvalid<FeedbackResource.PublicFeedback, FeedbackResource.CreateValidationErrors>> {
-  const response = await request(HttpMethod.Post, 'feedback', body);
+  const response = await apiRequest(HttpMethod.Post, 'feedback', body);
   switch (response.status) {
     case 201:
       const rawFeedback = body as RawFeedback;
@@ -176,7 +176,7 @@ export async function createFeedback(body: FeedbackResource.CreateRequestBody): 
 }
 
 export async function createForgotPasswordToken(body: ForgotPasswordTokenResource.CreateRequestBody): Promise<ValidOrInvalid<null, null>> {
-  const response = await request(HttpMethod.Post, 'forgot-password-tokens', body);
+  const response = await apiRequest(HttpMethod.Post, 'forgot-password-tokens', body);
   switch (response.status) {
     case 201:
       return valid(null);
@@ -190,7 +190,7 @@ export async function updateForgotPasswordToken(body: ForgotPasswordTokenResourc
   const { token, userId } = body;
   let { password } = body;
   password = hashPassword(password);
-  const response = await request(HttpMethod.Put, `forgot-password-tokens/${token}`, { userId, password });
+  const response = await apiRequest(HttpMethod.Put, `forgot-password-tokens/${token}`, { userId, password });
   switch (response.status) {
     case 200:
       return valid(null);
@@ -228,7 +228,7 @@ export async function createFile(file: CreateFileRequestBody): Promise<ValidOrIn
       alias: file.alias
     })
   );
-  const response = await request(HttpMethod.Post, 'files', requestBody);
+  const response = await apiRequest(HttpMethod.Post, 'files', requestBody);
   switch (response.status) {
     case 200:
     case 201:
@@ -243,7 +243,7 @@ export async function createFile(file: CreateFileRequestBody): Promise<ValidOrIn
 }
 
 export async function readOneFile(id: string): Promise<ValidOrInvalid<FileResource.PublicFile, string[]>> {
-  const response = await request(HttpMethod.Get, `files/${id}`);
+  const response = await apiRequest(HttpMethod.Get, `files/${id}`);
   switch (response.status) {
     case 200:
       const rawFile = response.data as RawFile;
@@ -314,7 +314,7 @@ function rawRfiToPublicRfi(raw: RawRfi): RfiResource.PublicRfi {
 }
 
 export async function createRfi(rfi: RfiResource.CreateRequestBody): Promise<ValidOrInvalid<RfiResource.PublicRfi, RfiResource.CreateValidationErrors>> {
-  const response = await request(HttpMethod.Post, 'requestsForInformation', rfi);
+  const response = await apiRequest(HttpMethod.Post, 'requestsForInformation', rfi);
   switch (response.status) {
     case 201:
       const rawRfi = response.data as RawRfi;
@@ -327,7 +327,7 @@ export async function createRfi(rfi: RfiResource.CreateRequestBody): Promise<Val
 }
 
 export async function updateRfi(rfiId: string, rfi: RfiResource.CreateRequestBody): Promise<ValidOrInvalid<RfiResource.PublicRfi, RfiResource.UpdateValidationErrors>> {
-  const response = await request(HttpMethod.Put, `requestsForInformation/${rfiId}`, rfi);
+  const response = await apiRequest(HttpMethod.Put, `requestsForInformation/${rfiId}`, rfi);
   switch (response.status) {
     case 200:
       const rawRfi = response.data as RawRfi;
@@ -340,7 +340,7 @@ export async function updateRfi(rfiId: string, rfi: RfiResource.CreateRequestBod
 }
 
 export async function readOneRfi(rfiId: string): Promise<ValidOrInvalid<RfiResource.PublicRfi, null>> {
-  const response = await request(HttpMethod.Get, `requestsForInformation/${rfiId}`);
+  const response = await apiRequest(HttpMethod.Get, `requestsForInformation/${rfiId}`);
   switch (response.status) {
     case 200:
       const rawRfi = response.data as RawRfi;
@@ -355,7 +355,7 @@ type RawReadManyRfiResponseBody = PaginatedList<RawRfi>;
 export type ReadManyRfiResponseBody = PaginatedList<RfiResource.PublicRfi>;
 
 export async function readManyRfis(): Promise<ValidOrInvalid<ReadManyRfiResponseBody, null>> {
-  const response = await request(HttpMethod.Get, 'requestsForInformation');
+  const response = await apiRequest(HttpMethod.Get, 'requestsForInformation');
   switch (response.status) {
     case 200:
       const rawResponseBody = response.data as RawReadManyRfiResponseBody;
@@ -369,7 +369,7 @@ export async function readManyRfis(): Promise<ValidOrInvalid<ReadManyRfiResponse
 }
 
 export async function createRfiPreview(rfi: RfiResource.CreateRequestBody): Promise<ValidOrInvalid<RfiResource.PublicRfi, RfiResource.CreateValidationErrors>> {
-  const response = await request(HttpMethod.Post, 'requestForInformationPreviews', rfi);
+  const response = await apiRequest(HttpMethod.Post, 'requestForInformationPreviews', rfi);
   switch (response.status) {
     case 201:
       const rawRfi = response.data as RawRfi;
@@ -382,7 +382,7 @@ export async function createRfiPreview(rfi: RfiResource.CreateRequestBody): Prom
 }
 
 export async function readOneRfiPreview(rfiId: string): Promise<ValidOrInvalid<RfiResource.PublicRfi, null>> {
-  const response = await request(HttpMethod.Get, `requestForInformationPreviews/${rfiId}`);
+  const response = await apiRequest(HttpMethod.Get, `requestForInformationPreviews/${rfiId}`);
   switch (response.status) {
     case 200:
       const rawRfi = response.data as RawRfi;
@@ -406,7 +406,7 @@ function rawDdrToPublicDdr(raw: RawDdr): DdrResource.PublicDiscoveryDayResponse 
 }
 
 export async function createDdr(ddr: DdrResource.CreateRequestBody): Promise<ValidOrInvalid<DdrResource.PublicDiscoveryDayResponse, DdrResource.CreateValidationErrors>> {
-  const response = await request(HttpMethod.Post, 'discoveryDayResponses', ddr);
+  const response = await apiRequest(HttpMethod.Post, 'discoveryDayResponses', ddr);
   switch (response.status) {
     case 200:
     case 201:
@@ -420,7 +420,7 @@ export async function createDdr(ddr: DdrResource.CreateRequestBody): Promise<Val
 }
 
 export async function readOneDdr(vendorId: string, rfiId: string): Promise<ValidOrInvalid<DdrResource.PublicDiscoveryDayResponse, null>> {
-  const response = await request(HttpMethod.Get, `discoveryDayResponses/${vendorId}?rfiId=${rfiId}`);
+  const response = await apiRequest(HttpMethod.Get, `discoveryDayResponses/${vendorId}?rfiId=${rfiId}`);
   switch (response.status) {
     case 200:
       const rawDdr = response.data as RawDdr;
@@ -433,7 +433,7 @@ export async function readOneDdr(vendorId: string, rfiId: string): Promise<Valid
 }
 
 export async function updateDdr(vendorId: string, rfiId: string, attendees: DdrResource.Attendee[]): Promise<ValidOrInvalid<DdrResource.PublicDiscoveryDayResponse, DdrResource.UpdateValidationErrors>> {
-  const response = await request(HttpMethod.Put, `discoveryDayResponses/${vendorId}?rfiId=${rfiId}`, { attendees });
+  const response = await apiRequest(HttpMethod.Put, `discoveryDayResponses/${vendorId}?rfiId=${rfiId}`, { attendees });
   switch (response.status) {
     case 200:
       const rawDdr = response.data as RawDdr;
@@ -447,7 +447,7 @@ export async function updateDdr(vendorId: string, rfiId: string, attendees: DdrR
 }
 
 export async function deleteDdr(vendorId: string, rfiId: string): Promise<ValidOrInvalid<null, null>> {
-  const response = await request(HttpMethod.Delete, `discoveryDayResponses/${vendorId}?rfiId=${rfiId}`);
+  const response = await apiRequest(HttpMethod.Delete, `discoveryDayResponses/${vendorId}?rfiId=${rfiId}`);
   switch (response.status) {
     case 200:
       return valid(null);
@@ -474,7 +474,7 @@ function rawRfiResponseToPublicRfiResponse(raw: RawRfiResponse): RfiResponseReso
 }
 
 export async function createRfiResponse(rfiResponse: RfiResponseResource.CreateRequestBody): Promise<ValidOrInvalid<RfiResponseResource.PublicRfiResponse, RfiResponseResource.CreateValidationErrors>> {
-  const response = await request(HttpMethod.Post, 'requestForInformationResponses', rfiResponse);
+  const response = await apiRequest(HttpMethod.Post, 'requestForInformationResponses', rfiResponse);
   switch (response.status) {
     case 201:
       const rawRfiResponse = response.data as RawRfiResponse;
@@ -491,7 +491,7 @@ type RawReadManyRfiResponsesResponseBody = PaginatedList<RawRfiResponse>;
 export type ReadManyRfiResponsesResponseBody = PaginatedList<RfiResponseResource.PublicRfiResponse>;
 
 export async function readManyRfiResponses(rfiId: string): Promise<ValidOrInvalid<ReadManyRfiResponsesResponseBody, null>> {
-  const response = await request(HttpMethod.Get, `requestForInformationResponses?rfiId=${rfiId}`);
+  const response = await apiRequest(HttpMethod.Get, `requestForInformationResponses?rfiId=${rfiId}`);
   switch (response.status) {
     case 200:
       const rawResponseBody = response.data as RawReadManyRfiResponsesResponseBody;
@@ -520,7 +520,7 @@ function rawLogItemToPublicLogItem(raw: RawLogItem): LogItemResource.PublicLogIt
 }
 
 export async function createViLogItem(body: LogItemResource.CreateRequestBody): Promise<ValidOrInvalid<LogItemResource.PublicLogItem, LogItemResource.CreateValidationErrors>> {
-  const response = await request(HttpMethod.Post, 'unsolicitedProposalLogItems', body);
+  const response = await apiRequest(HttpMethod.Post, 'unsolicitedProposalLogItems', body);
   switch (response.status) {
     case 201:
       const rawResponseBody = response.data as RawLogItem;
@@ -618,7 +618,7 @@ function rawViForProgramStaffToPublicViForProgramStaff(raw: RawViForProgramStaff
 
 // Only vendors create vendor ideas.
 export async function createVi(vi: ViResource.CreateRequestBody): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForVendors, ViResource.CreateValidationErrors>> {
-  const response = await request(HttpMethod.Post, 'unsolicitedProposals', vi);
+  const response = await apiRequest(HttpMethod.Post, 'unsolicitedProposals', vi);
   switch (response.status) {
     case 201:
       const rawVi = response.data as RawViForVendors;
@@ -683,7 +683,7 @@ interface RawViSlimForProgramStaff extends Omit<ViResource.PublicVendorIdeaSlimF
 }
 
 export async function readManyVisForBuyers(): Promise<ValidOrInvalid<PaginatedList<ViResource.PublicVendorIdeaSlimForBuyers>, null>> {
-  const response = await request(HttpMethod.Get, 'unsolicitedProposals');
+  const response = await apiRequest(HttpMethod.Get, 'unsolicitedProposals');
   switch (response.status) {
     case 200:
       const raw = response.data as PaginatedList<RawViSlimForBuyers>;
@@ -697,7 +697,7 @@ export async function readManyVisForBuyers(): Promise<ValidOrInvalid<PaginatedLi
 }
 
 export async function readManyVisForVendors(): Promise<ValidOrInvalid<PaginatedList<ViResource.PublicVendorIdeaSlimForVendors>, null>> {
-  const response = await request(HttpMethod.Get, 'unsolicitedProposals');
+  const response = await apiRequest(HttpMethod.Get, 'unsolicitedProposals');
   switch (response.status) {
     case 200:
       const raw = response.data as PaginatedList<RawViSlimForVendors>;
@@ -711,7 +711,7 @@ export async function readManyVisForVendors(): Promise<ValidOrInvalid<PaginatedL
 }
 
 export async function readManyVisForProgramStaff(): Promise<ValidOrInvalid<PaginatedList<ViResource.PublicVendorIdeaSlimForProgramStaff>, null>> {
-  const response = await request(HttpMethod.Get, 'unsolicitedProposals');
+  const response = await apiRequest(HttpMethod.Get, 'unsolicitedProposals');
   switch (response.status) {
     case 200:
       const raw = response.data as PaginatedList<RawViSlimForProgramStaff>;
@@ -725,7 +725,7 @@ export async function readManyVisForProgramStaff(): Promise<ValidOrInvalid<Pagin
 }
 
 export async function readOneViForBuyers(id: string): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForBuyers, null>> {
-  const response = await request(HttpMethod.Get, `unsolicitedProposals/${id}`);
+  const response = await apiRequest(HttpMethod.Get, `unsolicitedProposals/${id}`);
   switch (response.status) {
     case 200:
       const rawVi = response.data as RawViForBuyers;
@@ -736,7 +736,7 @@ export async function readOneViForBuyers(id: string): Promise<ValidOrInvalid<ViR
 }
 
 export async function readOneViForProgramStaff(id: string): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForProgramStaff, null>> {
-  const response = await request(HttpMethod.Get, `unsolicitedProposals/${id}`);
+  const response = await apiRequest(HttpMethod.Get, `unsolicitedProposals/${id}`);
   switch (response.status) {
     case 200:
       const rawVi = response.data as RawViForProgramStaff;
@@ -747,7 +747,7 @@ export async function readOneViForProgramStaff(id: string): Promise<ValidOrInval
 }
 
 export async function readOneViForVendors(id: string): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForVendors, null>> {
-  const response = await request(HttpMethod.Get, `unsolicitedProposals/${id}`);
+  const response = await apiRequest(HttpMethod.Get, `unsolicitedProposals/${id}`);
   switch (response.status) {
     case 200:
       const rawVi = response.data as RawViForVendors;
@@ -758,7 +758,7 @@ export async function readOneViForVendors(id: string): Promise<ValidOrInvalid<Vi
 }
 
 export async function updateViForVendors(vi: ViResource.UpdateRequestBody, id: string): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForVendors, ViResource.UpdateValidationErrors>> {
-  const response = await request(HttpMethod.Put, `unsolicitedProposals/${id}`, vi);
+  const response = await apiRequest(HttpMethod.Put, `unsolicitedProposals/${id}`, vi);
   switch (response.status) {
     case 200:
       const rawVi = response.data as RawViForVendors;
@@ -771,7 +771,7 @@ export async function updateViForVendors(vi: ViResource.UpdateRequestBody, id: s
 }
 
 export async function updateViForProgramStaff(vi: ViResource.UpdateRequestBody, id: string): Promise<ValidOrInvalid<ViResource.PublicVendorIdeaForProgramStaff, ViResource.UpdateValidationErrors>> {
-  const response = await request(HttpMethod.Put, `unsolicitedProposals/${id}`, vi);
+  const response = await apiRequest(HttpMethod.Put, `unsolicitedProposals/${id}`, vi);
   switch (response.status) {
     case 200:
       const rawVi = response.data as RawViForProgramStaff;
@@ -780,5 +780,16 @@ export async function updateViForProgramStaff(vi: ViResource.UpdateRequestBody, 
       return invalid(response.data as ViResource.UpdateValidationErrors);
     default:
       return invalid({});
+  }
+}
+
+export async function getFeatureFlags(): Promise<FeatureFlags> {
+  const response = await request(HttpMethod.Get, 'flags');
+  switch (response.status) {
+    case 200:
+      const flags = response.data as FeatureFlags;
+      return flags;
+    default:
+      return defaultFeatureFlags;
   }
 }

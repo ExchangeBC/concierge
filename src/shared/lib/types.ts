@@ -106,11 +106,7 @@ export function userTypeToTitleCase(userType: UserType): string {
   }
 }
 
-export type AuthLevel<UserType>
-  = ADT<'any'>
-  | ADT<'signedIn'>
-  | ADT<'signedOut'>
-  | ADT<'userType', UserType[]>;
+export type AuthLevel<UserType> = ADT<'any'> | ADT<'signedIn'> | ADT<'signedOut'> | ADT<'userType', UserType[]>;
 
 /**
  * Parses an `AuthLevel` from a plain object.
@@ -134,8 +130,9 @@ export function parseAuthLevel<UserType>(raw: any, parseOneUserType: (raw: strin
           tag: 'userType',
           value: userTypes
         };
+      } else {
+        return null;
       }
-      // Else, continues to return null.
     default:
       return null;
   }
@@ -320,3 +317,11 @@ export function ratingToTitleCase(rating: Rating): string {
       return 'Bad';
   }
 }
+
+export interface FeatureFlags {
+  vendorIdeasEnabled: boolean;
+}
+
+export const defaultFeatureFlags: FeatureFlags = {
+  vendorIdeasEnabled: false
+};

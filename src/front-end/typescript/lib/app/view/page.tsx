@@ -98,10 +98,10 @@ export function view<PageState, PageMsg>(props: Props<PageState, PageMsg>) {
   if (!pageState) {
     dispatch(
       newRoute({
-        tag: 'notice' as 'notice',
+        tag: 'notice',
         value: {
           noticeId: {
-            tag: 'notFound' as 'notFound',
+            tag: 'notFound',
             value: undefined
           }
         }

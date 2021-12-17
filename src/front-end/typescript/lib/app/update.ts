@@ -1,7 +1,7 @@
 import { makeStartLoading, makeStopLoading, UpdateState } from 'front-end/lib';
 import { Msg, Route, Session, State } from 'front-end/lib/app/types';
 import { Dispatch, Immutable, initAppChildPage, PageModal, Update, updateAppChildPage } from 'front-end/lib/framework';
-import { getSession } from 'front-end/lib/http/api';
+import { getSession, getFeatureFlags } from 'front-end/lib/http/api';
 import * as PageChangePassword from 'front-end/lib/pages/change-password';
 import * as PageFeedback from 'front-end/lib/pages/feedback';
 import * as PageForgotPassword from 'front-end/lib/pages/forgot-password';
@@ -418,7 +418,6 @@ const update: Update<State, Msg> = ({ state, msg }) => {
       return modal ? state.setIn(['modal', 'content'], modal) : state;
     }
   };
-
   switch (msg.tag) {
     case 'noop':
       return [state];
@@ -433,6 +432,8 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           state = state.setIn(['pages', state.activeRoute.tag], undefined);
           // Refresh the front-end's view of the current session.
           state = setSession(state, await getSession());
+          // Refresh feature flags
+          state = state.set('featureFlags', await getFeatureFlags());
           state = state
             .set('activeRoute', incomingRoute)
             // We switch this flag to true so the view function knows to display the page.
