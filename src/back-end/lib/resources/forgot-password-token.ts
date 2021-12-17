@@ -36,7 +36,7 @@ export const resource: Resource = {
         if (!permissions.createForgotPasswordToken(request.session)) {
           return respond(401);
         }
-        const user = await UserModel.findOne({ email: request.body.email, active: true }).exec();
+        const user = await UserModel.findOne({ email: request.body.email }).exec();
         // We respond with a 201 so we don't give away any information about
         // which users do and don't have accounts.
         if (!user) {
@@ -95,10 +95,10 @@ export const resource: Resource = {
             password: validatedPassword.value
           });
         }
-        const user = await UserModel.findOne({ _id: validatedUserId.value, active: true }).exec();
+        const user = await UserModel.findOne({ _id: validatedUserId.value }).exec();
         if (!user) {
           return respond(400, {
-            userId: ['Your user account is no longer active.']
+            userId: ['User does not exist']
           });
         }
         const correctForgotPasswordToken = await ForgotPasswordTokenSchema.authenticateToken(forgotPasswordToken.token, validatedUserId.value);

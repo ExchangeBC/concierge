@@ -87,10 +87,10 @@ const update: Update<State, Msg> = ({ state, msg }) => {
             case 'valid':
               dispatch(
                 newRoute({
-                  tag: 'notice' as 'notice',
+                  tag: 'notice',
                   value: {
                     noticeId: {
-                      tag: 'resetPassword' as 'resetPassword',
+                      tag: 'resetPassword',
                       value: undefined
                     }
                   }

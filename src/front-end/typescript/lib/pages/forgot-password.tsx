@@ -42,7 +42,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isSignedOut({
   async fail({ dispatch }) {
     dispatch(
       replaceRoute({
-        tag: 'requestForInformationList' as 'requestForInformationList',
+        tag: 'requestForInformationList',
         value: null
       })
     );
@@ -71,10 +71,10 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           // have accounts and which ones don't.
           dispatch(
             newRoute({
-              tag: 'notice' as 'notice',
+              tag: 'notice',
               value: {
                 noticeId: {
-                  tag: 'forgotPassword' as 'forgotPassword',
+                  tag: 'forgotPassword',
                   value: undefined
                 }
               }
