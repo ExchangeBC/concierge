@@ -10,24 +10,24 @@ This document describes the project's developer environment, technical architect
 <!-- toc -->
 
 - [Project Organisation](#project-organisation)
-  * [Front-End (`src/front-end`)](#front-end-srcfront-end)
-  * [Back-End (`src/back-end`)](#back-end-srcback-end)
-    + [CRUD Resources](#crud-resources)
-  * [Shared (`src/shared`)](#shared-srcshared)
-  * [Database Migrations (`migrations`)](#database-migrations-migrations)
+  - [Front-End (`src/front-end`)](#front-end-srcfront-end)
+  - [Back-End (`src/back-end`)](#back-end-srcback-end)
+    - [CRUD Resources](#crud-resources)
+  - [Shared (`src/shared`)](#shared-srcshared)
+  - [Database Migrations (`migrations`)](#database-migrations-migrations)
 - [Contributing](#contributing)
 - [Development Environment](#development-environment)
-  * [Dependencies](#dependencies)
-  * [Quick Start](#quick-start)
-  * [NPM Scripts](#npm-scripts)
-  * [Environment Variables](#environment-variables)
+  - [Dependencies](#dependencies)
+  - [Quick Start](#quick-start)
+  - [NPM Scripts](#npm-scripts)
+  - [Environment Variables](#environment-variables)
 - [Deployment](#deployment)
-  * [Environments](#environments)
-  * [Deployment Process](#deployment-process)
-    + [Running Database Migrations](#running-database-migrations)
-  * [Backups](#backups)
-    + [Restoring from Backup](#restoring-from-backup)
-  * [Replica Sets](#replica-sets)
+  - [Environments](#environments)
+  - [Deployment Process](#deployment-process)
+    - [Running Database Migrations](#running-database-migrations)
+  - [Backups](#backups)
+    - [Restoring from Backup](#restoring-from-backup)
+  - [Replica Sets](#replica-sets)
 - [Team](#team)
 - [Credits](#credits)
 
@@ -142,29 +142,29 @@ It is recommended that developers use the following scripts defined in `package.
 npm run <SCRIPT_NAME>
 ```
 
-| Script Name | Description |
-|---|---|
-| `start` | Runs the back-end server. |
-| `front-end:lint` | Lints the front-end source code using tslint. |
-| `front-end:typecheck` | Typechecks the front-end source code using tsc. |
-| `front-end:test` | Runs unit tests for the front-end source code. |
-| `front-end:build` | Builds the front-end using grunt. |
-| `front-end:watch` | Builds the front-end using grunt, and rebuilds it whenever a front-end or shared source file changes. |
-| `front-end:typedoc` | Builds TypeDoc API documentation for the front-end source code. |
-| `back-end:lint` | Lints the back-end source code using tslint. |
-| `back-end:typecheck` | Typechecks the back-end source code using tsc. |
-| `back-end:test` | Runs unit tests for the back-end source code. |
-| `back-end:start` | Starts the back-end server. |
-| `back-end:watch` | Starts the back-end server inside a nodemon process, and restarts it whenever a back-end or shared source file changes. |
-| `back-end:typedoc` | Builds TypeDoc API documentation for the back-end source code. |
-| `shared:typedoc` | Builds TypeDoc API documentation for the shared source code. |
-| `migrations:create` | Creates a migration file from a template in `migrations/migrations`. |
-| `migrations:up` | Runs migrations using their exported `up` functions. |
-| `migrations:down` | Runs migrations using their exported `down` functions. |
-| `typedoc:build` | Builds all TypeDoc API documentation. |
-| `typedoc:start` | Serves TypeDoc documentation on a local server. |
-| `docs:readme-toc` | Generate and insert a table of contents for README.md. |
-| `docs:licenses` | Generate the list of licenses from this project's NPM dependencies in OPEN_SOURCE_LICENSES.txt. |
+| Script Name           | Description                                                                                                             |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `start`               | Runs the back-end server.                                                                                               |
+| `front-end:lint`      | Lints the front-end source code using tslint.                                                                           |
+| `front-end:typecheck` | Typechecks the front-end source code using tsc.                                                                         |
+| `front-end:test`      | Runs unit tests for the front-end source code.                                                                          |
+| `front-end:build`     | Builds the front-end using grunt.                                                                                       |
+| `front-end:watch`     | Builds the front-end using grunt, and rebuilds it whenever a front-end or shared source file changes.                   |
+| `front-end:typedoc`   | Builds TypeDoc API documentation for the front-end source code.                                                         |
+| `back-end:lint`       | Lints the back-end source code using tslint.                                                                            |
+| `back-end:typecheck`  | Typechecks the back-end source code using tsc.                                                                          |
+| `back-end:test`       | Runs unit tests for the back-end source code.                                                                           |
+| `back-end:start`      | Starts the back-end server.                                                                                             |
+| `back-end:watch`      | Starts the back-end server inside a nodemon process, and restarts it whenever a back-end or shared source file changes. |
+| `back-end:typedoc`    | Builds TypeDoc API documentation for the back-end source code.                                                          |
+| `shared:typedoc`      | Builds TypeDoc API documentation for the shared source code.                                                            |
+| `migrations:create`   | Creates a migration file from a template in `migrations/migrations`.                                                    |
+| `migrations:up`       | Runs migrations using their exported `up` functions.                                                                    |
+| `migrations:down`     | Runs migrations using their exported `down` functions.                                                                  |
+| `typedoc:build`       | Builds all TypeDoc API documentation.                                                                                   |
+| `typedoc:start`       | Serves TypeDoc documentation on a local server.                                                                         |
+| `docs:readme-toc`     | Generate and insert a table of contents for README.md.                                                                  |
+| `docs:licenses`       | Generate the list of licenses from this project's NPM dependencies in OPEN_SOURCE_LICENSES.txt.                         |
 
 ### Environment Variables
 
@@ -175,45 +175,47 @@ All environment variables affect the back-end server's functionality, and are sa
 In development, developers can create a `.env` file in the repository's root directory to configure environment variables.
 As a convenience, developers can refer to `sample.env` as a guide.
 
-| Name | Description |
-|---|---|
-| `NODE_ENV` | The back-end run-time's environment, or the front-end's build target. Possible values include either "development" or "production". |
-| `SERVER_HOST` | The IPv4 address for the back-end to bind to. |
-| `SERVER_PORT` | The TCP port for the back-end to bind to. |
-| `BASIC_AUTH_USERNAME` | An HTTP basic auth username to limit access to the web application. |
-| `BASIC_AUTH_PASSWORD_HASH` | A password hash to authenticate HTTP basic auth passwords to limit access to the web application. |
-| `MONGO_URL` | The MongoDB database to connect to. |
-| `DATABASE_SERVICE_NAME` | Auto-generated by OpenShift. |
-| `${DATABASE_SERVICE_NAME}_SERVICE_HOST` | The MongoDB host to connect to in OpenShift. |
-| `${DATABASE_SERVICE_NAME}_SERVICE_PORT` | The MongoDB port to connect to in OpenShift. |
-| `MONGODB_USER` | The MongoDB user to connect with in OpenShift. |
-| `MONGODB_PASSWORD` | The MongoDB password to connect with in OpenShift. |
-| `MONGODB_DATABASE_NAME` | The MongoDB database to connect to in OpenShift. |
-| `TOKEN_SECRET` | The secret used to hash ForgotPasswordTokens. |
-| `COOKIE_SECRET` | The secret used to hash cookies. |
-| `FILE_STORAGE_DIR` | The location to store uploaded files. |
-| `MAILER_GMAIL_USER` | A GMail SMTP username to test transactional emails in development. |
-| `MAILER_GMAIL_PASS` | A GMail SMTP password to test transactional emails in development. |
-| `MAILER_HOST` | SMTP server host for transactional emails in production. |
-| `MAILER_PORT` | SMTP server port for transactional emails in production. |
-| `MAILER_FROM` | The sender for transactional emails. |
-| `MAILER_ROOT_URL` | The domain used for links in transactional email bodies. |
-| `CONTACT_EMAIL` | The Procurement Transformation team's contact email address. |
-| `SCHEDULED_MAINTENANCE` | A boolean flag (`0` for `false`, `1` for `true`) to turn off CRUD endpoints and vend a downtime HTML page to all users when set to a non-zero number. |
+| Name                                    | Description                                                                                                                                                                                                              |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `NODE_ENV`                              | The back-end run-time's environment, or the front-end's build target. Possible values include either "development" or "production".                                                                                      |
+| `SERVER_HOST`                           | The IPv4 address for the back-end to bind to.                                                                                                                                                                            |
+| `SERVER_PORT`                           | The TCP port for the back-end to bind to.                                                                                                                                                                                |
+| `BASIC_AUTH_USERNAME`                   | An HTTP basic auth username to limit access to the web application.                                                                                                                                                      |
+| `BASIC_AUTH_PASSWORD_HASH`              | A password hash to authenticate HTTP basic auth passwords to limit access to the web application.                                                                                                                        |
+| `MONGO_URL`                             | The MongoDB database to connect to.                                                                                                                                                                                      |
+| `DATABASE_SERVICE_NAME`                 | Auto-generated by OpenShift.                                                                                                                                                                                             |
+| `${DATABASE_SERVICE_NAME}_SERVICE_HOST` | The MongoDB host to connect to in OpenShift.                                                                                                                                                                             |
+| `${DATABASE_SERVICE_NAME}_SERVICE_PORT` | The MongoDB port to connect to in OpenShift.                                                                                                                                                                             |
+| `MONGODB_USER`                          | The MongoDB user to connect with in OpenShift.                                                                                                                                                                           |
+| `MONGODB_PASSWORD`                      | The MongoDB password to connect with in OpenShift.                                                                                                                                                                       |
+| `MONGODB_DATABASE_NAME`                 | The MongoDB database to connect to in OpenShift.                                                                                                                                                                         |
+| `TOKEN_SECRET`                          | The secret used to hash ForgotPasswordTokens.                                                                                                                                                                            |
+| `COOKIE_SECRET`                         | The secret used to hash cookies.                                                                                                                                                                                         |
+| `FILE_STORAGE_DIR`                      | The location to store uploaded files.                                                                                                                                                                                    |
+| `MAILER_GMAIL_USER`                     | A GMail SMTP username to test transactional emails in development.                                                                                                                                                       |
+| `MAILER_GMAIL_PASS`                     | A GMail SMTP password to test transactional emails in development.                                                                                                                                                       |
+| `MAILER_HOST`                           | SMTP server host for transactional emails in production.                                                                                                                                                                 |
+| `MAILER_PORT`                           | SMTP server port for transactional emails in production.                                                                                                                                                                 |
+| `MAILER_FROM`                           | The sender for transactional emails.                                                                                                                                                                                     |
+| `MAILER_ROOT_URL`                       | The domain used for links in transactional email bodies.                                                                                                                                                                 |
+| `CONTACT_EMAIL`                         | The Procurement Transformation team's contact email address.                                                                                                                                                             |
+| `SCHEDULED_MAINTENANCE`                 | A boolean flag (`0` for `false`, `1` for `true`) to turn off CRUD endpoints and vend a downtime HTML page to all users when set to a non-zero number.                                                                    |
+| `HIDE_VENDOR_IDEAS`                     | Feature flag for hiding the Vendor Ideas / Unsolicited Proposals features. Defaults to `false`. Set to `true` to hide features.                                                                                          |
+| `FORCE_SHOW_VENDOR_IDEAS`               | A semi-colon separated list of user emails that will allow certains users to access the Vendor Ideas / Unsolicited Proposal features, despite them being hidden. Has no effect if `HIDE_VENDOR_IDEAS` is set to `false`. |
 
 ## Deployment
 
-This project is deployed to the Government of British Columbia's own OpenShift infrastructure.  *NOTE* The instructions below apply to deployment to the OpenShift 4 (OCP4) environment, and no longer apply to deployment to OCP3 environments.
+This project is deployed to the Government of British Columbia's own OpenShift infrastructure. _NOTE_ The instructions below apply to deployment to the OpenShift 4 (OCP4) environment, and no longer apply to deployment to OCP3 environments.
 
 ### Environments
 
 We have four environments:
 
-| OpenShift Project | Name | URL |
-|---|---|---|
-| 1b91ec-dev | Development | https://app-concierge-dev.apps.silver.devops.gov.bc.ca |
-| 1b91ec-test | Test | https://app-concierge-test.apps.silver.devops.gov.bc.ca |
-| 1b91ec-prod | Production | https://app-concierge-prod.apps.silver.devops.gov.bc.ca |
+| OpenShift Project | Name        | URL                                                     |
+| ----------------- | ----------- | ------------------------------------------------------- |
+| 1b91ec-dev        | Development | https://app-concierge-dev.apps.silver.devops.gov.bc.ca  |
+| 1b91ec-test       | Test        | https://app-concierge-test.apps.silver.devops.gov.bc.ca |
+| 1b91ec-prod       | Production  | https://app-concierge-prod.apps.silver.devops.gov.bc.ca |
 
 The Development, Test and Staging environments are secured behind HTTP Basic Auth. Please contact a team member to access these credentials.
 
@@ -227,7 +229,7 @@ To deploy to the Test environment, start a build for "app-concierge-test", and O
 
 To deploy to the Production environment, start a build for "app-concierge-prod", and OpenShift will build HEAD from the `master` branch. You will need to manually deploy the build to the Production environment listed above once it completes by deploying the "app-concierge-prod" deployment in the "1b91ec-prod" project.
 
-For instructions on building images for each of the environments and setting up build and deployment configurations in OpenShift 4, please refer to the instructions in [openshift/README.md](./openshift/README.md).  
+For instructions on building images for each of the environments and setting up build and deployment configurations in OpenShift 4, please refer to the instructions in [openshift/README.md](./openshift/README.md).
 
 #### Running Database Migrations
 
@@ -237,10 +239,10 @@ Using an environment's deployment shell, run `npm run migrations:up` or `npm run
 
 Automated backups of the MongoDB database are performed with the BC Government Backup Container. Full documentation for this tool can be found here: https://github.com/BCDevOps/backup-container. The schedule for automated backups is as follows:
 
-* Every 6 hours with a retention of 4 backups
-* Every 24 hours with a retention of 1 backup (daily)
-* Every week with a retention of 4 backups (weekly)
-* Every month with a retention of 1 backup (monthly)
+- Every 6 hours with a retention of 4 backups
+- Every 24 hours with a retention of 1 backup (daily)
+- Every week with a retention of 4 backups (weekly)
+- Every month with a retention of 1 backup (monthly)
 
 A manual backup can be immediately performed by connecting to the backup container pod in OpenShift and running `backup.sh -1`.
 
@@ -250,11 +252,11 @@ You can find instructions for building and deploying the Backup Container images
 
 #### Restoring from Backup
 
-In the unfortunate event that you need to restore your data from a backup archive, the `backup.sh` script can  be used to restore from the last backup file. Refer to https://github.com/BCDevOps/backup-container#restore for details on how to use this script.
+In the unfortunate event that you need to restore your data from a backup archive, the `backup.sh` script can be used to restore from the last backup file. Refer to https://github.com/BCDevOps/backup-container#restore for details on how to use this script.
 
 ### Replica Sets
 
-If you are deploying the Concierge application to OpenShift, we recommend running the MongoDB database as a replica set, or Stateful Set in OpenShift.  Replica sets use redundant pods on separate nodes to minimize downtime and mitigate data loss.  We have provided the necessary configuration and instructions for setting up the replica set in [openshift/README.md](./openshift/README.md).
+If you are deploying the Concierge application to OpenShift, we recommend running the MongoDB database as a replica set, or Stateful Set in OpenShift. Replica sets use redundant pods on separate nodes to minimize downtime and mitigate data loss. We have provided the necessary configuration and instructions for setting up the replica set in [openshift/README.md](./openshift/README.md).
 
 ## Team
 
