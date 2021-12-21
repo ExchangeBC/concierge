@@ -175,7 +175,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const isDisabled = isLoading || !RfiForm.isValid(state.rfiForm);
   return (
     <FixedBar>
-      <LoadingButton color="info" onClick={saveDraft} loading={isSaveLoading} disabled={isDisabled} className="ml-3 text-nowrap">
+      <LoadingButton color="primary" onClick={saveDraft} loading={isSaveLoading} disabled={isDisabled} className="ml-3 text-nowrap">
         Create
       </LoadingButton>
       <LoadingButton color="info" onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className="ml-3 text-nowrap">
