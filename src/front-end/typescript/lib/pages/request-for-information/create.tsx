@@ -176,7 +176,7 @@ const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   return (
     <FixedBar>
       <LoadingButton color="primary" onClick={saveDraft} loading={isSaveLoading} disabled={isDisabled} className="ml-3 text-nowrap">
-        Create
+        Create Draft
       </LoadingButton>
       <LoadingButton color="info" onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className="ml-3 text-nowrap">
         Preview
