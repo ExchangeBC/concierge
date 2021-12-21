@@ -14,6 +14,8 @@ interface Props {
 
 export function rfiStatusToColor(s: RfiStatus): BootstrapColor {
   switch (s) {
+    case RfiStatus.Draft:
+      return 'secondary';
     case RfiStatus.Open:
       return 'success';
     case RfiStatus.Closed:

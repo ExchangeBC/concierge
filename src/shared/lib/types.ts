@@ -20,7 +20,20 @@ export interface ADT<Tag, Value = undefined> {
   readonly value: Value;
 }
 
+export function adt<T>(tag: T, value?: undefined): ADT<T>;
+export function adt<T, V>(tag: T, value: V): ADT<T, V>;
+export function adt<T extends ADT<unknown, unknown>>(tag: T['tag'], value: T['value']): ADT<T['tag'], T['value']> {
+  return { tag, value };
+}
+
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+
+export interface BodyWithErrors {
+  permissions?: string[];
+  database?: string[];
+  notFound?: string[];
+  conflict?: string[];
+}
 
 export interface PaginatedList<Item> {
   readonly total: number;
@@ -277,6 +290,7 @@ export interface Addendum {
 }
 
 export enum RfiStatus {
+  Draft = 'DRAFT',
   Open = 'OPEN',
   Closed = 'CLOSED',
   Expired = 'EXPIRED'
@@ -297,6 +311,8 @@ export function parseRfiStatus(raw: string): RfiStatus | null {
 
 export function rfiStatusToTitleCase(s: RfiStatus): string {
   switch (s) {
+    case RfiStatus.Draft:
+      return 'Draft';
     case RfiStatus.Open:
       return 'Open';
     case RfiStatus.Closed:

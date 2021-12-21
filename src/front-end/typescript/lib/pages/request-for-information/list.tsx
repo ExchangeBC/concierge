@@ -60,7 +60,7 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ shared }) 
     // Sort rfis by status first, then name.
     rfis = rfis.sort((a, b) => {
       if (a.status === b.status) {
-        return compareDates(a.publishedAt, b.publishedAt) * -1;
+        return compareDates(a.publishedAt || a.createdAt, b.publishedAt || b.createdAt) * -1;
       } else if (a.status === RfiStatus.Open) {
         return -1;
       } else if (b.status === RfiStatus.Open) {
@@ -388,7 +388,7 @@ function nonProgramStaffTableBodyRows(rfis: Rfi[]): Table.RowsSpec {
         className: className()
       },
       {
-        children: formatTableDate(rfi.publishedAt),
+        children: (rfi.publishedAt && formatTableDate(rfi.publishedAt)) || '',
         className: className()
       },
       {

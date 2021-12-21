@@ -91,8 +91,11 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
           infoAlerts.push('This RFI is no longer accepting responses.');
         }
         const updatedAt = rfi.latestVersion.createdAt;
-        if (rfiStatus === RfiStatus.Open && updatedAt && compareDates(rfi.publishedAt, updatedAt) === -1) {
+        if (rfiStatus === RfiStatus.Open && updatedAt && rfi.publishedAt && compareDates(rfi.publishedAt, updatedAt) === -1) {
           infoAlerts.push(`This RFI was last updated on ${formatDate(updatedAt)}.`);
+        }
+        if (rfiStatus === RfiStatus.Draft) {
+          infoAlerts.push('This RFI in still in draft.');
         }
       }
       return {
@@ -327,7 +330,7 @@ const view: ComponentView<State, Msg> = (props) => {
         <Col xs="12" className="d-flex flex-column text-center align-items-center">
           <h1 className="h4">RFI Number: {version.rfiNumber}</h1>
           <h2 className="h1">{version.title}</h2>
-          <div className="text-secondary small">{publishedDateToString(rfi.publishedAt)}</div>
+          <div className="text-secondary small">{(rfi.publishedAt && publishedDateToString(rfi.publishedAt)) || 'DRAFT'}</div>
           <div className="text-secondary small">{updatedDateToString(version.createdAt)}</div>
         </Col>
       </Row>

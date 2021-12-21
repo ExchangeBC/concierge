@@ -294,7 +294,7 @@ function rawRfiToPublicRfi(raw: RawRfi): RfiResource.PublicRfi {
   return {
     ...raw,
     createdAt: new Date(raw.createdAt),
-    publishedAt: new Date(raw.publishedAt),
+    publishedAt: (raw.publishedAt && new Date(raw.publishedAt)) || undefined,
     latestVersion: {
       ...raw.latestVersion,
       createdAt: new Date(raw.latestVersion.createdAt),
@@ -326,7 +326,7 @@ export async function createRfi(rfi: RfiResource.CreateRequestBody): Promise<Val
   }
 }
 
-export async function updateRfi(rfiId: string, rfi: RfiResource.CreateRequestBody): Promise<ValidOrInvalid<RfiResource.PublicRfi, RfiResource.UpdateValidationErrors>> {
+export async function updateRfi(rfiId: string, rfi: RfiResource.UpdateRequestBody): Promise<ValidOrInvalid<RfiResource.PublicRfi, RfiResource.UpdateValidationErrors>> {
   const response = await apiRequest(HttpMethod.Put, `requestsForInformation/${rfiId}`, rfi);
   switch (response.status) {
     case 200:

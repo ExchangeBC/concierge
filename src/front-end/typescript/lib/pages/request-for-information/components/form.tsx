@@ -10,7 +10,7 @@ import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { PublicRfiResponse } from 'shared/lib/resources/request-for-information/response';
 import { ADT, Omit } from 'shared/lib/types';
 
-export const ERROR_MESSAGE = `Please fix the errors below, and try submitting the form again. If you don't see any errors below, you may need to review the information in a different tab, and resolve any issues there.`;
+export const ERROR_MESSAGE = "Please fix the errors below, and try submitting the form again. If you don't see any errors below, you may need to review the information in a different tab, and resolve any issues there.";
 
 export type TabId = 'details' | 'discoveryDay' | 'responses';
 
@@ -39,6 +39,7 @@ export interface State {
   details: Immutable<DetailsForm.State>;
   discoveryDay: Immutable<DiscoveryDayForm.State>;
   responses?: Immutable<Responses.State>;
+  existingRfi?: PublicRfi;
 }
 
 export interface Values extends Omit<RfiResource.CreateRequestBody, 'attachments'> {
@@ -78,6 +79,7 @@ export const init: Init<Params, State> = async ({ formType, existingRfi, activeT
         discoveryDayResponses: isEditForm ? existingRfi && existingDiscoveryDay && existingRfi.discoveryDayResponses : undefined
       })
     ),
+    existingRfi,
     responses:
       showResponses && existingRfi && rfiResponses
         ? immutable(
@@ -157,13 +159,14 @@ export const view: ComponentView<State, Msg> = (props) => {
   const dispatchDetails: Dispatch<DetailsForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'details' as const, value }));
   const dispatchDiscoveryDay: Dispatch<DiscoveryDayForm.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'discoveryDay' as const, value }));
   const dispatchResponses: Dispatch<Responses.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'responses' as const, value }));
+  const showResponseView = state.responses && state.existingRfi && state.existingRfi.publishedAt;
   return (
     <div>
       <div className="d-flex mb-5" style={{ overflowX: 'auto' }}>
         <Nav className="flex-grow-1 flex-nowrap" tabs>
           <TabLink id="details" {...props} />
           <TabLink id="discoveryDay" {...props} />
-          {state.responses ? <TabLink id="responses" {...props} /> : null}
+          {showResponseView ? <TabLink id="responses" {...props} /> : null}
         </Nav>
       </div>
       <TabContent activeTab={state.activeTab}>
@@ -173,7 +176,7 @@ export const view: ComponentView<State, Msg> = (props) => {
         <TabPane tabId="discoveryDay">
           <DiscoveryDayForm.view state={state.discoveryDay} dispatch={dispatchDiscoveryDay} />
         </TabPane>
-        {state.responses ? (
+        {state.responses && showResponseView ? (
           <TabPane tabId="responses">
             <Responses.view state={state.responses} dispatch={dispatchResponses} />
           </TabPane>

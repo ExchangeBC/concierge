@@ -8,8 +8,8 @@ import { formatDateAndTime } from 'shared/lib';
 import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { invalid, valid, ValidOrInvalid } from 'shared/lib/validators';
 
-export function publishedDateToString(date: Date): string {
-  return `Published: ${formatDateAndTime(date, true)}`;
+export function publishedDateToString(date?: Date): string {
+  return date ? `Published: ${formatDateAndTime(date, true)}` : 'DRAFT';
 }
 
 export function updatedDateToString(date: Date): string {

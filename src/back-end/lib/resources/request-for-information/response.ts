@@ -125,7 +125,7 @@ export const resource: Resource = {
         if (!(await permissions.readManyRfiResponses(UserModel, request.session))) {
           return respond(401, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
         }
-        const validatedRfi = await validateRfiId(RfiModel, request.query.rfiId || '', undefined, true);
+        const validatedRfi = await validateRfiId(RfiModel, request.query.rfiId || '', undefined, false);
         if (validatedRfi.tag === 'invalid') {
           return respond(400, makeJsonResponseBody(validatedRfi.value));
         }

@@ -17,12 +17,13 @@ import { ADT, UserType } from 'shared/lib/types';
 
 export type RouteParams = null;
 
-export type InnerMsg = ADT<'rfiForm', RfiForm.Msg> | ADT<'preview'> | ADT<'hideCancelConfirmationPrompt'> | ADT<'showCancelConfirmationPrompt'> | ADT<'hidePublishConfirmationPrompt'> | ADT<'publish'>;
+export type InnerMsg = ADT<'rfiForm', RfiForm.Msg> | ADT<'preview'> | ADT<'hideCancelConfirmationPrompt'> | ADT<'showCancelConfirmationPrompt'> | ADT<'hidePublishConfirmationPrompt'> | ADT<'publish'> | ADT<'saveDraft'>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
 export interface State {
   previewLoading: number;
+  saveLoading: number;
   publishLoading: number;
   hasTriedPublishing: boolean;
   promptCancelConfirmation: boolean;
@@ -33,6 +34,7 @@ export interface State {
 async function makeInitState(): Promise<State> {
   return {
     previewLoading: 0,
+    saveLoading: 0,
     publishLoading: 0,
     hasTriedPublishing: false,
     promptCancelConfirmation: false,
@@ -88,8 +90,8 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
 
 const startPreviewLoading: UpdateState<State> = makeStartLoading('previewLoading');
 const stopPreviewLoading: UpdateState<State> = makeStopLoading('previewLoading');
-const startPublishLoading: UpdateState<State> = makeStartLoading('publishLoading');
-const stopPublishLoading: UpdateState<State> = makeStopLoading('publishLoading');
+const startSaveLoading: UpdateState<State> = makeStartLoading('saveLoading');
+const stopSaveLoading: UpdateState<State> = makeStopLoading('saveLoading');
 
 const update: Update<State, Msg> = ({ state, msg }) => {
   switch (msg.tag) {
@@ -113,24 +115,12 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           return state.set('rfiForm', rfiForm);
         }
       });
-    case 'hideCancelConfirmationPrompt':
-      return [state.set('promptCancelConfirmation', false)];
-    case 'showCancelConfirmationPrompt':
-      return [state.set('promptCancelConfirmation', true)];
-    case 'hidePublishConfirmationPrompt':
-      return [state.set('promptPublishConfirmation', false)];
-    case 'publish':
-      state = state.set('hasTriedPublishing', true);
-      if (!state.promptPublishConfirmation) {
-        return [state.set('promptPublishConfirmation', true)];
-      } else {
-        state = state.set('promptPublishConfirmation', false);
-      }
+    case 'saveDraft':
       return [
-        startPublishLoading(state),
+        startSaveLoading(state),
         async (state, dispatch) => {
           const fail = (state: Immutable<State>, errors: RfiResource.CreateValidationErrors) => {
-            state = stopPublishLoading(state);
+            state = stopSaveLoading(state);
             return state.set('rfiForm', RfiForm.setErrors(state.rfiForm, errors));
           };
           const requestBody = await makeRequestBody(state.rfiForm);
@@ -141,7 +131,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
                 case 'valid':
                   dispatch(
                     newRoute({
-                      tag: 'requestForInformationEdit' as const,
+                      tag: 'requestForInformationEdit',
                       value: {
                         rfiId: result.value._id
                       }
@@ -163,6 +153,12 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           return state;
         }
       ];
+    case 'hideCancelConfirmationPrompt':
+      return [state.set('promptCancelConfirmation', false)];
+    case 'showCancelConfirmationPrompt':
+      return [state.set('promptCancelConfirmation', true)];
+    case 'hidePublishConfirmationPrompt':
+      return [state.set('promptPublishConfirmation', false)];
     default:
       return [state];
   }
@@ -171,20 +167,21 @@ const update: Update<State, Msg> = ({ state, msg }) => {
 const viewBottomBar: ComponentView<State, Msg> = ({ state, dispatch }) => {
   const showCancelConfirmationPrompt = () => dispatch({ tag: 'showCancelConfirmationPrompt', value: undefined });
   const preview = () => dispatch({ tag: 'preview', value: undefined });
-  const publish = () => dispatch({ tag: 'publish', value: undefined });
+  const saveDraft = () => dispatch({ tag: 'saveDraft', value: undefined });
   const isPreviewLoading = state.previewLoading > 0;
   const isPublishLoading = state.publishLoading > 0;
+  const isSaveLoading = state.saveLoading > 0;
   const isLoading = isPreviewLoading || isPublishLoading;
   const isDisabled = isLoading || !RfiForm.isValid(state.rfiForm);
   return (
     <FixedBar>
-      <LoadingButton color="primary" onClick={publish} loading={isPublishLoading} disabled={isDisabled} className="text-nowrap">
-        Publish RFI
+      <LoadingButton color="info" onClick={saveDraft} loading={isSaveLoading} disabled={isDisabled} className="ml-3 text-nowrap">
+        Create
       </LoadingButton>
-      <LoadingButton color="info" onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className="mx-3 text-nowrap">
-        Preview RFI
+      <LoadingButton color="info" onClick={preview} loading={isPreviewLoading} disabled={isDisabled} className="ml-3 text-nowrap">
+        Preview
       </LoadingButton>
-      <Link onClick={showCancelConfirmationPrompt} color="secondary" disabled={isLoading}>
+      <Link onClick={showCancelConfirmationPrompt} color="secondary" className="ml-3" disabled={isLoading}>
         Cancel
       </Link>
     </FixedBar>

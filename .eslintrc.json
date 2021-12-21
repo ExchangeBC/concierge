@@ -3,12 +3,7 @@
     "browser": true,
     "es2021": true
   },
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended",
-    "prettier"
-  ],
+  "extends": ["eslint:recommended", "plugin:@typescript-eslint/eslint-recommended", "plugin:@typescript-eslint/recommended", "prettier"],
   "plugins": ["@typescript-eslint"],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -16,6 +11,7 @@
     "sourceType": "module"
   },
   "rules": {
+    "indent": "off",
     "quotes": [
       "error",
       "single",
@@ -35,14 +31,6 @@
     "no-case-declarations": "off",
     "no-ex-assign": "off",
     "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/indent": [
-      "error",
-      2,
-      {
-        "offsetTernaryExpressions": true,
-        "SwitchCase": 1,
-        "ignoredNodes": ["JSXElement *", "TSTypeParameterInstantiation"]
-      }
-    ]
+    "@typescript-eslint/indent": "off"
   }
 }

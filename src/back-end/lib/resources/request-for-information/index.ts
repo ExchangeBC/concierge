@@ -11,7 +11,7 @@ import { get, isObject } from 'lodash';
 import { getNumber, getString, getStringArray } from 'shared/lib';
 import { Attendee, vendorIsSoloAttendee } from 'shared/lib/resources/discovery-day-response';
 import { CreateDiscoveryDayBody, CreateRequestBody, CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicDiscoveryDay, PublicRfi, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
-import { PaginatedList, UserType } from 'shared/lib/types';
+import { PaginatedList, UserType, adt } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, valid, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
 import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validateDiscoveryDay, validateGracePeriodDays, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
 
@@ -138,7 +138,7 @@ type ReadManyResponseBody = JsonResponseBody<PaginatedList<PublicRfi> | string[]
 
 type UpdateResponseBody = JsonResponseBody<PublicRfi | UpdateValidationErrors>;
 
-export type Resource<RequiredModels extends keyof AvailableModels> = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, UpdateRequestBody, Session>;
+export type Resource<RequiredModels extends keyof AvailableModels> = crud.Resource<SupportedRequestBodies, JsonResponseBody, AvailableModels, RequiredModels, CreateRequestBody, UpdateRequestBody | null, Session>;
 
 type GetRfiModel<RfiModelName extends keyof AvailableModels> = (Models: Pick<AvailableModels, RfiModelName>) => RfiSchema.Model;
 
@@ -189,7 +189,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
               const rfi = new RfiModel({
                 createdAt: version.createdAt,
                 // TODO publishedAt will need to change if drafts are added.
-                publishedAt: version.createdAt,
+                publishedAt: null,
                 versions: [version],
                 discoveryDayResponses: []
               });
@@ -244,7 +244,18 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
           if (!globalPermissions(request.session) || !permissions.readManyRfis()) {
             return basicResponse(401, request.session, makeJsonResponseBody([permissions.ERROR_MESSAGE]));
           }
-          let rfis = await RfiModel.find().exec();
+          // Depending on user type, we may need to return draft RFIs.
+          // Only Program Staff can view draft RFIs
+          let query;
+          switch ((request.session.user && request.session.user.type) || '') {
+            case UserType.ProgramStaff:
+              query = {};
+              break;
+            default:
+              query = { publishedAt: { $ne: null } };
+              break;
+          }
+          let rfis = await RfiModel.find(query).exec();
           if (!permissions.isProgramStaff(request.session)) {
             rfis = rfis.filter((rfi) => {
               return RfiSchema.hasBeenPublished(rfi);
@@ -272,21 +283,30 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
       return {
         async transformRequest(request) {
           const body = request.body.tag === 'json' && isObject(request.body.value) ? request.body.value : {};
-          return {
-            closingDate: getString(body, 'closingDate'),
-            closingTime: getString(body, 'closingTime'),
-            gracePeriodDays: getNumber(body, 'gracePeriodDays', -1),
-            rfiNumber: getString(body, 'rfiNumber'),
-            title: getString(body, 'title'),
-            description: getString(body, 'description'),
-            publicSectorEntity: getString(body, 'publicSectorEntity'),
-            categories: getStringArray(body, 'categories'),
-            discoveryDay: getDiscoveryDayBody(body),
-            addenda: getStringArray(body, 'addenda'),
-            attachments: getStringArray(body, 'attachments'),
-            buyerContact: getString(body, 'buyerContact'),
-            programStaffContact: getString(body, 'programStaffContact')
-          };
+          const tag = get(body, 'tag');
+          const value = get(body, 'value');
+          switch (tag) {
+            case 'edit':
+              return adt('edit', {
+                closingDate: getString(value, 'closingDate'),
+                closingTime: getString(value, 'closingTime'),
+                gracePeriodDays: getNumber(value, 'gracePeriodDays', -1),
+                rfiNumber: getString(value, 'rfiNumber'),
+                title: getString(value, 'title'),
+                description: getString(value, 'description'),
+                publicSectorEntity: getString(value, 'publicSectorEntity'),
+                categories: getStringArray(value, 'categories'),
+                discoveryDay: getDiscoveryDayBody(value),
+                addenda: getStringArray(value, 'addenda'),
+                attachments: getStringArray(value, 'attachments'),
+                buyerContact: getString(value, 'buyerContact'),
+                programStaffContact: getString(value, 'programStaffContact')
+              });
+            case 'publish':
+              return adt('publish');
+            default:
+              return null;
+          }
         },
         async respond(request): Promise<Response<UpdateResponseBody, Session>> {
           const respond = (code: number, body: PublicRfi | UpdateValidationErrors) => basicResponse(code, request.session, makeJsonResponseBody(body));
@@ -295,83 +315,105 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
               permissions: [permissions.ERROR_MESSAGE]
             });
           }
+          if (!request || !request.body) {
+            return respond(400, {
+              rfi: adt('parseFailure')
+            });
+          }
           const rfi = await RfiModel.findById(request.params.id);
           if (!rfi) {
             return respond(404, {
-              rfiId: ['RFI not found']
+              notFound: ['RFI not found']
             });
           }
-          const validatedVersion = await validateCreateRequestBody(UserModel, FileModel, request.body, request.session);
-          switch (validatedVersion.tag) {
-            case 'valid':
-              const currentVersion = RfiSchema.getLatestVersion(rfi);
-              const newVersion = validatedVersion.value;
-              // Update the addenda correctly (support deleting, updating and adding new addenda).
-              const now = new Date();
-              const newAddenda = newVersion.addenda.map((newAddendum, index) => {
-                const currentAddendum = get(currentVersion, ['addenda', index]);
-                if (currentAddendum && newAddendum.description !== currentAddendum.description) {
-                  // Addendum has changed.
-                  return {
-                    createdAt: currentAddendum.createdAt,
-                    updatedAt: now,
-                    description: newAddendum.description
-                  };
-                } else if (currentAddendum && newAddendum.description === currentAddendum.description) {
-                  // The addendum has not changed, so we return the current addendum,
-                  // which has the correct `updatedAt` date.
-                  return currentAddendum;
-                } else {
-                  // Return the addendum if it is new, unchanged or flagged for deletion.
-                  // Re: flagged for deletion, we will remove it later in this function.
-                  return newAddendum;
-                }
-              });
-              newVersion.addenda = newAddenda.filter((addendum) => {
-                return addendum.description !== DELETE_ADDENDUM_TOKEN;
-              });
-              // Persist the new version
-              rfi.versions.push(newVersion);
-              const publicRfi = await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session);
-              const existingDdrs = publicRfi.discoveryDayResponses || [];
-              const discoveryDayHasBeenUpdated = hasDiscoveryDayBeenUpdated(currentVersion, newVersion);
-              const discoveryDayHasBeenDeleted = hasDiscoveryDayBeenDeleted(currentVersion, newVersion);
-              if (discoveryDayHasBeenDeleted) {
-                // Remove existing discovery day responses if discovery day has been deleted.
-                rfi.discoveryDayResponses = [];
-              }
-              await rfi.save();
-              // Notifications.
-              for (const ddr of existingDdrs) {
-                // Discovery day has been updated
-                const impactedAttendeesByDiscoveryDayUpdate = getImpactedAttendeesWhenDiscoveryDayHasChanged(ddr.attendees, currentVersion, newVersion);
-                if (discoveryDayHasBeenUpdated && vendorIsSoloAttendee(ddr.vendor.email, ddr.attendees) && ddr.attendees[0] && impactedAttendeesByDiscoveryDayUpdate.length) {
-                  mailer.updateDiscoveryDayToVendorSolo({
-                    rfi,
-                    to: ddr.vendor.email,
-                    remote: ddr.attendees[0].remote
+          switch (request.body.tag) {
+            case 'edit':
+              const validatedVersion = await validateCreateRequestBody(UserModel, FileModel, request.body.value, request.session);
+              switch (validatedVersion.tag) {
+                case 'valid':
+                  const currentVersion = RfiSchema.getLatestVersion(rfi);
+                  const newVersion = validatedVersion.value;
+                  // Update the addenda correctly (support deleting, updating and adding new addenda).
+                  const now = new Date();
+                  const newAddenda = newVersion.addenda.map((newAddendum, index) => {
+                    const currentAddendum = get(currentVersion, ['addenda', index]);
+                    if (currentAddendum && newAddendum.description !== currentAddendum.description) {
+                      // Addendum has changed.
+                      return {
+                        createdAt: currentAddendum.createdAt,
+                        updatedAt: now,
+                        description: newAddendum.description
+                      };
+                    } else if (currentAddendum && newAddendum.description === currentAddendum.description) {
+                      // The addendum has not changed, so we return the current addendum,
+                      // which has the correct `updatedAt` date.
+                      return currentAddendum;
+                    } else {
+                      // Return the addendum if it is new, unchanged or flagged for deletion.
+                      // Re: flagged for deletion, we will remove it later in this function.
+                      return newAddendum;
+                    }
                   });
-                } else if (discoveryDayHasBeenUpdated) {
-                  mailer.updateDiscoveryDayToVendor({ rfi, to: ddr.vendor.email });
-                  if (impactedAttendeesByDiscoveryDayUpdate.length) {
-                    mailer.updateDiscoveryDayToAttendees({
-                      rfi,
-                      vendor: ddr.vendor,
-                      attendees: impactedAttendeesByDiscoveryDayUpdate
-                    });
+                  newVersion.addenda = newAddenda.filter((addendum) => {
+                    return addendum.description !== DELETE_ADDENDUM_TOKEN;
+                  });
+                  // Persist the new version
+                  rfi.versions.push(newVersion);
+                  const publicRfi = await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session);
+                  const existingDdrs = publicRfi.discoveryDayResponses || [];
+                  const discoveryDayHasBeenUpdated = hasDiscoveryDayBeenUpdated(currentVersion, newVersion);
+                  const discoveryDayHasBeenDeleted = hasDiscoveryDayBeenDeleted(currentVersion, newVersion);
+                  if (discoveryDayHasBeenDeleted) {
+                    // Remove existing discovery day responses if discovery day has been deleted.
+                    rfi.discoveryDayResponses = [];
                   }
-                } else if (discoveryDayHasBeenDeleted) {
-                  mailer.deleteDiscoveryDayToVendor({ rfi, to: ddr.vendor.email });
-                  mailer.deleteDiscoveryDayToAttendees({
-                    rfi,
-                    vendor: ddr.vendor,
-                    attendees: ddr.attendees
-                  });
-                }
+                  await rfi.save();
+                  // Notifications.
+                  for (const ddr of existingDdrs) {
+                    // Discovery day has been updated
+                    const impactedAttendeesByDiscoveryDayUpdate = getImpactedAttendeesWhenDiscoveryDayHasChanged(ddr.attendees, currentVersion, newVersion);
+                    if (discoveryDayHasBeenUpdated && vendorIsSoloAttendee(ddr.vendor.email, ddr.attendees) && ddr.attendees[0] && impactedAttendeesByDiscoveryDayUpdate.length) {
+                      mailer.updateDiscoveryDayToVendorSolo({
+                        rfi,
+                        to: ddr.vendor.email,
+                        remote: ddr.attendees[0].remote
+                      });
+                    } else if (discoveryDayHasBeenUpdated) {
+                      mailer.updateDiscoveryDayToVendor({ rfi, to: ddr.vendor.email });
+                      if (impactedAttendeesByDiscoveryDayUpdate.length) {
+                        mailer.updateDiscoveryDayToAttendees({
+                          rfi,
+                          vendor: ddr.vendor,
+                          attendees: impactedAttendeesByDiscoveryDayUpdate
+                        });
+                      }
+                    } else if (discoveryDayHasBeenDeleted) {
+                      mailer.deleteDiscoveryDayToVendor({ rfi, to: ddr.vendor.email });
+                      mailer.deleteDiscoveryDayToAttendees({
+                        rfi,
+                        vendor: ddr.vendor,
+                        attendees: ddr.attendees
+                      });
+                    }
+                  }
+                  return respond(200, publicRfi);
+                case 'invalid':
+                  return respond(400, { rfi: adt('edit', validatedVersion.value) });
+                default:
+                  return respond(400, { rfi: adt('parseFailure') });
               }
+            case 'publish':
+              if (rfi.publishedAt) {
+                return respond(400, { rfi: adt('publish', ['RFI has already been published']) });
+              }
+              // Update the RFI with a published date and respond with updates PublicRFI
+              // RFI has already been validated at this point
+              rfi.publishedAt = new Date();
+              await rfi.save();
+              const publicRfi = await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session);
               return respond(200, publicRfi);
-            case 'invalid':
-              return respond(400, validatedVersion.value);
+            default:
+              return respond(400, { rfi: adt('parseFailure') });
           }
         }
       };

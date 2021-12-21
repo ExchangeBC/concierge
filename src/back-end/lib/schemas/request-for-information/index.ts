@@ -42,7 +42,7 @@ export interface DiscoveryDayResponseDeprecated {
 export interface Data {
   _id: mongoose.Types.ObjectId;
   createdAt: Date;
-  publishedAt: Date;
+  publishedAt?: Date;
   versions: Version[];
   discoveryDayResponses: DiscoveryDayResponse[];
   discoveryDayResponsesDeprecated: DiscoveryDayResponseDeprecated[];
@@ -151,11 +151,11 @@ const requiredMixedSchema = {
 
 export const schema: mongoose.Schema = new mongoose.Schema({
   createdAt: dateSchema(true),
-  publishedAt: dateSchema(true),
+  publishedAt: dateSchema(false),
   versions: requiredMixedSchema,
   discoveryDayResponses: requiredMixedSchema
 });
 
 export function hasBeenPublished(rfi: InstanceType<Model>): boolean {
-  return rfi.publishedAt.getTime() <= Date.now();
+  return (rfi.publishedAt && rfi.publishedAt.getTime() <= Date.now()) || false;
 }

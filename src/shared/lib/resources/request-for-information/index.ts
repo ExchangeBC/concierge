@@ -2,7 +2,7 @@ import { diffDates } from 'shared/lib';
 import { PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
 import { PublicFile } from 'shared/lib/resources/file';
 import { PublicUser } from 'shared/lib/resources/user';
-import { Addendum, RfiStatus } from 'shared/lib/types';
+import { Addendum, RfiStatus, ADT, BodyWithErrors } from 'shared/lib/types';
 
 export interface PublicDiscoveryDay {
   description?: string;
@@ -40,7 +40,7 @@ export interface PublicVersion {
 export interface PublicRfi {
   _id: string;
   createdAt: Date;
-  publishedAt: Date;
+  publishedAt?: Date; // Published date is not defined for Draft RFIs
   latestVersion: PublicVersion;
   discoveryDayResponses?: PublicDiscoveryDayResponse[]; // Only defined for Program Staff.
 }
@@ -98,11 +98,19 @@ export interface CreateValidationErrors {
   programStaffContact?: string[];
 }
 
-export type UpdateRequestBody = CreateRequestBody;
+export type UpdateEditRequestBody = CreateRequestBody;
 
-export interface UpdateValidationErrors extends CreateValidationErrors {
+export interface UpdateEditValidationErrors extends CreateValidationErrors {
   rfiId?: string[];
 }
+
+export type UpdateRequestBody = ADT<'edit', UpdateEditRequestBody> | ADT<'publish'>;
+
+export interface UpdateValidationErrors extends BodyWithErrors {
+  rfi?: UpdateADTErrors;
+}
+
+export type UpdateADTErrors = ADT<'edit', UpdateEditValidationErrors> | ADT<'publish', string[]> | ADT<'parseFailure'>;
 
 /**
  * Constant to be used as an Addendum's description
@@ -113,7 +121,7 @@ export const DELETE_ADDENDUM_TOKEN = '$$__DELETE_ADDENDUM_TOKEN__$$';
 
 export function determineRfiStatus(closingAt: Date, gracePeriodDays: number): RfiStatus {
   const days = diffDates(closingAt, new Date(), 'days');
-  if (days >= (-1 * gracePeriodDays) && days <= 0) {
+  if (days >= -1 * gracePeriodDays && days <= 0) {
     return RfiStatus.Closed;
   } else if (days > 0) {
     return RfiStatus.Open;
@@ -123,5 +131,6 @@ export function determineRfiStatus(closingAt: Date, gracePeriodDays: number): Rf
 }
 
 export function rfiToRfiStatus(rfi: PublicRfi): RfiStatus {
+  if (!rfi.publishedAt) return RfiStatus.Draft;
   return determineRfiStatus(rfi.latestVersion.closingAt, rfi.latestVersion.gracePeriodDays);
 }
