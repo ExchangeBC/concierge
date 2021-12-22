@@ -80,22 +80,20 @@ const productionMailerConfigOptions = {
   }
 };
 
+// SendGrid mail settings - for development only. MAILER_NOREPLY must be set to a 'from' address that is registered with the SendGrid account used.
 const developmentMailerConfigOptions = {
-  service: 'gmail',
+  service: 'SendGrid',
   auth: {
-    user: get('MAILER_GMAIL_USER', ''),
-    pass: get('MAILER_GMAIL_PASS', '')
-  },
-  tls: {
-    rejectUnauthorized: false
+    user: get('SENDGRID_USER', 'apikey'),
+    pass: get('SENDGRID_PASS', '')
   }
 };
 
 export const MAILER_CONFIG = ENV === 'development' ? developmentMailerConfigOptions : productionMailerConfigOptions;
 
-export const MAILER_NOREPLY = 'noreply@procurementconcierge.gov.bc.ca';
+export const MAILER_NOREPLY = get('MAILER_NOREPLY', 'noreply@procurementconcierge.gov.bc.ca');
 
-export const MAILER_FROM = get('MAILER_FROM', `Procurement Concierge Program <${MAILER_NOREPLY}>`);
+export const MAILER_FROM = get('MAILER_FROM', `"Procurement Concierge Program" <${MAILER_NOREPLY}>`);
 
 export const MAILER_ROOT_URL = get('MAILER_ROOT_URL', 'https://procurementconcierge.gov.bc.ca').replace(/\/*$/, '');
 

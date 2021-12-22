@@ -110,7 +110,6 @@ export const styles = (() => {
       margin: '0 auto',
       border: 0,
       width: '100%',
-      maxWidth: px(scale(30)),
       lineHeight: 1.4
     },
     row: {
@@ -121,10 +120,10 @@ export const styles = (() => {
       ...utilities.font.xl,
       ...utilities.font.bold,
       ...utilities.pt[4],
-      ...utilities.text.center
+      ...utilities.text.left
     },
     description: {
-      ...utilities.text.center
+      ...utilities.text.left
     },
     p: {
       ...utilities.mt[1],
@@ -165,7 +164,7 @@ export const styles = (() => {
       ...utilities.p[3],
       ...utilities.text.center,
       backgroundColor: variables.colors.primary,
-      display: 'block'
+      display: 'inline-flex'
     },
     logo: {
       height: px(scale(2))
@@ -221,7 +220,7 @@ export const Link: View<LinkProps> = ({ text, url }) => {
 
 const CallToAction: View<LinkProps> = ({ text, url }) => {
   return (
-    <Row style={styles.utilities.text.center}>
+    <Row style={styles.utilities.text.left}>
       <a href={url} target="_blank" style={styles.classes.button}>
         {text}
       </a>
@@ -239,7 +238,7 @@ const LinkList: View<LinkListProps> = ({ title, links }) => {
     return null;
   }
   return (
-    <Row style={styles.utilities.text.center}>
+    <Row style={styles.utilities.text.left}>
       {title ? <div style={styles.classes.linkListTitle}>{title}</div> : null}
       <Fragment>
         {links.map((link, i) => (
@@ -273,7 +272,7 @@ export interface DescriptionListProps {
 
 const DescriptionList: View<DescriptionListProps> = ({ title, items }) => {
   return (
-    <Row style={styles.utilities.text.center}>
+    <Row style={styles.utilities.text.left}>
       {title ? <div style={styles.classes.descriptionListTitle}>{title}</div> : null}
       <Fragment>
         {items.map((item, i) => (
@@ -317,7 +316,7 @@ const Layout: View<LayoutProps> = ({ title, description, children }) => {
       </head>
       <body style={styles.classes.body}>
         <Container>
-          <Row>
+          <Row style={styles.classes.row}>
             <a href={makeUrl('')} target="_blank" style={styles.classes.logoBackground}>
               <img src={makeUrl('images/logo.svg')} alt="Procurement Concierge Program Logo" style={styles.classes.logo} />
             </a>
