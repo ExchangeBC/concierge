@@ -165,18 +165,25 @@ export async function rfiResponseReceivedToVendorT(params: RfiResponseReceivedTo
     return [];
   }
   const rfiName = latestVersion.rfiNumber;
-  const subject = `${rfiName}: RFI Response Received`;
+  const subject = `${rfiName}: Your Response has been Submitted`;
   return [
     {
       to,
       subject,
       html: templates.simple({
-        title: 'RFI Response Received',
+        title: 'Your Response has been Submitted',
         description: (
-          <p>
-            Thank you for submitting your response to <templates.Link url={templates.makeUrl(`requests-for-information/${rfi._id}/edit`)} text={`${latestVersion.rfiNumber}: ${latestVersion.title}`} />. It has been successfully received by the Procurement Concierge Program's staff.
-          </p>
-        )
+          <div>
+            <p>
+              Your response to <templates.Link url={templates.makeUrl(`requests-for-information/${rfi._id}/edit`)} text={`${latestVersion.rfiNumber}: ${latestVersion.title}`} /> has been successfully submitted. We want to thank you for your response.
+            </p>
+            <p>We encourage you to keep an eye on BCBid...</p>
+          </div>
+        ),
+        callToAction: {
+          text: 'Visit BCBid',
+          url: 'https://www.bcbid.gov.bc.ca'
+        }
       })
     }
   ];
