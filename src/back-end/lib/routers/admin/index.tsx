@@ -77,6 +77,14 @@ async function makeEmailNotificationReference(): Promise<View<Record<string, nev
       emails: [...(await mailer.buyerStatusUpdatedT(mocks.email, VerificationStatus.Verified)), ...(await mailer.buyerStatusUpdatedT(mocks.email, VerificationStatus.UnderReview)), ...(await mailer.buyerStatusUpdatedT(mocks.email, VerificationStatus.Unverified))]
     },
     {
+      title: 'RFI Matches Vendor Area of Interest',
+      emails: await mailer.rfiMatchingVendorSkillsT({
+        rfi: mocks.rfi,
+        matchingCategory: 'Health',
+        vendor: mocks.publicVendor
+      })
+    },
+    {
       title: 'RFI Response Submitted by Vendors for Program Staff',
       emails: await mailer.rfiResponseReceivedToProgramStaffT({
         rfiResponse: mocks.publicRfiResponse,

@@ -11,9 +11,10 @@ import { get, isObject } from 'lodash';
 import { getNumber, getString, getStringArray } from 'shared/lib';
 import { Attendee, vendorIsSoloAttendee } from 'shared/lib/resources/discovery-day-response';
 import { CreateDiscoveryDayBody, CreateRequestBody, CreateValidationErrors, DELETE_ADDENDUM_TOKEN, PublicDiscoveryDay, PublicRfi, UpdateRequestBody, UpdateValidationErrors } from 'shared/lib/resources/request-for-information';
-import { PaginatedList, UserType, adt } from 'shared/lib/types';
+import { PaginatedList, UserType, adt, VendorProfile } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, valid, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
 import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validateDiscoveryDay, validateGracePeriodDays, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
+import { Model, Document } from 'mongoose';
 
 async function validateCreateRequestBody(UserModel: UserSchema.Model, FileModel: FileSchema.Model, body: CreateRequestBody, session: Session): Promise<ValidOrInvalid<RfiSchema.Version, CreateValidationErrors>> {
   // Get raw values.
@@ -411,6 +412,9 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
               rfi.publishedAt = new Date();
               await rfi.save();
               const publicRfi = await RfiSchema.makePublicRfi(UserModel, FileModel, rfi, request.session);
+              // Notify Vendors that have selected Areas of Interest that overlap with the RFI categories
+              // We take the first match only to avoid sending multiple emails to a single vendor
+              notifyMatchingVendors(UserModel, rfi);
               return respond(200, publicRfi);
             default:
               return respond(400, { rfi: adt('parseFailure') });
@@ -426,5 +430,26 @@ export const resource = makeResource(
   (Models) => Models.Rfi,
   () => true
 );
+
+const notifyMatchingVendors = async (UserModel: Model<UserSchema.Data & Document>, rfi: RfiSchema.Data & Document) => {
+  const latestRfiVersion = RfiSchema.getLatestVersion(rfi);
+  if (!latestRfiVersion) return;
+  const matchingVendors = await UserModel.find({ 'profile.type': UserType.Vendor, 'profile.categories': { $in: latestRfiVersion.categories } });
+  const vendorsAlreadyNotified: string[] = [];
+  matchingVendors.forEach((vendor: UserSchema.Data & Document) => {
+    if (!vendorsAlreadyNotified.includes(vendor._id)) {
+      const match = getFirstMatch(latestRfiVersion.categories, (vendor.profile as VendorProfile).categories);
+      mailer.rfiMatchingVendorSkills({ rfi, matchingCategory: match || '', vendor: vendor });
+    }
+  });
+};
+
+const getFirstMatch = (rfiCategories: string[], vendorInterests: string[]) => {
+  const matches = rfiCategories.filter((category) => vendorInterests.includes(category));
+  if (matches.length > 0) {
+    return matches[0];
+  }
+  return null;
+};
 
 export default resource;

@@ -101,6 +101,42 @@ export async function createForgotPasswordTokenT(email: string, token: string, u
   ];
 }
 
+interface RfiMatchingVendorSkillsParams {
+  rfi: RfiSchema.Data;
+  matchingCategory: string;
+  vendor: PublicUser;
+}
+
+export const rfiMatchingVendorSkills = makeSend(rfiMatchingVendorSkillsT);
+
+export async function rfiMatchingVendorSkillsT(params: RfiMatchingVendorSkillsParams): Promise<Emails> {
+  const { rfi, matchingCategory, vendor } = params;
+  const subject = 'An RFI that matches your selected Area of Interest was posted on the Procurement Concierge';
+  return [
+    {
+      to: vendor.email,
+      subject,
+      html: templates.simple({
+        title: subject,
+        description: (
+          <div>
+            <p>
+              An RFI for <b>{matchingCategory}</b> was recently posted on the Procurement Concierge. You can view this RFI by clicking the button below.
+            </p>
+            <p>
+              You are receiving this email because you selected <b>{matchingCategory}</b> in your Procurement Concierge account. You can access your <templates.Link url={templates.makeUrl(`users/${vendor._id}`)} text={'Procurement Concierge profile'} /> to update your Area(s) of Interest.
+            </p>
+          </div>
+        ),
+        callToAction: {
+          text: 'View RFI',
+          url: templates.makeUrl(`requests-for-information/${rfi._id}/edit`)
+        }
+      })
+    }
+  ];
+}
+
 interface RfiResponseReceivedToProgramStaffParams {
   rfiResponse: PublicRfiResponse;
   rfi: RfiSchema.Data;
@@ -401,7 +437,6 @@ function makeViewDdrRegistrationCta(rfiId: mongoose.Types.ObjectId): templates.L
  * A call to action linking Program Staff to the "Discovery Day" tab
  * of an RFI's edit page.
  */
-
 function makeViewDdrRegistrationsCta(rfiId: mongoose.Types.ObjectId): templates.LinkProps {
   return {
     text: 'View Discovery Day Registrations',
