@@ -14,7 +14,7 @@ import { CreateDiscoveryDayBody, CreateRequestBody, CreateValidationErrors, DELE
 import { PaginatedList, UserType, adt, VendorProfile } from 'shared/lib/types';
 import { allValid, getInvalidValue, getValidValue, invalid, valid, validateCategories, ValidOrInvalid } from 'shared/lib/validators';
 import { validateAddendumDescriptions, validateClosingDate, validateClosingTime, validateDescription, validateDiscoveryDay, validateGracePeriodDays, validatePublicSectorEntity, validateRfiNumber, validateTitle } from 'shared/lib/validators/request-for-information';
-import { Model, Document } from 'mongoose';
+import { Model, Document, FilterQuery } from 'mongoose';
 
 async function validateCreateRequestBody(UserModel: UserSchema.Model, FileModel: FileSchema.Model, body: CreateRequestBody, session: Session): Promise<ValidOrInvalid<RfiSchema.Version, CreateValidationErrors>> {
   // Get raw values.
@@ -247,7 +247,7 @@ export function makeResource<RfiModelName extends keyof AvailableModels>(routeNa
           }
           // Depending on user type, we may need to return draft RFIs.
           // Only Program Staff can view draft RFIs
-          let query;
+          let query: FilterQuery<RfiSchema.Data & Document>;
           switch ((request.session.user && request.session.user.type) || '') {
             case UserType.ProgramStaff:
               query = {};
