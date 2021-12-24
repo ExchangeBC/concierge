@@ -42,7 +42,7 @@ export interface DiscoveryDayResponseDeprecated {
 export interface Data {
   _id: mongoose.Types.ObjectId;
   createdAt: Date;
-  publishedAt?: Date;
+  publishedAt: Date | null;
   versions: Version[];
   discoveryDayResponses: DiscoveryDayResponse[];
   discoveryDayResponsesDeprecated: DiscoveryDayResponseDeprecated[];

@@ -10,11 +10,7 @@ import { getLatestStatus, LogItemTypeStatus } from 'shared/lib/resources/vendor-
 import { RfiStatus, UserType, VerificationStatus } from 'shared/lib/types';
 import { ArrayValidation, invalid, valid, validateArrayAsync, validateEmail as validateEmailShared, validatePassword as validatePasswordShared, Validation } from 'shared/lib/validators';
 
-interface HasEmail {
-  email: string;
-}
-
-export async function validateEmail(Model: mongoose.Model<HasEmail & mongoose.Document>, email: string): Promise<Validation<string>> {
+export async function validateEmail(Model: mongoose.Model<UserSchema.Data & mongoose.Document>, email: string): Promise<Validation<string>> {
   const validation = validateEmailShared(email);
   switch (validation.tag) {
     case 'invalid':

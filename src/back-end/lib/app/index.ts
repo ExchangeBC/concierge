@@ -42,15 +42,15 @@ export async function connectToDatabase(mongoUrl: string): Promise<mongoose.Conn
 
 export function createModels(): AvailableModels {
   return {
-    Session: mongoose.model('Session', SessionSchema.schema),
-    User: mongoose.model('User', UserSchema.schema),
-    Feedback: mongoose.model('Feedback', FeedbackSchema.schema),
-    ForgotPasswordToken: mongoose.model('ForgotPasswordToken', ForgotPasswordTokenSchema.schema),
-    File: mongoose.model('File', FileSchema.schema),
-    Rfi: mongoose.model('Rfi', RfiSchema.schema),
-    RfiPreview: mongoose.model('RfiPreview', RfiSchema.schema),
-    RfiResponse: mongoose.model('RfiResponse', RfiResponseSchema.schema),
-    VendorIdea: mongoose.model('VendorIdea', ViSchema.schema)
+    Session: mongoose.model<SessionSchema.Data & mongoose.Document>('Session', SessionSchema.schema),
+    User: mongoose.model<UserSchema.Data & mongoose.Document>('User', UserSchema.schema),
+    Feedback: mongoose.model<FeedbackSchema.Data & mongoose.Document>('Feedback', FeedbackSchema.schema),
+    ForgotPasswordToken: mongoose.model<ForgotPasswordTokenSchema.Data & mongoose.Document>('ForgotPasswordToken', ForgotPasswordTokenSchema.schema),
+    File: mongoose.model<FileSchema.Data & mongoose.Document>('File', FileSchema.schema),
+    Rfi: mongoose.model<RfiSchema.Data & mongoose.Document>('Rfi', RfiSchema.schema),
+    RfiPreview: mongoose.model<RfiSchema.Data & mongoose.Document>('RfiPreview', RfiSchema.schema),
+    RfiResponse: mongoose.model<RfiResponseSchema.Data & mongoose.Document>('RfiResponse', RfiResponseSchema.schema),
+    VendorIdea: mongoose.model<ViSchema.Data & mongoose.Document>('VendorIdea', ViSchema.schema)
   };
 }
 

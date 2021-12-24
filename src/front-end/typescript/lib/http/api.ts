@@ -294,7 +294,7 @@ function rawRfiToPublicRfi(raw: RawRfi): RfiResource.PublicRfi {
   return {
     ...raw,
     createdAt: new Date(raw.createdAt),
-    publishedAt: (raw.publishedAt && new Date(raw.publishedAt)) || undefined,
+    publishedAt: (raw.publishedAt && new Date(raw.publishedAt)) || null,
     latestVersion: {
       ...raw.latestVersion,
       createdAt: new Date(raw.latestVersion.createdAt),
@@ -526,7 +526,7 @@ export async function createViLogItem(body: LogItemResource.CreateRequestBody): 
       const rawResponseBody = response.data as RawLogItem;
       return valid(rawLogItemToPublicLogItem(rawResponseBody));
     default:
-      return invalid(response.data);
+      return invalid(response.data as ViResource.CreateValidationErrors);
   }
 }
 

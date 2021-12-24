@@ -40,7 +40,7 @@ export interface PublicVersion {
 export interface PublicRfi {
   _id: string;
   createdAt: Date;
-  publishedAt?: Date; // Published date is not defined for Draft RFIs
+  publishedAt: Date | null; // Published date is not defined for Draft RFIs
   latestVersion: PublicVersion;
   discoveryDayResponses?: PublicDiscoveryDayResponse[]; // Only defined for Program Staff.
 }

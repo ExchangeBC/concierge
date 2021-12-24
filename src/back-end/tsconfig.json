@@ -14,6 +14,7 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "incremental": true,
+    "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
       "back-end/*": ["./*"],
