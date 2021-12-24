@@ -183,7 +183,7 @@ export function createRfiResponse(session: Session): boolean {
 }
 
 export async function readManyRfiResponses(UserModel: UserSchema.Model, session: Session): Promise<boolean> {
-  return await isProgramStaffAndHasAcceptedTerms(UserModel, session);
+  return (await isProgramStaffAndHasAcceptedTerms(UserModel, session)) || (await isVerifiedBuyerAndHasAcceptedTerms(UserModel, session));
 }
 
 // Vendor Ideas.

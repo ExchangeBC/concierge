@@ -254,7 +254,7 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           };
           const uploadedFiles = await api.uploadFiles(FileMulti.getValues(attachments), {
             tag: 'userType',
-            value: [UserType.ProgramStaff]
+            value: [UserType.ProgramStaff, UserType.Buyer]
           });
           if (uploadedFiles.tag === 'invalid') {
             return fail(state, uploadedFiles.value);

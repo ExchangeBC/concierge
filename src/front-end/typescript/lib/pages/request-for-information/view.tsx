@@ -1,7 +1,7 @@
 import { CONTACT_EMAIL } from 'front-end/config';
 import { makePageMetadata } from 'front-end/lib';
 import { Route, SharedState } from 'front-end/lib/app/types';
-import { ComponentView, emptyPageAlerts, GlobalComponentMsg, newRoute, PageBreadcrumbs, PageComponent, PageInit, Update, View } from 'front-end/lib/framework';
+import { ComponentView, emptyPageAlerts, GlobalComponentMsg, newRoute, PageBreadcrumbs, PageComponent, PageInit, Update, View, Immutable, immutable, Dispatch, mapComponentDispatch, updateComponentChild } from 'front-end/lib/framework';
 import * as api from 'front-end/lib/http/api';
 import { publishedDateToString, updatedDateToString } from 'front-end/lib/pages/request-for-information/lib';
 import DiscoveryDayInfo from 'front-end/lib/pages/request-for-information/views/discovery-day-info';
@@ -21,17 +21,20 @@ import * as RfiResource from 'shared/lib/resources/request-for-information';
 import { PublicRfi, rfiToRfiStatus } from 'shared/lib/resources/request-for-information';
 import { PublicSessionUser } from 'shared/lib/resources/session';
 import { Addendum, ADT, RfiStatus, UserType } from 'shared/lib/types';
+import { PublicRfiResponse } from 'shared/lib/resources/request-for-information/response';
+import * as Responses from 'front-end/lib/pages/request-for-information/components/responses';
 
 const ERROR_MESSAGE = 'The Request for Information you are looking for is not available.';
 const DISCOVERY_DAY_ID = 'discovery-day';
 const ATTACHMENTS_ID = 'attachments';
+const RESPONSES_VIEW_ID = 'responses';
 
 export interface RouteParams {
   rfiId: string;
   preview?: boolean;
 }
 
-export type InnerMsg = ADT<'hideResponseConfirmationPrompt'> | ADT<'hideDiscoveryDayConfirmationPrompt'> | ADT<'respondToRfi'> | ADT<'attendDiscoveryDay'>;
+export type InnerMsg = ADT<'hideResponseConfirmationPrompt'> | ADT<'hideDiscoveryDayConfirmationPrompt'> | ADT<'respondToRfi'> | ADT<'attendDiscoveryDay'> | ADT<'responses', Responses.Msg>;
 
 export type Msg = GlobalComponentMsg<InnerMsg, Route>;
 
@@ -46,7 +49,9 @@ export interface State {
   // of handling valid/invalid state initialization for pages.
   sessionUser?: PublicSessionUser;
   rfi?: PublicRfi;
+  rfiResponses?: PublicRfiResponse[];
   ddr?: DdrResource.PublicDiscoveryDayResponse;
+  responsesFormState?: Immutable<Responses.State>;
 }
 
 const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParams, shared }) => {
@@ -64,16 +69,26 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
   switch (rfiResult.tag) {
     case 'valid':
       const rfi = rfiResult.value;
+      // Fetch responses for this rfi if not a Vendor
       // Show newest addenda first.
       rfi.latestVersion.addenda.reverse();
       // Determine if the user has already sent a Discovery Day Response,
       // if they are a Vendor.
       let ddr: DdrResource.PublicDiscoveryDayResponse | undefined;
+      let rfiResponses;
       if (sessionUser && sessionUser.type === UserType.Vendor) {
         const ddrResult = await api.readOneDdr(sessionUser.id, rfi._id);
         if (ddrResult.tag === 'valid') {
           ddr = ddrResult.value;
         }
+      }
+      // if they are not a vendor, we show responses
+      else {
+        const rfiResponsesResult = await api.readManyRfiResponses(rfi._id);
+        if (rfiResponsesResult.tag === 'invalid') {
+          return defaultState;
+        }
+        rfiResponses = rfiResponsesResult.value.items;
       }
       // Determine infoAlerts to display on the page.
       const infoAlerts: string[] = [];
@@ -102,7 +117,18 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
         ...defaultState,
         infoAlerts,
         rfi,
-        ddr
+        rfiResponses,
+        ddr,
+        view,
+        responsesFormState:
+          rfi && rfiResponses
+            ? immutable(
+                await Responses.init({
+                  rfi,
+                  responses: rfiResponses
+                })
+              )
+            : undefined
       };
     case 'invalid':
       return defaultState;
@@ -160,6 +186,14 @@ const update: Update<State, Msg> = ({ state, msg }) => {
           }
         }
       ];
+    case 'responses':
+      return updateComponentChild({
+        state,
+        mapChildMsg: (value) => ({ tag: 'responses', value }),
+        childStatePath: ['responses'],
+        childUpdate: Responses.update,
+        childMsg: msg.value
+      });
     default:
       return [state];
   }
@@ -174,35 +208,44 @@ const Detail: View<DetailProps> = ({ title, values }) => {
   values = values.map((v, i) => <div key={`${title}-${i}`}>{v}</div>);
   return (
     <Row className="align-items-start mb-3">
-      <Col xs="12" md="5" className="font-weight-bold text-secondary text-center text-md-right">
+      <Col xs="12" md="5" className="font-weight-bold text-secondary text-left text-md-left">
         {title}
       </Col>
-      <Col xs="12" md="7" className="text-center text-md-left">
+      <Col xs="12" md="7" className="text-left text-md-left">
         {values}
       </Col>
     </Row>
   );
 };
 
-const Details: View<{ rfi: PublicRfi }> = ({ rfi }) => {
+const Details: View<{ rfi: PublicRfi; rfiResponses: PublicRfiResponse[]; showResponses: boolean }> = ({ rfi, rfiResponses, showResponses }) => {
   const version = rfi.latestVersion;
   const contactValues = [`${version.programStaffContact.firstName} ${version.programStaffContact.lastName}`, version.programStaffContact.positionTitle, <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>];
   const statusValues = [<StatusBadge rfi={rfi} />];
   const discoveryDayValues = version.discoveryDay ? [<a href={`#${DISCOVERY_DAY_ID}`}>View Discovery Day Information</a>] : ['No Discovery Day session'];
   const attachmentsValues = version.attachments.length ? [<a href={`#${ATTACHMENTS_ID}`}>View Attachments</a>] : ['No attachments'];
+  const responseValues =
+    rfiResponses.length > 0
+      ? [
+          <div>
+            <span className="mr-2">{rfiResponses.length}</span>
+            <a href={`#${RESPONSES_VIEW_ID}`}>View Responses</a>
+          </div>
+        ]
+      : ['0'];
   return (
     <Row>
       <Col xs="12" md="7">
-        <Detail title="Public Sector Entity" values={[version.publicSectorEntity]} />
-        <Detail title="Contact" values={contactValues} />
-        <Detail title="Commodity Code(s)" values={version.categories} />
+        <Detail title="Public Sector Entity:" values={[version.publicSectorEntity]} />
+        <Detail title="Contact:" values={contactValues} />
+        <Detail title="Areas of Interest:" values={version.categories} />
       </Col>
       <Col xs="12" md="5">
-        <Detail title="Status" values={statusValues} />
-        <Detail title="Closing Date" values={[formatDate(version.closingAt)]} />
-        <Detail title="Closing Time" values={[formatTime(version.closingAt, true)]} />
-        <Detail title="Discovery Day" values={discoveryDayValues} />
-        <Detail title="Attachments" values={attachmentsValues} />
+        <Detail title="Status:" values={statusValues} />
+        <Detail title="Closing Date/Time:" values={[`${formatDate(version.closingAt)} ${formatTime(version.closingAt, true)}`]} />
+        <Detail title="Discovery Day:" values={discoveryDayValues} />
+        {showResponses ? <Detail title="Responses:" values={responseValues} /> : <div />}
+        <Detail title="Attachments:" values={attachmentsValues} />
       </Col>
     </Row>
   );
@@ -217,6 +260,22 @@ const Description: View<{ value: string }> = ({ value }) => {
         </Col>
       </Row>
     </div>
+  );
+};
+
+const ResponsesView: ComponentView<State, Msg> = (props) => {
+  const { state, dispatch } = props;
+  const dispatchResponses: Dispatch<Responses.Msg> = mapComponentDispatch(dispatch as Dispatch<Msg>, (value) => ({ tag: 'responses', value }));
+  return state.responsesFormState ? (
+    <div className="mt-5 pt-5 border-top" id={RESPONSES_VIEW_ID}>
+      <Row>
+        <Col xs="12">
+          <Responses.view state={state.responsesFormState} dispatch={dispatchResponses} />
+        </Col>
+      </Row>
+    </div>
+  ) : (
+    <div />
   );
 };
 
@@ -318,24 +377,27 @@ const viewBottomBar: ComponentView<State, Msg> = (props) => {
 };
 
 const view: ComponentView<State, Msg> = (props) => {
-  const { state } = props;
+  const { state, dispatch } = props;
   if (!state.rfi) {
     return null;
   }
   const rfi = state.rfi;
+  const rfiResponses = state.rfiResponses || [];
   const version = state.rfi.latestVersion;
+  const showResponses = (state.sessionUser && state.sessionUser.type !== UserType.Vendor) || false;
   return (
     <div>
       <Row className="mb-5">
-        <Col xs="12" className="d-flex flex-column text-center align-items-center">
+        <Col xs="12" className="d-flex flex-column text-left align-items-left">
           <h1 className="h4">RFI Number: {version.rfiNumber}</h1>
           <h2 className="h1">{version.title}</h2>
           <div className="text-secondary small">{(rfi.publishedAt && publishedDateToString(rfi.publishedAt)) || 'DRAFT'}</div>
           <div className="text-secondary small">{updatedDateToString(version.createdAt)}</div>
         </Col>
       </Row>
-      <Details rfi={rfi} />
+      <Details rfi={rfi} rfiResponses={rfiResponses} showResponses={showResponses} />
       <Description value={version.description} />
+      <ResponsesView state={state} dispatch={dispatch} />
       <DiscoveryDay discoveryDay={version.discoveryDay} />
       <Attachments files={version.attachments} />
       <Addenda addenda={version.addenda} />
