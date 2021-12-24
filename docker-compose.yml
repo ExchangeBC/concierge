@@ -3,5 +3,22 @@ services:
   db:
     image: mongo:3.6
     restart: always
+    volumes:
+      - ./.db:/data/db
     ports:
       - '27017:27017'
+
+  app:
+    image: concierge_app_image
+    container_name: concierge_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      MONGO_URL: mongodb://db:27017/concierge
+    env_file:
+      - .env
+    depends_on:
+      - db
