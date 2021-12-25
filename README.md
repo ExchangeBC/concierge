@@ -100,9 +100,9 @@ and drop you in a shell with them accessible in your `$PATH`.
 
 If you are not using Nix, please ensure the following packages have been installed:
 
-- Node.js 10.x
+- Node.js 14.x
 - SASS
-- MongoDB 3.4.x
+- MongoDB 3.6.x
 - Docker
 - Docker Compose 3.x
 
@@ -124,14 +124,18 @@ cp sample.env .env
 Finally, open three terminals and run the following commands:
 
 ```bash
-docker-compose up # Terminal 1, starts a local MongoDB server.
+docker-compose up -d db # Terminal 1, starts a local MongoDB server.
 npm run back-end:watch # Terminal 2, starts the back-end server.
 npm run front-end:watch # Terminal 3, builds the front-end source code.
 ```
 
 Then, visit the URL logged to your terminal to view the now locally-running web application.
 
-You can stop (and wipe) the local MongoDB server by running `docker-compose down`.
+You can stop the local MongoDB server by running `docker-compose down`.
+
+You can wipe the local MongoDB server by removing the `.db` directory.
+
+You can also run the application in a docker container locally, by using `docker-compose up -d` (do not specify the `db` service). This will build the front-end, and run the back-end as a service in the background.
 
 ### NPM Scripts
 
@@ -210,7 +214,7 @@ This project is deployed to the Government of British Columbia's own OpenShift i
 
 ### Environments
 
-We have four environments:
+We have three application environments:
 
 | OpenShift Project | Name        | URL                                                     |
 | ----------------- | ----------- | ------------------------------------------------------- |
