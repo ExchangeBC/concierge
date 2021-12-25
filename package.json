@@ -16,13 +16,10 @@
     "back-end:test": "node tests/back-end/index.js",
     "back-end:start": "cd src/back-end && npx ts-node --require tsconfig-paths/register --project tsconfig.json index.ts",
     "back-end:watch": "cd src/back-end && npx nodemon --watch . --watch ../shared --ext ts,tsx,json --exec \"ts-node --require tsconfig-paths/register --project tsconfig.json index.ts\"",
-    "back-end:typedoc": "npx typedoc --name 'Concierge Back-End' --tsconfig src/back-end/tsconfig.json --out typedoc/back-end src/back-end",
     "shared:typedoc": "npx typedoc --name 'Concierge Shared' --tsconfig src/shared/tsconfig.json --out typedoc/shared src/shared",
     "migrations:create": "npx migrate --chdir migrations --template-file template.ts --migrations-dir migrations create",
     "migrations:up": "cd migrations && npx ts-node --require tsconfig-paths/register --project tsconfig.json index.ts --direction up",
     "migrations:down": "cd migrations && npx ts-node --require tsconfig-paths/register --project tsconfig.json index.ts --direction down",
-    "typedoc:build": "npm run back-end:typedoc; npm run front-end:typedoc; npm run shared:typedoc",
-    "typedoc:start": "npx serve --config typedoc/serve.json typedoc",
     "docs:readme-toc": "npx markdown-toc -i README.md",
     "docs:functional-spec-toc": "npx markdown-toc --maxdepth 5 -i docs/FUNCTIONAL_SPEC.md",
     "docs:licenses": "npx license-checker > OPEN_SOURCE_LICENSES.txt"
@@ -41,19 +38,6 @@
     "node": ">=10.9 <14.10"
   },
   "dependencies": {
-    "@types/bcrypt": "^3.0.0",
-    "@types/cookie-parser": "^1.4.1",
-    "@types/express": "^4.16.1",
-    "@types/html-to-text": "^1.4.31",
-    "@types/immutable": "^3.8.7",
-    "@types/lodash": "^4.14.120",
-    "@types/mime-types": "^2.1.0",
-    "@types/minimist": "^1.2.0",
-    "@types/moment": "^2.13.0",
-    "@types/multiparty": "0.0.32",
-    "@types/node": "^10.12.26",
-    "@types/react": "^16.8.19",
-    "@types/react-dom": "^16.8.4",
     "bcrypt": "^5.0.0",
     "body-parser": "^1.18.3",
     "bowser": "^2.9.0",
@@ -75,10 +59,22 @@
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "ts-node": "^8.0.2",
-    "tsconfig-paths": "^3.8.0",
-    "typescript": "^3.5.1"
+    "tsconfig-paths": "^3.8.0"
   },
   "devDependencies": {
+    "@types/bcrypt": "^3.0.0",
+    "@types/cookie-parser": "^1.4.1",
+    "@types/express": "^4.16.1",
+    "@types/html-to-text": "^1.4.31",
+    "@types/immutable": "^3.8.7",
+    "@types/lodash": "^4.14.120",
+    "@types/mime-types": "^2.1.0",
+    "@types/minimist": "^1.2.0",
+    "@types/moment": "^2.13.0",
+    "@types/multiparty": "0.0.32",
+    "@types/node": "^10.12.26",
+    "@types/react": "^16.8.19",
+    "@types/react-dom": "^16.8.4",
     "@types/mocha": "^5.2.6",
     "@types/moment-timezone": "^0.5.10",
     "@types/nodemailer": "^6.4.4",
@@ -125,6 +121,7 @@
     "reactstrap": "^7.1.0",
     "require-dir": "^1.2.0",
     "serve": "^10.1.2",
-    "sha.js": "^2.4.11"
+    "sha.js": "^2.4.11",
+    "typescript": "^3.5.1"
   }
 }

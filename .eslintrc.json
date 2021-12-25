@@ -1,6 +1,7 @@
 {
   "env": {
     "browser": true,
+    "node": true,
     "es2021": true
   },
   "extends": ["eslint:recommended", "plugin:@typescript-eslint/eslint-recommended", "plugin:@typescript-eslint/recommended", "prettier"],
@@ -31,6 +32,7 @@
     "no-case-declarations": "off",
     "no-ex-assign": "off",
     "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/indent": "off"
+    "@typescript-eslint/indent": "off",
+    "@typescript-eslint/no-var-requires": "off"
   }
 }
