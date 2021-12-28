@@ -228,7 +228,7 @@ const resource: Resource = {
         if (!permissions.readManyUsers(request.session)) {
           return basicResponse(401, request.session, makeJsonResponseBody(null));
         }
-        const users = await UserModel.find({ active: true }).sort({ email: 1 }).exec();
+        const users = await UserModel.find().exec();
         return basicResponse(
           200,
           request.session,

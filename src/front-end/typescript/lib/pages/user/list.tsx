@@ -10,7 +10,7 @@ import * as Select from 'front-end/lib/views/form-field/select';
 import * as ShortText from 'front-end/lib/views/form-field/short-text';
 import Icon from 'front-end/lib/views/icon';
 import Link from 'front-end/lib/views/link';
-import { VerificationStatusIcon } from 'front-end/lib/views/verification-status-badge';
+import { VerificationStatusIcon, AccountStatusIcon } from 'front-end/lib/views/verification-status-badge';
 import { get } from 'lodash';
 import React from 'react';
 import { Col, Row } from 'reactstrap';
@@ -85,6 +85,20 @@ async function makeInitState(): Promise<State> {
   };
 }
 
+const compareActive = (a: { active: boolean }, b: { active: boolean }): number => {
+  return a.active === b.active ? 0 : a.active ? -1 : 1;
+};
+
+const compareType = (a: PublicUser, b: PublicUser): number => {
+  return a.profile.type.localeCompare(b.profile.type, 'en');
+};
+
+const compareName = (a: PublicUser, b: PublicUser): number => {
+  const aName = profileToName(a.profile) || FALLBACK_USER_NAME;
+  const bName = profileToName(b.profile) || FALLBACK_USER_NAME;
+  return aName.localeCompare(bName, 'en', { sensitivity: 'base' });
+};
+
 const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
   userTypes: [UserType.ProgramStaff],
 
@@ -92,15 +106,9 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = isUserType({
     const result = await readManyUsers();
     let users: PublicUser[] = [];
     if (result.tag === 'valid') {
-      // Sort users by user type first, then name.
+      // Sort users by account status, then user type, then name.
       users = result.value.items.sort((a, b) => {
-        if (a.profile.type === b.profile.type) {
-          const aName = profileToName(a.profile) || FALLBACK_USER_NAME;
-          const bName = profileToName(b.profile) || FALLBACK_USER_NAME;
-          return aName.localeCompare(bName, 'en', { sensitivity: 'base' });
-        } else {
-          return a.profile.type.localeCompare(b.profile.type, 'en');
-        }
+        return compareActive(a, b) || compareType(a, b) || compareName(a, b);
       });
     }
     const initState = await makeInitState();
@@ -262,7 +270,7 @@ const Filters: ComponentView<State, Msg> = ({ state, dispatch }) => {
 
 const tableHeadCells: Table.THSpec[] = [
   {
-    children: 'Status',
+    children: 'Verified',
     className: 'text-center',
     style: {
       width: '10%'
@@ -278,13 +286,20 @@ const tableHeadCells: Table.THSpec[] = [
     children: 'Name',
     style: {
       minWidth: '200px',
-      width: '40%'
+      width: '30%'
     }
   },
   {
     children: 'Email Address',
     style: {
       width: '25%'
+    }
+  },
+  {
+    children: 'Active',
+    className: 'text-center',
+    style: {
+      width: '10%'
     }
   },
   {
@@ -303,6 +318,7 @@ function tableBodyRows(users: PublicUser[], dispatch: Dispatch<Msg>): Table.Rows
     const entity = user.profile.type === UserType.Buyer ? user.profile.publicSectorEntity : undefined;
     const verificationStatus: VerificationStatus | undefined = get(user.profile, 'verificationStatus');
     const name = profileToName(user.profile) || FALLBACK_USER_NAME;
+    const isActive: boolean = get(user, 'active');
     return [
       {
         children: verificationStatus ? <VerificationStatusIcon verificationStatus={verificationStatus} colored large /> : null,
@@ -327,7 +343,11 @@ function tableBodyRows(users: PublicUser[], dispatch: Dispatch<Msg>): Table.Rows
         className: className()
       },
       {
-        children: user.acceptedTermsAt ? <Icon name="check" color="body" width={1.25} height={1.25} /> : null,
+        children: <AccountStatusIcon active={isActive} colored large />,
+        className: className(true)
+      },
+      {
+        children: user.acceptedTermsAt ? <Icon name="check" color="success" width={1.25} height={1.25} /> : null,
         className: className(true),
         tooltipText: user.acceptedTermsAt && `${name} has accepted the Terms and Conditions.`
       }

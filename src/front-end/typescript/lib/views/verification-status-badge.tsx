@@ -5,8 +5,14 @@ import { CSSProperties, default as React } from 'react';
 import { Badge as BootstrapBadge } from 'reactstrap';
 import { VerificationStatus, verificationStatusToTitleCase } from 'shared/lib/types';
 
-interface Props {
+interface VerificationStatusProps {
   verificationStatus: VerificationStatus;
+  className?: string;
+  style?: CSSProperties;
+}
+
+interface AccountStatusProps {
+  active: boolean;
   className?: string;
   style?: CSSProperties;
 }
@@ -23,7 +29,11 @@ export function verificationStatusToColor(s: VerificationStatus): BootstrapColor
   }
 }
 
-export const VerificationStatusIcon: View<Pick<Props, 'verificationStatus' | 'className'> & { colored?: boolean; large?: boolean }> = ({ verificationStatus, colored, className, large }) => {
+export function accountStatusToColor(active: boolean): BootstrapColor {
+  return active ? 'success' : 'danger';
+}
+
+export const VerificationStatusIcon: View<Pick<VerificationStatusProps, 'verificationStatus' | 'className'> & { colored?: boolean; large?: boolean }> = ({ verificationStatus, colored, className, large }) => {
   const color = colored ? verificationStatusToColor(verificationStatus) : undefined;
   const size = large ? 1.25 : 1;
   switch (verificationStatus) {
@@ -37,7 +47,13 @@ export const VerificationStatusIcon: View<Pick<Props, 'verificationStatus' | 'cl
   }
 };
 
-export const Badge: View<Props> = (props) => {
+export const AccountStatusIcon: View<Pick<AccountStatusProps, 'active' | 'className'> & { colored?: boolean; large?: boolean }> = ({ active, colored, className, large }) => {
+  const color = colored ? accountStatusToColor(active) : undefined;
+  const size = large ? 1.25 : 1;
+  return active ? <Icon name="check" color={color} width={size} height={size} className={className} /> : <Icon name="times-circle" color={color} width={size} height={size} className={className} />;
+};
+
+export const Badge: View<VerificationStatusProps> = (props) => {
   const { verificationStatus, className = '', style = {} } = props;
   return (
     <BootstrapBadge color={verificationStatusToColor(verificationStatus)} className={`text-uppercase font-size-regular align-items-center ${className}`} style={{ ...style }}>
