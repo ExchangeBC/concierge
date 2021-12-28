@@ -210,16 +210,12 @@ export async function rfiResponseReceivedToVendorT(params: RfiResponseReceivedTo
         title: 'Your Response has been Submitted',
         description: (
           <div>
+            <p>We want to thank you for taking the time to respond to this request; your insight is appreciated.</p>
             <p>
-              Your response to <templates.Link url={templates.makeUrl(`requests-for-information/${rfi._id}/edit`)} text={`${latestVersion.rfiNumber}: ${latestVersion.title}`} /> has been successfully submitted. We want to thank you for your response.
+              While we cannot guarantee a subsequent solicitation, we encourage you to keep an eye on BCBid and consider <templates.Link url={'https://www.bcbid.gov.bc.ca/custom/BCBidServicesGuide.pdf'} text={'subscribing to notifications.'} />
             </p>
-            <p>We encourage you to keep an eye on BCBid...</p>
           </div>
-        ),
-        callToAction: {
-          text: 'Visit BCBid',
-          url: 'https://www.bcbid.gov.bc.ca'
-        }
+        )
       })
     }
   ];
