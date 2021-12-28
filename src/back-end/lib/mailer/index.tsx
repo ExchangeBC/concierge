@@ -121,7 +121,7 @@ export async function rfiMatchingVendorSkillsT(params: RfiMatchingVendorSkillsPa
         description: (
           <div>
             <p>
-              An RFI for <b>{matchingCategory}</b> was recently posted on the Procurement Concierge. You can view this RFI by clicking the button below.
+              An RFI for <b>{matchingCategory}</b> was recently posted on the Procurement Concierge Web Application. You can view this RFI by clicking the button below.
             </p>
             <p>
               You are receiving this email because you selected <b>{matchingCategory}</b> in your Procurement Concierge account. You can access your <templates.Link url={templates.makeUrl(`users/${vendor._id}`)} text={'Procurement Concierge profile'} /> to update your Area(s) of Interest.
