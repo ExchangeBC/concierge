@@ -54,6 +54,19 @@ export interface State {
   responsesFormState?: Immutable<Responses.State>;
 }
 
+const isVendor = (user: PublicSessionUser): boolean => {
+  return user.type === UserType.Vendor;
+};
+
+const isProgramStaff = (user: PublicSessionUser): boolean => {
+  return user.type === UserType.ProgramStaff;
+};
+
+const isAssociatedBuyer = (user: PublicSessionUser, rfi: PublicRfi): boolean => {
+  const buyerContactEmail = rfi.latestVersion.buyerContact && rfi.latestVersion.buyerContact.email;
+  return user.type === UserType.Buyer && user.email === buyerContactEmail;
+};
+
 const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParams, shared }) => {
   const { rfiId, preview = false } = routeParams;
   const { session } = shared;
@@ -76,14 +89,14 @@ const init: PageInit<RouteParams, SharedState, State, Msg> = async ({ routeParam
       // if they are a Vendor.
       let ddr: DdrResource.PublicDiscoveryDayResponse | undefined;
       let rfiResponses;
-      if (sessionUser && sessionUser.type === UserType.Vendor) {
+      if (sessionUser && isVendor(sessionUser)) {
         const ddrResult = await api.readOneDdr(sessionUser.id, rfi._id);
         if (ddrResult.tag === 'valid') {
           ddr = ddrResult.value;
         }
       }
-      // if they are not a vendor, we show responses
-      else {
+      // if they are a Program Staff OR the associated Public Sector Buyer we show responses
+      else if (sessionUser && (isProgramStaff(sessionUser) || isAssociatedBuyer(sessionUser, rfi))) {
         const rfiResponsesResult = await api.readManyRfiResponses(rfi._id);
         if (rfiResponsesResult.tag === 'invalid') {
           return defaultState;

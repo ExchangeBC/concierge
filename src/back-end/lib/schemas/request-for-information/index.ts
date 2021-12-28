@@ -7,6 +7,7 @@ import mongooseDefault, * as mongoose from 'mongoose';
 import { Attendee, PublicDiscoveryDayResponse } from 'shared/lib/resources/discovery-day-response';
 import { PublicDiscoveryDay, PublicRfi } from 'shared/lib/resources/request-for-information';
 import { Addendum, ProgramStaffProfile } from 'shared/lib/types';
+import { ObjectID } from 'bson';
 
 export interface Version {
   createdAt: Date;
@@ -95,6 +96,8 @@ export async function makePublicRfi(UserModel: UserSchema.Model, FileModel: File
   if (!latestVersion) {
     throw new Error('RFI does not have at least one version');
   }
+  const sessionUserId = (session.user && session.user.id) || new ObjectID();
+  const isBuyerContact = permissions.isBuyer(session) && latestVersion.buyerContact.equals(sessionUserId);
   const attachments = await Promise.all(latestVersion.attachments.map((fileId) => FileSchema.findPublicFileByIdUnsafely(FileModel, fileId)));
   const programStaffContact = await UserSchema.findPublicUserByIdUnsafely(UserModel, latestVersion.programStaffContact);
   const programStaffProfile = programStaffContact.profile as ProgramStaffProfile;
@@ -118,7 +121,7 @@ export async function makePublicRfi(UserModel: UserSchema.Model, FileModel: File
       lastName: programStaffProfile.lastName,
       positionTitle: programStaffProfile.positionTitle
     },
-    buyerContact: isProgramStaff ? await UserSchema.findPublicUserByIdUnsafely(UserModel, latestVersion.buyerContact) : undefined
+    buyerContact: isProgramStaff || isBuyerContact ? await UserSchema.findPublicUserByIdUnsafely(UserModel, latestVersion.buyerContact) : undefined
   };
   let discoveryDayResponses: PublicDiscoveryDayResponse[] | undefined;
   if (isProgramStaff) {
