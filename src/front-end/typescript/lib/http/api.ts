@@ -784,7 +784,7 @@ export async function updateViForProgramStaff(vi: ViResource.UpdateRequestBody, 
 }
 
 export async function getFeatureFlags(): Promise<FeatureFlags> {
-  const response = await request(HttpMethod.Get, 'flags');
+  const response = await request(HttpMethod.Get, '/flags');
   switch (response.status) {
     case 200:
       const flags = response.data as FeatureFlags;
