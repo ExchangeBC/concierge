@@ -83,21 +83,9 @@ You may include a Discovery Day Session as part of your RFI. A Discovery Day Ses
 
 If you are interested in participating in a Discovery Day Session, please email your request to <Procurement.Concierge@gov.bc.ca>. Program Staff will assist you with developing and managing your RFI and your participation in a Discovery Day Session.
 
-### **(iv) Unsolicited Proposals (UPs)**
+### Further Reading for Public Sector Buyers
 
-Please note that this part of the Program is restricted to core ministry buyers at this time. Broader Public Sector buyers will be notified if the UP Program becomes available to them.
-
-#### **How to View Eligible UPs**
-
-A complete listing of eligible UPs posted through the Concierge Web App can be viewed by clicking the “Unsolicited Proposals” tab at the top of the page. By default, all UPs are listed, however you can filter by Commodity Code or Industry Sector. The details of a UP can be viewed by clicking on its “Learn More” button.
-
-More information about a UP can be displayed by clicking “View Attachments”. At a minimum, Vendors are required to submit a “Detailed Information” document, however some Vendors may choose to provide more documents.
-
-If you are interested in learning more about an Unsolicited Proposal, click “Express Interest” and email your request to <Procurement.Concierge@gov.bc.ca>. The Program Staff will work with you through every step, from requesting secondary level information from the vendor, facilitating a face-to-face Clarification Meeting, to moving to a procurement, if the purchase of goods or services is desired.
-
-### **Further Reading for Public Sector Buyers**
-
-More information about the Program, can be found at [Procurement Concierge Program](https://www2.gov.bc.ca/gov/content/governments/services-for-government/bc-bid-resources/support-services/innovative-procurement-initiatives/procurement-concierge-program).
+More information about the Program can be found at [Procurement Concierge Program](https://www2.gov.bc.ca/gov/content/bc-procurement-resources/policy-and-strategies/strategies-and-initiatives/procurement-concierge-program).
 
 <i id="vendors"></i>
 
@@ -296,6 +284,6 @@ Program Staff will review your UP to see if it meets eligibility criteria and up
 **Under Procurement** – UP has been accepted by a Potential Buyer and procurement is underway. No longer visible to Potential Buyers.  
 **Closed** – the UP is closed and not being considered
 
-### **Further Reading for Vendors**
+### Further Reading for Vendors
 
-More information can be found at [Vendor Information: Procurement Concierge Program](https://www2.gov.bc.ca/gov/content/employment-business/business/business-government/respond-to-opportunities/contract-opportunities/procurement-concierge-program).
+More information can be found at [Procurement Concierge Program](https://www2.gov.bc.ca/gov/content/bc-procurement-resources/policy-and-strategies/strategies-and-initiatives/procurement-concierge-program).

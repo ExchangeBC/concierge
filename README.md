@@ -263,6 +263,40 @@ In the unfortunate event that you need to restore your data from a backup archiv
 
 If you are deploying the Concierge application to OpenShift, we recommend running the MongoDB database as a replica set, or Stateful Set in OpenShift. Replica sets use redundant pods on separate nodes to minimize downtime and mitigate data loss. We have provided the necessary configuration and instructions for setting up the replica set in [openshift/README.md](./openshift/README.md).
 
+### Replica Sets
+
+If you are deploying the Concierge application to OpenShift, we recommend running the MongoDB database as a replica set, or Stateful Set in OpenShift. Replica sets use redundant pods on separate nodes to minimize downtime and mitigate data loss. We have provided the necessary configuration and instructions for setting up the replica set and configuring the application below.
+
+IMPORTANT: Create a backup of your existing database before migrating to a replica set. This is in case anything goes wrong, and for transferring over data to the replica set.
+
+1. Create the replicaset
+
+   - If you wish to change any of the defaults (i.e. database name, passwords, etc.), edit the file `openshift/mongodb-replicaset` and change the appropriate parameters values before performing the steps below
+   - Run `oc new-app openshift/mongodb-replicaset.yaml` to create the replicaset from the openshift command line tools
+
+2. Migrate existing data to the replicaset
+
+   - Scale down the Concierge application using the existing MongoDB database OR set the SCHEDULED_MAINTENANCE environment variable in the Concierge application deployment to 1
+   - Create a data dump of your existing database with `mongodump -u admin -p <admin-password> --authenticationDatabase=admin`
+   - Use the mongo-restore tool to transfer the existing database data to the new replicaset `mongorestore -u admin -p <admin-password> --authenticationDatabase=admin`
+
+3. Configure the Concierge application to use the replicaset
+
+   - Update the environment variables for DATABASE_SERVICE_NAME, MONGODB_USER, MONGODB_PASSWORD, MONGODB_DATABASE_NAME
+   - Add a new environment variable called MONGODB_REPLICA_NAME and assign it the name of the replicaset (by default this is `rs0`)
+   - Scale the Concierge application back up / change SCHEDULED_MAINTENANCE environment variable to 0
+
+4. Set the backup pod to point to the replicaset
+
+   - Update the environment variable MONGODB_URI in the devexutils_backup deployment to reflect the new username, password, database service name, and database name.
+   - Redeploy
+
+5. Cleanup
+   - Remove the old mongodb deployment
+   - Remove the old mongodb service
+   - Remove the old mongodb storage
+   - Remove the old mongodb persistent volume
+
 ## Team
 
 The Procurement Concierge is currently operated by the BC Developers' Exchange within the Government of British Columbia.
