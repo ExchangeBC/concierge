@@ -87,15 +87,9 @@ You may include a Discovery Day Session as part of your RFI. A Discovery Day Ses
 
 If you are interested in participating in a Discovery Day Session, please email your request to [Procurement.Concierge@gov.bc.ca](mailto:Procurement.Concierge@gov.bc.ca).  The Program will assist you with developing and managing your RFI and your participation in a Discovery Day Session.
 
-### (iv) Opportunity Statement Negotiated Requests for Proposals (OS NRFPs)
-
-*More information coming soon.*
-
-If you are interested in learning more about OS NRFPs, please email your request to [Procurement.Concierge@gov.bc.ca](mailto:Procurement.Concierge@gov.bc.ca). The Program can explain the OS NRFP process to help you decide if it is the right solicitation model for your needs.  The Program will work with you through every step, from developing your OS NRFP to signing your contract.
-
 ### Further Reading for Public Sector Buyers
 
-More information about the Program, including Discovery Day Sessions and OS NRFPs, can be found at [Procurement Concierge Program](https://www2.gov.bc.ca/gov/content/governments/services-for-government/bc-bid-resources/support-services/innovative-procurement-initiatives/procurement-concierge-program).
+More information about the Program can be found at [Procurement Concierge Program](https://www2.gov.bc.ca/gov/content/bc-procurement-resources/policy-and-strategies/strategies-and-initiatives/procurement-concierge-program).
 
 <i id="vendors"></i>
 ## 2. Vendors
@@ -183,10 +177,6 @@ The Concierge Web App will indicate whether an RFI has a planned Discovery Day S
 
 If you would like to attend a Discovery Day Session, click on the “Attend Discovery Session” button located at the bottom of the page for the specific RFI.  The Program will be notified of your request and will get in touch with you to set up your registration for the Discovery Day Session.
 
-### (iv) Opportunity Statement Negotiated Requests for Proposals (OS NRFPs)
-
-*More information coming soon.*
-
 ### Further Reading for Vendors
 
-More information can be found at [Vendor Information: Procurement Concierge Program](https://www2.gov.bc.ca/gov/content/employment-business/business/business-government/respond-to-opportunities/contract-opportunities/procurement-concierge-program).
+More information can be found at [Procurement Concierge Program](https://www2.gov.bc.ca/gov/content/bc-procurement-resources/policy-and-strategies/strategies-and-initiatives/procurement-concierge-program).
