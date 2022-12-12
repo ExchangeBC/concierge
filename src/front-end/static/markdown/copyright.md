@@ -10,7 +10,7 @@ To request permission to reproduce all or part of any other materials on this we
 
 ## Exceptions
 
-For the reproduction of provincial legislation found on the [BC Laws website](http://www.bclaws.ca/), permission is subject to the terms of the [Queen’s Printer License – British Columbia](http://www.bclaws.ca/standards/2014/QP-License_1.0.html).
+For the reproduction of provincial legislation found on the [BC Laws website](http://www.bclaws.ca/), permission is subject to the terms of the [King’s Printer License – British Columbia](https://www.bclaws.gov.bc.ca/standards/Licence.html).
 
 For the reproduction of materials found in the [BC Data Catalogue](https://catalogue.data.gov.bc.ca/), either a license agreement (as specified in the BC Data Catalogue) will apply or the materials are “access only” and reproduction is not permitted without written permission. To request permission, please complete the [Copyright Permission Request Form](https://extranet.gov.bc.ca/forms/gov/copy/index.html). If a license agreement applies, permission is subject to the terms of the specified license.
 
