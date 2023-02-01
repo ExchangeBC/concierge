@@ -53,7 +53,7 @@
     "minimist": "^1.2.5",
     "moment": "^2.24.0",
     "mongodb": "^3.2.6",
-    "mongoose": "^5.13.9",
+    "mongoose": "^5.13.15",
     "multiparty": "^4.2.1",
     "nodemailer": "^6.7.2",
     "react": "^16.8.6",
