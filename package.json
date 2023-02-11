@@ -113,7 +113,7 @@
     "mocha": "^5.2.0",
     "moment-timezone": "^0.5.23",
     "node-sass": "^7.0.0",
-    "nodemon": "^2.0.15",
+    "nodemon": "^2.0.20",
     "page": "^1.11.3",
     "pathmodify": "^0.5.0",
     "react-markdown": "^4.0.6",
