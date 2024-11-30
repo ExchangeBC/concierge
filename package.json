@@ -50,7 +50,7 @@
     "lodash": "^4.17.21",
     "migrate": "^1.6.2",
     "mime-types": "^2.1.22",
-    "minimist": "^1.2.5",
+    "minimist": "^1.2.6",
     "moment": "^2.24.0",
     "mongodb": "^3.2.6",
     "mongoose": "^5.13.9",
