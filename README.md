@@ -1,5 +1,7 @@
 # Procurement Concierge
 
+#### \*\*\***This project is retired**\*\*\*
+
 The Procurement Concierge is a web application that enables Buyers to work with Program Staff to publish Requests for Information, and for Vendors to respond to them.
 In addition, Vendors can use this tool to publish their own ideas, enabling Program Staff to facilitate connections between Buyers and Vendors.
 
